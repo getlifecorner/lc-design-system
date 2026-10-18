@@ -99,8 +99,12 @@ function symbolKind(checker, symbol) {
   return kinds.join('+') || `flags:${s.flags}`;
 }
 
-/** Export name → kind of each `.d.ts`, from one TypeScript program. */
-function exportsOf(files) {
+/**
+ * Export name → kind of each `.d.ts`, from one TypeScript program. With
+ * `declared`, also fills `declared[i][name]` with the file that declares the
+ * symbol (a re-export resolves to the original).
+ */
+function exportsOf(files, declared) {
   const program = ts.createProgram(files, {
     module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, target: ts.ScriptTarget.ES2022,
     skipLibCheck: true, noEmit: true, types: [],
@@ -110,7 +114,13 @@ function exportsOf(files) {
     const source = program.getSourceFile(file);
     const symbol = source && checker.getSymbolAtLocation(source);
     if (!symbol) return null;
-    return Object.fromEntries(checker.getExportsOfModule(symbol).map((e) => [e.name, symbolKind(checker, e)]));
+    return Object.fromEntries(checker.getExportsOfModule(symbol).map((e) => {
+      if (declared) {
+        const s = e.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(e) : e;
+        (declared[files.indexOf(file)] ??= {})[e.name] = s.declarations?.[0]?.getSourceFile().fileName;
+      }
+      return [e.name, symbolKind(checker, e)];
+    }));
   });
 }
 
@@ -133,21 +143,30 @@ const nonEntry = ['.', './styles', './styles/*', './icon-names.json', './package
 check('AC-14', 'the ., ./styles, ./styles/*, ./icon-names.json and ./package.json exports are unchanged', nonEntry.every((k) => k === '.' ? next.pkg.exports[k].default === old.pkg.exports[k].default : JSON.stringify(next.pkg.exports[k]) === JSON.stringify(old.pkg.exports[k])));
 
 // AC-15
-const subpaths = Object.keys(next.pkg.exports).filter((k) => !nonEntry.includes(k));
+// 3.8 (request 005, G-4): the pose files, a path pattern, not an entry.
+const assetPaths = ['./assets/character/*'];
+check('AC-15', 'the pose files resolve through ./assets/character/*', next.pkg.exports['./assets/character/*']?.default === './src/assets/character/*' && existsSync(join(next.root, 'src/assets/character/hello-light.svg')));
+const subpaths = Object.keys(next.pkg.exports).filter((k) => !nonEntry.includes(k) && !assetPaths.includes(k));
 const entries = subpaths.map((k) => k.slice(2));
 const publicEntries = entries.filter((e) => !e.startsWith('internal/'));
 numbers.entries = { total: entries.length, public: publicEntries.length, internal: entries.length - publicEntries.length };
-// 116 since 3.6 (request 002): + icons, sidenav-placeholder, internal/icon-set, internal/navigation.
-check('AC-15', `${entries.length} subpaths (${publicEntries.length} public, ${entries.length - publicEntries.length} internal), each with types and default`, entries.length === 116 &&subpaths.every((k) => existsSync(join(next.root, next.pkg.exports[k].types)) && existsSync(join(next.root, next.pkg.exports[k].default))));
-const entryExports = exportsOf(subpaths.map((k) => join(next.root, next.pkg.exports[k].types)));
+// 116 since 3.6 (request 002): + icons, sidenav-placeholder, internal/icon-set, internal/navigation;
+// 118 since 3.8 (request 005): + character, character-svg.
+check('AC-15', `${entries.length} subpaths (${publicEntries.length} public, ${entries.length - publicEntries.length} internal), each with types and default`, entries.length === 118 &&subpaths.every((k) => existsSync(join(next.root, next.pkg.exports[k].types)) && existsSync(join(next.root, next.pkg.exports[k].default))));
+const declaredIn = [];
+const entryExports = exportsOf(subpaths.map((k) => join(next.root, next.pkg.exports[k].types)), declaredIn);
 const unresolved = subpaths.filter((_, i) => !entryExports[i]);
 check('AC-15', 'every subpath\'s types resolve in TypeScript', unresolved.length === 0, unresolved);
 const owners = new Map();
 publicEntries.forEach((entry) => {
   for (const name of Object.keys(entryExports[entries.indexOf(entry)] ?? {})) owners.set(name, [...(owners.get(name) ?? []), entry]);
 });
-const duplicates = [...owners].filter(([, list]) => list.length > 1);
-check('AC-15', 'each public symbol is exported by exactly one public entry', duplicates.length === 0, duplicates);
+// A type that one entry re-exports from another (3.8: `character` re-exports
+// `CharacterPose` from `character-svg`, type only) is still one declaration.
+const declarations = (name, list) => new Set(list.map((entry) => declaredIn[entries.indexOf(entry)]?.[name]));
+const duplicates = [...owners].filter(([name, list]) => list.length > 1 && declarations(name, list).size > 1);
+numbers.reexports = [...owners].filter(([name, list]) => list.length > 1 && declarations(name, list).size === 1);
+check('AC-15', 'each public symbol is declared by exactly one public entry (type re-exports of the same declaration aside)', duplicates.length === 0, duplicates);
 const notInEntries = Object.keys(nextExports).filter((n) => !owners.has(n));
 const notInPrimary = [...owners.keys()].filter((n) => !(n in nextExports));
 check('AC-15', 'the public entries together export exactly the primary entry\'s symbols', notInEntries.length === 0 && notInPrimary.length === 0, { notInEntries, notInPrimary });

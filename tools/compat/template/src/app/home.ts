@@ -28,6 +28,7 @@ import {
   RadioComponent, RadioGroupComponent, type BottomNavItem,
 } from '@lifecorner/angular-ui-kit';
 import { Probe36 } from './probe-36';
+import { Probe38 } from './probe-38';
 
 /**
  * The broad page (route `''`): every component, imported from the PRIMARY
@@ -59,6 +60,8 @@ import { Probe36 } from './probe-36';
     RadioComponent, RadioGroupComponent,
     // 3.6 (request 002)
     Probe36,
+    // 3.8 (request 005)
+    Probe38,
   ],
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

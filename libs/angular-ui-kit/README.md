@@ -77,6 +77,7 @@ and the CSP notes.
 | Button | `lc-button` | Primary, secondary, and text buttons |
 | Button link | `a[lcButton]` | `lc-button` look on a native `<a href>` — native attributes pass through, works without JavaScript |
 | Card | `lc-card` | Content container with elevation; optional leading brand-tile header icon (`[icon]` / `[iconVariant]`) |
+| Character | `lc-character` | Edu, the LifeCorner character, in 14 still poses with light and dark drawings; decorative by default, sized by CSS (`--lc-character-size`), prerenders as `<img>`. The files are in `src/assets/character/` (`@lifecorner/angular-ui-kit/assets/character/<pose>-<light\|dark>.svg`), the SVG strings in `@lifecorner/angular-ui-kit/character-svg`; `.lc-horizon__figure` puts him on the horizon line |
 | Chat | `lc-chat` | Conversational UI with streaming, custom message templates |
 | Icon | `lc-icon` | Tabler SVG icons; fail-loud on unknown names (dev warning + visible placeholder, optional `[strict]` throw); exports `ICON_NAMES` / `isValidIconName` / `ICON_ALIASES` (+ `icon-names.json`) for static checking; tree-shakable glyphs: `provideLcIcons([ICON_HOME, …])` with the constants of `@lifecorner/angular-ui-kit/icons` |
 | Logo | `lc-logo` | LifeCorner logo: Edu, the emblem, and the LifeCorner lockup, with dark and small drawings |

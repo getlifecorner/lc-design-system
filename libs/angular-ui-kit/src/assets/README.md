@@ -31,3 +31,7 @@ The words "Life" and "Corner" are **outlined to paths**, so the lockup looks the
 | Layout | x 118, baseline 74, size 72, letter-spacing −1.4, kerning on, no ligatures (as a browser sets it) |
 
 The font file itself is not shipped. Outlined glyphs in a logo are artwork made with the font, which the OFL allows.
+
+## Character (`character/`, 3.8)
+
+Edu's 14 poses, `<pose>-light.svg` and `<pose>-dark.svg` (100 × 100, about 1.5 KB each), for `lc-character` (`@lifecorner/angular-ui-kit/character`, loaded from `LC_CHARACTER_BASE_PATH`, default `LC_LOGO_BASE_PATH` + `/character`), `<img>` or `<picture>`. They resolve as `@lifecorner/angular-ui-kit/assets/character/<file>`; the same drawings are strings in `@lifecorner/angular-ui-kit/character-svg`. Source: the approved drawings in life-os `docs/brand/character/`, copied unchanged; the dark files of welcomes-member, resting, in-his-corner, comforts, all-done, connects, discovered, thinking, connection-paused and see-you are made by its dark rule (`scripts/generate-character-assets.mjs`).

@@ -39,6 +39,9 @@
     "./icon-names.json": {
       "default": "./src/assets/icon-names.json"
     },
+    "./assets/character/*": {
+      "default": "./src/assets/character/*"
+    },
     "./package.json": {
       "default": "./package.json"
     }

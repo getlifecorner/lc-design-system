@@ -31,6 +31,19 @@
  *                            on the land add its height, e.g. 136 px on the phone)
  *   --lc-horizon-sun-radius  the sun's radius (58 px phone, 70 · 90 · 120 · 166 px)
  *   --lc-horizon-sun-x       the sun's centre from the block's left edge (72%)
+ *   --lc-horizon-figure-size the figure's size in .lc-horizon__figure
+ *                            (64 px phone, 96 px from 1024, 128 px from 1920)
+ *   --lc-horizon-figure-gap  its right edge to the sun's left edge (16 px; 24 px from 1024)
+ *
+ * Figure (3.8, G-4): Edu on the line, left of the sun, in a DIRECT child with
+ * .lc-horizon__figure (lc-character, <img>, <picture>, or an element holding an
+ * inline <svg>), placed BEFORE .lc-horizon__land. His feet stand on the line
+ * (the box bottom 12.5 % of its size below it); the block's height above the
+ * line becomes max(sun + 22 px, figure + 8 px). Decorative, never a target:
+ *
+ *   <div class="lc-horizon" aria-hidden="true">
+ *     <lc-character class="lc-horizon__figure" pose="comforts" />
+ *   </div>
  *
  * Colours: --color-background-low, --color-horizon-line, --color-land-1…3,
  * --color-sun-1…3, --color-sun-ring, --color-sun-halo (theme tokens).
@@ -40,6 +53,8 @@
   --_lc-horizon-land: var(--lc-horizon-land, 112px);
   --_lc-horizon-r: var(--lc-horizon-sun-radius, 58px);
   --_lc-horizon-x: var(--lc-horizon-sun-x, 72%);
+  --_lc-horizon-fig: var(--lc-horizon-figure-size, 64px);
+  --_lc-horizon-fig-gap: var(--lc-horizon-figure-gap, 16px);
 
   position: relative;
   flex: 1 0 auto;
@@ -84,6 +99,8 @@
   @media (min-width: 1024px) {
     --_lc-horizon-land: var(--lc-horizon-land, 100px);
     --_lc-horizon-r: var(--lc-horizon-sun-radius, 70px);
+    --_lc-horizon-fig: var(--lc-horizon-figure-size, 96px);
+    --_lc-horizon-fig-gap: var(--lc-horizon-figure-gap, 24px);
   }
 
   @media (min-width: 1280px) {
@@ -99,6 +116,7 @@
   @media (min-width: 1920px) {
     --_lc-horizon-land: var(--lc-horizon-land, 184px);
     --_lc-horizon-r: var(--lc-horizon-sun-radius, 166px);
+    --_lc-horizon-fig: var(--lc-horizon-figure-size, 128px);
   }
 
   // Windows high contrast and other forced-colour modes: no decoration.
@@ -112,4 +130,38 @@
 .lc-horizon__land {
   position: absolute;
   inset: auto 0 0;
+}
+
+// Edu on the horizon line (3.8, G-4): left of the sun, the feet on the line.
+// Only a block WITH the figure gets the taller minimum; without it the block
+// renders exactly as before.
+.lc-horizon:has(> .lc-horizon__figure) {
+  min-height: calc(var(--_lc-horizon-land) + max(var(--_lc-horizon-r) + 22px, var(--_lc-horizon-fig) + 8px));
+}
+
+// The slot sizes the figure (an lc-character's `size` input doesn't apply).
+// Its right edge sits the gap left of the sun's left edge; the box bottom lies
+// 12.5 % of its size below the line, where the standing poses' feet end
+// (y 87.5 of 100). Px, not rem: at 200 % text the figure keeps its size.
+.lc-horizon__figure {
+  --lc-character-size: var(--_lc-horizon-fig);
+
+  position: absolute;
+  right: calc(100% - var(--_lc-horizon-x) + var(--_lc-horizon-r) + var(--_lc-horizon-fig-gap));
+  bottom: calc(var(--_lc-horizon-land) - var(--_lc-horizon-fig) * 0.125);
+  width: var(--_lc-horizon-fig);
+  height: var(--_lc-horizon-fig);
+  pointer-events: none;
+
+  // Decoration, like the horizon's own: dropped, its box kept.
+  @media (forced-colors: active) {
+    visibility: hidden;
+  }
+}
+
+// A <picture> or an element holding an inline <svg>.
+.lc-horizon__figure > :is(img, svg) {
+  display: block;
+  width: 100%;
+  height: 100%;
 }

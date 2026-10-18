@@ -114,6 +114,22 @@ function codeBlockRegions(html) {
 }
 
 /**
+ * `lc-character` in the horizon's figure slot on the home page (3.8, G-4):
+ * decorative, both drawings as `<img>` from the logo base path, before JS.
+ */
+function characterPrerendered(html) {
+  const host = html.match(/<lc-character(?=[^>]*id="compat-character")[^>]*>[^]*?<\/lc-character>/)?.[0];
+  if (!host) return false;
+  const tag = host.slice(0, host.indexOf('>') + 1);
+  const imgs = [...host.matchAll(/<img\b[^>]*>/g)].map((m) => m[0]);
+  return /aria-hidden="true"/.test(tag) && !/\brole=/.test(tag)
+    && /class="[^"]*\blc-character--64\b/.test(tag) && /class="[^"]*\blc-horizon__figure\b/.test(tag)
+    && imgs.length === 2
+    && /src="\/compat-logo\/character\/hello-light\.svg"/.test(imgs[0]) && /src="\/compat-logo\/character\/hello-dark\.svg"/.test(imgs[1])
+    && imgs.every((img) => /alt=""/.test(img) && /aria-hidden="true"/.test(img) && /width="100"/.test(img) && /height="100"/.test(img));
+}
+
+/**
  * What the prerendered pages must contain (rendered on the server, no JS):
  * `[label, RegExp | (html) => boolean, page]`, page `index.html` unless named.
  */
@@ -163,6 +179,10 @@ const EXPECT_IN_HTML = [
   ['tt: code-block text equals the source (AS-20)', codeBlocksPrerendered, 'tt/code/index.html'],
   // 3.7 (request 004): the scroll body is a named region and a tab stop before JS
   ['tt: code-block body is a named, focusable region (AS-21)', codeBlockRegions, 'tt/code/index.html'],
+  // 3.8 (request 005): Edu prerenders as plain <img> in a box the component style sizes
+  ['character: decorative, in the horizon slot, files from the logo base path (G-4)', characterPrerendered],
+  ['character: the on-dark drawing alone, named (G-4)', /<lc-character(?=[^>]*id="compat-character-dark")(?=[^>]*role="img")(?=[^>]*aria-label="Edu winkt")(?=[^>]*class="[^"]*\blc-character--96\b)(?![^>]*aria-hidden)[^>]*>(?:<!--[^]*?-->|\s)*<img(?=[^>]*src="\/compat-logo\/character\/hello-dark\.svg")[^>]*>(?:<!--[^]*?-->|\s)*<\/lc-character>/],
+  ['character: the box is square and sized by CSS (G-4)', /--_lc-character-size:\s*64px;[^}]*aspect-ratio:\s*1\b/],
 ];
 
 /**
@@ -276,6 +296,17 @@ for (const entry of MATRIX.filter((m) => !only || only.includes(m.name))) {
     const html = page(name);
     result.checks.push([label, typeof test === 'function' ? test(html) : test.test(html)]);
   }
+  // 3.8 (request 005, G-4): the pose files through the app's `assets` config and
+  // the package's `exports`, and the string entry in plain Node (no Angular).
+  result.checks.push(['character: the assets config copied the pose files (G-4)', existsSync(join(dir, 'dist/compat/browser/compat-logo/character/hello-light.svg'))]);
+  const node = run(process.execPath, ['--input-type=module', '-e', `
+    import { createRequire } from 'node:module';
+    import { readFileSync } from 'node:fs';
+    const file = createRequire(process.cwd() + '/').resolve('@lifecorner/angular-ui-kit/assets/character/hello-light.svg');
+    const { CHARACTER_SVG_HELLO, CHARACTER_POSES } = await import('@lifecorner/angular-ui-kit/character-svg');
+    console.log(JSON.stringify({ head: CHARACTER_SVG_HELLO.light.slice(0, 4), poses: CHARACTER_POSES.length, same: readFileSync(file, 'utf8') === CHARACTER_SVG_HELLO.light }));`], dir);
+  const svg = (() => { try { return JSON.parse(node.out.trim().split('\n').pop()); } catch { return {}; } })();
+  result.checks.push(['character: the file resolves through exports and equals the string, imported in plain Node (G-4)', node.code === 0 && svg.head === '<svg' && svg.poses === 14 && svg.same === true]);
   if (entry.name === CSP_ENTRY) {
     const csp = run('npx', ['ng', 'build', '--configuration=production,csp'], dir);
     writeFileSync(join(dir, 'build-csp.log'), csp.out);

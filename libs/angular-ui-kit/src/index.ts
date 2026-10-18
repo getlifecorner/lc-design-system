@@ -55,6 +55,10 @@ export * from '@lifecorner/angular-ui-kit/icons';
 // Logo Component
 export * from '@lifecorner/angular-ui-kit/logo';
 
+// Character Component (Edu's poses, 3.8, G-4) and the poses as SVG strings
+export * from '@lifecorner/angular-ui-kit/character';
+export * from '@lifecorner/angular-ui-kit/character-svg';
+
 // Menu Component
 export * from '@lifecorner/angular-ui-kit/menu';
 

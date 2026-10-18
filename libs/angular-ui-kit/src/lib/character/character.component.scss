@@ -1,0 +1,77 @@
+// Edu (3.8, G-4): a square box sized by CSS before JavaScript runs, so the
+// figure prerenders and never shifts the layout. The drawings are still and
+// nothing here moves or sets a colour (the files are artwork).
+:host {
+  --_lc-character-size: 64px;
+
+  display: block;
+  flex: none;
+  width: var(--lc-character-size, var(--_lc-character-size));
+  height: var(--lc-character-size, var(--_lc-character-size));
+  aspect-ratio: 1;
+}
+
+:host(.lc-character--48) {
+  --_lc-character-size: 48px;
+}
+
+:host(.lc-character--80) {
+  --_lc-character-size: 80px;
+}
+
+:host(.lc-character--96) {
+  --_lc-character-size: 96px;
+}
+
+:host(.lc-character--128) {
+  --_lc-character-size: 128px;
+}
+
+.lc-character__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+// Light/dark pair (`colorMode="auto"`): the ROOT THEME picks one, with the
+// selectors of lc-logo and the theme stylesheets (_theme-dark.scss): dark
+// under `:root.dark`, a root without a theme class (dark-first default), and
+// `:root.system` while the OS is dark; light under `:root.light` and
+// `:root.system` while the OS is light. `:host-context`, because under
+// emulated encapsulation a plain `:root.dark &` can never match the root.
+.lc-character__img--dark {
+  display: none;
+}
+
+:host-context(:root.dark),
+:host-context(:root:not(.light):not(.system)) {
+  .lc-character__img--light {
+    display: none;
+  }
+
+  .lc-character__img--dark {
+    display: block;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :host-context(:root.system:not(.light)) {
+    .lc-character__img--light {
+      display: none;
+    }
+
+    .lc-character__img--dark {
+      display: block;
+    }
+  }
+}
+
+// Forced colours: a decorative figure drops out and keeps its box (like the
+// horizon's decoration); a named one stays as drawn (images aren't recoloured).
+@media (forced-colors: active) {
+  :host([aria-hidden='true']) {
+    visibility: hidden;
+  }
+}

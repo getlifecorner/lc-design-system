@@ -20,6 +20,9 @@
             "tsConfig": "tsconfig.json",
             "inlineStyleLanguage": "scss",
             "styles": ["src/styles.scss"],
+            "assets": [
+              { "glob": "**/*", "input": "node_modules/@lifecorner/angular-ui-kit/src/assets/character", "output": "compat-logo/character" }
+            ],
             "budgets": []
           },
           "configurations": {

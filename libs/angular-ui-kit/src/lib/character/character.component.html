@@ -1,0 +1,6 @@
+@if (colorMode() === 'dark') {
+  <img class="lc-character__img" [src]="darkSrc()" alt="" aria-hidden="true" width="100" height="100" decoding="async" fetchpriority="low" />
+} @else {
+  <img class="lc-character__img lc-character__img--light" [src]="lightSrc()" alt="" aria-hidden="true" width="100" height="100" decoding="async" fetchpriority="low" />
+  <img class="lc-character__img lc-character__img--dark" [src]="darkSrc()" alt="" aria-hidden="true" width="100" height="100" decoding="async" fetchpriority="low" />
+}

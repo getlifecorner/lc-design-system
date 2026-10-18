@@ -1,4 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/angular';
+import { moduleMetadata, type Meta, type StoryObj } from '@storybook/angular';
+import { CharacterComponent } from '../lib/character/character.component';
 
 /**
  * The horizon block (`.lc-horizon`, 3.3, gap LK-1) — the "Weite" page ending.
@@ -33,6 +34,24 @@ empty block \`aria-hidden="true"\`.
 | \`--lc-horizon-land\` — height of the land below the line | 112 px (phone), 100 · 120 · 140 · 184 px from 1024 · 1280 · 1440 · 1920 px; add the footer's height when a footer sits on the land (136 px on a phone) |
 | \`--lc-horizon-sun-radius\` | 58 px (phone), 70 · 90 · 120 · 166 px |
 | \`--lc-horizon-sun-x\` — the sun's centre from the left edge | 72% |
+| \`--lc-horizon-figure-size\` — the figure's size in \`.lc-horizon__figure\` | 64 px (phone), 96 px from 1024 px, 128 px from 1920 px |
+| \`--lc-horizon-figure-gap\` — the figure's right edge to the sun's left edge | 16 px (phone), 24 px from 1024 px |
+
+**Figure (3.8, G-4):** Edu stands on the line, left of the sun. Put him in a
+**direct child** with \`.lc-horizon__figure\` (\`<lc-character>\`, an \`<img>\`, a
+\`<picture>\`, or an element holding an inline \`<svg>\`), **before**
+\`.lc-horizon__land\`. The slot sizes him (the \`size\` input doesn't apply); his
+feet stand on the line (the box bottom lies 12.5 % of his size below it, where
+the standing poses' feet end), and the block's height above the line becomes
+max(sun + 22 px, figure + 8 px), so a block with him is 204 px tall at 1024 px
+instead of 192 px. A block without the figure renders exactly as before. He is
+decorative and never a pointer target; forced-colour modes hide him.
+
+\`\`\`html
+<div class="lc-horizon" aria-hidden="true">
+  <lc-character class="lc-horizon__figure" pose="comforts" />
+</div>
+\`\`\`
 
 **Colours** (theme tokens, see *Design Tokens / Colors → Horizon*):
 \`--color-background-low\`, \`--color-horizon-line\`, \`--color-land-1\`…\`-3\`,
@@ -116,6 +135,56 @@ export const Desktop: Story = {
           <p class="lc-overline" style="font-size: 14px">Wednesday, 15 October</p>
         </main>
         <div class="lc-horizon" aria-hidden="true" style="--lc-horizon-land: 120px; --lc-horizon-sun-radius: 90px; --lc-horizon-sun-x: 60%"></div>
+      </div>`,
+  }),
+};
+
+export const WithFigure: Story = {
+  name: 'With Figure',
+  decorators: [moduleMetadata({ imports: [CharacterComponent] })],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Edu (`comforts`) in `.lc-horizon__figure` with the default geometry: full width, no fixed height, so the block is at its minimum height. 64 px and a 16 px gap to the sun on the phone, 96 px and 24 px from 1024 px, 128 px from 1920 px.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-direction: column; background-color: var(--color-background); background-image: var(--app-background-image)">
+        <div class="lc-horizon" aria-hidden="true">
+          <lc-character class="lc-horizon__figure" pose="comforts" />
+        </div>
+      </div>`,
+  }),
+};
+
+export const FigureAndFooter: Story = {
+  name: 'Figure and Footer',
+  decorators: [moduleMetadata({ imports: [CharacterComponent] })],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A phone page with Edu (`in-his-corner`) and the compact footer on the land (`--lc-horizon-land: 136px`). The figure comes before `.lc-horizon__land`, is aria-hidden and never takes a pointer, so the two links stay the only tab stops. The block is not aria-hidden here.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="width: 360px; height: 640px; display: flex; flex-direction: column; overflow: hidden; background-color: var(--color-background); font-family: var(--font-family-base)">
+        <main style="display: flex; flex-direction: column; gap: 10px; padding: 48px 24px 16px; text-align: center">
+          <h1 class="lc-auth-title" style="font-size: 30px">You're offline</h1>
+          <p style="margin: 0; color: var(--color-text-secondary)">We'll try again as soon as you're back.</p>
+        </main>
+        <div class="lc-horizon" style="--lc-horizon-land: 136px; --lc-horizon-sun-radius: 58px">
+          <lc-character class="lc-horizon__figure" pose="in-his-corner" />
+          <footer class="lc-horizon__land" style="display: flex; gap: 8px; padding: 8px 16px 16px">
+            <a href="#" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; color: var(--color-link); text-decoration: underline; font-size: 14px">Privacy policy</a>
+            <a href="#" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; color: var(--color-link); text-decoration: underline; font-size: 14px">Legal notice</a>
+          </footer>
+        </div>
       </div>`,
   }),
 };
