@@ -17,6 +17,8 @@ metadata:
 - **Global element styles.** `_typography.scss` gives every `pre` `overflow-x: auto`, so inside lc-code-block the `pre` was the real scroller (axe flagged `.code-block__pre`, not the body). Measure which element scrolls before placing `tabindex`. A ring inside `overflow: hidden` must be inset.
 - **Wording.** Check an AC's wording (for example "no emitted .js contains X", "file unchanged") against what the design has to move.
 
+- **Gradient bands.** On a 135° band the top-right corner is at t = w / (w + h), which is 0.88 for 1280 × 168, so "top-right on a card" fails a t ≤ 0.75 rule on any compact band. A taller text doesn't help, because the media column centres vertically. Prototype the placement with `--measure` before you fix it in a design, and name the measuring point (the box centre).
+
 **Why:** each of these cost a round trip or would have broken the build.
 
 **How to apply:** name the relevant ones in the design's risk list.

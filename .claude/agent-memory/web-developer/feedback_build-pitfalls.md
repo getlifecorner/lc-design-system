@@ -21,6 +21,7 @@ Traps from request 001 (2026-10-17), each cost a debugging round:
 
 - **`lc-icon` in Jest (request 003):** names outside the inline set (`clipboard-document` → Tabler `clipboard`) are fetched; the fetch cache is module-level and `resetIconCache` is not public. Register a fake glyph in the TestBed (`provideLcIcons([{ name, variant: 'outline', svg }])`) so it renders synchronously.
 - **Text runs inside `<pre>`:** `@else{{{ x }}}}` compiles fine; write control flow with no whitespace. `[attr.class]` renders 10,000 token spans faster than `[class]` (115 vs 123 ms long task). Prerendered HTML gets a `<!---->` per `@for`/`@if` anchor.
+- **Regex SVG/attr parsers (request 005):** attribute names carry digits (`x1`, `y2`); `[a-zA-Z-]+` silently skipped a whole tag. Count matched tags against `<[a-z]` and fail on a mismatch. A global slot rule like `.x__figure > img` also hits a component host's own images when the host carries the class: check the component's `display:none` still wins (it does at (0,2,0)).
 **Why:** these are not visible in the code and each looked like a kit regression at first.
 **How to apply:** check this list before debugging a failing fixture, browser check or story; add new traps here.
 
