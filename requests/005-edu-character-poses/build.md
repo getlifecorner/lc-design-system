@@ -1,7 +1,6 @@
 # Build 005: Edu's character poses as kit assets (G-4)
 
-- **Branch:** `feat/3.8-edu-character-poses`
-- **Commits:** `acf0e7c` feat(character): Edu's poses as files, SVG strings and lc-character; horizon figure slot · `b32be26` docs(character): the review r1 fix · then request-document commits (`build.md`, `log.md`). `git commit --amend` was denied in the r1 session, so these are separate commits: squash everything after `acf0e7c` into it before release (`git reset --soft acf0e7c~1` and one commit with the feat message)
+- **Branch:** `feat/3.8-edu-character-poses` (squashed into `a3a25f5`, released as `580b388`) · CI fix: `fix/3.8.0-compat-empty-alt` (see *CI fix* below)
 
 ## Files changed
 
@@ -60,6 +59,18 @@ Round 0 ran on `34f188f`. Round 1 changed only `character.stories.ts` (excluded 
 | Story screenshots | `tmp/story-shots/005/` (21 Character stories at 360/1280, 2 Horizon at 360/1024/1280/1920, both themes); baseline `tmp/story-shots/005/baseline`, after `…/after`. r1: `tmp/story-shots/005/r1/` (on-dark-surface at 360/1024/1280, both themes) |
 | `node tools/compat/check-angular-majors.mjs --only=22` | `34f188f`: PASS, 42 of 42 checks (5 new for G-4, csp build included). r1: nothing server-rendered changed |
 | `node tools/compat/check-entries.mjs` (changed) | `34f188f`: 24/24 |
+
+## CI fix (2026-10-19, after release commit `580b388`)
+
+| Item | Result |
+|---|---|
+| Failure | CI run 39174864979: `MISSING character: decorative, in the horizon slot …` on 21.0, 21 and 22.0; 22 (22.2.3) passed, as locally |
+| Cause | Not the kit. The markup is the same on every line (host `class="lc-horizon__figure lc-character lc-character--64"`, `aria-hidden`, 2 `<img>` from `/compat-logo/character/`). 21.x and 22.0 build with Beasties 0.4.2 (dom-serializer 2), which writes an empty attribute bare (`<img … alt aria-hidden="true" …>`); 22.2 has Beasties 0.5.4 and writes `alt=""`. The check matched only `alt=""`. Browsers parse both as the empty `alt`, so the drawings stay decorative |
+| Fix | `tools/compat/check-angular-majors.mjs`: `emptyAttr('alt')` accepts `alt` and `alt=""`, rejects `alt="x"` and `data-alt` (8 cases checked); no other check matches `=""` |
+| Kit | unchanged: `git diff --quiet 580b388 -- libs` holds, so the unit, lint, build and Storybook gates of `580b388` stand |
+| `npm run test:tools` | 22/22 |
+| `check-angular-majors.mjs` (full matrix, csp build included) | PASS on 21.0 (21.0.9), 21 (21.2.25), 22.0 (22.0.8): 41/41 each; 22 (22.2.3): 42/42. Before the fix, `--only=22.0` reproduced the CI failure locally. Logs: `tmp/005/fix/` |
+| Changelog | no entry: tools only, nothing changes for consumers |
 
 ## Deviations from the design
 

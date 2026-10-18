@@ -126,7 +126,18 @@ function characterPrerendered(html) {
     && /class="[^"]*\blc-character--64\b/.test(tag) && /class="[^"]*\blc-horizon__figure\b/.test(tag)
     && imgs.length === 2
     && /src="\/compat-logo\/character\/hello-light\.svg"/.test(imgs[0]) && /src="\/compat-logo\/character\/hello-dark\.svg"/.test(imgs[1])
-    && imgs.every((img) => /alt=""/.test(img) && /aria-hidden="true"/.test(img) && /width="100"/.test(img) && /height="100"/.test(img));
+    && imgs.every((img) => emptyAttr('alt').test(img) && /aria-hidden="true"/.test(img) && /width="100"/.test(img) && /height="100"/.test(img));
+}
+
+/**
+ * An attribute with the empty value, in both serialisations of the same DOM:
+ * `alt=""` (Angular 22.2's prerender) and a bare `alt` (21.x and 22.0, whose
+ * critical-CSS pass, Beasties 0.4.2 with dom-serializer 2, writes empty
+ * attributes without a value). Browsers parse both as the empty value.
+ * A value (`alt="x"`) or a longer name (`data-alt`) doesn't match.
+ */
+function emptyAttr(name) {
+  return new RegExp(`\\s${name}(?:="")?(?=[\\s/>])`);
 }
 
 /**
