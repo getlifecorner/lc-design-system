@@ -1,6 +1,6 @@
 # LifeCorner Design System
 
-A standalone Angular component library (`@lifecorner/angular-ui-kit`, formerly `@life-cockpit/angular-ui-kit`) with 110 accessible, themeable components built with Angular 22 (apps on Angular 21 and 22 are supported), TailwindCSS, and design tokens.
+A standalone Angular component library (`@lifecorner/angular-ui-kit`, formerly `@life-cockpit/angular-ui-kit`) with 111 accessible, themeable components built with Angular 22 (apps on Angular 21 and 22 are supported), TailwindCSS, and design tokens.
 
 Docs and Storybook: https://design.life-cockpit.de (MCP endpoint `/mcp`). The site moves to `design.lifecorner.de` once the owner registers `lifecorner.de`; until then the domain and the CDK stack keep the old name.
 

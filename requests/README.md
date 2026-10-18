@@ -37,4 +37,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [002](002-f1-bundle-size-gaps/) F1 bundle-size and link-cue gaps | life-os | AS-17, AS-18, AS-19 | 3.6.0 | 3.6.0 |
 | [003](003-code-block-trusted-types/) lc-code-block under Trusted Types | life-os | AS-20 | 3.6.1 | 3.6.1 |
 | [004](004-code-block-scroll-region/) lc-code-block scroll region | life-os | AS-21 | 3.7.0 | 3.7.0 |
-| [005](005-edu-character-poses/) Edu's character poses | life-os | G-4 | release | |
+| [005](005-edu-character-poses/) Edu's character poses | life-os | G-4 | 3.8.0 | 3.8.0 |

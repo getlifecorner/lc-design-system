@@ -2,6 +2,51 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.8.0] - 2026-10-19
+
+Edu, the LifeCorner brand character, for the F1 app pages and the website
+(G-4). No API breaks.
+
+### Added
+
+- **Edu's character poses** (G-4; life-os app-shell 7.2: offline, empty and done
+  pages, the horizon; website: Hallo on the band, calm at the page end, Tröstet
+  on the 404). 14 still poses (`hello`, `shows-the-way`, `happy`,
+  `welcomes-member`, `resting`, `in-his-corner`, `comforts`, `all-done`, `calm`,
+  `connects`, `discovered`, `thinking`, `connection-paused`, `see-you`), each
+  with a light and a dark drawing, 1.0 to 1.7 KB, 100 × 100:
+  - **Files** in `src/assets/character/<pose>-<light|dark>.svg`, also
+    `@lifecorner/angular-ui-kit/assets/character/<file>` through `exports`
+    (`<img>`, `<picture>`, Angular `assets`, bundler `loader`).
+  - **`@lifecorner/angular-ui-kit/character-svg`**: `CHARACTER_SVG_<POSE>`
+    (`.light`, `.dark`), `CHARACTER_SVG`, `CHARACTER_POSES`; plain TypeScript,
+    Node imports it; unused poses tree-shake away.
+  - **`lc-character`** in `@lifecorner/angular-ui-kit/character`: `pose`
+    (default `calm`), `size` 48 · 64 (default) · 80 · 96 · 128, `colorMode`
+    `auto` | `dark`, `ariaLabel`. Prerenders as two `<img>`; the root theme
+    picks one (light, dark, system), no JavaScript. Decorative by default
+    (`aria-hidden`); a square box sized by CSS, so nothing shifts.
+    `--lc-character-size` sets it per breakpoint; files come from
+    `LC_CHARACTER_BASE_PATH` (default `LC_LOGO_BASE_PATH` + `/character`).
+- **`.lc-horizon__figure`**: Edu on the horizon line, 16 px (24 px from 1024)
+  left of the sun, feet on the line; 64 · 96 · 128 px (`--lc-horizon-figure-size`,
+  `--lc-horizon-figure-gap`). A block with him is at least max(sun + 22,
+  figure + 8) px above the land (204 px instead of 192 px at 1024).
+- **Contrast** (computed): light body 6.21:1 on white, 5.91:1 on
+  `--color-background-low`; dark body 9.14:1 on the night sky; Hallo on the
+  hero band 6.97:1 at its dark start to 3.01:1 at 75 %: keep his box's centre
+  where t = (x + y) / (width + height) ≤ 0.75. A band's top-right corner is at
+  t = w / (w + h) (0.88 on a 1280 × 168 band), so on a short, wide band stand
+  him left of the right end, for example on a card's top-left corner
+  (`left: 16px`: t 0.35 / 0.59 / 0.66 at 360 / 1024 / 1280).
+
+### Compatibility
+
+- No API breaks. New entries, files and an optional class; `lc-logo`, `lc-header`
+  and `lc-empty-state` don't import the character (their code is byte-identical
+  to 3.7.0), and a horizon without the figure renders as before (96 of 96
+  screenshots identical).
+
 ## [3.7.0] - 2026-10-17
 
 `lc-code-block`'s scrolling body is keyboard-reachable (life-os account
