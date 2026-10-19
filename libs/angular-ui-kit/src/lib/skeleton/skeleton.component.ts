@@ -11,6 +11,9 @@ export type SkeletonVariant = 'line' | 'circle' | 'rect';
  * - Colours from `--color-skeleton` / `--color-skeleton-highlight`, overridable
  *   with the `--lc-skeleton-bg` / `--lc-skeleton-highlight` hooks
  * - Custom width, height, and border radius
+ * - `--lc-skeleton-height` hook: the height from CSS (a container query, `cqi`),
+ *   winning over the `height` input; set it on the `lc-skeleton` element (on a
+ *   wrapper it reaches every skeleton inside)
  * - Composable for building complex loading layouts
  * - Dark mode compatible
  *
@@ -41,7 +44,10 @@ export class SkeletonComponent {
   /** Width (CSS value). Defaults to '100%' for line/rect, '40px' for circle. */
   readonly width = input<string>();
 
-  /** Height (CSS value). Defaults to '0.875rem' for line, '40px' for circle, '100px' for rect. */
+  /**
+   * Height (CSS value). Defaults to '0.875rem' for line, '40px' for circle, '100px' for rect.
+   * The `--lc-skeleton-height` custom property, when set, wins over it.
+   */
   readonly height = input<string>();
 
   /** Border radius override (CSS value). */

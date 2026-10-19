@@ -130,6 +130,21 @@ function characterPrerendered(html) {
 }
 
 /**
+ * `<img shell-horizon-figure>` in lc-app-shell's horizon on the home page
+ * (3.9, AS-29): projected as the only element of the aria-hidden horizon,
+ * before JS.
+ */
+function shellFigurePrerendered(html) {
+  const shell = html.match(/<lc-app-shell(?=[^>]*id="compat-shell-39")[^>]*>[^]*?<\/lc-app-shell>/)?.[0];
+  const horizon = shell?.match(/<div(?=[^>]*class="lc-app-shell__horizon lc-horizon")[^>]*>((?:<!--[^]*?-->|\s)*<img\b[^>]*>(?:<!--[^]*?-->|\s)*)<\/div>/);
+  if (!horizon) return false;
+  const tag = horizon[0].slice(0, horizon[0].indexOf('>') + 1);
+  const img = horizon[1].match(/<img\b[^>]*>/)[0];
+  return /aria-hidden="true"/.test(tag) && /id="compat-shell-figure"/.test(img)
+    && emptyAttr('shell-horizon-figure').test(img) && emptyAttr('alt').test(img);
+}
+
+/**
  * An attribute with the empty value, in both serialisations of the same DOM:
  * `alt=""` (Angular 22.2's prerender) and a bare `alt` (21.x and 22.0, whose
  * critical-CSS pass, Beasties 0.4.2 with dom-serializer 2, writes empty
@@ -194,6 +209,10 @@ const EXPECT_IN_HTML = [
   ['character: decorative, in the horizon slot, files from the logo base path (G-4)', characterPrerendered],
   ['character: the on-dark drawing alone, named (G-4)', /<lc-character(?=[^>]*id="compat-character-dark")(?=[^>]*role="img")(?=[^>]*aria-label="Edu winkt")(?=[^>]*class="[^"]*\blc-character--96\b)(?![^>]*aria-hidden)[^>]*>(?:<!--[^]*?-->|\s)*<img(?=[^>]*src="\/compat-logo\/character\/hello-dark\.svg")[^>]*>(?:<!--[^]*?-->|\s)*<\/lc-character>/],
   ['character: the box is square and sized by CSS (G-4)', /--_lc-character-size:\s*64px;[^}]*aspect-ratio:\s*1\b/],
+  // 3.9 (request 006), on the home page (probe-39.ts)
+  ['shell figure: a direct child of the aria-hidden horizon (AS-29)', shellFigurePrerendered],
+  ['page header secondary at h2 (AS-25)', /<lc-page-header(?=[^>]*id="compat-secondary")(?=[^>]*class="[^"]*\blc-page-header--size-secondary\b)[^>]*>[^]*?<h2[^>]*class="lc-page-header__title"[^>]*>\s*Back in a few minutes/],
+  ['flush link (AS-26)', /<a(?=[^>]*id="compat-flush")(?=[^>]*class="[^"]*\bbtn-flush\b)(?=[^>]*class="[^"]*\bbtn-link\b)(?=[^>]*class="[^"]*\bbtn-lg\b)[^>]*>/],
 ];
 
 /**

@@ -60,7 +60,7 @@ Empty slots collapse automatically — they do not produce phantom gaps.
 | \`subtitle\` | \`string\` | — | Short supporting line below the title |
 | \`overline\` | \`string\` | — | 3.3: short uppercase label **above** the title, **after** it in the DOM (a date, a section) |
 | \`level\` | \`1 \\| 2 \\| 3\` | \`1\` | Semantic heading level (\`h1\`/\`h2\`/\`h3\`) |
-| \`size\` | \`'compact' \\| 'default' \\| 'comfortable' \\| 'title' \\| 'display' \\| 'auth'\` | \`'default'\` | Visual scale of the whole block |
+| \`size\` | \`'compact' \\| 'secondary' \\| 'default' \\| 'comfortable' \\| 'title' \\| 'display' \\| 'auth'\` | \`'default'\` | Visual scale of the whole block |
 | \`badge\` | \`string\` | — | Pill rendered next to the title (e.g. \`Beta\`, \`New\`) |
 | \`showDivider\` | \`boolean\` | \`false\` | Render a border-bottom divider below the header |
 
@@ -71,6 +71,7 @@ Empty slots collapse automatically — they do not produce phantom gaps.
 | Size | Typical use | Title size |
 |------|-------------|------------|
 | \`compact\` | Side panels, data-dense tools, modals | \`--font-size-lg\` |
+| \`secondary\` (3.9) | A second title under the page's main one, e.g. the other language of a bilingual page | \`--font-size-xl\`: 20 px, the \`compact\` spacing |
 | \`default\` | Standard application pages | \`--font-size-2xl\` |
 | \`comfortable\` | Landing / welcome / onboarding pages | \`--font-size-3xl\` |
 | \`title\` (3.3) | Page titles in the "Weite" look | \`--font-size-title\`: 32 px, 40 / 44 / 48 px from 1024 / 1440 / 1920 px |
@@ -140,9 +141,9 @@ input for a header-specific override.
     },
     size: {
       control: 'inline-radio',
-      options: ['compact', 'default', 'comfortable', 'title', 'display', 'auth'],
+      options: ['compact', 'secondary', 'default', 'comfortable', 'title', 'display', 'auth'],
       description:
-        'Visual scale of the whole header block. 3.3: `title` (32–48 px page title), `display` (40–72 px greeting, weight 700), `auth` (30 / 34 px sign-in heading) — responsive, from the type-scale tokens.',
+        'Visual scale of the whole header block. 3.3: `title` (32–48 px page title), `display` (40–72 px greeting, weight 700), `auth` (30 / 34 px sign-in heading) — responsive, from the type-scale tokens. 3.9: `secondary` (20 px, the `compact` spacing) for a second title under the main one.',
       table: { defaultValue: { summary: 'default' } },
     },
     showDivider: {
@@ -509,3 +510,76 @@ export const AuthTitle: Story = {
   }),
 };
 
+
+/** 3.9 (AS-25): a second title under the page's main one, 20 px with the `compact` spacing. */
+export const Secondary: Story = {
+  name: 'Secondary (3.9)',
+  args: {
+    title: 'Household members',
+    subtitle: 'Two people share this household',
+    level: 2,
+    size: 'secondary',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`size="secondary"`: the title at `--font-size-xl` (20 px, line height 25 px, bold), the subtitle at 14 px, with the `compact` gaps and padding. The heading level stays a separate choice (`level`).',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `<lc-page-header [title]="title" [subtitle]="subtitle" [level]="level" [size]="size" />`,
+  }),
+};
+
+/**
+ * 3.9 (AS-25): the bilingual error page: the German `<h1>` on the title scale
+ * and the English `<h2>` under it at 20 px, each with its own `lang`.
+ */
+export const BilingualPage: Story = {
+  name: 'Bilingual page (3.9)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A static error page in two languages: `size="title"` for the German `<h1>`, `size="secondary"` for the English `<h2>` below it. `lang` on each header, so screen readers switch the voice and hyphenation follows the language. Both `noPaddingX`, in a padded page.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-direction: column;">
+        <lc-page-header lang="de" [level]="1" size="title" title="LifeCorner ist gerade nicht erreichbar"
+                        subtitle="Wir arbeiten daran. Versuch es in ein paar Minuten noch einmal." [noPaddingX]="true" />
+        <lc-page-header lang="en" [level]="2" size="secondary" title="Can't reach LifeCorner right now"
+                        subtitle="We're working on it. Try again in a few minutes." [noPaddingX]="true" />
+      </div>
+    `,
+  }),
+};
+
+/** 3.9 (AS-25): `secondary` at every heading level, with and without a subtitle, in English and German. */
+export const SecondaryLevels: Story = {
+  name: 'Secondary at every level (3.9)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`size="secondary"` with `level` 1, 2 and 3 (`<h1>`, `<h2>`, `<h3>`): the same 20 px title. "Haushaltsmitgliederverwaltung" is 296.5 px wide at 20 px and fits a 360 px phone on one line; a longer word hyphenates in the page language.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <lc-page-header lang="en" [level]="1" size="secondary" title="Settings" />
+        <lc-page-header lang="de" [level]="2" size="secondary" title="Haushaltsmitgliederverwaltung"
+                        subtitle="Wer gehört zu deinem Haushalt?" />
+        <lc-page-header lang="en" [level]="3" size="secondary" title="Notifications"
+                        subtitle="Choose what we tell you about" />
+      </div>
+    `,
+  }),
+};

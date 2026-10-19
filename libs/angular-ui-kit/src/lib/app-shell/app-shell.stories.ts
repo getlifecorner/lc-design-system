@@ -9,6 +9,8 @@ import { BottomNavComponent } from '../bottom-nav/bottom-nav.component';
 import { AvatarGroupComponent } from '../avatar-group/avatar-group.component';
 import { ListComponent } from '../list/list.component';
 import { SkeletonComponent } from '../skeleton/skeleton.component';
+import { FooterComponent } from '../footer/footer.component';
+import { CharacterComponent } from '../character/character.component';
 
 const nav = [
   { id: 'today', icon: 'sun', label: 'Heute', route: '/', displayOrder: 1 },
@@ -25,8 +27,11 @@ const placeholder = (text: string, height = 160) =>
               display: flex; align-items: center; justify-content: center; padding: 16px; text-align: center;
               font-size: 13px; color: var(--color-text-tertiary);">${text}</div>`;
 
-/** Today in the "Weite" frame: every slot of the shell and the page's right column. */
-const todayTemplate = `
+/**
+ * Today in the "Weite" frame: every slot of the shell and the page's right
+ * column. `figure` goes into the shell's figure slot (3.9; empty: as before).
+ */
+const today = (figure = '') => `
   <lc-app-shell [horizon]="horizon">
     <lc-header shell-header variant="transparent" [sticky]="false" title="Produkt" titleTag="span"
                subtitle="Unser Haushalt" homeAriaLabel="Produkt – Startseite"
@@ -52,11 +57,13 @@ const todayTemplate = `
         <lc-list [items]="members" size="lg" [showDividers]="true" />
       </section>
     </lc-app-page>
-    <lc-bottom-nav shell-bottom-nav variant="floating" ariaLabel="Hauptnavigation" [items]="nav" activeRoute="/" />
+    ${figure}<lc-bottom-nav shell-bottom-nav variant="floating" ariaLabel="Hauptnavigation" [items]="nav" activeRoute="/" />
   </lc-app-shell>
   <style>
     @media (min-width: 1280px) { .story-member-row { display: none; } }
   </style>`;
+
+const todayTemplate = today();
 
 const meta: Meta<AppShellComponent> = {
   title: 'Layout/App Shell',
@@ -65,7 +72,7 @@ const meta: Meta<AppShellComponent> = {
     moduleMetadata({
       imports: [
         AppPageComponent, HeaderComponent, SidenavComponent, SidenavPlaceholderComponent, BottomNavComponent,
-        AvatarGroupComponent, ListComponent, SkeletonComponent,
+        AvatarGroupComponent, ListComponent, SkeletonComponent, FooterComponent, CharacterComponent,
       ],
     }),
   ],
@@ -73,7 +80,7 @@ const meta: Meta<AppShellComponent> = {
     horizon: {
       control: 'boolean',
       description:
-        'Close the page with the "Weite" horizon (`.lc-horizon`): full width below the side navigation and the page, filling the rest of the screen; the footer and the floating bar rest on its land',
+        'Close the page with the "Weite" horizon (`.lc-horizon`): full width below the side navigation and the page, filling the rest of the screen; the footer (in a row of its own, which adds to the land) and the floating bar rest on its land, and `[shell-horizon-figure]` stands on its line',
       table: { defaultValue: { summary: 'false' } },
     },
   },
@@ -91,9 +98,10 @@ The frame of an app: header, side navigation, page, bottom bar, footer and the h
 | \`[shell-nav]\` | hidden | a docked column, 240 px (248 from 1440, 280 from 1920; \`--lc-app-shell-nav-width\`), sticky once the header is gone. Use \`lc-sidenav mode="docked" [isOpen]="true" width="100%" [mobileBreakpoint]="0"\` |
 | default | the page | the page, up to the window's right edge |
 | \`[shell-bottom-nav]\` | \`lc-bottom-nav\` (fixed); the shell keeps 112 px + the inset free at the end (\`--lc-app-shell-bottom-clearance\`) | hidden |
-| \`[shell-footer]\` | after the page, or on the horizon's land | the same |
+| \`[shell-footer]\` | after the page; with \`horizon\` in a row of its own below it, in the land's colour (\`--color-land-3\`), so the land grows by the footer's height (3.9) | the same |
+| \`[shell-horizon-figure]\` | with \`horizon\`: Edu (\`lc-character\`, \`<img alt="">\`, \`<picture>\` or an inline \`<svg>\`) on the line, left of the sun, as a direct child of \`.lc-horizon\`; 64 px (3.9) | 96 px, 128 px from 1920 px |
 
-Input \`horizon\` closes the page with the horizon block (\`.lc-horizon\`, from the kit's styles).
+Input \`horizon\` closes the page with the horizon block (\`.lc-horizon\`, from the kit's styles). Its land is 112 px on a phone and 72 · 80 · 96 · 128 px from 1024 · 1280 · 1440 · 1920 px (3.9, LK-12; \`--lc-horizon-land\`). With a \`[shell-footer]\` the footer's height is added below that, so a page with a footer needs no override: \`--lc-horizon-land\` is the land above the footer. The horizon is \`aria-hidden\` (decoration): a figure in it gets \`alt=""\` and nothing focusable; the footer is outside it and stays reachable.
 
 **\`lc-app-page\`** — the page inside the shell: \`<main [id]="mainId">\` (default \`main\`) with the content as a column (24 px apart, 40 px from 1024 px), centred and at most \`contentMaxWidth\` wide (880 px; side padding 24 · 32 · 48 · 56 · 72 · 96 px). \`[page-aside]\` is the right column: an \`<aside>\` after \`<main>\`, docked to the window's right edge from 1280 px (360 · 400 · 460 px; \`--lc-app-page-aside-width\`) with a fading tint and hairline that start behind the header (set a changed \`--lc-app-page-aside-width\` on the shell, so both parts line up), hidden below 1280 px (show a narrow equivalent inside main). It renders only with \`asideLabelledby\` or \`asideAriaLabel\`.
 
@@ -296,4 +304,66 @@ export const LazySideNavigationGerman: Story = {
   name: 'Lazy side navigation (German)',
   args: { horizon: true },
   render: (args) => ({ props: { ...args, lazyNav: lazyNav(DE) }, template: lazyNavTemplate }),
+};
+
+/**
+ * 3.9 (LK-12, AS-29): a public sign-in page with the horizon, Edu on its line
+ * and the compact footer in its own row below the land: the land grows by the
+ * footer's height, with no `--lc-horizon-land` override. The figure's file
+ * follows the toolbar theme.
+ */
+export const FooterOnTheHorizon: Story = {
+  name: 'Footer on the horizon (3.9)',
+  args: { horizon: true },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'No side navigation and no bottom bar (a public frame). `<img shell-horizon-figure alt="">` stands on the line; `lc-footer shell-footer [compact]="true"` takes the last row, painted in `--color-land-3`, so the land reads as the horizon\'s 112 · 72 · 80 px (360 · 1024 · 1280) plus the footer. At 360 px the footer wraps to two rows and the land grows with it.',
+      },
+    },
+  },
+  render: (args, { globals }) => ({
+    props: { ...args, figureSrc: `/assets/character/hello-${globals['theme'] === 'light' ? 'light' : 'dark'}.svg` },
+    template: `
+      <lc-app-shell [horizon]="horizon">
+        <lc-header shell-header variant="transparent" [sticky]="false" title="LifeCorner" titleTag="span"
+                   homeAriaLabel="LifeCorner – home" [showUserMenu]="false" />
+        <lc-app-page contentMaxWidth="400px">
+          <h1 class="lc-auth-title" style="margin: 0;">Sign in</h1>
+          ${placeholder('‹Sign-in form›', 160)}
+        </lc-app-page>
+        <img shell-horizon-figure [src]="figureSrc" alt="" width="64" height="64" />
+        <lc-footer shell-footer variant="default" [compact]="true" [showBorder]="false" copyright="© 2026 LifeCorner">
+          <a lcButton variant="link" size="lg" href="#privacy">Privacy policy</a>
+          <a lcButton variant="link" size="lg" href="#legal">Legal notice</a>
+        </lc-footer>
+      </lc-app-shell>`,
+  }),
+};
+
+/**
+ * 3.9 (AS-29): Today with Edu (`comforts`) on the shell's horizon and no
+ * footer: the land keeps its default height.
+ */
+export const FigureOnTheHorizon: Story = {
+  name: 'Figure on the horizon (3.9)',
+  args: { horizon: true },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`<lc-character shell-horizon-figure pose="comforts" />` in the shell: projected as a direct child of `.lc-horizon`, sized by the horizon (64 px, 96 px from 1024 px, 128 px from 1920 px) and placed left of the sun with his feet on the line. Without a footer the land is the default (112 · 72 · 80 px at 360 · 1024 · 1280).',
+      },
+    },
+  },
+  render: (args) => ({
+    props: {
+      ...args,
+      nav,
+      members,
+      memberAvatars: members.map((m) => ({ name: m.label, color: m.avatarColor })),
+    },
+    template: today('<lc-character shell-horizon-figure pose="comforts" />\n    '),
+  }),
 };

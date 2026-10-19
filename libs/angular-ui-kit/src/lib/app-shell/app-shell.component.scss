@@ -56,8 +56,8 @@
   display: none;
 }
 
-// The horizon fills the rest of the screen, full-bleed (no insets); the
-// footer shares its row and rests on the land.
+// The horizon fills the rest of the screen, full-bleed (no insets). Without
+// the horizon the footer ends the page in the same area.
 .lc-app-shell__horizon {
   grid-area: end;
   min-width: 0;
@@ -71,9 +71,21 @@
   padding-right: env(safe-area-inset-right, 0px);
 }
 
+// With the horizon (3.9, LK-12) the footer takes a last row of its own below
+// it, full width, in the land's last colour: the land reads as the horizon's
+// land plus the footer, with no seam (the land's gradient ends in land-3), and
+// the line never meets the footer however tall it wraps. An empty footer has
+// `display: none`, so its row is 0 px.
+.lc-app-shell--horizon {
+  grid-template-rows: auto auto 1fr auto;
+}
+
 .lc-app-shell--horizon .lc-app-shell__footer {
   position: relative;
   z-index: 1;
+  grid-row: 4;
+  grid-column: 1 / -1;
+  background-color: var(--color-land-3);
 }
 
 .lc-app-shell__footer:empty,

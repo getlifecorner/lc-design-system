@@ -233,6 +233,22 @@
     }
   }
 
+  // A second title under the page's main one (3.9, AS-25), e.g. the English
+  // <h2> under a German <h1> on a bilingual page: the compact rhythm with a
+  // 20 px title.
+  &--size-secondary {
+    --lc-density-gap-md: 0.5rem;
+    --lc-density-gap-sm: 0.375rem;
+    --lc-density-padding-md: 0.75rem;
+
+    .lc-page-header__title {
+      font-size: var(--font-size-xl, 1.25rem);
+    }
+    .lc-page-header__subtitle {
+      font-size: var(--lc-page-header-subtitle-font-size, var(--font-size-sm, 0.875rem));
+    }
+  }
+
   &--size-default {
     .lc-page-header__title {
       font-size: var(--font-size-2xl, 1.5rem);

@@ -255,6 +255,28 @@ a.btn {
   }
 }
 
+// Flush link (3.9, AS-26): a link-variant button that sits flush with the
+// content edge, e.g. "Resend code" under a paragraph. Only the inline padding
+// goes; the block padding (and so the height) stays, and the box never gets
+// smaller than the 44 × 44 px target, even for a two-letter label. The label
+// and every wrapped line start at the edge. Hook: `--lc-btn-flush-align`
+// (`start` by default, or `end`) picks the edge; `end` puts every line at the
+// end edge, for a link at the end of a row (`justify-content: space-between`).
+// It inherits, so set it on the link, the `lc-button` host or an ancestor.
+// The small radius shapes the focus ring around the text (it reaches 4 px
+// past the edge: leave that room). (0,3,0) beats the size classes. With
+// `inline` the inline variant wins: it is excluded here, since a <button>
+// lays out as inline-block even with `display: inline` and would take the
+// minimum box.
+.btn-link.btn-flush:not(.btn-icon-only, .btn-inline) {
+  padding-inline: 0;
+  min-width: var(--size-min-touch-width, 2.75rem);
+  min-height: var(--size-min-touch-height, 2.75rem);
+  justify-content: var(--lc-btn-flush-align, start);
+  text-align: var(--lc-btn-flush-align, start);
+  border-radius: var(--border-radius-sm);
+}
+
 // Loading Spinner
 .loading-spinner {
   display: inline-block;

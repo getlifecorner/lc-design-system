@@ -49,11 +49,13 @@ describe('.lc-horizon (LK-1)', () => {
     expect(base).toMatch(/--_lc-horizon-x:\s*var\(--lc-horizon-sun-x, 72%\)/);
   });
 
+  // The land steps changed in 3.9 (LK-12, request 006): 100 · 120 · 140 · 184 px
+  // became 72 · 80 · 96 · 128 px; the sun radii are unchanged.
   it.each([
-    [1024, '100px', '70px'],
-    [1280, '120px', '90px'],
-    [1440, '140px', '120px'],
-    [1920, '184px', '166px'],
+    [1024, '72px', '70px'],
+    [1280, '80px', '90px'],
+    [1440, '96px', '120px'],
+    [1920, '128px', '166px'],
   ])('uses Today’s desktop geometry from %s px', (width, land, radius) => {
     const step = block(`@media (min-width: ${width}px) {\n  .lc-horizon {`);
     expect(step).toContain(`var(--lc-horizon-land, ${land})`);

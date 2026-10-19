@@ -63,6 +63,16 @@ export class ButtonLinkComponent {
    * size, weight and line-height). Pair with `variant="link"`.
    */
   readonly inline = input(false);
+  /**
+   * Drop the inline padding so a `variant="link"` link sits flush with the
+   * content edge: the label starts at the edge, and the link keeps its height
+   * and a 44 × 44 px minimum target. At the end edge of a row, set the CSS
+   * hook `--lc-btn-flush-align: end` (default `start`) on the link or an
+   * ancestor: every line of the label then ends at the edge. Ignored on other
+   * variants and with `iconOnly` (3.9, AS-26).
+   * @default false
+   */
+  readonly flush = input(false);
 
   /** Classes on the anchor; merged with the consumer's own `class`. */
   protected readonly hostClasses = computed(() => {
@@ -70,6 +80,7 @@ export class ButtonLinkComponent {
     if (this.iconOnly()) classes.push('btn-icon-only');
     if (this.fullWidth()) classes.push('btn-full-width');
     if (this.inline()) classes.push('btn-inline');
+    if (this.flush()) classes.push('btn-flush');
     return classes.join(' ');
   });
 }

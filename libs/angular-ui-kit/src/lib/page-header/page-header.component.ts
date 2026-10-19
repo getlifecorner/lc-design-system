@@ -11,6 +11,9 @@ import { IconComponent } from '@lifecorner/angular-ui-kit/icon';
 /**
  * Visual size of the page header.
  * - `compact`     — dense data-tool pages and section headings (18 px)
+ * - `secondary`   — a second title under the page's main one, e.g. the other
+ *                   language of a bilingual page (20 px, `--font-size-xl`;
+ *                   the `compact` spacing; 3.9, AS-25)
  * - `default`     — standard app pages (24 px)
  * - `comfortable` — landing-page hero feel (30 px)
  * - `title`       — the "Weite" page title: 32 px on phones, 40 / 44 / 48 px
@@ -20,7 +23,7 @@ import { IconComponent } from '@lifecorner/angular-ui-kit/icon';
  * - `auth`        — the sign-in and registration `<h1>`: 30 px, 34 px from
  *                   1024 px (`--font-size-auth-title`)
  */
-export type PageHeaderSize = 'compact' | 'default' | 'comfortable' | 'title' | 'display' | 'auth';
+export type PageHeaderSize = 'compact' | 'secondary' | 'default' | 'comfortable' | 'title' | 'display' | 'auth';
 
 /**
  * Page header — top-of-page title block with optional subtitle,
@@ -117,6 +120,8 @@ export class PageHeaderComponent {
   /**
    * Visual size of the page header.
    * - `compact`     — dense data-tool pages and section headings (18 px)
+   * - `secondary`   — a second title under the main one, e.g. the other
+   *                   language of a bilingual page (20 px, compact spacing)
    * - `default`     — standard app pages (24 px)
    * - `comfortable` — landing-page hero feel (30 px)
    * - `title`       — page title on the responsive title scale, 32–48 px

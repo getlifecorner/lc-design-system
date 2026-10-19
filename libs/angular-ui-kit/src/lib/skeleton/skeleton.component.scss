@@ -15,6 +15,13 @@
   );
   background-size: 200% 100%;
   animation: lc-skeleton-shimmer 1.5s infinite ease-in-out;
+  // --lc-skeleton-height (3.9, AS-27): the fill's height from CSS, e.g. in a
+  // container query or in `cqi`, so a placeholder follows the tiles it stands
+  // for. It wins over the `height` input (the inline height stays, min and max
+  // override it); unset, these are no-ops. Height only: a circle becomes an
+  // oval unless the width follows too.
+  min-height: var(--lc-skeleton-height, 0px);
+  max-height: var(--lc-skeleton-height, none);
 }
 
 // AS-7: the shimmer never ends, so under reduced motion the placeholder is a

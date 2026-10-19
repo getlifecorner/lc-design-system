@@ -31,7 +31,7 @@ empty block \`aria-hidden="true"\`.
 
 | Input (custom property, on the block or an ancestor) | Default |
 |---|---|
-| \`--lc-horizon-land\` — height of the land below the line | 112 px (phone), 100 · 120 · 140 · 184 px from 1024 · 1280 · 1440 · 1920 px; add the footer's height when a footer sits on the land (136 px on a phone) |
+| \`--lc-horizon-land\` — height of the land below the line | 112 px (phone), 72 · 80 · 96 · 128 px from 1024 · 1280 · 1440 · 1920 px (3.9, LK-12; 3.8: 100 · 120 · 140 · 184); add the footer's height when a footer sits on the land (136 px on a phone). In \`lc-app-shell\` with a \`[shell-footer]\` the shell adds the footer's height below it |
 | \`--lc-horizon-sun-radius\` | 58 px (phone), 70 · 90 · 120 · 166 px |
 | \`--lc-horizon-sun-x\` — the sun's centre from the left edge | 72% |
 | \`--lc-horizon-figure-size\` — the figure's size in \`.lc-horizon__figure\` | 64 px (phone), 96 px from 1024 px, 128 px from 1920 px |
@@ -43,9 +43,11 @@ empty block \`aria-hidden="true"\`.
 \`.lc-horizon__land\`. The slot sizes him (the \`size\` input doesn't apply); his
 feet stand on the line (the box bottom lies 12.5 % of his size below it, where
 the standing poses' feet end), and the block's height above the line becomes
-max(sun + 22 px, figure + 8 px), so a block with him is 204 px tall at 1024 px
-instead of 192 px. A block without the figure renders exactly as before. He is
-decorative and never a pointer target; forced-colour modes hide him.
+max(sun + 22 px, figure + 8 px), so a block with him is 176 px tall at 1024 px
+instead of 164 px. A block without the figure renders exactly as before. He is
+decorative and never a pointer target; forced-colour modes hide him. In
+\`lc-app-shell\` (3.9, AS-29) the attribute \`shell-horizon-figure\` does the same:
+\`<lc-character shell-horizon-figure pose="comforts" />\`.
 
 \`\`\`html
 <div class="lc-horizon" aria-hidden="true">
@@ -123,7 +125,7 @@ export const Desktop: Story = {
     docs: {
       description: {
         story:
-          "A wide page with Today's 1280 px geometry set explicitly (land 120 px, sun 90 px) and the sun moved under the content column with `--lc-horizon-sun-x`.",
+          "A wide page with its geometry set explicitly (land 120 px, sun 90 px: 3.8's 1280 px defaults) and the sun moved under the content column with `--lc-horizon-sun-x`.",
       },
     },
   },

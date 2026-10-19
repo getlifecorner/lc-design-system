@@ -50,6 +50,12 @@ same variants and sizes and works without JavaScript (see **Components / Button 
     loading: { control: 'boolean', description: 'Shows a loading spinner and disables the button' },
     fullWidth: { control: 'boolean', description: 'Stretches the button to full container width' },
     iconOnly: { control: 'boolean', description: 'Renders as a square icon-only button' },
+    flush: {
+      control: 'boolean',
+      description:
+        '3.9 (AS-26): drops the inline padding so a `variant="link"` button sits flush with the content edge; it keeps its height and a 44 × 44 px minimum target. The label starts at the edge; `--lc-btn-flush-align: end` puts it at the end edge (a link at the end of a row). Ignored on other variants and with `iconOnly`',
+      table: { defaultValue: { summary: 'false' } },
+    },
     type: {
       control: 'select',
       options: ['button', 'submit', 'reset'],
@@ -180,6 +186,48 @@ export const InlineWithoutUnderline: Story = {
         </tbody>
       </table>`,
   }),
+};
+
+/**
+ * 3.9 (AS-26): `flush` on a `variant="link"` button: the label starts at the
+ * content edge, the height (46.5 px at `lg`) and the 44 × 44 px minimum target
+ * stay. Default, disabled and loading (the spinner at the edge).
+ */
+export const FlushLink: Story = {
+  name: 'Flush link',
+  args: { variant: 'link', size: 'lg', flush: true },
+  argTypes: {
+    // The hook, documented here (it is CSS, not an input).
+    '--lc-btn-flush-align': {
+      control: false,
+      description:
+        'CSS hook on `lc-button` / `a[lcButton]` with `flush`: the edge the label sits on, `start` or `end`. `end` puts the label and every wrapped line at the end edge, for a button at the end of a row (`justify-content: space-between`). It inherits: set it on the `lc-button` host or an ancestor, no `::ng-deep`. The end-edge row is in Button Link › Flush.',
+      table: { category: 'CSS hooks', defaultValue: { summary: 'start' } },
+    },
+  } as Meta<ButtonComponent>['argTypes'],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`lc-button variant="link" size="lg" [flush]="true"` under a paragraph in a 312 px column: default, `disabled` (opacity 0.5) and `loading`. All three start at the paragraph\'s x. Hover underlines the label, `:focus-visible` draws the 2 px ring with a 10 px radius, 4 px past the edge.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div lang="de" style="width: 312px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
+        <p style="margin: 0 0 8px; font-size: 16px; line-height: 1.5; color: var(--color-text-primary);">Wir haben dir einen Code geschickt.</p>
+        <lc-button [variant]="variant" [size]="size" [flush]="flush" (clicked)="clicked($event)">Code erneut senden</lc-button>
+        <lc-button [variant]="variant" [size]="size" [flush]="flush" [disabled]="true" disabledReason="Erst in 30 Sekunden wieder möglich">Code erneut senden</lc-button>
+        <lc-button [variant]="variant" [size]="size" [flush]="flush" [loading]="true">Code wird gesendet</lc-button>
+      </div>`,
+  }),
+  play: async ({ canvasElement }) => {
+    const buttons = within(canvasElement).getAllByRole('button');
+    await expect(buttons).toHaveLength(3);
+    for (const button of buttons) await expect(button.classList.contains('btn-flush')).toBe(true);
+  },
 };
 
 export const Danger: Story = {

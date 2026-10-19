@@ -36,6 +36,13 @@ Skeleton loader component for placeholder loading states.
 **Colours:** the fill is \`--color-skeleton\` with the shimmer band \`--color-skeleton-highlight\`
 (both visible on the white light page and on cards). Override per use with the hooks
 \`--lc-skeleton-bg\` and \`--lc-skeleton-highlight\` on the element or an ancestor.
+
+**Height from CSS (3.9, AS-27):** \`--lc-skeleton-height\` sets the fill's height from a
+stylesheet, e.g. in a container query or in \`cqi\`, so a placeholder follows the tiles it
+stands for. It wins over the \`height\` input (which stays the default) and works for every
+variant; it changes only the height, so a circle becomes an oval unless its width follows.
+Set it on the \`lc-skeleton\` element (a class): set on a wrapper, it reaches every skeleton
+inside. See *Height from container*.
 `,
       },
     },
@@ -155,5 +162,52 @@ export const DashboardGrid: Story = {
           <div style="margin-top: 8px;"><lc-skeleton variant="line" width="40%"></lc-skeleton></div>
         </div>
       </div>`,
+  }),
+};
+
+/**
+ * 3.9 (AS-27): `--lc-skeleton-height` from a container query. The tiles are
+ * 88 px across and 59 px once the list is narrower than 21.5rem and they stack;
+ * the heading line is 14 px, 20 px from a 40rem container.
+ */
+export const HeightFromContainer: StoryObj<SkeletonComponent & { '--lc-skeleton-height': string }> = {
+  name: 'Height from container',
+  argTypes: {
+    '--lc-skeleton-height': {
+      control: false,
+      description:
+        'CSS hook on `lc-skeleton`: the fill\'s height from CSS (a container query, `cqi`). Wins over the `height` input; unset, the `height` input applies, else the variant default. Set it on the element: on a wrapper it reaches every skeleton inside.',
+      table: { category: 'CSS hooks', defaultValue: { summary: 'unset (the height input)' } },
+    },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The tiles keep `height="88px"`; below a 21.5rem list they stack and `--lc-skeleton-height: 59px` (in `@container (max-width: 21.5rem)`) wins over it. The heading line keeps `height="14px"` and gets `--lc-skeleton-height: 20px` from `@container (min-width: 40rem)`. At 360 px: tiles 59 px, stacked, line 14 px; from 1024 px: tiles 88 px in a row, line 20 px.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div class="story-hfc">
+        <div style="width: 60%"><lc-skeleton class="story-hfc__line" height="14px" borderRadius="6px" /></div>
+        <div class="story-hfc__tiles">
+          <lc-skeleton class="story-hfc__tile" variant="rect" height="88px" borderRadius="18px" />
+          <lc-skeleton class="story-hfc__tile" variant="rect" height="88px" borderRadius="18px" />
+          <lc-skeleton class="story-hfc__tile" variant="rect" height="88px" borderRadius="18px" />
+        </div>
+      </div>
+      <style>
+        .story-hfc { container-type: inline-size; display: flex; flex-direction: column; gap: 12px; }
+        .story-hfc__tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+        @container (max-width: 21.5rem) {
+          .story-hfc__tiles { grid-template-columns: minmax(0, 1fr); }
+          .story-hfc__tile { --lc-skeleton-height: 59px; }
+        }
+        @container (min-width: 40rem) {
+          .story-hfc__line { --lc-skeleton-height: 20px; }
+        }
+      </style>`,
   }),
 };

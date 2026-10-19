@@ -29,6 +29,7 @@ import {
 } from '@lifecorner/angular-ui-kit';
 import { Probe36 } from './probe-36';
 import { Probe38 } from './probe-38';
+import { Probe39 } from './probe-39';
 
 /**
  * The broad page (route `''`): every component, imported from the PRIMARY
@@ -62,6 +63,8 @@ import { Probe38 } from './probe-38';
     Probe36,
     // 3.8 (request 005)
     Probe38,
+    // 3.9 (request 006)
+    Probe39,
   ],
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

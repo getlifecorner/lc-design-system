@@ -26,9 +26,11 @@
  *
  * Inputs (custom properties, set on the block or any ancestor):
  *   --lc-horizon-land        height of the land below the line
- *                            (default Today's: 112 px phone, 100 · 120 · 140 · 184 px
- *                            from 1024 · 1280 · 1440 · 1920; with the compact footer
- *                            on the land add its height, e.g. 136 px on the phone)
+ *                            (default Today's: 112 px phone, 72 · 80 · 96 · 128 px
+ *                            from 1024 · 1280 · 1440 · 1920 (3.9, LK-12); with the
+ *                            compact footer on the land add its height, e.g. 136 px
+ *                            on the phone. Inside lc-app-shell with a [shell-footer]
+ *                            the footer's height is added below it by the shell.)
  *   --lc-horizon-sun-radius  the sun's radius (58 px phone, 70 · 90 · 120 · 166 px)
  *   --lc-horizon-sun-x       the sun's centre from the block's left edge (72%)
  *   --lc-horizon-figure-size the figure's size in .lc-horizon__figure
@@ -44,6 +46,9 @@
  *   <div class="lc-horizon" aria-hidden="true">
  *     <lc-character class="lc-horizon__figure" pose="comforts" />
  *   </div>
+ *
+ * In lc-app-shell (3.9, AS-29) the attribute `shell-horizon-figure` alone does
+ * the same: the shell projects the element as a direct child of its horizon.
  *
  * Colours: --color-background-low, --color-horizon-line, --color-land-1…3,
  * --color-sun-1…3, --color-sun-ring, --color-sun-halo (theme tokens).
@@ -94,27 +99,28 @@
     linear-gradient(180deg, transparent, var(--color-background-low))
       0 0 / 100% calc(100% - var(--_lc-horizon-land)) no-repeat;
 
-  // Desktop steps of Today's horizon (app-shell 12.2). A page sets its own
-  // geometry through --lc-horizon-land / --lc-horizon-sun-radius.
+  // Desktop steps of Today's horizon (app-shell 12.2; the land 72 · 80 · 96 ·
+  // 128 px since 3.9, LK-12). A page sets its own geometry through
+  // --lc-horizon-land / --lc-horizon-sun-radius.
   @media (min-width: 1024px) {
-    --_lc-horizon-land: var(--lc-horizon-land, 100px);
+    --_lc-horizon-land: var(--lc-horizon-land, 72px);
     --_lc-horizon-r: var(--lc-horizon-sun-radius, 70px);
     --_lc-horizon-fig: var(--lc-horizon-figure-size, 96px);
     --_lc-horizon-fig-gap: var(--lc-horizon-figure-gap, 24px);
   }
 
   @media (min-width: 1280px) {
-    --_lc-horizon-land: var(--lc-horizon-land, 120px);
+    --_lc-horizon-land: var(--lc-horizon-land, 80px);
     --_lc-horizon-r: var(--lc-horizon-sun-radius, 90px);
   }
 
   @media (min-width: 1440px) {
-    --_lc-horizon-land: var(--lc-horizon-land, 140px);
+    --_lc-horizon-land: var(--lc-horizon-land, 96px);
     --_lc-horizon-r: var(--lc-horizon-sun-radius, 120px);
   }
 
   @media (min-width: 1920px) {
-    --_lc-horizon-land: var(--lc-horizon-land, 184px);
+    --_lc-horizon-land: var(--lc-horizon-land, 128px);
     --_lc-horizon-r: var(--lc-horizon-sun-radius, 166px);
     --_lc-horizon-fig: var(--lc-horizon-figure-size, 128px);
   }
@@ -135,7 +141,7 @@
 // Edu on the horizon line (3.8, G-4): left of the sun, the feet on the line.
 // Only a block WITH the figure gets the taller minimum; without it the block
 // renders exactly as before.
-.lc-horizon:has(> .lc-horizon__figure) {
+@mixin figure-min-height {
   min-height: calc(var(--_lc-horizon-land) + max(var(--_lc-horizon-r) + 22px, var(--_lc-horizon-fig) + 8px));
 }
 
@@ -143,7 +149,7 @@
 // Its right edge sits the gap left of the sun's left edge; the box bottom lies
 // 12.5 % of its size below the line, where the standing poses' feet end
 // (y 87.5 of 100). Px, not rem: at 200 % text the figure keeps its size.
-.lc-horizon__figure {
+@mixin figure {
   --lc-character-size: var(--_lc-horizon-fig);
 
   position: absolute;
@@ -160,8 +166,36 @@
 }
 
 // A <picture> or an element holding an inline <svg>.
-.lc-horizon__figure > :is(img, svg) {
+@mixin figure-fill {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+.lc-horizon:has(> .lc-horizon__figure) {
+  @include figure-min-height;
+}
+
+.lc-horizon__figure {
+  @include figure;
+}
+
+.lc-horizon__figure > :is(img, svg) {
+  @include figure-fill;
+}
+
+// lc-app-shell's figure slot (3.9, AS-29): the attribute alone places the
+// figure, with the same rules and the same specificity as .lc-horizon__figure
+// (`:where` adds none). Here, not in the shell's own stylesheet: the slot's
+// element belongs to the page's view, and `:has()` must see it.
+.lc-horizon:has(> [shell-horizon-figure]) {
+  @include figure-min-height;
+}
+
+.lc-horizon > :where([shell-horizon-figure]) {
+  @include figure;
+}
+
+.lc-horizon > :where([shell-horizon-figure]) > :is(img, svg) {
+  @include figure-fill;
 }

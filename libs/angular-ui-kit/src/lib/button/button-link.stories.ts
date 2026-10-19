@@ -26,7 +26,7 @@ links to social profiles.
   markup is a plain \`<a class="btn btn-primary btn-lg" href="…">\`, so it works with
   JavaScript disabled. \`routerLink\` may sit on the same anchor for in-app navigation.
 - Same variants (\`primary | secondary | outline | ghost | link | danger | warning | info\`),
-  sizes (\`xs | sm | md | lg\`) and modifiers (\`fullWidth\`, \`iconOnly\`, \`inline\`) as
+  sizes (\`xs | sm | md | lg\`) and modifiers (\`fullWidth\`, \`iconOnly\`, \`inline\`, \`flush\`) as
   \`lc-button\`, from the same stylesheet. Icon slots: \`[slot='icon-before']\`,
   \`[slot='icon-after']\`.
 - Labels wrap instead of overflowing the viewport (WCAG 1.4.10 reflow).
@@ -55,6 +55,12 @@ height + 2 × 1 px border) and meets the 44 px target; \`md\` is 42 px, \`sm\` 3
     fullWidth: { control: 'boolean', description: 'Stretches the link to the full container width' },
     iconOnly: { control: 'boolean', description: 'Square icon-only link (needs aria-label)' },
     inline: { control: 'boolean', description: 'Flows with surrounding text (pair with variant="link")' },
+    flush: {
+      control: 'boolean',
+      description:
+        '3.9 (AS-26): drops the inline padding so a `variant="link"` link sits flush with the content edge; it keeps its height and a 44 × 44 px minimum target. The label starts at the edge; `--lc-btn-flush-align: end` puts it at the end edge (a link at the end of a row). Ignored on other variants and with `iconOnly`',
+      table: { defaultValue: { summary: 'false' } },
+    },
   },
 };
 
@@ -210,4 +216,56 @@ export const InlineLinkWrapping: Story = {
       </div>
     `,
   }),
+};
+
+/**
+ * 3.9 (AS-26): `flush` on a `variant="link"` link drops the inline padding, so
+ * the label starts at the content edge, like the paragraph above it. The link
+ * keeps its height (46.5 px at `lg`) and a 44 × 44 px minimum target. At the
+ * end edge of a row, `--lc-btn-flush-align: end` puts every line at that edge.
+ */
+export const Flush: Story = {
+  argTypes: {
+    // The hook, documented here (it is CSS, not an input).
+    '--lc-btn-flush-align': {
+      control: false,
+      description:
+        'CSS hook on `a[lcButton]` / `lc-button` with `flush`: the edge the label sits on, `start` or `end`. `end` puts the label and every wrapped line at the end edge, for a link at the end of a row (`justify-content: space-between`). It inherits: set it on the link, the `lc-button` host or an ancestor, no `::ng-deep`.',
+      table: { category: 'CSS hooks', defaultValue: { summary: 'start' } },
+    },
+  } as Meta<ButtonLinkComponent>['argTypes'],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A sign-in step at 360 px (a 312 px column): the paragraph and the three flush `lg` links start at the same x, also the one with an icon and the two-letter "Ja", which stays 44 px wide. The fourth link is without `flush`, for comparison: its label starts 24 px in. Below, a row with `justify-content: space-between`: "Neu senden in 25 s" on the start edge and "Anders anmelden" with `--lc-btn-flush-align: end` on the end edge; it wraps to two lines, and both end at the row\'s edge. The focus ring reaches 4 px past the edge, so leave that room (no `overflow: hidden` at the edge).',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div lang="de" style="width: 312px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
+        <p style="margin: 0 0 8px; font-size: 16px; line-height: 1.5; color: var(--color-text-primary);">Wir haben dir einen Code geschickt.</p>
+        <a lcButton variant="link" size="lg" [flush]="true" href="#code">Code erneut senden</a>
+        <a lcButton variant="link" size="lg" [flush]="true" href="#anderer-weg">
+          <lc-icon slot="icon-before" name="arrow-left" size="sm" [decorative]="true" />
+          Anderen Weg wählen
+        </a>
+        <a lcButton variant="link" size="lg" [flush]="true" href="#ja">Ja</a>
+        <a lcButton variant="link" size="lg" href="#ohne">Ohne flush</a>
+        <div style="width: 312px; margin-top: 24px; display: flex; justify-content: space-between; gap: 8px;">
+          <a lcButton variant="link" size="lg" [flush]="true" href="#neu-senden" style="flex: 0 0 auto;">Neu senden in 25 s</a>
+          <a lcButton variant="link" size="lg" [flush]="true" href="#anders-anmelden" style="flex: 0 1 auto; min-width: 0; --lc-btn-flush-align: end;">Anders anmelden</a>
+        </div>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('link', { name: 'Code erneut senden' }).classList.contains('btn-flush')).toBe(true);
+    await expect(canvas.getByRole('link', { name: 'Ohne flush' }).classList.contains('btn-flush')).toBe(false);
+    const endLink = canvas.getByRole('link', { name: 'Anders anmelden' });
+    await expect(getComputedStyle(endLink).textAlign).toBe('end');
+    await expect(getComputedStyle(endLink).justifyContent).toBe('end');
+  },
 };

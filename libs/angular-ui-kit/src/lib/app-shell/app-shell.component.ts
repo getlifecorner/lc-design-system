@@ -21,8 +21,17 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
  *   reserves its height at the end of the page (16 + 72 + 24 px plus the
  *   safe-area inset; `--lc-app-shell-bottom-clearance`), so it never covers
  *   content. With the horizon, the bar rests on the land instead.
- * - `[shell-footer]` — e.g. a compact `lc-footer`; on the horizon's land when
- *   `horizon` is on, else after the page.
+ * - `[shell-footer]` — e.g. a compact `lc-footer`; after the page, or with
+ *   `horizon` in a row of its own below the horizon, painted in the land's
+ *   colour (`--color-land-3`): the land grows by the footer's height, so
+ *   `--lc-horizon-land` stays the land above the footer and no page overrides
+ *   it (3.9, LK-12).
+ * - `[shell-horizon-figure]` — Edu (or any decorative figure) on the horizon
+ *   line, left of the sun: `lc-character`, `<img>`, `<picture>` or an element
+ *   holding an inline `<svg>`. Projected as a direct child of `.lc-horizon`,
+ *   sized and placed by the horizon (`--lc-horizon-figure-size` / `-gap`).
+ *   Decorative: the horizon is `aria-hidden`, so give an `<img>` `alt=""` and
+ *   nothing focusable. Shown only when `horizon` is on (3.9, AS-29).
  *
  * `horizon` closes the page with the "Weite" horizon (`.lc-horizon` from the
  * kit's styles): full-bleed, below the side navigation and the page, filling
@@ -55,7 +64,9 @@ export class AppShellComponent {
   /**
    * Close the page with the horizon (`.lc-horizon`): full width, below the
    * side navigation and the page, filling the rest of the screen; the footer
-   * and the floating bar rest on its land.
+   * (in a row of its own, which adds to the land) and the floating bar rest
+   * on its land, and `[shell-horizon-figure]` stands on its line.
+   * @default false
    */
   readonly horizon = input(false);
 
