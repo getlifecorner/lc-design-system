@@ -23,7 +23,7 @@ Package includes: assets (character SVGs), styles, icon-names.json. No component
 
 1. `git switch main && git merge --ff-only feat/3.9-f1-shell-review-gaps`, then `git push origin main`
 2. `gh workflow run publish-npm.yml --ref main -f version=3.9.0`: tests, build, `npm stage publish` (OIDC, provenance), then the tag `v3.9.0` on the release commit
-3. Public once the npm stage is approved with 2FA (`npm stage approve <id>`)
+3. Public once the npm stage is approved with 2FA (`npm stage approve fb962786-4b53-4dbd-921a-4d75395a0db1`)
 
 ## For the requester
 
@@ -34,24 +34,20 @@ Package includes: assets (character SVGs), styles, icon-names.json. No component
 ```html
 <!-- Shell footer on the land (LK-12) -->
 <lc-app-shell [horizon]="true">
-  <div shell-horizon-figure>
-    <lc-character pose="hello" size="96" />
-  </div>
-  <footer shell-footer>
-    <lc-footer [links]="footerLinks" size="compact" />
-  </footer>
+  <lc-character shell-horizon-figure pose="hello" size="96" />
+  <lc-footer shell-footer [compact]="true" />
 </lc-app-shell>
 
 <!-- Secondary page header (AS-25) -->
 <lc-page-header 
   title="Can't reach LifeCorner right now"
   size="secondary"
-  level="2" />
+  [level]="2" />
 
 <!-- Flush link button (AS-26) -->
 <lc-stack justify="between">
-  <button lcButton variant="link" size="lg" flush>Code erneut senden</button>
-  <a lcButton variant="link" size="lg" flush 
+  <lc-button variant="link" size="lg" [flush]="true">Code erneut senden</lc-button>
+  <a lcButton variant="link" size="lg" [flush]="true"
      style="--lc-btn-flush-align: end">
     Anders anmelden
   </a>
@@ -65,7 +61,7 @@ Package includes: assets (character SVGs), styles, icon-names.json. No component
 </div>
 ```
 
-- **Stories:** `components-app-shell--footer-on-the-horizon`, `components-app-shell--figure-on-the-horizon`, `components-page-header--secondary-levels`, `components-page-header--bilingual-page`, `components-button--flush`, `components-button-link--flush`, `components-skeleton--height-from-container`, `docs-horizon-design-tokens--docs`
+- **Stories:** `layout-app-shell--footer-on-the-horizon`, `layout-app-shell--figure-on-the-horizon`, `layout-page-header--secondary`, `layout-page-header--secondary-levels`, `layout-page-header--bilingual-page`, `components-button-link--flush`, `components-button--flush-link`, `feedback-skeleton--height-from-container`, `design-tokens-horizon--footer-on-the-land`
 
 ## Open findings
 
