@@ -165,6 +165,7 @@ const preview: Preview = {
         method: 'alphabetical',
         order: [
           'Installation',
+          'Changelog',
           'Design Tokens',
           ['Colors', 'Spacing', 'Typography', 'Elevation', 'Sizes & Animation'],
           'Components',

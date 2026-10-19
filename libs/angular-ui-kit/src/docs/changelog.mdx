@@ -1,0 +1,8 @@
+import { Meta, Markdown } from '@storybook/addon-docs/blocks';
+import changelog from '../../CHANGELOG.md?raw';
+
+<Meta title="Changelog" tags={['!manifest']} />
+
+{/* Rendered from libs/angular-ui-kit/CHANGELOG.md at build time, so every docs deploy shows the current file. Kept out of the manifest: the MCP serves the file itself (get_changelog). */}
+
+<Markdown>{changelog}</Markdown>
