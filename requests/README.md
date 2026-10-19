@@ -38,3 +38,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [003](003-code-block-trusted-types/) lc-code-block under Trusted Types | life-os | AS-20 | 3.6.1 | 3.6.1 |
 | [004](004-code-block-scroll-region/) lc-code-block scroll region | life-os | AS-21 | 3.7.0 | 3.7.0 |
 | [005](005-edu-character-poses/) Edu's character poses | life-os | G-4 | 3.8.0 | 3.8.0 |
+| [006](006-f1-shell-review-gaps/) F1 shell review gaps | life-os | AS-22–AS-29, HS-6, SI-14, LK-12 | 3.9.0 | 3.9.0 |

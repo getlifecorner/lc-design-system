@@ -34,3 +34,24 @@ Screenshots: the developer's `build/` and `compare/` (252 of 276 identical to `b
 | 2 | nit | design.md §3 page-header wireframe | — | Said "8 gap"; measured 4, the same as `compact`. Fixed in design.md, no code change |
 
 **Verdict:** changes requested (finding 1). Everything else is approved as built; after the fix, round 2 only re-measures the Flush stories and compares the other button stories by hash.
+
+## Round 2 — 2026-10-20, commit 06c6042 (gates on 2b151d1; `git diff --quiet 2b151d1 -- libs tools` holds)
+
+Scope as announced in round 1: finding 1 only. Screenshots: the developer's `r2/` (both flush stories, 360 · 1024 · 1280, light · dark, measures in `tmp/006/shots-r2.log`) and `r2-compare/` (the other 13 button and button-link stories, 78 / 78 identical to `baseline/`). Mine: `r2-review/` (Flush 360 dark with the focus on the end link). `cmp`: all 6 `flush-link` shots identical to the approved r1 shots. I opened 3 shots: flush 360 light, 1280 light, and r2-review 360 dark.
+
+| AC | Result | Evidence |
+|---|---|---|
+| AC-12 | pass | `components-button-link--flush`, all 6 width × theme shots: the start column is unchanged from r1 (x 16, "Code erneut senden" 170 wide, h 46.5, "Ja" 44). End row 16–328: "Neu senden in 25 s" 16–175.5 on one line; "Anders anmelden" box 183.5–328, h 69, `justify-content` / `text-align` `end`, lines 267.7–328 and 245.2–328, so both end at the row edge as in the prototype (328 / 328; finding 1 measured 243.8 / 266.3). build.md probe: on an `lc-button` host in a 260 px row, 3 lines all end at 276 (life-os uses both host forms) |
+| AC-13 | pass | End link at 360 dark: `:focus-visible` true, 2 px solid `rgb(132,199,212)` (#84c7d4, 9.95:1), offset 2. The ring runs 179.5–332 and stays 4 px clear of "Neu senden" (175.5). No overflow (`scrollWidth` 360 = `clientWidth`). `flush-link` default / disabled / loading are identical to r1 |
+| AC-14 | pass | Every default declaration is a `var(--lc-btn-flush-align, start)` fallback; `start` matches r1's `flex-start` here (the `flush-link` hashes are unchanged); 13 button stories are identical to the baseline (78 / 78) |
+| API (§2) | pass | SCSS `.btn-link.btn-flush:not(.btn-icon-only, .btn-inline)` with both hook declarations. JSDoc of `flush` on `lc-button` ("host or an ancestor") and `a[lcButton]` ("link or an ancestor") names the hook, its default `start` and `@default false`. argType `--lc-btn-flush-align` (category CSS hooks, default `start`) on both stories. The play step checks `end`. The spec pins both declarations, says the hook is read only there, and requires it in both JSDocs. The changelog draft explains the hook with the 84 / 62 px before-and-after |
+
+Findings 1 and 2 from round 1 are closed.
+
+### Findings
+
+| # | Severity | Where | Expected | Actual |
+|---|---|---|---|---|
+| 3 | nit | `button-link.stories.ts` Flush, end row `<div>` | `align-items: center`, like the consumer's row (`lc-stack align="center"`, life-os `code.page.ts`), so the one-line start link keeps its 46.5 px box and ring | The row uses the default `stretch`, so "Neu senden in 25 s" is 69 px high (`align-self: auto`), and its focus ring and hit area are 69 px. The label is centred either way, and the shots at rest would not change |
+
+**Verdict:** approved. All 20 AC pass (AC-1–AC-11 and AC-15–AC-20 as in round 1). Nit 3 is open for the release-manager's list.

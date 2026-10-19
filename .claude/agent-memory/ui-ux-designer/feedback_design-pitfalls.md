@@ -19,6 +19,9 @@ metadata:
 
 - **Gradient bands.** On a 135° band the top-right corner is at t = w / (w + h), which is 0.88 for 1280 × 168, so "top-right on a card" fails a t ≤ 0.75 rule on any compact band. A taller text doesn't help, because the media column centres vertically. Prototype the placement with `--measure` before you fix it in a design, and name the measuring point (the box centre).
 
+- **CSS limits (006).** CSS can't read a sibling's height: to "grow the land by the footer", give the footer its own grid row painted in the gradient's end colour. An inline `height` can't be overridden from a stylesheet, but `min-height`/`max-height: var(--hook, 0px / none)` clamp it and leave the DOM unchanged. Injected `.btn` markup is unstyled in a story that renders no button (the stylesheet registers on first render).
+- **Edge features need both edges (006 r1).** A "flush with the edge" design must cover the end edge too: grep the consumer's markup for the row (`justify="between"`) before fixing an alignment at high specificity; expose it as a hook (`--lc-btn-flush-align`). Copy the consumer's `align-items` into the story row too: the default `stretch` made a one-line link's box and focus ring 69 px instead of 46.5 (r2 nit).
+
 **Why:** each of these cost a round trip or would have broken the build.
 
 **How to apply:** name the relevant ones in the design's risk list.

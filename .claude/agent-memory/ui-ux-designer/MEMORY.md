@@ -1,3 +1,3 @@
-- [Measured reference values](reference_measured-values.md) — sidenav/app-page/icon DOM (3.4.1–3.6), icon data, compat sizes, link contrast, code-block 3.6.0/3.6.1 metrics; baselines
-- [Design pitfalls](feedback_design-pitfalls.md) — entries, esbuild shared chunks, @defer deps, CSP hydration, DOM APIs, .btn-inline specificity, global pre scroller, size premises, token values
+- [Measured reference values](reference_measured-values.md) — sidenav/app-page/icon DOM (3.4.1–3.6), icon data, compat sizes, link contrast, code-block, Edu, link-lg/footer/page-header (006) metrics; baselines
+- [Design pitfalls](feedback_design-pitfalls.md) — entries, esbuild shared chunks, @defer deps, CSP hydration, DOM APIs, .btn-inline specificity, global pre scroller, size premises, token values, CSS limits (sibling height, inline height)
 - [Review techniques](reference_review-techniques.md) — browser-side math via --measure, axe via CDN, Bash-safe syntax, cmp across runs, unstable baseline shots, worktree

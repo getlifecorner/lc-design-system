@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.9.0] - 2026-10-20
+
+The F1 shell's review gaps from life-os (app-shell 7.1): slimmer horizon land, the footer on it without overrides, Edu on the shell's horizon, a 20 px second title, flush links and a container-driven skeleton height. No API breaks.
+
+### Added
+
+- **`[shell-horizon-figure]` on `lc-app-shell`** (AS-29; life-os T365, 9 of 12 moments): Edu (`lc-character`, `<img alt="">`, `<picture>`, inline `<svg>`) on the shell's horizon line, placed like `.lc-horizon__figure` (64 · 96 · 128 px, 16 / 24 px left of the sun, feet on the line). The horizon is now `aria-hidden="true"`.
+- **The shell footer on the land** (LK-12; T367): with `horizon`, `[shell-footer]` takes a row of its own below the horizon in `--color-land-3`, so the land grows by the footer: 245 / 150.5 / 158.5 px at 360 / 1024 / 1280 with a compact two-link footer, no `--lc-horizon-land` override. Footer links 6.03:1 light, 11.70:1 dark.
+- **`size="secondary"` on `lc-page-header`** (AS-25; the bilingual error page 6.9): a 20 px title (line 25 px) with the `compact` spacing, at `level` 1–3. Replaces the `--font-size-lg` interim pixel for pixel.
+- **`flush` on `lc-button` and `a[lcButton]`** (AS-26; account settings, sign-in): a `variant="link"` button without inline padding, the label at the content edge (48 px narrower at `lg`), height kept (46.5 px), at least 44 × 44 px. For a link at the end edge of a row (the code page's "Anders anmelden" with `justify="between"`), the CSS hook `--lc-btn-flush-align: end` (default `start`) puts the label and every wrapped line at that edge: both lines end at the row's edge at 360 px, where they stopped 84 / 62 px short before. It inherits, so set it on the link, the `lc-button` host or an ancestor. Replaces `padding-inline: 0` and `::ng-deep .btn`.
+- **`--lc-skeleton-height`** (AS-27; Today's tile skeletons, T358): the fill's height from CSS (container query, `cqi`), winning over `height`: tiles 88 px across, 59 px stacked below 21.5rem.
+
+### Changed
+
+- **`.lc-horizon` land from 1024 px** (LK-12): 72 · 80 · 96 · 128 px at 1024 · 1280 · 1440 · 1920 (was 100 · 120 · 140 · 184). Phone (112 px) and sun radii unchanged.
+
+### Compatibility
+
+- No API breaks. A horizon relying on the defaults is lower from 1024 px; 252 of 276 screenshots are identical, the others are those stories at 1024 / 1280. In `lc-app-shell` with a `[shell-footer]`, `--lc-horizon-land` is now the land above the footer.
+
+### Migration
+
+- To keep 3.8's land: `--lc-horizon-land: 100px / 120px / 140px / 184px` from 1024 / 1280 / 1440 / 1920. In a shell with a footer, remove the footer's height from a `--lc-horizon-land` override. life-os can drop the interims labelled LK-12, AS-25, AS-26 and AS-27.
+
 ## [3.8.0] - 2026-10-19
 
 Edu, the LifeCorner brand character, for the F1 app pages and the website
