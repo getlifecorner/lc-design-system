@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.10.1] - 2026-10-21
+
+The signed-in shell at 200 % text on a phone (AS-31; life-os Today and household, U1). No API breaks.
+
+### Fixed
+
+- **`lc-header` no longer covers its brand** (AS-31): the end content (end slot, theme button, context, account menu) is one group that takes the end of a second row when it doesn't fit beside the logo and the title's longest word. At 200 % text, 320 / 360 px: brand and account trigger never overlap (the wordmark ran 72.6 / 32.6 px under the avatar), the subtitle shows 168 / 208 px before "…" (was 40 / 80), and a signed-out header no longer widens the page (+10.8 px at 320). Focus order unchanged.
+- **`lc-bottom-nav` labels no longer overlap or run together** at large text: their 8 px reach into neighbouring columns turns into a 4 px gutter from 150 % text, so at 200 % neighbouring labels keep at least 4.6 px apart (they overlapped by 8 px). Labels wrap with `overflow-wrap: anywhere` and hyphenate by `lang`; the pill fits a 54 px column (five floating items at 320 px). Item content is top-aligned, so every icon pill sits on one line even when labels wrap to different line counts (they were up to 48 px apart). The bar itself never widened the page: AS-31's +19 / +59 px is page-wide horizontal overflow on the app side (T387), which moves a fixed bar.
+- **`lc-app-shell` keeps the bar's real height free**: at least 112 px plus the inset, the bar's height plus 40 px when it grows (measured in the browser). At 200 % with five German items the last block now ends 38 px above the bar (it was covered by 69.6 px). With `horizon` the land grows by what the bar is taller than 72 px.
+
+### Compatibility
+
+- No API breaks. At 100 % text, 184 of 192 header, bar and shell screenshots are pixel-identical to 3.10.0. Changed: a header whose title ran into its end items now wraps them (FullFeatured, TranslatedLabels at 360 px), the horizon's land grows under a bar with two-line labels (+12 px), and in a bar whose labels wrap to different line counts the pills move up into one line (one-line bars are unchanged).
+- The header's end content (end slot, theme button, context, account menu) now sits in `div.lc-header__end`. A child selector such as `.lc-header > [slot='end']` no longer matches; use `.lc-header__end > [slot='end']` or a descendant selector (life-os: `shell.component.css`).
+- Before JavaScript (prerendering) the clearance is 112 px plus the inset, as before; `--lc-app-shell-bottom-clearance` still wins.
+
+### Migration
+
+- life-os: remove the AS-30 header interims (`shell.component.css`, `auth-layout`: brand `flex: 1 1 0` and the wrap rules); a zero brand basis keeps the end group from wrapping.
+
 ## [3.10.0] - 2026-10-21
 
 `lc-textarea` posts and pre-fills without JavaScript, for life-os's contact form (G-CF1, G-CF3; website-contact-form §7). No API breaks.

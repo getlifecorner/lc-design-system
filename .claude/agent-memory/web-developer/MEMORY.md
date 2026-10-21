@@ -1,2 +1,2 @@
-- [Gates and measuring](reference_gates-and-measuring.md) — Jest counts, build time, lint baseline, bundle sizes (--measure), Bash-tool filters, golden DOM captures, render cost, FESM-hash bundle proof, check-entries counts, no-JS post/hydration check
-- [Build pitfalls](feedback_build-pitfalls.md) — TT fakes, NG0502, CSP fixtures, skeleton widths, BOM, story routers, entry-graph cycles, SCSS specs, lc-icon fetches in Jest, `<pre>` templates, regex SVG parsing, bare empty attrs on 21/22.0, model replacing an output
+- [Gates and measuring](reference_gates-and-measuring.md) — baselines (Jest/lint/build), story-shots quirks (--full baselines, CSS injection, in-browser pixel diff), Bash-tool filters
+- [Build pitfalls](feedback_build-pitfalls.md) — Jest fakes, compat/CSP fixtures, Storybook ::ng-deep text size, entry graph, SCSS specs, pixel-identical flex rows (lc-header), model() API break

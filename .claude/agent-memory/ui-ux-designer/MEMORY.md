@@ -1,3 +1,3 @@
-- [Measured reference values](reference_measured-values.md) — sidenav/app-page/icon DOM (3.4.1–3.6), icon data, compat sizes, link contrast, code-block, Edu, link-lg/footer/page-header (006), placeholder bundle share (007), textarea/accname, input-lg vs textarea (008); baselines
-- [Design pitfalls](feedback_design-pitfalls.md) — entries, esbuild shared chunks, @defer deps, CSP hydration, DOM APIs, .btn-inline specificity, global pre scroller, size premises, token values, CSS limits, prerender serialisers, output()→model() member removal
-- [Review techniques](reference_review-techniques.md) — browser-side math via --measure, axe via CDN, Bash-safe syntax, cmp/diff -rq across runs, unstable baseline shots, worktree
+- [Measured reference values](reference_measured-values.md) — sidenav/app-page/icon DOM, compat sizes, code-block, Edu, footer/page-header (006), bundle share (007), textarea (008), 200 % text (009); baselines
+- [Design pitfalls](feedback_design-pitfalls.md) — entries, esbuild chunks, @defer, CSP hydration, DOM APIs, specificity, size premises, CSS limits, serialisers, output()→model(), flex wrap at 200 %, sticky grid, nav label alignment/gutter
+- [Review techniques](reference_review-techniques.md) — --measure math, axe via CDN, Bash-safe syntax, cmp/diff -rq, unstable shots, worktree, inherited NX_WORKSPACE_ROOT_PATH
