@@ -39,3 +39,40 @@ Headless run (started with `--headless`); no owner available during the run.
 | npm stage | Not read (`npm stage list` needs a local npm login). The owner approves it with 2FA |
 
 Process change (owner, 2026-10-22): agents push `main` and wait for CI; the owner starts `publish-npm.yml`; the release manager watches the run. Updated: `README.md`, `requests/README.md`. Needs the owner (agent config writes are not permitted to the release manager): `.claude/agents/release-manager.md` (section 2, steps 4 and the description), `CLAUDE.md` (Releases, agent table, "No release gate"), `.claude/skills/lc-release/SKILL.md`, `.claude/settings.json` (drop the `gh workflow run` allow rule).
+
+### Paste-ready replacements (owner applies; the release-manager may not write `.claude/` or `CLAUDE.md`)
+
+**`.claude/agents/release-manager.md`, frontmatter description, the sentence "When everything is green and the review is approved, it releases without asking. It pushes ... watches CI to the end." becomes:**
+
+> When everything is green and the review is approved, it pushes the release commit to main and waits for CI. The agents' GitHub token cannot start workflows, so it then asks the owner to start the publish pipeline and watches that run, which stages the package on npm and tags the commit.
+
+**Same file, heading of section 2 and the line below it:**
+
+```
+## 2. Release (through the pipeline, only when step 1 is completely green)
+
+The machine's GitHub token has Contents and Pull requests write but only Actions read (owner decision 2026-10-22). You push `main`, but you cannot start a workflow: the owner starts `publish-npm.yml`, and you watch it.
+```
+
+**Same file, step 4 (and the end of its second sentence):**
+
+```
+4. **Only then ask the owner to start the publish.** Don't run `gh workflow run` (the token cannot). Use AskUserQuestion; in a headless run end with `status: needs-owner`, `next: owner`, and a task that names the exact command `gh workflow run publish-npm.yml --ref main -f version=X.Y.Z`, the release commit SHA and the green CI run. Once the owner has started it, find the run: `gh run list --workflow=publish-npm.yml --limit 3 --json databaseId,headSha,status,event`. It must be the `workflow_dispatch` run whose `headSha` is your release commit. Never start a second run.
+```
+
+**`.claude/skills/lc-release/SKILL.md`, frontmatter description: replace "when everything is green, it pushes main and triggers the publish pipeline, which stages the package on npm and tags the commit." with:**
+
+> when everything is green, it pushes main, waits for CI, asks the owner to start the publish pipeline and watches that run, which stages the package on npm and tags the commit.
+
+**Same file, replace the line "Call `release-manager` ... It needs no go: when the gates are green, it ships." with:**
+
+> Call `release-manager` (Agent tool, foreground) with the request folder or the scope and the task "Release it". It needs no go to push `main`, but the owner starts the publish workflow: when the gates and CI are green, it hands off to the owner with the exact `gh workflow run` command.
+
+**Same file, add to the handoff list:** `next: owner` with the `gh workflow run publish-npm.yml` command: ask the owner to run it (AskUserQuestion), then call `release-manager` again with the run ID so it only watches.
+
+**`CLAUDE.md` (also the owner's to apply):**
+- Line 51: "**The normal path (release-manager):** push the release commit to `main` and wait for CI, then the owner starts `gh workflow run publish-npm.yml --ref main -f version=X.Y.Z` (the agents' token has only Actions read) and the release-manager watches the run. The *publish* job checks ... [rest unchanged]".
+- Line 78, release-manager row: "... runs all gates and makes the release commit. When everything is green, without asking: pushes `main` and waits for CI, then asks the owner to start the publish, and watches that run until the package is staged and the commit tagged".
+- Line 93: "**One release step needs the owner:** a request whose review is approved and whose gates are all green is pushed to `main` by the `release-manager` without asking. The owner starts `publish-npm.yml` and approves the npm stage with 2FA before the package is public."
+
+**Owner decision for `.claude/settings.json`:** the allow rule `Bash(gh workflow run publish-npm.yml --ref main -f version=*)` can no longer succeed with the Actions-read token. Remove it, or keep it for a future token with Actions write. Not edited.
