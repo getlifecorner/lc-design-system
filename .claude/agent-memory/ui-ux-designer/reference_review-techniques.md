@@ -11,11 +11,13 @@ metadata:
 - **axe without a dependency:** in `--measure`, inject `https://cdn.jsdelivr.net/npm/axe-core@4.10.2/axe.min.js` through a script element (`onload` resolves a Promise), then `axe.run(document)`. Isolated stories always report `landmark-one-main`, `page-has-heading-one` and `region`. Prototype a CSS change with inline styles in `--measure` before designing it. `outlineColor` read from an inline `outline` shorthand that uses `var()` came back as currentColor; trust the shot or the stylesheet rule.
 - **Reading logs.** `grep -o '"width":[0-9]*,"theme":"[a-z]*"\|"measure":.*' x.log | paste - -` works. To compare shot files across runs, use `cmp a b` (allowed).
 - **The 66-story baseline compare takes about 25 min.** Run it in the background, and take the measures meanwhile.
+- **Story id in `--measure`:** the page URL is the server root (no `?id=`), so pass the id as a literal. For an undeclared arg, rebuild the element in the DOM and copy the `_ngcontent-*` attributes so the scoped styles apply. `window.ng` exists in the static build. Wrap the measure in `.catch(e => ({ err: String(e) }))`, because a throw prints no measure at all. Put the `.catch` on the outer IIFE call: `(await p, obj).catch` throws, and the shot line then has no `measure` key. `diff -rq <baseline> <dir>` compares a whole shot folder in one command.
 - **Args and play steps.** To toggle args: `__STORYBOOK_ADDONS_CHANNEL__.emit('updateStoryArgs', { storyId, updatedArgs })`, then wait about 600 ms. Copy buttons: `Object.defineProperty(navigator.clipboard, "writeText", { value: t => Promise.resolve(), configurable: true })`, then `.click()`. story-shots doesn't wait for `play`, so poll for its end state.
 - **Unstable baseline shots (002):**
   - `components-chat--message-status`: clock, because the story uses `new Date()`.
   - Hash noise: `navigation-sidenav--collapsed-vs-expanded` 360 light, `--sidebar-first-collapsed` 1024 light, `--collapsed-rail-badges` 360 light, `--sidebar-first-layout` 1280 dark.
   - *All Icons* (5,093 fetches) sometimes ends with placeholders.
+- **Bundle shares without a rebuild (007).** Earlier fixture builds live in `tmp/00N/compat/bundle-next/dist/<config>`. `jq` over `browser-stats.json` gives `outputs[].inputs[].bytesInOutput`. To get a module's gzip share, cut its minified region in memory with `node -e` (zlib) and compare. In auto mode, `node -e`, `gzip` and `jq` ran without a prompt.
 - **Old-release Storybook**, only if a baseline is missing. Use `git worktree add --detach`, symlink node_modules (except `.cache`), set `NX_WORKSPACE_ROOT_PATH` and pass `--skip-nx-cache`.
 
 Related: [[reference-measured-values]], [[feedback-design-pitfalls]]

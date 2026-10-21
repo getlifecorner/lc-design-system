@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.10.0] - 2026-10-21
+
+`lc-textarea` posts and pre-fills without JavaScript, for life-os's contact form (G-CF1, G-CF3; website-contact-form §7). No API breaks.
+
+### Added
+
+- **`name` and `value` on `lc-textarea`** (G-CF1, blocking for the life-os contact form, spec 002): `name` sets the native `name` (unset = no attribute), so a plain `<form method="post">` sends the message without JavaScript. `value` is a model (`[value]` / `[(value)]`) and is written into the prerendered `<textarea>`, so the server's 422/429/503 pages keep the visitor's text. Text is escaped (`<`, `&`, `</textarea>` stay text) and a leading line break survives: posted with JavaScript disabled as `message=%0D%0AErste+Zeile%0D%0A…`, identical after hydration, on Angular 21 and 22.
+- **`requiredIndicator`** (default `true`) and **`requiredAriaLabel`** (default `'required'`) on `lc-textarea`, as on `lc-input` (G-CF3). `false` hides the `*` and keeps `required` / `aria-required`. The `*` stays `aria-hidden`, so a screen reader says "required" once (the name stays the label, e.g. "Nachricht").
+
+### Changed
+
+- **`lc-textarea` `valueChange`** is the `value` model's output (same name and payload, still subscribable on the component). It now also emits when a form control or code sets a different text, as `lc-input` does; an input event that leaves the text unchanged no longer emits.
+
+### Compatibility
+
+- No API breaks. The default textarea renders the same attributes as 3.9; the 10 existing textarea stories are pixel-identical (60 of 60 screenshots).
+- `TextareaComponent.valueChange` is now typed `OutputRef<string>` (was `OutputEmitterRef<string>`). `subscribe()` and `outputToObservable()` work unchanged, and the template output `(valueChange)` is the same. Only an `.emit()` on the component from outside no longer compiles; that was never a supported use.
+- G-CF2 confirmed, no change: `lc-input`'s `value` is in the prerendered `value` attribute, escaped (`Anna &quot;Ann&quot; &amp; Co`), on Angular 21 and 22.
+
+### Migration
+
+- life-os: bind `name="message"` and `[value]` on the contact form's `lc-textarea`; no interim needed.
+
 ## [3.9.0] - 2026-10-20
 
 The F1 shell's review gaps from life-os (app-shell 7.1): slimmer horizon land, the footer on it without overrides, Edu on the shell's horizon, a 20 px second title, flush links and a container-driven skeleton height. No API breaks.

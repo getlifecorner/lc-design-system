@@ -11,7 +11,7 @@ metadata:
 - **Hydration.** life-os runs `withNoIncrementalHydration()` because its CSP blocks the inline script, so `hydrate` triggers aren't available and the server renders `@placeholder`. A CSP fixture needs that setting plus `inlineCritical: false`.
 - **DOM.** For DOM that must equal earlier output, use `DOCUMENT` APIs, not Renderer2 (it stamps `_ngcontent`). A server-side write belongs in an `effect`, not an `afterRender` hook.
 - **CSS specificity.** `a.btn` (0,1,1) beats `.btn-inline`; use `.btn.btn-inline`.
-- **Spec premises.** Measure a requester's size figures before accepting a target. In 002, "136 SVGs ≈ 20 kB" turned out to be 12.0 kB. Measure wrap row counts too: URL runs break only at hyphens, so the estimate of 3 rows was really 4 (004).
+- **Spec premises.** Measure a requester's size figures before accepting a target. In 002, "136 SVGs ≈ 20 kB" turned out to be 12.0 kB; in 007, "≈ 9 kB" was 2.5 kB, and only 0.33 kB of it was removable. A dependency the app already ships (Router, rxjs) saves nothing. Check whether a removal would break an existing spec assertion (AC "tests unchanged"). Measure wrap row counts too: URL runs break only at hyphens, so the estimate of 3 rows was really 4 (004).
 - **Token values.** Read the value before writing "token (N px)". `--border-radius-sm` is 10 px, and there is no 4 px radius token.
 - **"Output equal to the old version."** Capture the old output in the browser before promising it. The innerHTML-era code block had quirks that came from HTML-parser recovery: SCSS showed `&amp;`, multi-line tokens were coloured on the first line only, and an empty line collapsed to 0 px (003).
 - **Global element styles.** `_typography.scss` gives every `pre` `overflow-x: auto`, so inside lc-code-block the `pre` was the real scroller (axe flagged `.code-block__pre`, not the body). Measure which element scrolls before placing `tabindex`. A ring inside `overflow: hidden` must be inset.
@@ -21,6 +21,9 @@ metadata:
 
 - **CSS limits (006).** CSS can't read a sibling's height: to "grow the land by the footer", give the footer its own grid row painted in the gradient's end colour. An inline `height` can't be overridden from a stylesheet, but `min-height`/`max-height: var(--hook, 0px / none)` clamp it and leave the DOM unchanged. Injected `.btn` markup is unstyled in a story that renders no button (the stylesheet registers on first render).
 - **Edge features need both edges (006 r1).** A "flush with the edge" design must cover the end edge too: grep the consumer's markup for the row (`justify="between"`) before fixing an alignment at high specificity; expose it as a hook (`--lc-btn-flush-align`). Copy the consumer's `align-items` into the story row too: the default `stretch` made a one-line link's box and focus ring 69 px instead of 46.5 (r2 nit).
+
+- **Prerender serialisers (008).** Domino (platform-server 21/22) writes `textarea.value` as text and escapes `& < >`, but omits the spec's extra LF after `<textarea>`/`<pre>`: a leading newline is lost. Angular 21's default build re-serialises through beasties (`decodeEntities: false`): bare empty attributes (`placeholder`, `required`), no `jsaction`. Compat regexes must accept both forms.
+- **output() → model() is a member removal (008 r1).** Replacing `xChange = output()` with a model drops the public class member `xChange`; the 2.0 changelog calls that a break. In a minor, keep `readonly xChange: OutputRef<T> = this.x` (no duplicate output, no MCP duplicate) and give the type narrowing a line under Compatibility.
 
 **Why:** each of these cost a round trip or would have broken the build.
 

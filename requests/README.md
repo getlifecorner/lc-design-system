@@ -40,3 +40,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [005](005-edu-character-poses/) Edu's character poses | life-os | G-4 | 3.8.0 | 3.8.0 |
 | [006](006-f1-shell-review-gaps/) F1 shell review gaps | life-os | AS-22–AS-29, HS-6, SI-14, LK-12 | 3.9.0 | 3.9.0 |
 | [007](007-lighter-sidenav-placeholder/) Lighter sidenav placeholder | life-os | AS-28 | answered | — (measured, not worth it) |
+| [008](008-textarea-name-value/) lc-textarea name and value for no-script posts | life-os | G-CF1 (G-CF2 confirm, G-CF3 optional) | 3.10.0 | 3.10.0 |
