@@ -503,6 +503,103 @@ export const AppShellPhone: Story = {
   },
 };
 
+/** Root text size of a large-text story: `200%` is a phone set to large text (not browser zoom). */
+type StoryTextSize = '200%' | '100%';
+type LargeTextStory = StoryObj<HeaderComponent & { textSize: StoryTextSize }>;
+
+const textSizeArgType = {
+  control: 'inline-radio',
+  options: ['200%', '100%'],
+  description:
+    "Root font size of the canvas (`html { font-size }`), the way a phone's large-text setting raises it; every rem value doubles at `200%`. Story only, not a component input; the docs page stays at 100 %",
+  table: { defaultValue: { summary: "'200%'" } },
+} as const;
+
+/**
+ * Raises the root text size in the canvas only (`#storybook-root`), so the docs
+ * page keeps 100 %. The frame is fluid: the screenshot width is the viewport.
+ */
+const largeText = (content = '', lang = 'en') => `
+  <div lang="${lang}" [attr.data-lc-story-text]="textSize" style="background: var(--color-background); padding-bottom: 1rem;">
+    ${content}
+  </div>
+  <style>::ng-deep html:has(#storybook-root [data-lc-story-text="200%"]) { font-size: 200%; }</style>`;
+
+/** The signed-in frame of life-os (AS-31) on a phone at 200 % text: brand on the first row, the avatar at the end of the second. */
+export const SignedInLargeText: LargeTextStory = {
+  name: 'Signed In at 200 % Text (phone)',
+  args: { textSize: '200%' },
+  argTypes: { textSize: textSizeArgType },
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        story:
+          'AS-31: the header as life-os renders it signed in (`size="sm"`, transparent, avatar trigger) with the root text at 200 %. When brand and account button do not fit side by side, the header wraps: the brand keeps the first row and the avatar goes to the end of a second row, so the two never overlap and nothing scrolls sideways. At 100 % (`textSize`) it is one 56 px row, as before. Open it in the canvas at 360 or 320 px.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: largeText(`
+      <lc-header size="sm" logoSize="sm" variant="transparent" [sticky]="false" title="LifeCorner" titleTag="span"
+                 subtitle="The Miller household" userMenuTrigger="avatar" userAvatarColor="member-1"
+                 userName="Sarah Miller" userEmail="sarah.miller@example.com" userMenuAriaLabel="Menu for Sarah Miller" />`),
+  }),
+};
+
+/** The same in German, with a long household name: the subtitle ends with "…", the brand stays whole. */
+export const SignedInLargeTextGerman: LargeTextStory = {
+  name: 'Signed In at 200 % Text, German (phone)',
+  args: { textSize: '200%' },
+  argTypes: { textSize: textSizeArgType },
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        story:
+          'AS-31 in German: the household name is longer than the row, so it ends with "…" (its full text is the `title` attribute); the wordmark is never cut or covered. The avatar sits at the end of the second row.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: largeText(
+      `
+      <lc-header size="sm" logoSize="sm" variant="transparent" [sticky]="false" title="LifeCorner" titleTag="span"
+                 subtitle="Familie Apfelbaum-Kieselbacher-Morgentau" homeAriaLabel="LifeCorner – Startseite"
+                 userMenuTrigger="avatar" userAvatarColor="member-1" userName="Johanna Apfelbaum"
+                 userEmail="johanna.apfelbaum@example.org" userMenuAriaLabel="Menü für Johanna Apfelbaum"
+                 menuSize="md" profileLabel="Einstellungen" logoutLabel="Abmelden" />`,
+      'de',
+    ),
+  }),
+};
+
+/** The signed-out bar (AS-30 (1)) at 200 % text: the language link goes to the end of the second row. */
+export const SignedOutLargeText: LargeTextStory = {
+  name: 'Signed Out at 200 % Text (phone, language link)',
+  args: { textSize: '200%' },
+  argTypes: { textSize: textSizeArgType },
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        story:
+          "AS-30 (1): no account menu, a large ghost link in `[slot='end']`. At 200 % text the link does not fit next to the brand, so it takes the end of a second row (no row gap) instead of running past the screen edge.",
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: largeText(`
+      <lc-header size="sm" logoSize="sm" variant="transparent" [sticky]="false" title="LifeCorner" titleTag="span"
+                 [showUserMenu]="false" homeHref="#start" homeAriaLabel="LifeCorner – home">
+        <a slot="end" lcButton variant="ghost" size="lg" href="#de" hreflang="de" lang="de">Deutsch</a>
+      </lc-header>`),
+  }),
+};
+
 /** The same header from 1024 px: `size="md"`, the subtitle has room. */
 export const AppShellDesktop: Story = {
   name: 'App Shell on Desktop (transparent, avatar)',

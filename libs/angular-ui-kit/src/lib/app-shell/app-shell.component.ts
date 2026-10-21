@@ -1,4 +1,20 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  ElementRef,
+  inject,
+  input,
+  viewChild,
+} from '@angular/core';
+
+/**
+ * Private custom property the shell writes on `.lc-app-shell` in the browser:
+ * the bar's content height. Its CSS fallback is 72 px (4 + 64 + 4 at 100 % text).
+ */
+const BAR_VAR = '--_lc-app-shell-bar';
 
 /**
  * App shell: the frame around every page of an app — header, side navigation,
@@ -18,9 +34,11 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
  *   whose pages use one). It spans to the window's right edge, so a page's
  *   right column docks there.
  * - `[shell-bottom-nav]` — the `lc-bottom-nav`, shown below 1024 px. The shell
- *   reserves its height at the end of the page (16 + 72 + 24 px plus the
- *   safe-area inset; `--lc-app-shell-bottom-clearance`), so it never covers
- *   content. With the horizon, the bar rests on the land instead.
+ *   reserves its real height at the end of the page: at least 112 px (16 + 72
+ *   + 24) plus the safe-area inset, more when the bar grows with the text size
+ *   (measured in the browser; `--lc-app-shell-bottom-clearance` overrides it),
+ *   so it never covers content. With the horizon, the bar rests on the land
+ *   instead, and the land grows with a taller bar (3.10.1, AS-31).
  * - `[shell-footer]` — e.g. a compact `lc-footer`; after the page, or with
  *   `horizon` in a row of its own below the horizon, painted in the land's
  *   colour (`--color-land-3`): the land grows by the footer's height, so
@@ -75,4 +93,45 @@ export class AppShellComponent {
     if (this.horizon()) classes.push('lc-app-shell--horizon');
     return classes.join(' ');
   });
+
+  private readonly shell = viewChild.required<ElementRef<HTMLElement>>('shell');
+  private readonly barSlot = viewChild.required<ElementRef<HTMLElement>>('barSlot');
+
+  constructor() {
+    const destroyRef = inject(DestroyRef);
+    // Browser only (afterNextRender never runs on the server): follow the
+    // bar's content height, so the clearance and the land grow with a bar
+    // that grows with the text size (AS-31). Without ResizeObserver, and
+    // before this runs, the CSS fallback (72 px → 112 px clearance) holds.
+    afterNextRender(() => {
+      if (typeof ResizeObserver === 'undefined') return;
+      const shell = this.shell().nativeElement;
+      const slot = this.barSlot().nativeElement;
+      const clear = () => shell.style.removeProperty(BAR_VAR);
+      const sizes = new ResizeObserver((entries) => {
+        const entry = entries[entries.length - 1];
+        const height = entry.contentBoxSize?.[0]?.blockSize ?? entry.contentRect.height;
+        // 0 when the bar is hidden (from 1024 px).
+        if (height > 0) shell.style.setProperty(BAR_VAR, `${height}px`);
+        else clear();
+      });
+      let bar: Element | null = null;
+      // The bar may come later (`@if (items())` around it) or go again.
+      const pick = () => {
+        const next = slot.querySelector('.lc-bottom-nav') ?? slot.firstElementChild;
+        if (next === bar) return;
+        if (bar) sizes.unobserve(bar);
+        bar = next;
+        if (bar) sizes.observe(bar);
+        else clear();
+      };
+      pick();
+      const changes = typeof MutationObserver === 'undefined' ? null : new MutationObserver(pick);
+      changes?.observe(slot, { childList: true, subtree: true });
+      destroyRef.onDestroy(() => {
+        sizes.disconnect();
+        changes?.disconnect();
+      });
+    });
+  }
 }

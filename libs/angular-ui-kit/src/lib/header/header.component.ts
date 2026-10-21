@@ -73,6 +73,10 @@ export type HeaderUserMenuTrigger = 'icon' | 'avatar';
  * - `[slot='end']` takes content at the end of the first row (e.g. a language
  *   link), `showUserMenu` hides the account menu, `titleTag` picks the title
  *   element (the page keeps its own `<h1>`), `sticky` can be switched off.
+ * - The end content (slot, theme button, context, account menu) is one group:
+ *   when it doesn't fit beside the logo and the title's longest word (200 %
+ *   text on a phone), it takes the end of a second row instead of covering the
+ *   brand or widening the page (3.10.1, AS-31). The subtitle ends with "…".
  * App shell ("Weite", kit 3.3):
  * - `variant="transparent"`: no background and no border, the header sits on
  *   the page (pair it with `[sticky]="false"`, a header without a surface

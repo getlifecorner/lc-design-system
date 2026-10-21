@@ -27,6 +27,11 @@
   display: flex;
   align-items: center;
   gap: var(--lc-density-gap-md, var(--spacing-4));
+  // Every header wraps, with no row gap: when brand and end group don't fit
+  // side by side (200 % text on a phone), the end group takes a second row
+  // instead of covering the brand or running past the screen (AS-31, AS-30).
+  flex-wrap: wrap;
+  row-gap: 0;
   padding: 0 var(--lc-header-padding-x);
   background-color: var(--lc-header-bg);
   border-bottom: 1px solid var(--lc-header-border);
@@ -37,7 +42,7 @@
 
   // Explicit size variants (use to align the header with a sidebar brand block).
   // --lc-header-row-height is the height of the first row when the header
-  // wraps into two rows (navItems below 1024 px).
+  // wraps into two rows (navItems below 1024 px, or a large text size).
   &.lc-header--size-sm { min-height: 56px; --lc-header-row-height: 56px; }
   &.lc-header--size-md { min-height: 64px; --lc-header-row-height: 64px; }
   &.lc-header--size-lg { min-height: 80px; --lc-header-row-height: 80px; }
@@ -56,21 +61,10 @@
 
 // ── Main navigation (`navItems`) ──────────────────────────────────────────
 // From 1024 px the nav sits in the row between brand and the end content.
-// Below, the header wraps: the nav takes a second row of its own (order +
-// full basis) and its list wraps line by line, so a long German label or 200 %
-// text never scrolls sideways. DOM order stays brand → nav → end slot, which is
-// the focus order in both layouts.
-.lc-header--has-nav {
-  flex-wrap: wrap;
-  row-gap: 0;
-
-  // The first row keeps the header's size: the brand is always rendered, so
-  // its min-height defines the row and everything else centers in it.
-  .lc-header__brand {
-    min-height: var(--lc-header-row-height, 64px);
-  }
-}
-
+// Below, the nav takes a row of its own after them (order + full basis) and
+// its list wraps line by line, so a long German label or 200 % text never
+// scrolls sideways. DOM order stays brand → nav → end slot, which is the focus
+// order in both layouts.
 .lc-header__nav {
   display: flex;
   align-items: center;
@@ -131,6 +125,34 @@
     flex-basis: 100%;
     // Line the first link's text up with the brand above it.
     margin-left: calc(-1 * var(--spacing-3));
+  }
+}
+
+// From 1024 px a has-nav header keeps the 3.10 row: the brand at its content
+// size, the nav after it, the spacer pushing the end group right.
+@media (min-width: 1024px) {
+  .lc-header--has-nav {
+    .lc-header__brand {
+      flex: 0 1 auto;
+      width: auto;
+      max-width: none;
+    }
+
+    .lc-header__title-group {
+      flex: 0 1 auto;
+    }
+
+    .lc-header__title {
+      margin-inline-end: 0;
+    }
+
+    .lc-header__subtitle {
+      contain: none;
+    }
+
+    .lc-header__spacer {
+      flex: 1;
+    }
   }
 }
 
@@ -213,11 +235,26 @@ $hamburger-glyph: 24px;
 
 // Logo link. `min-width: 0` lets the brand shrink, so a long subtitle ends
 // with "…" instead of pushing the account button off the row (AS-3).
+// Its flex basis is the logo plus the longest title word (`width:
+// min-content`; the subtitle doesn't count, see `contain` below; the title's
+// negative margin takes one gap off) and it grows into the free space. So
+// brand and end group share the row while logo, word, one gap and the group
+// fit, and the end group wraps to a second row when they don't: the brand
+// keeps its own space and is never covered (AS-31). The max-width keeps the
+// spacer beside it, so a brand alone on its row ends one gap before the edge.
 .lc-header__brand {
   display: flex;
+  flex: 1 1 auto;
   align-items: center;
   gap: var(--spacing-3);
+  width: min-content;
+  max-width: calc(100% - var(--lc-density-gap-md, var(--spacing-4)));
   min-width: 0;
+}
+
+// A has-nav header keeps its 3.10 first row: the full row height.
+.lc-header--has-nav .lc-header__brand {
+  min-height: var(--lc-header-row-height, 64px);
 }
 
 .lc-header__logo {
@@ -241,17 +278,25 @@ $hamburger-glyph: 24px;
 
 .lc-header__title-group {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 0.125rem;
   min-width: 0;
 }
 
+// The title may run one gap past the title group, into the space before the
+// end group (3.10 let it overflow there too): the negative margin widens its
+// box by that gap and takes the gap off the brand's minimum. `break-word`
+// keeps the longest word as that minimum and breaks only a word wider than
+// its row (a long title at 320 px and 200 % text).
 .lc-header__title {
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--lc-header-fg);
   margin: 0;
+  margin-inline-end: calc(-1 * var(--lc-density-gap-md, var(--spacing-4)));
   line-height: 1.2;
+  overflow-wrap: break-word;
   transition: color 0.2s ease;
 
   @media (max-width: 640px) {
@@ -264,8 +309,11 @@ $hamburger-glyph: 24px;
 // stays in the DOM, so screen readers read all of it. Uppercase is gone —
 // it changed how names read and made some screen readers spell them out.
 // `--lc-header-subtitle-max-width` caps it below the available space.
+// `contain: inline-size` leaves it out of the brand's flex basis: it takes
+// the width the brand gets and ends with "…" there (AS-31).
 .lc-header__subtitle {
   display: block;
+  contain: inline-size;
   max-width: var(--lc-header-subtitle-max-width, 100%);
   overflow: hidden;
   white-space: nowrap;
@@ -282,9 +330,36 @@ $hamburger-glyph: 24px;
   }
 }
 
-// Spacer to push profile to the right
+// Spacer: a zero-width item that always shares the brand's row. Its two gaps
+// are the space 3.10 kept between brand and end group, so a squeezed subtitle
+// ends with "…" exactly where it did. Its min-height keeps the first row at
+// the header's size when the end group wraps (less the bottom border, which
+// the header's min-height includes); the brand keeps its content height and
+// centres in the row as before. It grows only in a has-nav header from
+// 1024 px (the brand grows everywhere else).
 .lc-header__spacer {
-  flex: 1;
+  flex: 0 0 0;
+  min-height: calc(var(--lc-header-row-height, 64px) - var(--_lc-header-border-width, 1px));
+}
+
+// The end content as one group (AS-31): it keeps to the end of its row,
+// beside the brand or at the end of a second row; several items wrap inside
+// it, right-aligned, with the header's gap. It fills its row's height, so its
+// items centre in the row exactly as the header's own items did. Empty: no box.
+.lc-header__end {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-self: stretch;
+  justify-content: flex-end;
+  gap: 0 var(--lc-density-gap-md, var(--spacing-4));
+  margin-inline-start: auto;
+  min-width: 0;
+  max-width: 100%;
+
+  &:empty {
+    display: none;
+  }
 }
 
 // Theme toggle button
@@ -416,6 +491,7 @@ html.dark .lc-header:not(.lc-header--light),
 .lc-header.lc-header--transparent {
   --lc-header-bg: transparent;
   --lc-header-border: transparent;
+  --_lc-header-border-width: 0px;
   border-bottom-width: 0;
 }
 

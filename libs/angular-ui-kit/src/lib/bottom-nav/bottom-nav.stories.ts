@@ -181,3 +181,86 @@ export const FixedToViewport: Story = {
   args: { items: twoDestinations, activeRoute: '/', variant: 'floating', fixed: true },
   parameters: { docs: { disable: true }, layout: 'fullscreen' },
 };
+
+/** The five German destinations of life-os (AS-31). */
+const germanDestinations: BottomNavItem[] = [
+  { id: 'today', label: 'Heute', icon: 'sun', route: '/' },
+  { id: 'household', label: 'Haushalt', icon: 'home', route: '/household' },
+  { id: 'documents', label: 'Dokumente', icon: 'folder', route: '/documents' },
+  { id: 'finances', label: 'Finanzen', icon: 'wallet', route: '/finances' },
+  { id: 'settings', label: 'Einstellungen', icon: 'settings', route: '/settings' },
+];
+
+/** Root text size of a large-text story: `200%` is a phone set to large text (not browser zoom). */
+type StoryTextSize = '200%' | '100%';
+type LargeTextStory = StoryObj<BottomNavComponent & { textSize: StoryTextSize }>;
+
+const textSizeArgType = {
+  control: 'inline-radio',
+  options: ['200%', '100%'],
+  description:
+    "Root font size of the canvas (`html { font-size }`), the way a phone's large-text setting raises it; every rem value doubles at `200%`. Story only, not a component input; the docs page stays at 100 %",
+  table: { defaultValue: { summary: "'200%'" } },
+} as const;
+
+/** Raises the root text size in the canvas only (`#storybook-root`), so the docs page keeps 100 %. */
+const largeTextStyle = `<style>::ng-deep html:has(#storybook-root [data-lc-story-text="200%"]) { font-size: 200%; }</style>`;
+
+/** AS-31: the floating bar fixed to a phone screen at 200 % text, German labels. */
+export const FloatingLargeText: LargeTextStory = {
+  name: 'Floating at 200 % Text (German, fixed)',
+  args: { items: germanDestinations, activeRoute: '/', variant: 'floating', fixed: true, ariaLabel: 'Hauptnavigation', textSize: '200%' },
+  argTypes: { textSize: textSizeArgType },
+  parameters: {
+    docs: { disable: true },
+    layout: 'fullscreen',
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div lang="de" [attr.data-lc-story-text]="textSize"
+           style="min-height: 100vh; box-sizing: border-box; padding: 1rem; background: var(--color-background); color: var(--color-text-primary);">
+        <h1 style="margin: 0 0 0.5rem; font-size: 1.5rem; line-height: 1.25;">Heute</h1>
+        <p style="margin: 0; font-size: 1rem; line-height: 1.5;">Die Leiste teilt die Breite gleichmäßig auf; ihre Beschriftungen brechen um, statt über den Rand zu laufen.</p>
+        <lc-bottom-nav [items]="items" [activeRoute]="activeRoute" [variant]="variant" [fixed]="fixed" [ariaLabel]="ariaLabel" />
+      </div>
+      ${largeTextStyle}`,
+  }),
+};
+
+/** AS-31: docked and floating bars with 3, 4 and 5 German destinations at 200 % text, in the flow. */
+export const ItemCountsLargeText: LargeTextStory = {
+  name: 'Item Counts at 200 % Text (German, docked and floating)',
+  args: { textSize: '200%' },
+  argTypes: { textSize: textSizeArgType },
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        story:
+          'Three, four and five destinations, docked (full width) and floating (16 px from the sides), with the root text at 200 %. The items share the width; a label that does not fit wraps and hyphenates (`lang="de"`) instead of widening the bar. Open it in the canvas at 360 or 320 px.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: {
+      ...args,
+      three: germanDestinations.slice(0, 3),
+      four: germanDestinations.slice(0, 4),
+      five: germanDestinations,
+    },
+    template: `
+      <div lang="de" [attr.data-lc-story-text]="textSize"
+           style="display: flex; flex-direction: column; gap: 1.5rem; padding: 1rem 0; background: var(--color-background);">
+        <lc-bottom-nav variant="docked" [fixed]="false" [items]="three" activeRoute="/" ariaLabel="Drei Ziele, angedockt" />
+        <lc-bottom-nav variant="docked" [fixed]="false" [items]="four" activeRoute="/" ariaLabel="Vier Ziele, angedockt" />
+        <lc-bottom-nav variant="docked" [fixed]="false" [items]="five" activeRoute="/" ariaLabel="Fünf Ziele, angedockt" />
+        <div style="display: flex; flex-direction: column; gap: 1.5rem; padding: 0 16px;">
+          <lc-bottom-nav variant="floating" [fixed]="false" [items]="three" activeRoute="/" ariaLabel="Drei Ziele, schwebend" />
+          <lc-bottom-nav variant="floating" [fixed]="false" [items]="four" activeRoute="/" ariaLabel="Vier Ziele, schwebend" />
+          <lc-bottom-nav variant="floating" [fixed]="false" [items]="five" activeRoute="/" ariaLabel="Fünf Ziele, schwebend" />
+        </div>
+      </div>
+      ${largeTextStyle}`,
+  }),
+};

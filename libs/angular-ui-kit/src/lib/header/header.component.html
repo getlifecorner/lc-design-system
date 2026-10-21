@@ -86,105 +86,112 @@
     </nav>
   }
 
+  <!-- Zero-width spacer on the brand's row: keeps 3.10's two gaps before the end
+       group and the first row's height; grows in a has-nav header from 1024 px. -->
   <div class="lc-header__spacer"></div>
 
-  <!-- End of the first row, e.g. a language link. -->
-  <ng-content select="[slot='end']" />
+  <!-- End of the bar: the end slot (e.g. a language link), theme toggle, context
+       info and account menu as one group. It goes to the end of a second row
+       when it doesn't fit beside the brand (AS-31). No role; the DOM order and
+       so the focus order stay brand → nav → end. -->
+  <div class="lc-header__end">
+    <ng-content select="[slot='end']" />
 
-  <!-- Theme toggle button -->
-  @if (showThemeButton()) {
-    <lc-button
-      variant="ghost"
-      size="sm"
-      [iconOnly]="true"
-      [ariaLabel]="themeService.isDark() ? themeToLightAriaLabel() : themeToDarkAriaLabel()"
-      (clicked)="onThemeButtonClick()"
-      class="lc-header__theme-toggle"
-    >
-      <lc-icon [name]="themeService.isDark() ? 'sun' : 'moon'" size="sm" />
-    </lc-button>
-  }
+    <!-- Theme toggle button -->
+    @if (showThemeButton()) {
+      <lc-button
+        variant="ghost"
+        size="sm"
+        [iconOnly]="true"
+        [ariaLabel]="themeService.isDark() ? themeToLightAriaLabel() : themeToDarkAriaLabel()"
+        (clicked)="onThemeButtonClick()"
+        class="lc-header__theme-toggle"
+      >
+        <lc-icon [name]="themeService.isDark() ? 'sun' : 'moon'" size="sm" />
+      </lc-button>
+    }
 
-  <!-- Context info (e.g. tenant, organization, project) -->
-  @if (contextName()) {
-    <button
-      type="button"
-      class="lc-header__context-info"
-      [attr.title]="contextName()"
-      [attr.aria-label]="contextAriaLabel()"
-      (click)="contextClick.emit()"
-    >
-      @if (contextLabel()) {
-        <span class="lc-header__context-label">{{ contextLabel() }}</span>
-      }
-      <span class="lc-header__context-name">{{ contextName() }}</span>
-    </button>
-  }
+    <!-- Context info (e.g. tenant, organization, project) -->
+    @if (contextName()) {
+      <button
+        type="button"
+        class="lc-header__context-info"
+        [attr.title]="contextName()"
+        [attr.aria-label]="contextAriaLabel()"
+        (click)="contextClick.emit()"
+      >
+        @if (contextLabel()) {
+          <span class="lc-header__context-label">{{ contextLabel() }}</span>
+        }
+        <span class="lc-header__context-name">{{ contextName() }}</span>
+      </button>
+    }
 
-  <!-- User profile menu -->
-  @if (showUserMenu()) {
-    <lc-menu
-      [items]="menuItems()"
-      [isOpen]="isDropdownOpen()"
-      position="bottom-right"
-      minWidth="min(220px, calc(100vw - 2rem))"
-      maxWidth="min(18rem, calc(100vw - 2rem))"
-      [size]="menuSize()"
-      (itemClick)="onMenuItemClick($event)"
-      (closed)="closeDropdown()"
-    >
-      <!-- Menu header with avatar, name and email -->
-      @if (userName() || userEmail()) {
-        <div header class="lc-header__menu-header">
-          <lc-avatar
-            [name]="userName()"
-            [src]="userAvatarSrc() || undefined"
-            [color]="userAvatarColor()"
-            size="md"
-          />
-          <div class="lc-header__menu-user-info">
-            @if (userName()) {
-              <div class="lc-header__menu-user-name">{{ userName() }}</div>
-            }
-            @if (userEmail()) {
-              <div class="lc-header__menu-user-email">{{ userEmail() }}</div>
-            }
+    <!-- User profile menu -->
+    @if (showUserMenu()) {
+      <lc-menu
+        [items]="menuItems()"
+        [isOpen]="isDropdownOpen()"
+        position="bottom-right"
+        minWidth="min(220px, calc(100vw - 2rem))"
+        maxWidth="min(18rem, calc(100vw - 2rem))"
+        [size]="menuSize()"
+        (itemClick)="onMenuItemClick($event)"
+        (closed)="closeDropdown()"
+      >
+        <!-- Menu header with avatar, name and email -->
+        @if (userName() || userEmail()) {
+          <div header class="lc-header__menu-header">
+            <lc-avatar
+              [name]="userName()"
+              [src]="userAvatarSrc() || undefined"
+              [color]="userAvatarColor()"
+              size="md"
+            />
+            <div class="lc-header__menu-user-info">
+              @if (userName()) {
+                <div class="lc-header__menu-user-name">{{ userName() }}</div>
+              }
+              @if (userEmail()) {
+                <div class="lc-header__menu-user-email">{{ userEmail() }}</div>
+              }
+            </div>
           </div>
-        </div>
-      }
+        }
 
-      @if (userMenuTrigger() === 'avatar') {
-        <button
-          trigger
-          class="lc-header__profile-trigger lc-header__profile-trigger--avatar"
-          type="button"
-          [attr.aria-label]="userMenuAriaLabel()"
-          [attr.aria-expanded]="isDropdownOpen()"
-          (click)="toggleDropdown()"
-        >
-          <lc-avatar
-            [name]="userName()"
-            [src]="userAvatarSrc() || undefined"
-            [color]="userAvatarColor()"
-            [decorative]="true"
-            size="md"
-          />
-        </button>
-      } @else {
-        <button
-          trigger
-          class="lc-header__profile-trigger"
-          type="button"
-          [attr.aria-label]="userMenuAriaLabel()"
-          [attr.aria-expanded]="isDropdownOpen()"
-          (click)="toggleDropdown()"
-        >
-          <lc-icon name="user" size="sm" />
-          <lc-icon name="chevron-down" size="xs" />
-        </button>
-      }
-    </lc-menu>
-  }
+        @if (userMenuTrigger() === 'avatar') {
+          <button
+            trigger
+            class="lc-header__profile-trigger lc-header__profile-trigger--avatar"
+            type="button"
+            [attr.aria-label]="userMenuAriaLabel()"
+            [attr.aria-expanded]="isDropdownOpen()"
+            (click)="toggleDropdown()"
+          >
+            <lc-avatar
+              [name]="userName()"
+              [src]="userAvatarSrc() || undefined"
+              [color]="userAvatarColor()"
+              [decorative]="true"
+              size="md"
+            />
+          </button>
+        } @else {
+          <button
+            trigger
+            class="lc-header__profile-trigger"
+            type="button"
+            [attr.aria-label]="userMenuAriaLabel()"
+            [attr.aria-expanded]="isDropdownOpen()"
+            (click)="toggleDropdown()"
+          >
+            <lc-icon name="user" size="sm" />
+            <lc-icon name="chevron-down" size="xs" />
+          </button>
+        }
+      </lc-menu>
+    }
+  </div>
 </header>
 
 <ng-template #brandLogo>

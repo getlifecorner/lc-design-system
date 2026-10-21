@@ -22,10 +22,10 @@ const members = [
   { label: 'Tom Ek', subtitle: 'Mitglied seit 12. Okt. 2026', avatar: 'TE', avatarColor: 'member-2' as const },
 ];
 
-const placeholder = (text: string, height = 160) =>
-  `<div style="min-height: ${height}px; box-sizing: border-box; border: 1.5px dashed var(--color-border); border-radius: 12px;
+const placeholder = (text: string, height = 160, fontSize = '13px', attrs = '') =>
+  `<div ${attrs}style="min-height: ${height}px; box-sizing: border-box; border: 1.5px dashed var(--color-border); border-radius: 12px;
               display: flex; align-items: center; justify-content: center; padding: 16px; text-align: center;
-              font-size: 13px; color: var(--color-text-tertiary);">${text}</div>`;
+              font-size: ${fontSize}; color: var(--color-text-tertiary);">${text}</div>`;
 
 /**
  * Today in the "Weite" frame: every slot of the shell and the page's right
@@ -97,11 +97,11 @@ The frame of an app: header, side navigation, page, bottom bar, footer and the h
 | \`[shell-header]\` | in the flow, scrolls away; top and side safe-area insets | the same, across the full width |
 | \`[shell-nav]\` | hidden | a docked column, 240 px (248 from 1440, 280 from 1920; \`--lc-app-shell-nav-width\`), sticky once the header is gone. Use \`lc-sidenav mode="docked" [isOpen]="true" width="100%" [mobileBreakpoint]="0"\` |
 | default | the page | the page, up to the window's right edge |
-| \`[shell-bottom-nav]\` | \`lc-bottom-nav\` (fixed); the shell keeps 112 px + the inset free at the end (\`--lc-app-shell-bottom-clearance\`) | hidden |
+| \`[shell-bottom-nav]\` | \`lc-bottom-nav\` (fixed); the shell keeps the bar's real height free at the end: 112 px + the inset, more when the bar grows with the text size (\`--lc-app-shell-bottom-clearance\`) | hidden |
 | \`[shell-footer]\` | after the page; with \`horizon\` in a row of its own below it, in the land's colour (\`--color-land-3\`), so the land grows by the footer's height (3.9) | the same |
 | \`[shell-horizon-figure]\` | with \`horizon\`: Edu (\`lc-character\`, \`<img alt="">\`, \`<picture>\` or an inline \`<svg>\`) on the line, left of the sun, as a direct child of \`.lc-horizon\`; 64 px (3.9) | 96 px, 128 px from 1920 px |
 
-Input \`horizon\` closes the page with the horizon block (\`.lc-horizon\`, from the kit's styles). Its land is 112 px on a phone and 72 · 80 · 96 · 128 px from 1024 · 1280 · 1440 · 1920 px (3.9, LK-12; \`--lc-horizon-land\`). With a \`[shell-footer]\` the footer's height is added below that, so a page with a footer needs no override: \`--lc-horizon-land\` is the land above the footer. The horizon is \`aria-hidden\` (decoration): a figure in it gets \`alt=""\` and nothing focusable; the footer is outside it and stays reachable.
+Input \`horizon\` closes the page with the horizon block (\`.lc-horizon\`, from the kit's styles). Its land is 112 px on a phone (more under a bar taller than 72 px, by the difference: 3.10.1, AS-31) and 72 · 80 · 96 · 128 px from 1024 · 1280 · 1440 · 1920 px (3.9, LK-12; \`--lc-horizon-land\`). With a \`[shell-footer]\` the footer's height is added below that, so a page with a footer needs no override: \`--lc-horizon-land\` is the land above the footer. The horizon is \`aria-hidden\` (decoration): a figure in it gets \`alt=""\` and nothing focusable; the footer is outside it and stays reachable.
 
 **\`lc-app-page\`** — the page inside the shell: \`<main [id]="mainId">\` (default \`main\`) with the content as a column (24 px apart, 40 px from 1024 px), centred and at most \`contentMaxWidth\` wide (880 px; side padding 24 · 32 · 48 · 56 · 72 · 96 px). \`[page-aside]\` is the right column: an \`<aside>\` after \`<main>\`, docked to the window's right edge from 1280 px (360 · 400 · 460 px; \`--lc-app-page-aside-width\`) with a fading tint and hairline that start behind the header (set a changed \`--lc-app-page-aside-width\` on the shell, so both parts line up), hidden below 1280 px (show a narrow equivalent inside main). It renders only with \`asideLabelledby\` or \`asideAriaLabel\`.
 
@@ -365,5 +365,121 @@ export const FigureOnTheHorizon: Story = {
       memberAvatars: members.map((m) => ({ name: m.label, color: m.avatarColor })),
     },
     template: today('<lc-character shell-horizon-figure pose="comforts" />\n    '),
+  }),
+};
+
+/** Root text size of a large-text story: `200%` is a phone set to large text (not browser zoom). */
+type StoryTextSize = '200%' | '100%';
+type LargeTextStory = StoryObj<AppShellComponent & { textSize: StoryTextSize }>;
+
+const textSizeArgType = {
+  control: 'inline-radio',
+  options: ['200%', '100%'],
+  description:
+    "Root font size of the canvas (`html { font-size }`), the way a phone's large-text setting raises it; every rem value doubles at `200%`. Story only, not a component input; the docs page stays at 100 %",
+  table: { defaultValue: { summary: "'200%'" } },
+} as const;
+
+/** Raises the root text size in the canvas only (`#storybook-root`), so the docs page keeps 100 %. */
+const largeTextStyle = `<style>::ng-deep html:has(#storybook-root [data-lc-story-text="200%"]) { font-size: 200%; }</style>`;
+
+/** The five destinations of life-os (AS-31), German and English. */
+const barItems = (labels: [string, string, string, string, string]) =>
+  [
+    { id: 'today', icon: 'sun', route: '/' },
+    { id: 'household', icon: 'home', route: '/household' },
+    { id: 'documents', icon: 'folder', route: '/documents' },
+    { id: 'finances', icon: 'wallet', route: '/finances' },
+    { id: 'settings', icon: 'settings', route: '/settings' },
+  ].map((item, i) => ({ ...item, label: labels[i], displayOrder: i + 1 }));
+
+const barDE = barItems(['Heute', 'Haushalt', 'Dokumente', 'Finanzen', 'Einstellungen']);
+const barEN = barItems(['Today', 'Household', 'Documents', 'Finances', 'Settings']);
+
+/**
+ * The signed-in frame of life-os (AS-31) with a page taller than the screen;
+ * the last block is `[data-story-last]`. Sizes are rem, so 200 % text grows them.
+ */
+const signedIn = (
+  lang = 'de',
+  subtitle = 'Familie Apfelbaum-Kieselbacher-Morgentau',
+  menuLabel = 'Menü für Johanna Apfelbaum',
+  homeLabel = 'LifeCorner – Startseite',
+  heading = 'Heute',
+  profile = 'Einstellungen',
+  logout = 'Abmelden',
+) => `
+  <div lang="${lang}" [attr.data-lc-story-text]="textSize">
+    <lc-app-shell [horizon]="horizon">
+      <lc-header shell-header size="sm" logoSize="sm" variant="transparent" [sticky]="false" title="LifeCorner" titleTag="span"
+                 subtitle="${subtitle}" homeAriaLabel="${homeLabel}" userMenuTrigger="avatar" userAvatarColor="member-1"
+                 userName="Johanna Apfelbaum" userMenuAriaLabel="${menuLabel}" profileLabel="${profile}" logoutLabel="${logout}" />
+      <lc-sidenav shell-nav mode="docked" [isOpen]="true" width="100%" [mobileBreakpoint]="0"
+                  variant="transparent" [items]="bar" activeRoute="/" />
+      <lc-app-page>
+        <h1 style="margin: 0; font-size: 2rem; line-height: 1.15; color: var(--color-text-primary);">${heading}</h1>
+        ${placeholder('‹1›', 160, '1rem')}
+        ${placeholder('‹2›', 200, '1rem')}
+        ${placeholder('‹3›', 200, '1rem')}
+        ${placeholder('‹4›', 120, '1rem', 'data-story-last ')}
+      </lc-app-page>
+      <lc-bottom-nav shell-bottom-nav variant="floating" [items]="bar" activeRoute="/" />
+    </lc-app-shell>
+  </div>
+  ${largeTextStyle}`;
+
+/** AS-31: the signed-in frame on a phone at 200 % text, German; the page ends above the bar however tall it grows. */
+export const SignedInLargeText: LargeTextStory = {
+  name: 'Signed in, large text (phone, German)',
+  args: { horizon: false, textSize: '200%' },
+  argTypes: { textSize: textSizeArgType },
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'AS-31: header, a page taller than the screen and the floating bar with five German destinations, root text at 200 %. The header wraps (the avatar takes a second row), the bar keeps inside the screen with wrapping labels, and the shell keeps the bar\'s real height free at the end of the page (at least 112 px plus the inset, `--lc-app-shell-bottom-clearance`), so the last block ends above the bar. Scroll to the end in the canvas.',
+      },
+    },
+  },
+  render: (args) => ({ props: { ...args, bar: barDE }, template: signedIn() }),
+};
+
+/** The same in English. */
+export const SignedInLargeTextEnglish: LargeTextStory = {
+  name: 'Signed in, large text (phone, English)',
+  args: { horizon: false, textSize: '200%' },
+  argTypes: { textSize: textSizeArgType },
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
+  render: (args) => ({
+    props: { ...args, bar: barEN },
+    template: signedIn('en', 'The Miller household', 'Menu for Johanna Apfelbaum', 'LifeCorner – home', 'Today', 'Profile', 'Logout'),
+  }),
+};
+
+/** AS-31 with the horizon: Today at 200 % text with five German destinations; the land grows with the bar. */
+export const TodayLargeText: LargeTextStory = {
+  name: 'Today, large text (phone, horizon)',
+  args: { horizon: true, textSize: '200%' },
+  argTypes: { textSize: textSizeArgType },
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Today with the horizon and the member row, five German destinations, root text at 200 %. The bar rests on the land; when it grows taller than at 100 % (72 px), the land grows by the difference, so the page above it is never covered.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: {
+      ...args,
+      nav: barDE,
+      members,
+      memberAvatars: members.map((m) => ({ name: m.label, color: m.avatarColor })),
+    },
+    template: `
+      <div lang="de" [attr.data-lc-story-text]="textSize">${today()}</div>
+      ${largeTextStyle}`,
   }),
 };

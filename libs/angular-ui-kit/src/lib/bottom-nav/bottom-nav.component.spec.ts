@@ -205,9 +205,28 @@ describe('BottomNavComponent', () => {
       expect(scss).toMatch(/prefers-reduced-motion: reduce\) \{\s*transition: none/);
     });
 
+    // 3.10.1 (AS-31): `break-word` → `anywhere` (AC-6 asks for it): a word wider
+    // than its column still breaks, and the label no longer counts in the
+    // item's minimum width, so it can't widen the bar.
     it('lets the label wrap instead of clipping', () => {
-      expect(scss).toMatch(/\.lc-bottom-nav__label \{[^}]*overflow-wrap: break-word/s);
+      expect(scss).toMatch(/\.lc-bottom-nav__label \{[^}]*overflow-wrap: anywhere/s);
       expect(scss).not.toMatch(/\.lc-bottom-nav__label \{[^}]*white-space: nowrap/s);
+    });
+
+    it('top-aligns the item content so every pill sits 6 px below the item top (AS-31)', () => {
+      expect(scss).toMatch(/\.lc-bottom-nav__item \{[^}]*justify-content: flex-start;/s);
+      expect(scss).toMatch(/\.lc-bottom-nav__item \{[^}]*padding-block: 6px 2px;[^}]*padding-inline: 0;/s);
+      expect(scss).not.toMatch(/\.lc-bottom-nav__item \{[^}]*justify-content: center;/s);
+    });
+
+    it('lets the label reach 8 px into its neighbours at 100 % text and keeps a 4 px gutter from 150 % (AS-31)', () => {
+      expect(scss).toMatch(/\.lc-bottom-nav__label \{[^}]*--_reach: clamp\(-4px, 32px - 1\.5rem, 8px\);/s);
+      expect(scss).toMatch(/\.lc-bottom-nav__label \{[^}]*max-width: calc\(100% \+ var\(--_reach\)\);/s);
+      expect(scss).toMatch(/\.lc-bottom-nav__label \{[^}]*margin-inline: calc\(var\(--_reach\) \/ -2\);/s);
+    });
+
+    it('keeps the pill inside its column (54 px with five floating items at 320 px)', () => {
+      expect(scss).toMatch(/\.lc-bottom-nav__pill \{[^}]*width: 56px;[^}]*max-width: 100%;/s);
     });
   });
 });

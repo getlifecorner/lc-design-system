@@ -218,6 +218,11 @@ const EXPECT_IN_HTML = [
   ['textarea without name and value unchanged (AC-9)', /<textarea _ngcontent-[^\s=>]+(?:="")? class="lc-textarea lc-textarea--md lc-textarea--outline" id="lc-textarea-\d+" placeholder(?:="")? rows="3"(?: jsaction="input:;blur:;")?><\/textarea>/],
   ['input value before JS (G-CF2)', /<input(?=[^>]*\sname="email")(?=[^>]*\stype="email")(?=[^>]*\svalue="a@b\.de")[^>]*>/],
   ['input value escaped (G-CF2)', /<input(?=[^>]*\sname="name")(?=[^>]*\svalue="Anna &quot;Ann&quot; &amp; Co")[^>]*>/],
+  // 3.10.1 (request 009): the header's end content is one group, after the nav;
+  // the shell's clearance holds 112 px before JS and the server writes no bar height
+  ['header end group after the nav (AS-31)', /<nav[^>]*aria-label="Hauptnavigation"[^]*?<div[^>]*class="lc-header__end"[^>]*>(?:<!--[^]*?-->|\s)*<a(?=[^>]*hreflang="en")[^>]*>/],
+  ['shell clearance fallback before JS (AS-31)', /--_clearance:\s*var\(\s*--lc-app-shell-bottom-clearance,\s*max\(\s*calc\(112px \+ env\(safe-area-inset-bottom,\s*0px\)\)\s*,\s*calc\(var\(--_lc-app-shell-bar,\s*72px\) \+ 40px/, 'tt/index.html'],
+  ['no bar height written on the server (AS-31)', (html) => html.includes('lc-bottom-nav--floating') && !/style="[^"]*--_lc-app-shell-bar/.test(html), 'tt/index.html'],
 ];
 
 /**

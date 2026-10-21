@@ -18,7 +18,14 @@
 
 .lc-app-shell {
   --_nav-width: var(--lc-app-shell-nav-width, 240px);
-  --_clearance: var(--lc-app-shell-bottom-clearance, calc(112px + env(safe-area-inset-bottom, 0px)));
+  // The bar's real height (AS-31): `--_lc-app-shell-bar` is the bar's content
+  // height, set by the shell in the browser (72 px at 100 % text: 4 + 64 + 4).
+  // Before JavaScript, and when the bar is no taller, this is 112 px plus the
+  // inset, as before.
+  --_clearance: var(
+    --lc-app-shell-bottom-clearance,
+    max(calc(112px + env(safe-area-inset-bottom, 0px)), calc(var(--_lc-app-shell-bar, 72px) + 40px + env(safe-area-inset-bottom, 0px)))
+  );
 
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -99,10 +106,15 @@
 }
 
 // Keep the bar's height free at the end of the page, so it never covers
-// content. With the horizon the bar rests on the land, which is taller.
+// content. With the horizon the bar rests on the land, which is taller; a bar
+// taller than at 100 % text grows the land by the difference (AS-31).
 @media (max-width: 1023.98px) {
   .lc-app-shell:not(.lc-app-shell--horizon):has(> .lc-app-shell__bottom-nav:not(:empty)) {
     padding-bottom: var(--_clearance);
+  }
+
+  .lc-app-shell--horizon:has(> .lc-app-shell__bottom-nav:not(:empty)) > .lc-app-shell__horizon {
+    --_lc-horizon-land: calc(var(--lc-horizon-land, 112px) + max(0px, var(--_lc-app-shell-bar, 72px) - 72px));
   }
 }
 
