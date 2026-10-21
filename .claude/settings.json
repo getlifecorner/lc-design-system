@@ -33,6 +33,8 @@
       "Bash(git rebase main)",
       "Bash(git merge --ff-only *)",
       "Bash(git push origin main)",
+      "Bash(git tag -a v*)",
+      "Bash(git push origin refs/tags/v*)",
       "Bash(gh run list *)",
       "Bash(gh run view *)",
       "Bash(gh run watch *)",
