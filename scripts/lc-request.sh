@@ -12,8 +12,8 @@
 #   --resume <NNN>    continue an open request; text after it answers its questions
 #   --budget <usd>    stop the run at this estimated cost
 #
-# A request that passes review and every gate is released through the publish pipeline
-# without asking; the npm stage still needs the owner's 2FA approval to become public.
+# A request that passes review and every gate is pushed to main without asking; the owner
+# starts the publish pipeline and approves the npm stage with 2FA before it is public.
 # The calling directory is readable for the run (--add-dir), so referenced files resolve.
 # Output: the pipeline's final message (released version and usage, or open questions).
 set -euo pipefail

@@ -33,7 +33,6 @@
       "Bash(git rebase main)",
       "Bash(git merge --ff-only *)",
       "Bash(git push origin main)",
-      "Bash(gh workflow run publish-npm.yml --ref main -f version=*)",
       "Bash(gh run list *)",
       "Bash(gh run view *)",
       "Bash(gh run watch *)",

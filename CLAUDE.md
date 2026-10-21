@@ -48,7 +48,7 @@ Use the `npx nx run angular-ui-kit:<target>` form: the project settings allow ex
 
 The version lives in `libs/angular-ui-kit/package.json`. Releases run only through `.github/workflows/publish-npm.yml`:
 
-- **The normal path (release-manager):** push the release commit to `main`, then `gh workflow run publish-npm.yml --ref main -f version=X.Y.Z`. The *publish* job checks the version against `package.json`, the changelog section and the existing tags, runs the tests and the production build, and runs `npm stage publish` through npm trusted publishing (OIDC, with provenance). Only then does the *tag* job tag the commit `vX.Y.Z – <summary>`, so a failed run leaves no tag behind.
+- **The normal path (release-manager):** push the release commit to `main` and wait for CI, then the owner starts `gh workflow run publish-npm.yml --ref main -f version=X.Y.Z` (the agents' token has only Actions read) and the release-manager watches the run. The *publish* job checks the version against `package.json`, the changelog section and the existing tags, runs the tests and the production build, and runs `npm stage publish` through npm trusted publishing (OIDC, with provenance). Only then does the *tag* job tag the commit `vX.Y.Z – <summary>`, so a failed run leaves no tag behind.
 - **By hand:** pushing a tag `vX.Y.Z` runs the same publish job, without the tag job.
 
 The staged version becomes public once it is approved with 2FA (`npm stage approve <id>`). A push to `main` also runs CI and `deploy-docs.yml` (Storybook and the MCP on `design.life-cockpit.de`). **Never run `npm publish` or `npm stage approve` locally, never push a release tag by hand from an agent, and never deploy the docs stack by hand.**
@@ -75,7 +75,7 @@ A requirement, usually from a consuming project, goes through four agents (`.cla
 | `spec-writer` | Takes the requirement, checks what the kit already has, and makes it testable | `spec.md` |
 | `ui-ux-designer` | Designs the API, anatomy, states, tokens and accessibility. After the build, reviews the stories in the browser | `design.md`, `review.md` |
 | `web-developer` | Implements on a branch until all gates are green, and drafts the changelog entry | code, `build.md` |
-| `release-manager` | Sets the version, writes the changelog, runs all gates and makes the release commit. When everything is green, without asking: pushes `main`, triggers the publish pipeline and watches it until the package is staged and the commit tagged | `release.md` |
+| `release-manager` | Sets the version, writes the changelog, runs all gates and makes the release commit. When everything is green, without asking: pushes `main` and waits for CI, then asks the owner to start the publish, and watches that run until the package is staged and the commit tagged | `release.md` |
 
 - **Start:** `/lc-request <requirement or file> [--from <project>]` in this repository. From another project: `<path>/lc-design-system/scripts/lc-request.sh "<requirement>"` (headless; see `requests/README.md`). Release on its own: `/lc-release`.
 - **Request folder** `requests/<NNN>-<slug>/` holds `request.md` (the requirement verbatim), `spec.md`, `design.md`, `build.md`, `review.md`, `release.md` and `log.md` (every handoff). The templates are in `requests/_templates/`.
@@ -90,4 +90,4 @@ A requirement, usually from a consuming project, goes through four agents (`.cla
   ```
 
   `next: owner` is only for decisions agents may not make: a breaking change (major version), a new runtime dependency, a scope or brand decision the requester's documents don't settle, and failures of the npm or GitHub infrastructure. Everything else the agents decide themselves and record as assumptions. `next: none` ends the request, either because it was released or because the kit already covers it and the requester has the answer.
-- **No release gate:** a request whose review is approved and whose gates are all green is released by the `release-manager` without asking anyone. The npm stage still has to be approved with 2FA before the package is public.
+- **One release step needs the owner:** a request whose review is approved and whose gates are all green is pushed to `main` by the `release-manager` without asking. The owner starts `publish-npm.yml` and approves the npm stage with 2FA before the package is public.
