@@ -67,4 +67,6 @@ flags=(-p "/lc-request $args" --permission-mode acceptEdits --allowedTools "${al
 [ -n "$budget" ] && flags+=(--max-budget-usd "$budget")
 
 cd "$REPO"
+# A caller's Claude Code session (another Nx workspace) exports its own root; Nx would look there for angular-ui-kit.
+unset NX_WORKSPACE_ROOT_PATH
 exec claude "${flags[@]}"
