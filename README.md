@@ -60,7 +60,7 @@ In this repository: `/lc-request <requirement>`. How it works: [CLAUDE.md](CLAUD
 
 Releases go through `.github/workflows/publish-npm.yml`. It tests, builds and **stages** the package with npm trusted publishing (OIDC, no npm token, with provenance). There are two ways to start it:
 
-- `gh workflow run publish-npm.yml --ref main -f version=<version>`, after the release commit is on `main`. The workflow tags the commit `v<version>` once staging succeeded. The `release-manager` agent uses this path (see [CLAUDE.md](CLAUDE.md#agent-pipeline)).
+- `gh workflow run publish-npm.yml --ref main -f version=<version>`, after the release commit is on `main`. The workflow tags the commit `v<version>` once staging succeeded. The `release-manager` agent pushes `main` and watches the run; the owner starts it, because the agents' token cannot start workflows (see [CLAUDE.md](CLAUDE.md#agent-pipeline)).
 - Pushing a tag `v<version>` by hand.
 
 In both cases `<version>` is the version in `libs/angular-ui-kit/package.json`. It becomes public only after a maintainer approves it with 2FA:

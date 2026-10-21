@@ -21,7 +21,7 @@ From the consuming project's directory, or from its Claude Code session through 
 
 The script runs Claude Code headless in this repository (`claude -p "/lc-request …"`). Its output is the pipeline's final message: the released version and how to use it, or the questions the owner has to answer. The requester is the name of the calling directory; `--from <name>` overrides it.
 
-Nobody has to approve the release: once the review is approved and every gate is green, the release manager pushes `main` and triggers the publish pipeline, which stages the package on npm and tags the commit. The package is public once the npm stage is approved with 2FA. The pipeline stops for the owner only for decisions agents may not make: a breaking change, a new runtime dependency, an npm or GitHub failure.
+Nobody has to approve the release: once the review is approved and every gate is green, the release manager pushes `main` and waits for CI. The agents' GitHub token has only Actions read, so the owner then starts `publish-npm.yml` (`gh workflow run publish-npm.yml --ref main -f version=X.Y.Z`; a headless run ends with a `needs-owner` handoff that names this command). The release manager watches that run, which stages the package on npm and tags the commit. The package is public once the npm stage is approved with 2FA. The pipeline stops for the owner for decisions agents may not make (a breaking change, a new runtime dependency, an npm or GitHub failure) and for starting the publish.
 
 Interactively, in this repository: `/lc-request <requirement or path> [--from <project>]`.
 
