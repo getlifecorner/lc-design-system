@@ -213,6 +213,11 @@ const EXPECT_IN_HTML = [
   ['shell figure: a direct child of the aria-hidden horizon (AS-29)', shellFigurePrerendered],
   ['page header secondary at h2 (AS-25)', /<lc-page-header(?=[^>]*id="compat-secondary")(?=[^>]*class="[^"]*\blc-page-header--size-secondary\b)[^>]*>[^]*?<h2[^>]*class="lc-page-header__title"[^>]*>\s*Back in a few minutes/],
   ['flush link (AS-26)', /<a(?=[^>]*id="compat-flush")(?=[^>]*class="[^"]*\bbtn-flush\b)(?=[^>]*class="[^"]*\bbtn-link\b)(?=[^>]*class="[^"]*\bbtn-lg\b)[^>]*>/],
+  // 3.10 (request 008), on the home page (probe-310.ts)
+  ['textarea name and value before JS (G-CF1)', /<textarea(?=[^>]*\sname="message")(?=[^>]*\srequired(?:=""|[\s>]))[^>]*>\n\nErste Zeile\nZweite Zeile: &lt;b&gt; &amp; "zitiert"\n&lt;\/textarea&gt;&lt;p&gt;x&lt;\/p&gt;\n<\/textarea>/],
+  ['textarea without name and value unchanged (AC-9)', /<textarea _ngcontent-[^\s=>]+(?:="")? class="lc-textarea lc-textarea--md lc-textarea--outline" id="lc-textarea-\d+" placeholder(?:="")? rows="3"(?: jsaction="input:;blur:;")?><\/textarea>/],
+  ['input value before JS (G-CF2)', /<input(?=[^>]*\sname="email")(?=[^>]*\stype="email")(?=[^>]*\svalue="a@b\.de")[^>]*>/],
+  ['input value escaped (G-CF2)', /<input(?=[^>]*\sname="name")(?=[^>]*\svalue="Anna &quot;Ann&quot; &amp; Co")[^>]*>/],
 ];
 
 /**

@@ -129,7 +129,9 @@ describe('TextareaComponent', () => {
       host.control.setValue('Hello from the form');
       fixture.detectChanges();
       expect(textarea().value).toBe('Hello from the form');
-      expect(host.changes).toEqual([]);
+      // 3.10 (request 008, design D2): `value` is a model, so a form write that
+      // changes the text emits `valueChange` once, as in lc-input (3.9: none).
+      expect(host.changes).toEqual(['Hello from the form']);
     });
 
     it('reflects control.disable()/enable() in the DOM without manual markForCheck', () => {

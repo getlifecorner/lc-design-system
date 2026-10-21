@@ -2,7 +2,7 @@
   @if (label()) {
     <label [for]="textareaId" class="lc-textarea-label">
       {{ label() }}
-      @if (required()) {
+      @if (required() && requiredIndicator()) {
         <span class="lc-textarea-required-indicator" aria-hidden="true">*</span>
       }
     </label>
@@ -13,11 +13,12 @@
       #textarea
       [id]="textareaId"
       [class]="textareaClasses()"
-      [value]="value()"
+      [value]="renderedValue()"
       [placeholder]="placeholder()"
       [disabled]="isDisabled()"
       [readonly]="readonly()"
       [required]="required()"
+      [attr.name]="name() ?? null"
       [attr.rows]="autoResize() ? null : rows()"
       [attr.maxlength]="maxLength() ?? null"
       [attr.aria-label]="ariaLabel() || null"

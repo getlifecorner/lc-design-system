@@ -2,14 +2,18 @@ import {
   Component,
   ChangeDetectionStrategy,
   ElementRef,
+  OutputRef,
+  PLATFORM_ID,
   afterRenderEffect,
   computed,
   forwardRef,
+  inject,
   input,
-  output,
+  model,
   signal,
   viewChild,
 } from '@angular/core';
+import { isPlatformServer } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 let nextUniqueId = 0;
@@ -25,10 +29,13 @@ let nextUniqueId = 0;
  * - Validation error message and helper text
  * - Disabled and readonly states
  * - ControlValueAccessor integration for reactive forms
+ * - Plain form posts without JavaScript: `name`, and a `value` that is
+ *   prerendered into the native `<textarea>`
  *
  * @example
  * ```html
  * <lc-textarea placeholder="Enter message" [autoResize]="true" [(ngModel)]="message" />
+ * <lc-textarea label="Message" name="message" [required]="true" [value]="draft" />
  * ```
  */
 @Component({
@@ -49,103 +56,168 @@ let nextUniqueId = 0;
 export class TextareaComponent implements ControlValueAccessor {
   private readonly textareaElement = viewChild<ElementRef<HTMLTextAreaElement>>('textarea');
 
+  private readonly isServer = isPlatformServer(inject(PLATFORM_ID));
+
   /**
    * Visual variant of the textarea
+   * @default 'outline'
    */
   readonly variant = input<'outline' | 'filled'>('outline');
 
   /**
    * Size of the textarea
+   * @default 'md'
    */
   readonly size = input<'xs' | 'sm' | 'md' | 'lg'>('md');
 
   /**
    * Whether the textarea is disabled
+   * @default false
    */
   readonly disabled = input<boolean>(false);
 
   /**
    * Whether the textarea is in error state
+   * @default false
    */
   readonly error = input<boolean>(false);
 
   /**
    * Whether the textarea is required
+   * @default false
    */
   readonly required = input<boolean>(false);
 
   /**
+   * Show the `*` after the label of a `required` field. `false` keeps the
+   * required semantics (`required`, `aria-required`) without the asterisk —
+   * for forms where every field is required.
+   * @default true
+   */
+  readonly requiredIndicator = input<boolean>(true);
+
+  /**
+   * Accessible name of the `*` marker, for API parity with `lc-input`.
+   * `lc-textarea` hides the `*` from assistive technology, because the native
+   * `required` state is announced already and naming the `*` would say
+   * "required" twice.
+   * @default 'required'
+   */
+  readonly requiredAriaLabel = input<string>('required');
+
+  /**
    * Whether the textarea is readonly
+   * @default false
    */
   readonly readonly = input<boolean>(false);
 
   /**
    * Placeholder text
+   * @default ''
    */
   readonly placeholder = input<string>('');
 
   /**
    * Label text displayed above the textarea
+   * @default ''
    */
   readonly label = input<string>('');
 
   /**
    * Helper text displayed below the textarea
+   * @default ''
    */
   readonly helperText = input<string>('');
 
   /**
    * Error message displayed when error is true
+   * @default ''
    */
   readonly errorMessage = input<string>('');
 
   /**
    * ARIA label for accessibility
+   * @default undefined
    */
   readonly ariaLabel = input<string | undefined>(undefined);
 
   /**
+   * Native `name` of the inner `<textarea>`, so a form posts the text without
+   * JavaScript. Unset = no attribute. A `disabled` textarea is not posted
+   * (HTML); use `readonly` to post a fixed text.
+   * @default undefined
+   */
+  readonly name = input<string>();
+
+  /**
    * Number of visible text rows
+   * @default 3
    */
   readonly rows = input<number>(3);
 
   /**
    * Maximum number of characters allowed
+   * @default undefined
    */
   readonly maxLength = input<number | undefined>(undefined);
 
   /**
    * Whether to show character count
+   * @default false
    */
   readonly showCharacterCount = input<boolean>(false);
 
   /**
    * Whether to automatically resize based on content
+   * @default false
    */
   readonly autoResize = input<boolean>(false);
 
   /**
    * Minimum number of rows for auto-resize
+   * @default 3
    */
   readonly minRows = input<number>(3);
 
   /**
    * Maximum number of rows for auto-resize
+   * @default undefined
    */
   readonly maxRows = input<number | undefined>(undefined);
 
   /**
-   * Emitted when value changes
+   * Current text, two-way bindable (`[value]` / `[(value)]`). It pre-fills the
+   * native textarea, in prerendered HTML too, so a server-rendered page can
+   * keep a visitor's text. Emits `valueChange` whenever it changes: once per
+   * keystroke that changes the text, and when a bound form control or code
+   * sets a different text. With a form control, the control's value wins;
+   * don't bind both.
+   * @default ''
    */
-  readonly valueChange = output<string>();
+  readonly value = model<string>('');
+
+  /**
+   * The model's change output as a class property, so code that subscribes to
+   * it (`textarea.valueChange.subscribe(…)`, `outputToObservable(…)`) keeps
+   * compiling as in 3.9. Template bindings `(valueChange)` use the model.
+   */
+  readonly valueChange: OutputRef<string> = this.value;
 
   /** Per-instance id: links label, error and helper text to the control. */
   readonly textareaId = `lc-textarea-${nextUniqueId++}`;
   readonly errorId = `${this.textareaId}-error`;
   readonly helperId = `${this.textareaId}-helper`;
 
-  // Internal state
-  readonly value = signal<string>('');
+  /**
+   * The native textarea's value. On the server a leading line break gets one
+   * extra `\n`: the HTML parser drops the first line break after `<textarea>`,
+   * and the server's DOM serialiser doesn't add the one the HTML
+   * serialisation rules require, so the prerendered page would lose it.
+   */
+  protected readonly renderedValue = computed(() => {
+    const value = this.value();
+    return this.isServer && /^[\r\n]/.test(value) ? `\n${value}` : value;
+  });
 
   // Internal disabled state (for ControlValueAccessor)
   private readonly formDisabled = signal<boolean>(false);
@@ -234,9 +306,9 @@ export class TextareaComponent implements ControlValueAccessor {
       return;
     }
 
+    // model.set() emits `valueChange` exactly once per actual change
     this.value.set(value);
     this.onChange(value);
-    this.valueChange.emit(value);
   }
 
   /**
