@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.11.1] - 2026-10-22
+
+lc-icon under a strict style CSP, and lc-footer sections at 320 px with 200 % text (G-37, G-36; life-os website v0). No API breaks.
+
+### Fixed
+
+- **`lc-icon` renders no `style` attribute** (G-37): the box size comes from the `icon-<size>` class (16 / 20 / 24 / 32 / 40 px) and the default colour from the stylesheet (`color: inherit`), so icons render under `style-src 'self'` without `unsafe-inline` or hashes, as the life-os website ships. Before, every prerendered icon carried `style="width: 24px; height: 24px;"` on its box and `style="color: currentcolor;"` on its svg, which that CSP blocks. Prerendered pages of the consumer check (Angular 21 and 22): 29 icons on the broad page and every icon of the bundled set without `style=`; after hydration still none, boxes 24 × 24. Size and colour are unchanged (the icon takes its parent's text colour in both themes, CanvasText or LinkText in forced colours); 464 of 472 icon, next-step-card, empty-state, document-viewer, kanban, header and footer screenshots are identical to 3.11.0 (the 8 others show a random image).
+- **`lc-footer` sections fit at 320 px with 200 % text** (G-36, WCAG 1.4.10): the column minimum is `min(10rem, 100%)`, so the sections stack in one 224 px column instead of a 320 px (10rem) column that scrolled the page sideways; a word wider than the column breaks inside the word ("Datenschutzerklärung"). Put a soft hyphen (U+00AD) into a compound to choose where. From 10rem up the columns are as before (1024 / 1280: 212 / 276 px × 4).
+
+### Compatibility
+
+- No API breaks. A custom `color` (`#FF5733`, `var(--…)`) is still the svg's inline colour, now set through CSSOM only, which a `style-src 'self'` CSP allows in the browser; in prerendered HTML it is a `style` attribute that such a CSP blocks until the app hydrates (the icon shows the parent's colour until then). Under a strict CSP, colour icons from your stylesheet: set `color` on `lc-icon` or its parent.
+- Tests that read `container.style.width` or the default `svg.style.color` now get `''`: read the `icon-<size>` class, the svg's `width` attribute or the computed style. A rule of your own on the inner `.icon-container` that is more specific than (0,2,0) now applies (the inline size used to win). An equally specific global rule still loses, because the component style loads later.
+
+### Migration
+
+- life-os website: drop the `G-36` page-level footer rule; the G-37 build check needs no change.
+
 ## [3.11.0] - 2026-10-22
 
 Reflow at 200 % text on a phone for life-os's sign-in, Today and Household pages (AS-30 (2), AS-32, SI-15; WCAG 1.4.4, 1.4.10). No API breaks.
