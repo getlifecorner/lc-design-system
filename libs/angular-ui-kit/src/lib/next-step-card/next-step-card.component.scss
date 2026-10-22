@@ -318,36 +318,45 @@
 // (a) icon and title share the first row, everything else spans the full
 // inner width below; (b) the actions take their own row and stretch;
 // (c) the inline padding drops from padding-lg to padding-md.
+// A wrapping flex row, not a grid (3.11, AS-32): the title's automatic minimum
+// is its longest word, so when icon, gap and that word don't fit on one line
+// ("Nichts zu tun" at 200 % text) the title moves below the icon and takes
+// the full width instead of breaking inside the word. Where it fits, the
+// boxes are the same as the old `auto minmax(0, 1fr)` grid.
 @container lc-next-step-card (width < 30rem) {
   .lc-next-step-card {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
     column-gap: var(--lc-nsc-narrow-icon-gap, var(--lc-density-gap-md, 1rem));
     row-gap: var(--lc-nsc-narrow-row-gap, var(--lc-density-gap-sm, 0.5rem));
     padding: var(--lc-density-padding-md, var(--spacing-4, 1rem));
   }
 
-  // The body dissolves, so its children become grid items of the card.
+  // The body dissolves, so its children become flex items of the card.
   .lc-next-step-card__body {
     display: contents;
   }
 
-  .lc-next-step-card__icon {
-    grid-column: 1;
-  }
-
+  // Shares the first line with the icon. The title keeps `break-word`: the
+  // wrap decision needs its minimum to be the longest word, and `max-width`
+  // caps that minimum at the line, so a word wider than the whole line still
+  // breaks without overflowing.
   .lc-next-step-card__title {
-    grid-column: 2;
+    flex: 1 1 0%;
+    max-width: 100%;
   }
 
+  // One full line each. `min-width: 0` as in the grid, where an item spanning
+  // a flexible track had no automatic minimum.
   .lc-next-step-card__message,
   .lc-next-step-card__custom-message,
   .lc-next-step-card__content,
   .lc-next-step-card__blockers,
   .lc-next-step-card__meta,
   .lc-next-step-card__actions {
-    grid-column: 1 / -1;
+    flex: 1 1 100%;
+    min-width: 0;
     margin-top: 0;
   }
 
@@ -355,9 +364,12 @@
     margin: 0;
   }
 
+  // The actions are a wrapping row of stretched items: a one-word label wider
+  // than its line breaks inside the word (the button hook).
   .lc-next-step-card__actions {
     margin-left: 0;
     padding-top: var(--lc-nsc-narrow-actions-offset, var(--lc-density-gap-sm, 0.5rem));
+    --lc-btn-overflow-wrap: anywhere;
   }
 
   :host ::ng-deep .lc-next-step-card__actions {

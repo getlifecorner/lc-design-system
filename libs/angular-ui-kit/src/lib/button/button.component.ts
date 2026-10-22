@@ -43,6 +43,15 @@ export type ButtonType = 'button' | 'submit' | 'reset';
  * - Keyboard and focus handling
  * - Accessible with ARIA attributes
  *
+ * CSS hook `--lc-btn-overflow-wrap` (`break-word | anywhere`, default
+ * `break-word`): `anywhere` lets a single word wider than the button's line
+ * break inside the word, so the button stays inside its container (WCAG 1.4.10
+ * at 320 px or 200 % text). Set it on the button, the `lc-button` host or an
+ * ancestor that is a wrapping row or a column. In a non-wrapping row it lets a
+ * one-word button shrink with its neighbours, which is why the default stays
+ * `break-word`. The kit sets it in `lc-footer`'s link row, the page-header
+ * actions and the next-step-card's narrow actions.
+ *
  * @example
  * ```html
  * <lc-button variant="primary" size="md">Save</lc-button>

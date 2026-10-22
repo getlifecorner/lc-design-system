@@ -10,6 +10,7 @@ export type BadgeSize = 'xs' | 'sm' | 'md' | 'lg';
  * - Semantic color variants (primary, secondary, success, warning, error, info, neutral)
  * - Multiple size options (xs, sm, md, lg)
  * - Pill-shaped rounded mode
+ * - Optional wrapping for long, sentence-like labels (`wrap`)
  * - Content projection for labels or count values
  *
  * @example
@@ -45,6 +46,17 @@ export class BadgeComponent {
   dot = input<boolean>(false);
 
   /**
+   * Let a long label wrap onto centred lines instead of staying on one line:
+   * the fixed height becomes a minimum height, lines are 1.25 high, and the
+   * badge is never wider than its container (a word wider than the container
+   * breaks). With `rounded`, the corners keep the one-line pill radius, so a
+   * two-line badge isn't clipped by half-circle ends. A label that fits looks
+   * as before. Use it for sentence-like status labels (SI-15), not for counts.
+   * @default false
+   */
+  wrap = input<boolean>(false);
+
+  /**
    * Computed CSS classes for the badge
    */
   badgeClasses = computed(() => {
@@ -59,6 +71,10 @@ export class BadgeComponent {
 
     if (this.dot()) {
       classes.push('lc-badge--has-dot');
+    }
+
+    if (this.wrap()) {
+      classes.push('lc-badge--wrap');
     }
 
     return classes.join(' ');

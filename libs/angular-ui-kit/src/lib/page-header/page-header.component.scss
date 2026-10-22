@@ -130,8 +130,13 @@
     // in the page language (`lang` on <html> or an ancestor) instead of being
     // cut without a hyphen; an unbreakable string still wraps. Hook:
     // --lc-page-header-title-hyphens (e.g. `manual` for a product name).
+    // `anywhere` (3.11, AS-30): the title is inline-flex, so its text is an
+    // anonymous flex item that `break-word` could not shrink below its
+    // longest word; "Hallo, Johanna-Friederike" ran 38 px past a 320 px
+    // screen at 200 % text. A word only breaks when it is wider than the
+    // whole line, and hyphenation is still tried first.
     hyphens: var(--lc-page-header-title-hyphens, auto);
-    overflow-wrap: break-word;
+    overflow-wrap: anywhere;
   }
 
   // Public theming hooks (stable API — set them on the host or any ancestor):
@@ -217,6 +222,11 @@
     // `justify-content: space-between` that __row used to provide, and keeps
     // them right-aligned even once they wrap onto their own line.
     margin-inline-start: auto;
+    // Never wider than the row (3.11, AS-30): at 320 px and 200 % text two
+    // actions ran 181 px past the header. Clamped, they wrap, and a one-word
+    // label wider than its line breaks inside the word (the button hook).
+    max-width: 100%;
+    --lc-btn-overflow-wrap: anywhere;
   }
 
   // ── Size variants ────────────────────────────────────────────────────────

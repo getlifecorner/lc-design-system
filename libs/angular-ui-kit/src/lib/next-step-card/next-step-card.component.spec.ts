@@ -331,15 +331,47 @@ describe('NextStepCardComponent', () => {
 
     it('switches to the narrow layout below 480 px of card width (TD-1)', () => {
       const narrow = block('@container lc-next-step-card (width < 30rem)');
-      // (a) icon beside the title, the rest full width
-      expect(narrow).toMatch(/grid-template-columns:\s*auto minmax\(0, 1fr\)/);
+      // (a) icon beside the title, the rest full width. 3.11 (AS-32): a wrapping
+      // flex row instead of the `auto minmax(0, 1fr)` grid (same boxes where the
+      // title's longest word fits; see the AS-32 test below), so the full-width
+      // items take a full flex line instead of the full grid row.
+      expect(narrow).toMatch(/\.lc-next-step-card\s*{[^}]*display:\s*flex;[^}]*flex-wrap:\s*wrap/);
       expect(narrow).toMatch(/\.lc-next-step-card__body\s*{\s*display:\s*contents/);
-      expect(narrow).toMatch(/\.lc-next-step-card__actions\s*{[^}]*grid-column:\s*1\s*\/\s*-1/);
+      expect(narrow).toMatch(/\.lc-next-step-card__actions\s*{[^}]*flex:\s*1 1 100%/);
       // (b) the actions stretch, an lc-button's inner button fills its host
       expect(narrow).toMatch(/\.lc-next-step-card__actions > \*[^{]*{[^}]*flex:\s*1 1 auto/);
       expect(narrow).toMatch(/lc-button > \.btn[^{]*{[^}]*width:\s*100%/);
       // (c) inline padding drops to padding-md
       expect(narrow).toMatch(/padding:\s*var\(--lc-density-padding-md/);
+    });
+
+    // 3.11 (AS-32): at 360 px and 200 % text the grid gave the title 92 px, so
+    // "Nichts zu tun" broke inside "Nichts". In a wrapping row the title's
+    // automatic minimum is its longest word: when that doesn't fit beside the
+    // icon, the title moves below it and takes the full width.
+    it('moves the title below the icon instead of breaking a word (AS-32)', () => {
+      const narrow = block('@container lc-next-step-card (width < 30rem)');
+      expect(narrow).not.toMatch(/display:\s*grid/);
+      expect(narrow).not.toMatch(/grid-(template-columns|column)/);
+      const title = /\.lc-next-step-card__title\s*{([^}]*)}/.exec(narrow)?.[1] ?? '';
+      expect(title).toMatch(/flex:\s*1 1 0%/);
+      expect(title).toMatch(/max-width:\s*100%/);
+      // No min-width: 0 (that would drop the longest-word minimum) and no
+      // `anywhere`: the base rule's break-word stays.
+      expect(title).not.toMatch(/min-width/);
+      expect(title).not.toMatch(/overflow-wrap/);
+      expect(css).toMatch(/\.lc-next-step-card__title\s*{[^}]*overflow-wrap:\s*break-word/);
+      // The full-width items have no automatic minimum, as in the grid.
+      for (const item of ['message', 'custom-message', 'content', 'blockers', 'meta', 'actions']) {
+        expect(narrow).toMatch(new RegExp(`\\.lc-next-step-card__${item}[,\\s][^{]*{[^}]*flex:\\s*1 1 100%;[^}]*min-width:\\s*0`));
+      }
+    });
+
+    it('keeps the wide layout untouched (AS-32 applies below 30rem only)', () => {
+      const wide = css.slice(0, css.indexOf('@container'));
+      expect(wide).toMatch(/\.lc-next-step-card\s*{[^}]*display:\s*flex;[^}]*align-items:\s*flex-start;[^}]*flex-wrap:\s*wrap/);
+      expect(wide).toMatch(/\.lc-next-step-card__body\s*{[^}]*flex:\s*1 1 16rem/);
+      expect(wide).not.toMatch(/--lc-btn-overflow-wrap/);
     });
 
     it('gives a projected fullWidth action its own row at every width', () => {

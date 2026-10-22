@@ -21,9 +21,14 @@
   // e.g. long German labels. Centred lines; a single word wider than the
   // button breaks rather than spilling out. A label that fits stays on one
   // line, so nothing changes where there is room.
+  // Hook `--lc-btn-overflow-wrap` (3.11, AS-30), default `break-word`: set to
+  // `anywhere` on a wrapping row or a column, a one-word label wider than its
+  // line breaks inside the word and the button stays inside its container.
+  // Not the default, because in a non-wrapping row `anywhere` lets a one-word
+  // button shrink with its neighbours ("Bearbeiten" 116.7 → 93.8 px wide).
   white-space: normal;
   text-align: center;
-  overflow-wrap: break-word;
+  overflow-wrap: var(--lc-btn-overflow-wrap, break-word);
   user-select: none;
 
   @include mix.focus-ring;

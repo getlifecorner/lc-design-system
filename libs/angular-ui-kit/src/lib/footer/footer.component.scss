@@ -95,6 +95,12 @@
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 0.5rem;
+    // A wrapping row (3.11, AS-30): a projected a[lcButton] whose one word is
+    // wider than the line ("Datenschutz" as a `lg` link at 320 px and 200 %
+    // text) breaks inside the word instead of running out of the footer.
+    // Links that fit render as before. The property inherits into projected
+    // content, so no ::ng-deep is needed.
+    --lc-btn-overflow-wrap: anywhere;
   }
 
   // Secondary ink for the same reason as the links (tertiary: 4.39:1 on the

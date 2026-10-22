@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/angular';
+import { moduleMetadata } from '@storybook/angular';
 import { expect, within } from 'storybook/test';
 import { FooterComponent } from './footer.component';
+import { ButtonLinkComponent } from '../button/button-link.component';
 
 const meta: Meta<FooterComponent> = {
   title: 'Layout/Footer',
@@ -245,4 +247,53 @@ export const PublicSite: Story = {
     await expect(within(nav).getByRole('link', { name: 'Sicherheit' }).getAttribute('aria-current')).toBe('page');
     await expect(within(nav).getByRole('link', { name: 'GitHub (öffnet in neuem Tab)' })).toBeTruthy();
   },
+};
+
+/** Root text size of a large-text story: `200%` is a phone set to large text (not browser zoom). */
+type StoryTextSize = '200%' | '100%';
+type LargeTextStory = StoryObj<FooterComponent & { textSize: StoryTextSize }>;
+
+const textSizeArgType = {
+  control: 'inline-radio',
+  options: ['200%', '100%'],
+  description:
+    "Root font size of the canvas (`html { font-size }`), the way a phone's large-text setting raises it; every rem value doubles at `200%`. Story only, not a component input; the docs page stays at 100 %",
+  table: { defaultValue: { summary: "'200%'" } },
+} as const;
+
+/** One language block: the life-os shell footer with two `link`/`lg` links and the copyright. */
+const shellFooter = (lang = 'en', privacy = '', legal = '') => `
+  <lc-footer lang="${lang}" variant="default" [compact]="true" [showBorder]="false" copyright="© 2026 LifeCorner">
+    <a lcButton variant="link" size="lg" href="#privacy">${privacy}</a>
+    <a lcButton variant="link" size="lg" href="#legal">${legal}</a>
+  </lc-footer>`;
+
+/**
+ * 3.11 (AS-30): the life-os shell footer on a phone at 200 % text. The root
+ * text size is raised in the canvas only (`#storybook-root`), so the docs page
+ * keeps 100 %.
+ */
+export const LinksLargeText: LargeTextStory = {
+  name: 'Links at 200 % Text (phone)',
+  args: { textSize: '200%' },
+  argTypes: { textSize: textSizeArgType },
+  decorators: [moduleMetadata({ imports: [ButtonLinkComponent] })],
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        story:
+          '3.11 (AS-30): the footer of the life-os shell (`compact`, no border) with two `a[lcButton]` links (`link`, `lg`) and the copyright, with the root text at 200 %. The bottom row sets `--lc-btn-overflow-wrap: anywhere`, so "Datenschutz" (with its padding wider than the 224 px line at 320 px) breaks inside the word and stays inside the footer, on two lines. Links that fit render as before. At 100 % (`textSize`) nothing changes. German, then English. Open it in the canvas at 360 or 320 px.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div [attr.data-lc-story-text]="textSize" style="background: var(--color-background); padding: 0; display: flex; flex-direction: column; gap: 32px;">
+        ${shellFooter('de', 'Datenschutz', 'LifeCorner')}
+        ${shellFooter('en', 'Privacy policy', 'LifeCorner')}
+      </div>
+      <style>::ng-deep html:has(#storybook-root [data-lc-story-text="200%"]) { font-size: 200%; }</style>`,
+  }),
 };

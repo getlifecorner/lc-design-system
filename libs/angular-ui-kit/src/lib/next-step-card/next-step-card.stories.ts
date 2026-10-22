@@ -318,3 +318,54 @@ export const LargeBuiltInActions: Story = {
   }),
 };
 
+/** Root text size of a large-text story: `200%` is a phone set to large text (not browser zoom). */
+type StoryTextSize = '200%' | '100%';
+type LargeTextStory = StoryObj<NextStepCardComponent & { textSize: StoryTextSize }>;
+
+const textSizeArgType = {
+  control: 'inline-radio',
+  options: ['200%', '100%'],
+  description:
+    "Root font size of the canvas (`html { font-size }`), the way a phone's large-text setting raises it; every rem value doubles at `200%`. Story only, not a component input; the docs page stays at 100 %",
+  table: { defaultValue: { summary: "'200%'" } },
+} as const;
+
+/** One language block: the soft card of the life-os Today page and a default card with two actions. */
+const largeTextCards = (lang = 'en', soft = '', softMessage = '', title = '', message = '', primary = '', secondary = '') => `
+  <div lang="${lang}" style="display: flex; flex-direction: column; gap: 16px;">
+    <lc-next-step-card variant="soft" tone="neutral" icon="check" titleTag="h2" actionSize="lg"
+      cardTitle="${soft}" message="${softMessage}" />
+    <lc-next-step-card tone="warning" icon="clock" cardTitle="${title}" message="${message}"
+      primaryLabel="${primary}" secondaryLabel="${secondary}" />
+  </div>`;
+
+/**
+ * 3.11 (AS-32): the narrow card at 200 % text. When icon, gap and the title's
+ * longest word don't fit on one line, the title moves below the icon instead
+ * of breaking inside the word. The root text size is raised in the canvas only
+ * (`#storybook-root`), so the docs page keeps 100 %.
+ */
+export const LargeText: LargeTextStory = {
+  name: 'Narrow at 200 % Text (phone)',
+  args: { textSize: '200%' },
+  argTypes: { textSize: textSizeArgType },
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        story:
+          '3.11 (AS-32): the soft card of the life-os Today page (`variant="soft"`, `titleTag="h2"`, no actions) and a default card with two actions, each as wide as the viewport minus 48 px, with the root text at 200 %. Below 30rem of card width the card is a wrapping row: the title shares the first line with the icon while its longest word fits there, and otherwise moves below the icon and takes the full width, so "Nichts zu tun" never breaks inside "Nichts". Where the title fits, the card looks exactly as before. German, then English. Open it in the canvas at 360 or 320 px.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div [attr.data-lc-story-text]="textSize" style="background: var(--color-background); padding: 16px 24px; display: flex; flex-direction: column; gap: 32px;">
+        ${largeTextCards('de', 'Nichts zu tun', 'Für heute ist alles erledigt.', 'Wartet auf Freigabe', 'Der Entwurf ist fertig und kann geprüft werden.', 'Freigeben', 'Änderungen anfordern')}
+        ${largeTextCards('en', 'Nothing to do', 'Everything is done for today.', 'Waiting for approval', 'The draft is ready for review.', 'Approve', 'Request changes')}
+      </div>
+      <style>::ng-deep html:has(#storybook-root [data-lc-story-text="200%"]) { font-size: 200%; }</style>`,
+  }),
+};
+

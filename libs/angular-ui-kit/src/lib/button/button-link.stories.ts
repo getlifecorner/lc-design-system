@@ -269,3 +269,58 @@ export const Flush: Story = {
     await expect(getComputedStyle(endLink).justifyContent).toBe('end');
   },
 };
+
+/** Root text size of a large-text story: `200%` is a phone set to large text (not browser zoom). */
+type StoryTextSize = '200%' | '100%';
+
+const textSizeArgType = {
+  control: 'inline-radio',
+  options: ['200%', '100%'],
+  description:
+    "Root font size of the canvas (`html { font-size }`), the way a phone's large-text setting raises it; every rem value doubles at `200%`. Story only, not a component input; the docs page stays at 100 %",
+  table: { defaultValue: { summary: "'200%'" } },
+} as const;
+
+/** One block with the hook set: the link is alone on its line. */
+const overlongWordBlock = (lang = 'en', label = '') => `
+  <div lang="${lang}" style="--lc-btn-overflow-wrap: anywhere;">
+    <a lcButton variant="secondary" size="lg" href="#privacy-statement">${label}</a>
+  </div>`;
+
+/**
+ * 3.11 (AS-30): `--lc-btn-overflow-wrap: anywhere` on a block that holds a
+ * link whose one word is wider than the line at 320 px and 200 % text. The
+ * root text size is raised in the canvas only (`#storybook-root`).
+ */
+export const OverlongWord: StoryObj<ButtonLinkComponent & { textSize: StoryTextSize }> = {
+  name: 'Overlong Word at 200 % Text (phone)',
+  args: { textSize: '200%' },
+  argTypes: {
+    textSize: textSizeArgType,
+    // The hook, documented here (it is CSS, not an input).
+    '--lc-btn-overflow-wrap': {
+      control: false,
+      description:
+        'CSS hook on `a[lcButton]` / `lc-button`: `anywhere` lets a single word wider than the button\'s line break inside the word, so the button stays inside its container (WCAG 1.4.10). Set it on the button, the `lc-button` host or an ancestor that is a wrapping row or a column; it inherits, no `::ng-deep`. The kit sets it in `lc-footer`\'s link row, the page-header actions and the next-step-card\'s narrow actions.',
+      table: { category: 'CSS hooks', defaultValue: { summary: 'break-word' } },
+    },
+  } as Meta<ButtonLinkComponent>['argTypes'],
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        story:
+          '3.11 (AS-30): a secondary `lg` link alone in a block with `--lc-btn-overflow-wrap: anywhere`, with the root text at 200 %. "Datenschutzerklärung" is wider than the 272 px line at 320 px, so it breaks inside the word and stays on screen. Why the default stays `break-word`: `anywhere` drops the minimum width of every button to one character, so in a row that does not wrap a one-word button shrinks with its neighbours. Measured at 312 px next to an `<h3>` "Haushaltsmitglieder verwalten": "Bearbeiten" (`md`) is 116.7 × 42 px with `break-word` and 93.8 × 62 px ("Bearbeit/en") with `anywhere`. Set it on wrapping rows and columns only. German, then English. Open it in the canvas at 360 or 320 px.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div [attr.data-lc-story-text]="textSize" style="background: var(--color-background); padding: 16px 24px; display: flex; flex-direction: column; gap: 32px;">
+        ${overlongWordBlock('de', 'Datenschutzerklärung')}
+        ${overlongWordBlock('en', 'Privacy statement')}
+      </div>
+      <style>::ng-deep html:has(#storybook-root [data-lc-story-text="200%"]) { font-size: 200%; }</style>`,
+  }),
+};

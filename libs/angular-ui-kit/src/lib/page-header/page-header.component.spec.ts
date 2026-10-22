@@ -259,8 +259,29 @@ describe('PageHeaderComponent', () => {
       it('hyphenates a long title in the page language instead of cutting a word without a hyphen', () => {
         const title = rule('.lc-page-header__title');
         expect(title).toMatch(/hyphens:\s*var\(--lc-page-header-title-hyphens, auto\)/);
-        expect(title).toMatch(/overflow-wrap:\s*break-word/);
+        // 3.11 (AS-30): `anywhere` instead of `break-word`, so a word wider than
+        // the whole line breaks inside the flex row instead of overflowing it.
+        expect(title).toMatch(/overflow-wrap:\s*anywhere/);
         expect(title).not.toMatch(/word-break:\s*break-word/);
+      });
+
+      // 3.11 (AS-30, WCAG 1.4.10): at 320 px and 200 % text "Hallo,
+      // Johanna-Friederike" ran 38 px past the screen; the title is inline-flex,
+      // and only `anywhere` lowers the min-content of its anonymous text item.
+      it('lets the title shrink below its longest word and keeps the title box shrinkable', () => {
+        const title = rule('.lc-page-header__title');
+        expect(title).toMatch(/display:\s*inline-flex/);
+        expect(title).toMatch(/min-width:\s*0/);
+        expect(title).toMatch(/overflow-wrap:\s*anywhere/);
+        expect(title).not.toMatch(/overflow-wrap:\s*break-word/);
+      });
+
+      it('clamps the actions to the row so they wrap at large text (AS-30)', () => {
+        const actions = rule('.lc-page-header__actions');
+        expect(actions).toMatch(/flex:\s*0 0 auto/);
+        expect(actions).toMatch(/flex-wrap:\s*wrap/);
+        expect(actions).toMatch(/max-width:\s*100%/);
+        expect(actions).toMatch(/--lc-btn-overflow-wrap:\s*anywhere/);
       });
 
       it.each([

@@ -26,7 +26,9 @@ describe('lc-button styles', () => {
     });
 
     it('breaks a single word that is wider than the button instead of overflowing', () => {
-      expect(rule('.btn')).toMatch(/overflow-wrap:\s*break-word/);
+      // 3.11 (AS-30): through the hook --lc-btn-overflow-wrap, whose default is
+      // the same break-word (see button.overflow-wrap.spec.ts).
+      expect(rule('.btn')).toMatch(/overflow-wrap:\s*var\(--lc-btn-overflow-wrap, break-word\)/);
     });
 
     it('nothing re-enables nowrap for a button or a link variant', () => {

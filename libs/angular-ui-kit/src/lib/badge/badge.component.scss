@@ -1,3 +1,5 @@
+@use 'sass:math';
+
 /**
  * Badge Component Styles
  *
@@ -102,6 +104,25 @@
     border-radius: var(--border-radius-full, 9999px);
   }
 
+  // Wrapping label (3.11, SI-15; WCAG 1.4.10): a sentence-like status label
+  // ("Geschlossene Beta, nur mit Einladung" at 320 px and 200 % text) wraps
+  // onto centred lines inside its container. Opt-in, so counts and table
+  // cells keep one line. Height, padding and radius per size are below.
+  &--wrap {
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
+    line-height: var(--line-height-tight, 1.25);
+    overflow-wrap: anywhere;
+  }
+
+  // On the first line's centre, not the badge's: (1.25 - 0.5) / 2 = 0.375em,
+  // the same 10.5 px top as without `wrap` on one line.
+  &--wrap &__dot {
+    align-self: flex-start;
+    margin-top: calc((var(--line-height-tight, 1.25) - 0.5) * 0.5em);
+  }
+
   // Leading status dot — fills in the variant's text color (currentColor), so
   // it always matches the label ink across every variant. Sized relative to the
   // label so it scales with the badge size automatically.
@@ -112,6 +133,31 @@
     margin-right: 0.4em;
     border-radius: var(--border-radius-full, 9999px);
     background-color: currentColor;
+  }
+}
+
+// Wrap mode per size (0,2,0, so `height: auto` beats the size rule): the
+// one-line height becomes the minimum, and the block padding centres one
+// 1.25 line box in it (minus the 1 px borders), so a label that fits is as
+// tall as before (md: 4.25 + 17.5 + 4.25 + 2 = 28 px). With `rounded`, the
+// radius is half that height: the same pill on one line, and no half-circle
+// ends clipping a second line.
+$_badge-wrap-heights: (
+  xs: 1.25rem,
+  sm: 1.5rem,
+  md: 1.75rem,
+  lg: 2rem,
+);
+
+@each $size, $height in $_badge-wrap-heights {
+  .lc-badge--wrap.lc-badge--#{$size} {
+    height: auto;
+    min-height: $height;
+    padding-block: max(0px, calc((#{$height} - 2px) / 2 - var(--line-height-tight, 1.25) * 0.5em));
+  }
+
+  .lc-badge--wrap.lc-badge--rounded.lc-badge--#{$size} {
+    border-radius: math.div($height, 2);
   }
 }
 

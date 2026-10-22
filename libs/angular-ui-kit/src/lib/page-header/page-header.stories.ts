@@ -583,3 +583,54 @@ export const SecondaryLevels: Story = {
     `,
   }),
 };
+
+/** Root text size of a large-text story: `200%` is a phone set to large text (not browser zoom). */
+type StoryTextSize = '200%' | '100%';
+type LargeTextStory = StoryObj<PageHeaderComponent & { textSize: StoryTextSize }>;
+
+const textSizeArgType = {
+  control: 'inline-radio',
+  options: ['200%', '100%'],
+  description:
+    "Root font size of the canvas (`html { font-size }`), the way a phone's large-text setting raises it; every rem value doubles at `200%`. Story only, not a component input; the docs page stays at 100 %",
+  table: { defaultValue: { summary: "'200%'" } },
+} as const;
+
+/** One language block: the life-os greeting, a page title with one action, and the sign-in title. */
+const largeTextHeaders = (lang = 'en', greeting = '', title = '', action = '', auth = '') => `
+  <div lang="${lang}">
+    <lc-page-header [level]="1" size="display" title="${greeting}" />
+    <lc-page-header [level]="2" size="title" title="${title}">
+      <lc-button slot="actions" variant="secondary" size="sm">${action}</lc-button>
+    </lc-page-header>
+    <lc-page-header [level]="2" size="auth" title="${auth}" [noPaddingX]="true" />
+  </div>`;
+
+/**
+ * 3.11 (AS-30): titles with a word wider than the line at 320 px and 200 %
+ * text. The root text size is raised in the canvas only (`#storybook-root`),
+ * so the docs page keeps 100 %.
+ */
+export const LargeText: LargeTextStory = {
+  name: 'Long Words at 200 % Text (phone)',
+  args: { textSize: '200%' },
+  argTypes: { textSize: textSizeArgType },
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        story:
+          '3.11 (AS-30): the life-os greeting (`display`, `<h1>`), a page title with one action (`title`, `<h2>`) and the sign-in title (`auth`), with the root text at 200 %. The title uses `overflow-wrap: anywhere`: a word wider than the whole line ("Johanna-Friederike", "Household" at 320 px) breaks inside the word instead of running past the screen edge, after hyphenation was tried. The actions are never wider than the row, so they wrap below the title. At 100 % (`textSize`) nothing changes. German, then English. Open it in the canvas at 360 or 320 px.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div [attr.data-lc-story-text]="textSize" style="background: var(--color-background); padding: 16px 24px; display: flex; flex-direction: column; gap: 32px;">
+        ${largeTextHeaders('de', 'Hallo, Johanna-Friederike', 'Haushalt', 'Einladen', 'Bei LifeCorner anmelden')}
+        ${largeTextHeaders('en', 'Hello, Johanna-Friederike', 'Household', 'Invite', 'Sign in to LifeCorner')}
+      </div>
+      <style>::ng-deep html:has(#storybook-root [data-lc-story-text="200%"]) { font-size: 200%; }</style>`,
+  }),
+};
