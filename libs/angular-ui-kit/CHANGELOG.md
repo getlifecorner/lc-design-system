@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.11.2] - 2026-10-23
+
+Intrinsic image size for lc-logo and lc-avatar, lazy loading for lc-character and lc-avatar, and buttons that no longer grow on load (G-38, G-39, G-40, G-41; life-os website v0). No API breaks.
+
+### Added
+
+- **`loading` on `lc-character`** (G-39, `'eager' | 'lazy'`, default `'eager'`, type `CharacterLoading`): `lazy` writes `loading="lazy"` on every drawing, for Edu below the fold such as on the horizon. In `colorMode="auto"` the browser then fetches only the drawing of the current theme. `eager` writes no attribute, as before.
+- **`loading` on `lc-avatar`** (G-40, same values, type `AvatarLoading`): `lazy` writes `loading="lazy"` on the image, for an avatar below the fold (the person card). The initials still replace an image that fails.
+- **`srcWidth` / `srcHeight` and `emblemSrcWidth` / `emblemSrcHeight` on `lc-logo`** (G-38, default unset): the intrinsic size of your own `src` / `darkSrc` and `emblemSrc` / `darkEmblemSrc` files, written as the `<img>` `width` / `height` when both of a pair are set (`srcWidth="160"` works too). Without them a custom logo has no size attributes, as before.
+
+### Fixed
+
+- **Built-in `lc-logo` images carry `width` and `height`** (G-38): the lockup 485 × 100 (the file's own size) at every size, the emblem the size's px squared (24, 32, 48, 64, 96), on the light and the dark image. The browser now reserves the logo's box before the SVG arrives: pending box = loaded box at every size (lockup 116.391 / 155.188 / 232.797 / 310.391 / 465.594 × 24 / 32 / 48 / 64 / 96 px; before, it was 0 px wide until the file loaded). The loaded logo is the same size as in 3.11.1 (360 / 1280 px, light and dark), also inside `lc-header`.
+- **`lc-avatar` images carry `width` and `height`** (G-40): the size's px (xs 24, sm 32, md 40, lg 48, xl 64). CSS still sizes the circle, so the rendered avatar is unchanged; at 200 % text the box grows and the attributes only give the 1:1 ratio.
+- **`.btn` animates only `color`, `background-color`, `border-color` and `box-shadow`** (G-41), 150 ms ease-in-out as before. With `transition: all`, the first layout inside `lc-next-step-card` animated padding and font size, so the CTAs grew for 150 ms and the page height depended on timing (measured in 3.11.1: the card at 360 px still 216.38 px high in the first frame of a 242.38 px layout, +26 px over 150 ms). Now the first frame equals the frame 500 ms later (0 px) at 360 / 1024 / 1280 px, German and English. Hover, active and the shadow still animate.
+
+### Compatibility
+
+- No API breaks. A patch by the owner's decision (2026-10-23), although it adds optional inputs. All 516 logo, avatar, avatar-group, character, button, button-link, next-step-card, header and sidenav screenshots (360 / 1024 / 1280, light and dark) are identical to 3.11.1.
+- New default markup: built-in `lc-logo` images and every `lc-avatar` image now have `width` / `height`; `lc-character` and `lc-avatar` have no `loading` attribute unless you set `lazy`. A test that pins the exact attribute list of these images sees the two new attributes. `lc-character` and `lc-avatar` now bind the image source as an attribute after `loading` (same URL sanitisation), so a lazy image is never requested before the browser knows it is lazy.
+- Buttons: the focus outline, the disabled / loading opacity, padding and font size now change at once instead of fading over 150 ms.
+- `lc-header` and `lc-sidenav` don't forward the four logo size inputs (built-in logos in them are sized), and `lc-avatar-group` and the header avatars don't forward `loading`; ask for a follow-up if you need either.
+- The attributes are in the prerendered HTML (consumer check on Angular 21 and 22), with no inline style or script, so they hold under a strict CSP.
+
+### Migration
+
+- life-os website: drop the page-level `G-41` rule (`transition: none` on the CTA buttons). Set `loading="lazy"` on Edu above the horizon and on the how-we-build person card's avatar; a custom logo gets `srcWidth` / `srcHeight` (and the emblem pair) from its file.
+
 ## [3.11.1] - 2026-10-22
 
 lc-icon under a strict style CSP, and lc-footer sections at 320 px with 200 % text (G-37, G-36; life-os website v0). No API breaks.

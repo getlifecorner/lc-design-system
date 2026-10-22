@@ -1,3 +1,3 @@
-- [Measured reference values](reference_measured-values.md) — sidenav/app-page/icon DOM, compat sizes, code-block, Edu, footer/page-header (006), bundle share (007), textarea (008), 200 % text (009, 010 incl. DejaVu widths), icon/footer grid (011); baselines
-- [Design pitfalls](feedback_design-pitfalls.md) — entries, esbuild chunks, @defer, CSP hydration + style-src (011), DOM APIs, specificity, size premises, CSS limits, serialisers, output()→model(), flex wrap at 200 %, `anywhere`, sticky grid, nav labels
-- [Review techniques](reference_review-techniques.md) — --measure math, CSS-injection prototype + --compare, axe/fonts via CDN, Bash-safe syntax, cmp/diff -rq, unstable shots, worktree, NX root
+- [Measured reference values](reference_measured-values.md) — sidenav/app-page/icon DOM, code-block, Edu, footer/page-header, bundle share, textarea, 200 % text, icon/footer grid, logo/avatar/CTA (012); baselines
+- [Design pitfalls](feedback_design-pitfalls.md) — entries, esbuild chunks, @defer, CSP hydration + style-src, DOM APIs, specificity, CSS limits, serialisers, flex wrap, `anywhere`, binding order prop→attr, dark-default story assets (012)
+- [Review techniques](reference_review-techniques.md) — --measure math, CSS-injection prototype + --compare, axe/fonts via CDN, Bash-safe syntax, pending-img/transition probes (012), worktree, NX root

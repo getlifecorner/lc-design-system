@@ -43,4 +43,5 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [008](008-textarea-name-value/) lc-textarea name and value for no-script posts | life-os | G-CF1 (G-CF2 confirm, G-CF3 optional) | 3.10.0 | 3.10.0 |
 | [009](009-signed-in-shell-200-text/) Signed-in shell at 200 % text on a phone | life-os | AS-31 | 3.10.1 | 3.10.1 |
 | [010](010-reflow-200-text-phone/) Reflow gaps at 200 % text on a phone | life-os | AS-30 (2), AS-32, SI-15 | 3.11.0 (staged, awaiting 2FA) | 3.11.0 |
-| [011](011-icon-csp-footer-reflow/) lc-icon without inline styles, footer at 320 px with 200 % text | life-os | G-37, G-36 | 3.11.1 | 3.11.1 |
+| [011](011-icon-csp-footer-reflow/) lc-icon without inline styles, footer at 320 px with 200 % text | life-os | G-37, G-36 | 3.11.1 (staged, awaiting 2FA) | 3.11.1 |
+| [012](012-image-size-lazy-button-transition/) Image size and lazy loading for logo, character, avatar; narrower button transition | life-os | G-38, G-39, G-40, G-41 | 3.11.2 | 3.11.2 |

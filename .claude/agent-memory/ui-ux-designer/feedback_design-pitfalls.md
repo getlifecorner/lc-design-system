@@ -31,6 +31,8 @@ metadata:
 
 - **CSP `style-src` without `'unsafe-inline'` (011).** On the server (domino), `[style.x]` bindings and CSSOM writes are both serialised as `style=""`. In the browser, CSSOM is allowed and parsed or `setAttribute` styles are blocked. Moving an inline style into a class drops its precedence from "beats everything" to the class's specificity, so restate the property (`svg { color: inherit }`) to keep global rules out. `min()` alone doesn't stop text overflowing a column; add `anywhere` in boxes whose tracks have a definite minimum. Component styles are appended to `head` after the app's stylesheet, so a global rule needs *more* specificity than the component rule to win: an equal one loses the tie (011 r1).
 
+- **Template binding order (012).** Angular applies every property binding before any attribute binding (`UPDATE_ORDERING` in @angular/compiler), so `[src]` lands before `[attr.loading]`. For lazy images, bind `[attr.loading]` and then `[attr.src]`. `[width]="undefined"` writes `width="0"`, so use `[attr.width]` (null means absent). The `loading` name collides with the kit's boolean busy flag (button, select); a `'eager' | 'lazy'` union keeps them apart. **Story assets (012 r1):** the Storybook preview defaults to dark (canvas rgb(10,18,27)), so a custom-src story needs a dark partner: the mono emblem (#111827) was 1.06:1 and cost a round. In timing protocols, toggle every element first, then read: toggle-and-read in turn measures a half-toggled wrapping row.
+
 **Why:** each of these cost a round trip or would have broken the build.
 
 **How to apply:** name the relevant ones in the design's risk list.
