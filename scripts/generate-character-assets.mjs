@@ -6,6 +6,8 @@
  *   - src/assets/character/<pose>-light.svg for the 14 poses below;
  *   - src/assets/character/<pose>-dark.svg for the 4 poses whose dark pair is drawn
  *     (hello, shows-the-way, happy, calm).
+ *   Exception: comforts-light.svg's brows and mouth were redrawn in the kit in 3.11.3
+ *   (gap G-42), so the kit file is now the source for that pose.
  *
  * Emits:
  *   - src/assets/character/<pose>-dark.svg for the other 10 poses: the light file

@@ -172,6 +172,32 @@ export const Thinking = poseStory('thinking');
 export const ConnectionPaused = poseStory('connection-paused');
 export const SeeYou = poseStory('see-you');
 
+export const Brows: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The three poses that draw brows, at 48 and 96 px. No pose frowns: brows never slope down toward the centre unless they arch. Tröstet (`comforts`) is worried, inner ends raised (3.11.3, G-42); Hat etwas entdeckt (`discovered`) raises both; Verbindung pausiert (`connection-paused`) arches one.',
+      },
+    },
+  },
+  render: () => ({
+    props: { poses: ['comforts', 'discovered', 'connection-paused'], de: DE, caption },
+    template: `
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--spacing-6)">
+        @for (pose of poses; track pose) {
+          <figure style="margin: 0; display: flex; flex-direction: column; align-items: center; gap: var(--spacing-2); text-align: center">
+            <div style="display: flex; align-items: flex-end; gap: var(--spacing-4)">
+              <lc-character [pose]="pose" [size]="48" />
+              <lc-character [pose]="pose" [size]="96" />
+            </div>
+            <figcaption [style]="caption">{{ pose }} · {{ de[pose] }}</figcaption>
+          </figure>
+        }
+      </div>`,
+  }),
+};
+
 export const Sizes: Story = {
   parameters: { docs: { description: { story: 'The five steps of `size`: 48, 64, 80, 96 and 128 px.' } } },
   render: () => ({
