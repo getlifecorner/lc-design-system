@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.11.0] - 2026-10-22
+
+Reflow at 200 % text on a phone for life-os's sign-in, Today and Household pages (AS-30 (2), AS-32, SI-15; WCAG 1.4.4, 1.4.10). No API breaks.
+
+### Added
+
+- **`wrap` on `lc-badge`** (SI-15, default `false`): a sentence-like label wraps onto centred lines instead of running out of its container. The fixed height becomes a minimum height, lines are 1.25 high, and the badge is never wider than its container. With `rounded`, the corners keep the one-line pill radius (md: 14 px), so a second line isn't clipped. "Geschlossene Beta, nur mit Einladung" at 320 px / 200 % text: 288 px wide in a 288 px column, 2 lines, 91 px high. A label that fits looks as before (same width and height).
+- **CSS hook `--lc-btn-overflow-wrap`** on `lc-button` and `a[lcButton]` (default `break-word`): `anywhere` lets a one-word label wider than its line break inside the word. Set it on wrapping rows and columns; in a non-wrapping row a one-word button would shrink with its neighbours ("Bearbeiten" 116.7 → 93.8 px), which is why it isn't the default.
+
+### Fixed
+
+- **`lc-page-header` titles stay on screen** (AS-30): the title uses `overflow-wrap: anywhere`, so a word wider than the whole line breaks after hyphenation was tried. At 320 px / 200 % text "Hallo, Johanna-Friederike" (+38 px) and "Household" (+5 px) no longer overflow; the actions are never wider than the row and wrap below the title.
+- **Footer links and page-header actions stay inside** (AS-30): `lc-footer`'s bottom row, the page-header actions and the narrow next-step-card actions set `--lc-btn-overflow-wrap: anywhere`. A `link`/`lg` "Datenschutz" at 320 px / 200 % ran from x 8 to 312; it now spans the footer's 48–272 on two lines, with the focus ring at 45–275.
+- **`lc-next-step-card` never breaks a title word** (AS-32): below 30rem of card width the card is a wrapping row; when icon, gap and the title's longest word don't fit, the title moves below the icon at full width. "Nichts zu tun" at 360 px / 200 %: 216 px wide under the 96 px icon (it was 92 px beside it and broke inside "Nichts").
+
+### Compatibility
+
+- No API breaks. At 100 % text all 474 badge, button, button-link, footer, page-header and next-step-card screenshots (360 / 1024 / 1280, light and dark) are pixel-identical to 3.10.1.
+- The new rules are plain CSS and hold in prerendered HTML; the `lc-badge--wrap` class is written by the server (Angular 21 and 22).
+
+### Migration
+
+- life-os: in `auth-layout.component.ts` remove the SI-15 rule (white-space, height, text-align, line-height on `.lc-auth-title > lc-badge .lc-badge`) and set `[wrap]="true"` on the closed-beta badge; remove `overflow-wrap: anywhere` from the AS-30 H1 rule (`text-align: center` is SI-12). In `shell.component.css`, remove `max-width` and `overflow-wrap` from `.footer__bottom > a`; the padding rule stays yours.
+
 ## [3.10.1] - 2026-10-21
 
 The signed-in shell at 200 % text on a phone (AS-31; life-os Today and household, U1). No API breaks.

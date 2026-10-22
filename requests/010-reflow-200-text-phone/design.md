@@ -87,7 +87,7 @@ Nothing changes at any width. The rules act only where a single word, or a row o
 | State | Behaviour |
 |---|---|
 | default, hover, active, disabled, loading | Unchanged. The hook only changes line breaking, and the spinner and icons stay flex items. |
-| focus-visible (wrapped link) | The ring (2 px solid, 2 px offset, `--color-primary-500`) follows the taller box. At 320 px it spans x 44–276, inside the viewport, and nothing in the footer, page header or card clips it (`overflow` visible). |
+| focus-visible (wrapped link) | The kit's focus ring follows the taller box. At 320 px it spans x 45–275, inside the viewport, and nothing in the footer, page header or card clips it (`overflow` visible). *Change note (review r1): it was given as 2 px solid, 2 px offset, 44–276; the measured ring is 3 px solid, offset 0, 45–275.* |
 | empty | An empty badge with `wrap` keeps its min-height and min-width, the same as without. |
 | overflow: long German words | These break inside the word only when the word is wider than the whole line ("Datenschutz" in a `lg` link at 320/200 %, "Household" at 48 px on a 232 px line). Hyphenation comes first where `lang` allows it (DE capitalised words, not EN, see the 009 pitfall). |
 | many items | Page-header actions and footer links wrap onto more lines. The card's actions stay stretched, one row each. |
