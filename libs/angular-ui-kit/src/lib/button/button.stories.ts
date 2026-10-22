@@ -21,6 +21,7 @@ It supports multiple variants, sizes, states, and slots for icons.
 - Full-width option
 - Accessible with ARIA attributes
 - Labels wrap onto centred lines when there is no room (since 3.3; WCAG 1.4.4 and 1.4.10), as on \`a[lcButton]\`
+- Only colours and the shadow animate (150 ms); padding, font size and size change at once, so a button never grows on load (G-41)
 
 **Navigation?** Use a link, not a button: \`<a lcButton href="…">\` gives an anchor the
 same variants and sizes and works without JavaScript (see **Components / Button Link**).

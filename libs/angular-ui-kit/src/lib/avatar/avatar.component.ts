@@ -4,6 +4,17 @@ export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 export type AvatarStatus = 'online' | 'offline' | 'away' | 'busy';
 
 /**
+ * How the browser loads the image (3.11.2, G-40). The same union as
+ * `CharacterLoading`, kept separate because entries don't import each other.
+ * - `eager`: no attribute, the browser default.
+ * - `lazy`: `loading="lazy"`, for an avatar below the fold.
+ */
+export type AvatarLoading = 'eager' | 'lazy';
+
+/** The box of each size in px at 100 % text, written as the `<img>` `width`/`height` (G-40). */
+const AVATAR_PX: Readonly<Record<AvatarSize, number>> = { xs: 24, sm: 32, md: 40, lg: 48, xl: 64 };
+
+/**
  * Background of the initials. `default` is the neutral kit avatar; `member-1`
  * … `member-6` are the member colours (`--color-member-1` … `-6`: teal, rust,
  * violet, sage, berry, slate) with white initials, each at least 4.5:1.
@@ -67,8 +78,21 @@ export class AvatarComponent {
   /** Full name for generating initials */
   name = input<string>();
 
-  /** Size of the avatar */
+  /**
+   * Size of the avatar: xs 24, sm 32, md 40, lg 48, xl 64 px (1.5 … 4 rem).
+   * The `<img>` carries the size's px as `width`/`height`; CSS sizes the box,
+   * so at 200 % text the box grows and the attributes only give the 1:1 ratio.
+   * @default 'md'
+   */
   size = input<AvatarSize>('md');
+
+  /**
+   * How the browser loads the image. `lazy`: for an avatar below the fold;
+   * writes `loading="lazy"`. `eager` writes no attribute. The initials still
+   * replace an image that fails.
+   * @default 'eager'
+   */
+  loading = input<AvatarLoading>('eager');
 
   /** Status indicator */
   status = input<AvatarStatus>();
@@ -155,6 +179,9 @@ export class AvatarComponent {
   ariaLabel = computed(() => {
     return this.alt() || this.name() || 'Avatar';
   });
+
+  /** The size's px, written as the `<img>` `width` and `height` (G-40). */
+  protected readonly imagePx = computed(() => AVATAR_PX[this.size()]);
 
   /**
    * Check if image should be displayed

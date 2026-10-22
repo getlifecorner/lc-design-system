@@ -31,6 +31,33 @@ export const LC_LOGO_BASE_PATH = new InjectionToken<string>('LC_LOGO_BASE_PATH',
 /** Sizes at or below 32 px, which use the small emblem (heavier arms, filled points). */
 const SMALL_EMBLEM_SIZES: ReadonlySet<string> = new Set(['xs', 'sm']);
 
+/** The CSS height of each size in px, which is also the built-in emblem's square (3.11.2, G-38). */
+const EMBLEM_PX: Readonly<Record<'xs' | 'sm' | 'md' | 'lg' | 'xl', number>> = { xs: 24, sm: 32, md: 48, lg: 64, xl: 96 };
+
+/** The built-in lockup files' own size (viewBox and `width`/`height` of both SVGs). */
+const LOCKUP_SIZE = { width: 485, height: 100 } as const;
+
+/** The `width`/`height` pair written on one `<img>`; `null` writes no size attributes. */
+type IntrinsicSize = { readonly width: number; readonly height: number } | null;
+
+/**
+ * `srcWidth="160"` from a template is the number 160. A finite value > 0 is
+ * rounded to whole px; `''`, `0`, negative values, `NaN`, `null` and
+ * `undefined` become `undefined` (no attribute).
+ */
+function toIntrinsicSize(value: number | string | null | undefined): number | undefined {
+  if (value === null || value === undefined || value === '') {
+    return undefined;
+  }
+  const px = Number(value);
+  return Number.isFinite(px) && px > 0 ? Math.round(px) : undefined;
+}
+
+/** A pair only when both values are defined. */
+function pair(width: number | undefined, height: number | undefined): IntrinsicSize {
+  return width !== undefined && height !== undefined ? { width, height } : null;
+}
+
 /**
  * Logo component for displaying a brand identity.
  *
@@ -51,6 +78,10 @@ const SMALL_EMBLEM_SIZES: ReadonlySet<string> = new Set(['xs', 'sm']);
  * - The built-in logo ships its own dark drawings; nothing is inverted or
  *   recoloured by CSS. A custom logo without a dark partner stays as it is.
  * - The logo is flat and fixed: never animated, posed or distorted.
+ * - Every built-in `<img>` carries its file's intrinsic `width`/`height`
+ *   (3.11.2, G-38), so the browser reserves the box before the file loads;
+ *   for your own files set `srcWidth`/`srcHeight` and
+ *   `emblemSrcWidth`/`emblemSrcHeight`.
  *
  * @example Default LifeCorner logo
  * ```html
@@ -90,6 +121,11 @@ export class LogoComponent {
    * - 'md': 48px height (default)
    * - 'lg': 64px height
    * - 'xl': 96px height
+   *
+   * With the built-in files the `<img>` carries the file's intrinsic size as
+   * `width`/`height`: the lockup 485 × 100 at every size, the emblem the
+   * size's px squared (24 … 96). CSS still sets the rendered height.
+   * @default 'md'
    */
   readonly size = input<'xs' | 'sm' | 'md' | 'lg' | 'xl'>('md');
 
@@ -136,6 +172,43 @@ export class LogoComponent {
    * Optional dark-theme URL for the emblem-only logo.
    */
   readonly darkEmblemSrc = input<string>('');
+
+  /**
+   * Intrinsic width in px of your `src` file (and `darkSrc`), written as the
+   * `<img>` `width`. Set it together with `srcHeight` so the browser reserves
+   * the logo's box before the file loads; `size` still sets the rendered
+   * height. Without both, no size attributes are written.
+   * @default undefined
+   */
+  readonly srcWidth = input<number | undefined, number | string | null | undefined>(undefined, {
+    transform: toIntrinsicSize,
+  });
+
+  /**
+   * Intrinsic height in px of your `src` file (and `darkSrc`). See `srcWidth`.
+   * @default undefined
+   */
+  readonly srcHeight = input<number | undefined, number | string | null | undefined>(undefined, {
+    transform: toIntrinsicSize,
+  });
+
+  /**
+   * Intrinsic width in px of your `emblemSrc` file (and `darkEmblemSrc`),
+   * written as the `<img>` `width`; set it together with `emblemSrcHeight`.
+   * @default undefined
+   */
+  readonly emblemSrcWidth = input<number | undefined, number | string | null | undefined>(undefined, {
+    transform: toIntrinsicSize,
+  });
+
+  /**
+   * Intrinsic height in px of your `emblemSrc` file (and `darkEmblemSrc`).
+   * See `emblemSrcWidth`.
+   * @default undefined
+   */
+  readonly emblemSrcHeight = input<number | undefined, number | string | null | undefined>(undefined, {
+    transform: toIntrinsicSize,
+  });
 
   /** Whether the consumer supplied at least one custom source. */
   readonly hasCustomSrc = computed(
@@ -190,6 +263,33 @@ export class LogoComponent {
    */
   readonly showLightSrc = computed(() => !this.logoDarkSrc() || this.colorMode() !== 'dark');
   readonly showDarkSrc = computed(() => !!this.logoDarkSrc() && this.colorMode() !== 'light');
+
+  /** The built-in file's own size: the lockup 485 × 100, the emblem the size's px squared. */
+  private readonly builtInSize = computed<IntrinsicSize>(() => {
+    if (this.variant() === 'emblem') {
+      const px = EMBLEM_PX[this.size()];
+      return { width: px, height: px };
+    }
+    return LOCKUP_SIZE;
+  });
+
+  /** The consumer's pair for the current variant (a dark file shares its light partner's pair). */
+  private readonly customSize = computed<IntrinsicSize>(() =>
+    this.variant() === 'emblem'
+      ? pair(this.emblemSrcWidth(), this.emblemSrcHeight())
+      : pair(this.srcWidth(), this.srcHeight()),
+  );
+
+  /** `width`/`height` of the light `<img>`: follows the file it shows (G-38). */
+  protected readonly lightSize = computed<IntrinsicSize>(() =>
+    this.customSrc() ? this.customSize() : this.builtInSize(),
+  );
+
+  /** `width`/`height` of the dark `<img>`: follows the file it shows (G-38). */
+  protected readonly darkSize = computed<IntrinsicSize>(() => {
+    const customDark = this.variant() === 'emblem' ? this.darkEmblemSrc() : this.darkSrc();
+    return customDark ? this.customSize() : this.builtInSize();
+  });
 
   readonly logoClasses = computed(() => {
     const classes = [`size-${this.size()}`];

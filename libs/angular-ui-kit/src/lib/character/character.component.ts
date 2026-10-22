@@ -16,6 +16,13 @@ export type CharacterSize = 48 | 64 | 80 | 96 | 128;
 export type CharacterColorMode = 'auto' | 'dark';
 
 /**
+ * How the browser loads the drawings (3.11.2, G-39).
+ * - `eager`: no attribute, the browser default; keep it above the fold.
+ * - `lazy`: `loading="lazy"` on every drawing, for a figure below the fold.
+ */
+export type CharacterLoading = 'eager' | 'lazy';
+
+/**
  * The URL folder that holds the pose files (`<pose>-light.svg`,
  * `<pose>-dark.svg`, copied from the package's `assets/character/`). Follows
  * `LC_LOGO_BASE_PATH` (default `/assets` → `/assets/character`) unless you
@@ -105,6 +112,15 @@ export class CharacterComponent {
    * @default ''
    */
   readonly ariaLabel = input<string>('');
+
+  /**
+   * How the browser loads the drawings. `lazy`: for a figure below the fold
+   * (such as the horizon); writes `loading="lazy"` on every drawing, and in
+   * `auto` only the drawing of the current theme is fetched. `eager` writes no
+   * attribute (the browser default). Keep `eager` above the fold.
+   * @default 'eager'
+   */
+  readonly loading = input<CharacterLoading>('eager');
 
   private readonly basePath = inject(LC_CHARACTER_BASE_PATH);
 

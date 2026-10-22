@@ -35,6 +35,28 @@ const meta: Meta<LogoComponent> = {
       description: 'Dark-theme URL for the lockup. Without it a custom `src` is shown on dark too.',
     },
     darkEmblemSrc: { control: 'text', description: 'Dark-theme URL for the emblem' },
+    srcWidth: {
+      control: 'number',
+      description:
+        'Intrinsic width in px of your `src` file (and `darkSrc`), written as the `<img>` `width`. Set it with `srcHeight` so the box is reserved before the file loads; `size` still sets the rendered height. Without both, no size attributes.',
+      table: { defaultValue: { summary: 'undefined' } },
+    },
+    srcHeight: {
+      control: 'number',
+      description: 'Intrinsic height in px of your `src` file (and `darkSrc`). See `srcWidth`.',
+      table: { defaultValue: { summary: 'undefined' } },
+    },
+    emblemSrcWidth: {
+      control: 'number',
+      description:
+        'Intrinsic width in px of your `emblemSrc` file (and `darkEmblemSrc`), written as the `<img>` `width`; set it with `emblemSrcHeight`.',
+      table: { defaultValue: { summary: 'undefined' } },
+    },
+    emblemSrcHeight: {
+      control: 'number',
+      description: 'Intrinsic height in px of your `emblemSrc` file (and `darkEmblemSrc`). See `emblemSrcWidth`.',
+      table: { defaultValue: { summary: 'undefined' } },
+    },
   },
 
   parameters: {
@@ -54,6 +76,17 @@ The LifeCorner logo: **Edu**, the emblem (a head, two eyes, four arms ending in 
 \`lifecorner-emblem-mono.svg\` (one colour) ships for print and one-colour uses.
 
 **Theme:** with \`colorMode="auto"\` both drawings are in the DOM and the root theme picks one, with the selectors of the theme stylesheets: dark under \`:root.dark\`, a root without a theme class, and \`:root.system\` while the OS is dark; light under \`:root.light\` and \`:root.system\` while the OS is light. No script, right on the first paint.
+
+**Intrinsic size** (3.11.2, G-38): every \`<img>\` carries the \`width\` and \`height\` of the file it shows, so the browser reserves the logo's box before the file loads. CSS still sets the rendered height (\`size\`) with \`width: auto\`, so the loaded logo is the same size as before.
+
+| The \`<img>\` shows | \`width\` / \`height\` |
+|---|---|
+| the built-in lockup (light or dark) | 485 / 100 at every size |
+| the built-in emblem (normal or small, light or dark) | the size's px squared: 24, 32, 48, 64, 96 |
+| \`src\` or \`darkSrc\` | \`srcWidth\` / \`srcHeight\`, otherwise none |
+| \`emblemSrc\` or \`darkEmblemSrc\` | \`emblemSrcWidth\` / \`emblemSrcHeight\`, otherwise none |
+
+A pair is written only when both values are set (a whole number of px > 0; \`srcWidth="160"\` works too). The kit doesn't know the ratio of your file, so without the inputs a custom logo has no size attributes, as before.
 
 **Rules:** the logo is flat and fixed. Never animate, rotate, pose, recolour or distort it; scale it only proportionally. The lockup always uses the filled emblem. In running text the name is plain text.
 `,
@@ -234,6 +267,80 @@ export const CustomBrand: Story = {
 swaps with the **app theme** (\`:root.dark\`, the dark-first default, or
 \`:root.system\` while the OS is dark), pure CSS, no JavaScript needed.
 \`colorMode="light|dark"\` pins one source.
+`,
+      },
+    },
+  },
+};
+
+/**
+ * A custom lockup with `srcWidth` / `srcHeight` (3.11.2, G-38): both `<img>`
+ * carry the pair, so the box is reserved before the file loads.
+ */
+export const CustomLockupWithSize: Story = {
+  name: 'Custom Lockup with Intrinsic Size',
+  args: {
+    variant: 'full',
+    size: 'md',
+    src: '/assets/lifecorner-logo.svg',
+    darkSrc: '/assets/lifecorner-logo-on-dark.svg',
+    srcWidth: 485,
+    srcHeight: 100,
+    alt: 'Acme Inc.',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: `
+The kit's own lockup files stand in for a brand file here, so the story works offline. Set the pair to your file's own size (its \`viewBox\` or \`width\`/\`height\`); the light and the dark \`<img>\` both carry it.
+
+\`\`\`html
+<lc-logo
+  src="/assets/acme-logo.svg"
+  darkSrc="/assets/acme-logo-dark.svg"
+  [srcWidth]="485"
+  [srcHeight]="100"
+  alt="Acme Inc.">
+</lc-logo>
+\`\`\`
+`,
+      },
+    },
+  },
+};
+
+/**
+ * A custom emblem with `emblemSrcWidth` / `emblemSrcHeight` (3.11.2, G-38):
+ * rendered 64 × 64 at `lg`, attributes 100 × 100 from the file.
+ */
+export const CustomEmblemWithSize: Story = {
+  name: 'Custom Emblem with Intrinsic Size',
+  args: {
+    variant: 'emblem',
+    size: 'lg',
+    emblemSrc: '/assets/lifecorner-emblem.svg',
+    darkEmblemSrc: '/assets/lifecorner-emblem-on-dark.svg',
+    emblemSrcWidth: 100,
+    emblemSrcHeight: 100,
+    alt: 'Acme Inc.',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: `
+The kit's own emblem files stand in for a brand file here, so the story works offline. The emblem pair applies to \`emblemSrc\` and \`darkEmblemSrc\` only (the dark \`<img>\` shares it); the lockup pair (\`srcWidth\` / \`srcHeight\`) to \`src\` and \`darkSrc\`. Rendered 64 × 64 (\`size="lg"\`), attributes 100 × 100.
+
+\`\`\`html
+<lc-logo
+  variant="emblem"
+  size="lg"
+  emblemSrc="/assets/acme-emblem.svg"
+  darkEmblemSrc="/assets/acme-emblem-dark.svg"
+  [emblemSrcWidth]="100"
+  [emblemSrcHeight]="100"
+  alt="Acme Inc.">
+</lc-logo>
+\`\`\`
 `,
       },
     },

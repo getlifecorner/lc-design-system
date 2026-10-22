@@ -161,6 +161,18 @@ function iconsWithoutStyle(html, min, required = []) {
 }
 
 /**
+ * 3.11.2 (G-38 to G-40): the `<img>` tags inside the first element `re`
+ * matches; every one must carry each attribute of `attrs` (`width="48"`), and
+ * there must be `count` of them (or at least one when `count` is omitted).
+ */
+function imagesCarry(html, re, attrs, count) {
+  const el = html.match(re)?.[0];
+  const imgs = el ? [...el.matchAll(/<img\b[^>]*>/g)].map((m) => m[0]) : [];
+  return (count === undefined ? imgs.length > 0 : imgs.length === count)
+    && imgs.every((img) => attrs.every((attr) => img.includes(` ${attr}`)));
+}
+
+/**
  * An attribute with the empty value, in both serialisations of the same DOM:
  * `alt=""` (Angular 22.2's prerender) and a bare `alt` (21.x and 22.0, whose
  * critical-CSS pass, Beasties 0.4.2 with dom-serializer 2, writes empty
@@ -249,6 +261,11 @@ const EXPECT_IN_HTML = [
   ['tt: lc-icon without style, the bundled set (G-37)', (html) => iconsWithoutStyle(html, 101), 'tt/icons/index.html'],
   ['lc-icon: the size is the class, no inline size (G-37)', /<lc-icon(?=[^>]*\sid="compat-registered")[^>]*><div(?=[^>]*class="[^"]*\bicon-md\b)(?![^>]*\sstyle=)[^>]*><svg(?=[^>]*\swidth="24px")(?=[^>]*\sheight="24px")(?![^>]*\sstyle=)[^>]*>/],
   ['lc-icon: a custom colour is the svg\'s inline colour, and only there (G-37 control)', /<lc-icon(?=[^>]*\sid="compat-color")(?![^>]*\sstyle=)[^>]*><div(?![^>]*\sstyle=)[^>]*><svg(?=[^>]*\sstyle="color: var\(--color-primary-500\);?")[^>]*>/],
+  // 3.11.2 (request 012): intrinsic size and lazy loading before JS (probe-3112.ts)
+  ['logo: both built-in lockup images 485 × 100 (G-38)', (html) => imagesCarry(html, /<lc-logo(?=[^>]*\sid="compat-logo")[^>]*>[^]*?<\/lc-logo>/, ['width="485"', 'height="100"'], 2)],
+  ['header logo: the emblem at md is 48 × 48 (G-38)', (html) => imagesCarry(html, /<a(?=[^>]*class="lc-header__logo")[^>]*>[^]*?<\/a>/, ['width="48"', 'height="48"'])],
+  ['avatar image: lg 48 × 48, lazy (G-40)', (html) => imagesCarry(html, /<lc-avatar(?=[^>]*\sid="compat-avatar")[^>]*>[^]*?<\/lc-avatar>/, ['width="48"', 'height="48"', 'loading="lazy"', 'src="/compat-logo/character/hello-light.svg"'], 1)],
+  ['character: both drawings lazy (G-39)', (html) => imagesCarry(html, /<lc-character(?=[^>]*\sid="compat-character-lazy")[^>]*>[^]*?<\/lc-character>/, ['loading="lazy"', 'width="100"', 'height="100"'], 2)],
 ];
 
 /**

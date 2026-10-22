@@ -15,7 +15,14 @@
   // DS2.0: pill-shaped buttons (the pitch language)
   border-radius: var(--border-radius-full);
   cursor: pointer;
-  transition: all var(--animation-duration-base) var(--animation-timing-ease);
+  // Only colours and the shadow animate (3.11.2, G-41): with `all`, the first
+  // layout inside lc-next-step-card animated padding and font size, so the
+  // CTAs grew for 150 ms and the card height depended on timing (+26 px at
+  // 360 px). Size, opacity and the focus outline now change at once. The same
+  // list as `.btn.btn-inline`.
+  transition-property: color, background-color, border-color, box-shadow;
+  transition-duration: var(--animation-duration-base);
+  transition-timing-function: var(--animation-timing-ease);
   // Labels wrap instead of overflowing (3.3, SI-7; WCAG 1.4.4 and 1.4.10): a
   // nowrap label wider than the viewport broke reflow at 320 px or 200 % text,
   // e.g. long German labels. Centred lines; a single word wider than the

@@ -2,6 +2,8 @@
   <img
     [src]="logoSrc()"
     [alt]="alt()"
+    [attr.width]="lightSize()?.width ?? null"
+    [attr.height]="lightSize()?.height ?? null"
     [class]="logoClasses()"
     class="lc-logo"
     [class.lc-logo--light-src]="showDarkSrc()"
@@ -11,6 +13,8 @@
   <img
     [src]="logoDarkSrc()"
     [alt]="alt()"
+    [attr.width]="darkSize()?.width ?? null"
+    [attr.height]="darkSize()?.height ?? null"
     [class]="logoClasses()"
     class="lc-logo"
     [class.lc-logo--dark-src]="showLightSrc()"

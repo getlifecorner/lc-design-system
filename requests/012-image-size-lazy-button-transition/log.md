@@ -1,0 +1,15 @@
+# Log 012: Intrinsic image size and lazy loading for logo, character and avatar, and a narrower button transition
+
+## Owner decisions
+
+2026-10-23 (with the request): kit first for G-38–G-41; release as a patch after 3.11.1 (request 011), do not hold 3.11.1 back.
+
+## Handoffs
+
+| Time | From → to | Status | Reason | Task |
+|---|---|---|---|---|
+| 2026-10-23 | spec-writer → ui-ux-designer | done | The classification, acceptance criteria and assumptions are settled, so the API and visuals are the next step; no owner decision is open. | Design the API and visuals for AC-1…14: the size attributes per logo size (rounded or nominal 485×100) and the names of the optional custom-src size inputs on lc-logo, the shared `loading` input on lc-character and lc-avatar, the `.btn` transition list, and the stories. Take baselines (logo and avatar boxes, CTA buttons in lc-next-step-card at 360/1024/1280 px) before the build. |
+| 2026-10-23 | ui-ux-designer → web-developer | done | The API, values, binding rules, stories and verification are settled and measured, the baseline is captured, and no question is open for the spec-writer or the owner. | Implement design.md for request 012 (logo size attributes and inputs, `loading` on character and avatar with the binding order in §2, the `.btn` transition list, the five stories in §8 and the EXPECT_IN_HTML checks for AC-10), then record the gates in build.md. |
+| 2026-10-23 | web-developer → ui-ux-designer | done | All gates are green on the branch tip and the stories are built, so the design review is next. | Review request 012 (stories `components-logo--custom-lockup-with-size`, `components-logo--custom-emblem-with-size`, `data-display-avatar--image-sizes`, `data-display-avatar--lazy-image`, `components-character--lazy-loading`; shots in `tmp/story-shots/012/r1-new`) and the 4 notes under "Deviations" in build.md. |
+| 2026-10-23 | ui-ux-designer → web-developer | changes-requested | Review round 1: AC-13 fails on one story because design §8 named a logo file without a dark partner (now corrected); all other ACs pass and the 516 baseline shots are identical. | Fix review.md finding 1: give `CustomEmblemWithSize` the kit's emblem pair per design §8 (r1) and update its story text, rebuild Storybook, shoot `components-logo--custom-emblem-with-size` at 360/1280 light/dark into `tmp/story-shots/012/r2-new`, and note it in build.md. |
+| 2026-10-23 | web-developer → ui-ux-designer | done | Finding 1 is fixed in the story only (lint, test:tools and the Storybook build green), so the designer re-checks the one story. | Review request 012 round 2: story `components-logo--custom-emblem-with-size` (shots in `tmp/story-shots/012/r2-new`, measures in `tmp/012/shots-r2-new.log`). |

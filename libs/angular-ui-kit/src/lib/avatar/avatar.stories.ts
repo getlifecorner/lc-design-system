@@ -34,6 +34,13 @@ const meta: Meta<AvatarComponent> = {
         'A ring in the page colour around the avatar (3 px; 2 px for xs/sm) so stacked avatars stay apart. Colour: `--lc-avatar-ring-color` (default `--color-background`)',
       table: { defaultValue: { summary: 'false' } },
     },
+    loading: {
+      control: 'inline-radio',
+      options: ['eager', 'lazy'],
+      description:
+        'How the browser loads the image. `lazy`: for an avatar below the fold; writes `loading="lazy"`. `eager` writes no attribute (the browser default). The initials still replace an image that fails.',
+      table: { defaultValue: { summary: "'eager'" } },
+    },
   },
 
   parameters: {
@@ -50,6 +57,7 @@ Avatar component for circular user representation.
 - Member colours (\`color\`: \`member-1\` … \`member-6\`) with white initials — colour is never the only cue, the initials and the name stay
 - \`ring\`: a gap in the page colour, for stacks and avatars on tints
 - Accessible with alt text support
+- The \`<img>\` carries the size's px as \`width\`/\`height\` (xs 24, sm 32, md 40, lg 48, xl 64; 3.11.2, G-40), and \`loading="lazy"\` defers an avatar below the fold
 `,
       },
     },
@@ -199,5 +207,60 @@ export const MemberColors: Story = {
 /** A member colour with the ring, as in a stack on the page. */
 export const MemberWithRing: Story = {
   args: { name: 'Tom Ek', size: 'lg', color: 'member-2', ring: true },
+};
+
+/**
+ * The image at every size (3.11.2, G-40): the `<img>` carries the size's px
+ * as `width`/`height`, equal to the box.
+ */
+export const ImageSizes: Story = {
+  name: 'Image Size Comparison',
+  render: () => ({
+    template: `
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="text-align: center;">
+          <lc-avatar src="/assets/lifecorner-emblem.svg" alt="LifeCorner" size="xs"></lc-avatar>
+          <div style="margin-top: 4px; font-size: 11px; color: var(--color-text-secondary);">xs</div>
+        </div>
+        <div style="text-align: center;">
+          <lc-avatar src="/assets/lifecorner-emblem.svg" alt="LifeCorner" size="sm"></lc-avatar>
+          <div style="margin-top: 4px; font-size: 11px; color: var(--color-text-secondary);">sm</div>
+        </div>
+        <div style="text-align: center;">
+          <lc-avatar src="/assets/lifecorner-emblem.svg" alt="LifeCorner" size="md"></lc-avatar>
+          <div style="margin-top: 4px; font-size: 11px; color: var(--color-text-secondary);">md</div>
+        </div>
+        <div style="text-align: center;">
+          <lc-avatar src="/assets/lifecorner-emblem.svg" alt="LifeCorner" size="lg"></lc-avatar>
+          <div style="margin-top: 4px; font-size: 11px; color: var(--color-text-secondary);">lg</div>
+        </div>
+        <div style="text-align: center;">
+          <lc-avatar src="/assets/lifecorner-emblem.svg" alt="LifeCorner" size="xl"></lc-avatar>
+          <div style="margin-top: 4px; font-size: 11px; color: var(--color-text-secondary);">xl</div>
+        </div>
+      </div>`,
+  }),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The `<img>` carries `width`/`height` 24, 32, 40, 48 and 64, so the browser reserves the circle before the file loads. CSS sizes the box (1.5 … 4 rem), so at 200 % text the box grows and the attributes only give the 1:1 ratio.',
+      },
+    },
+  },
+};
+
+/** `loading="lazy"` for an avatar below the fold (3.11.2, G-40). */
+export const LazyImage: Story = {
+  name: 'Lazy Image',
+  args: { src: '/assets/lifecorner-emblem.svg', alt: 'LifeCorner', name: 'Life Corner', size: 'lg', loading: 'lazy' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The `<img>` carries `loading="lazy"` and `width`/`height` 48: the browser fetches it only near the viewport, into a reserved circle. The initials still replace an image that fails. `eager` (the default) writes no attribute.',
+      },
+    },
+  },
 };
 

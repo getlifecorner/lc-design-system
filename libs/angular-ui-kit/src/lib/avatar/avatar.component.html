@@ -5,10 +5,16 @@
   [attr.aria-hidden]="decorative() ? 'true' : null"
 >
   @if (showImage()) {
-    <img 
-      [src]="src()!" 
-      [alt]="alt() || name() || 'Avatar'" 
+    <!-- `loading` before `src`: attribute bindings run in template order, after
+         every property binding, so `[attr.src]` keeps the source behind
+         `loading` (G-40; an engine may start the request when src is set). -->
+    <img
+      [alt]="alt() || name() || 'Avatar'"
       class="lc-avatar__image"
+      [attr.width]="imagePx()"
+      [attr.height]="imagePx()"
+      [attr.loading]="loading() === 'lazy' ? 'lazy' : null"
+      [attr.src]="src()!"
       (error)="onImageError()"
     />
   } @else {

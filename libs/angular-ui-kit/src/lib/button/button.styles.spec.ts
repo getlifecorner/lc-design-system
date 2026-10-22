@@ -42,6 +42,35 @@ describe('lc-button styles', () => {
     });
   });
 
+  // G-41 (request 012, AC-8): `transition: all` animated padding and font size
+  // on the first layout inside lc-next-step-card, so the CTAs grew for 150 ms.
+  describe('transition list (G-41)', () => {
+    function transitionProperties(selector: string): string[] {
+      const list = rule(selector).match(/transition-property:\s*([^;]+);/)?.[1] ?? '';
+      return list.split(',').map((p) => p.trim());
+    }
+
+    it('.btn animates only color, background-color, border-color and box-shadow', () => {
+      expect(transitionProperties('.btn')).toEqual(['color', 'background-color', 'border-color', 'box-shadow']);
+    });
+
+    it('.btn keeps the duration and the timing of 3.11.1', () => {
+      const base = rule('.btn');
+      expect(base).toMatch(/transition-duration:\s*var\(--animation-duration-base\);/);
+      expect(base).toMatch(/transition-timing-function:\s*var\(--animation-timing-ease\);/);
+    });
+
+    it('no rule of the stylesheet animates every property, and no shorthand resets the list', () => {
+      expect(css).not.toMatch(/transition:\s*all\b/);
+      expect(css).not.toMatch(/transition-property:\s*all\b/);
+      expect(css).not.toMatch(/\stransition:/);
+    });
+
+    it('.btn.btn-inline keeps its own, identical list', () => {
+      expect(transitionProperties('.btn.btn-inline')).toEqual(['color', 'background-color', 'border-color', 'box-shadow']);
+    });
+  });
+
   // AS-19 (WCAG 1.4.1, axe link-in-text-block): the inline link carries a
   // non-colour cue at rest, through a documented hook (AC-13 to AC-15, request 002).
   describe('inline link underline (AS-19)', () => {

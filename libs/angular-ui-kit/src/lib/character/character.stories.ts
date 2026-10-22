@@ -56,6 +56,13 @@ const meta: Meta<CharacterComponent> = {
         'Empty: decorative (`aria-hidden="true"`). Set: `role="img"` with this name. Your own translated text (EN "Edu waves", DE „Edu winkt"); the kit ships none.',
       table: { defaultValue: { summary: "''" } },
     },
+    loading: {
+      control: 'inline-radio',
+      options: ['eager', 'lazy'],
+      description:
+        'How the browser loads the drawings. `lazy`: for a figure below the fold (such as the horizon); writes `loading="lazy"` on every drawing, and in `auto` only the drawing of the current theme is fetched. `eager` writes no attribute (the browser default). Keep `eager` above the fold.',
+      table: { defaultValue: { summary: "'eager'" } },
+    },
   },
   parameters: {
     docs: {
@@ -236,6 +243,20 @@ export const WithLabel: Story = {
     docs: {
       description: {
         story: 'The semantic variant: `role="img"` with `aria-label="Edu waves"` (DE „Edu winkt"). Only where the figure says something the text around it doesn\'t.',
+      },
+    },
+  },
+};
+
+/** `loading="lazy"` for a figure below the fold (3.11.2, G-39). */
+export const LazyLoading: Story = {
+  name: 'Lazy Loading (below the fold)',
+  args: { pose: 'hello', size: 96, colorMode: 'auto', loading: 'lazy' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Both drawings carry `loading="lazy"`; the browser fetches only the visible one, and only near the viewport. The hidden theme\'s drawing (`display: none`) loads when the theme switches, into its reserved box. Use it for Edu on the horizon, which sits below the fold; keep the default `eager` above the fold.',
       },
     },
   },
