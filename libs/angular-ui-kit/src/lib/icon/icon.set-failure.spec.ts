@@ -49,7 +49,10 @@ describe('lc-icon when the kit set cannot be loaded (AS-17)', () => {
     await first.whenStable();
     expect(isPlaceholder(first.nativeElement)).toBe(true);
     expect(isPlaceholder(second.nativeElement)).toBe(true);
-    expect((first.nativeElement as HTMLElement).querySelector('.icon-container')?.getAttribute('style')).toBe('width: 24px; height: 24px;');
+    // 3.11.1 (G-37): the box is sized by the class, not an inline style.
+    const box = (first.nativeElement as HTMLElement).querySelector('.icon-container');
+    expect(box?.classList.contains('icon-md')).toBe(true);
+    expect(box?.hasAttribute('style')).toBe(false);
     expect(warnSpy.mock.calls.map(([m]) => m)).toEqual([
       "[lc-icon] The kit's icon set could not be loaded (Failed to fetch dynamically imported module). Rendering a placeholder instead.",
     ]);

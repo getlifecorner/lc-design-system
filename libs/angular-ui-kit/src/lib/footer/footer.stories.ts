@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { moduleMetadata } from '@storybook/angular';
 import { expect, within } from 'storybook/test';
-import { FooterComponent } from './footer.component';
+import { FooterComponent, type FooterSection } from './footer.component';
 import { ButtonLinkComponent } from '../button/button-link.component';
 
 const meta: Meta<FooterComponent> = {
@@ -293,6 +293,107 @@ export const LinksLargeText: LargeTextStory = {
       <div [attr.data-lc-story-text]="textSize" style="background: var(--color-background); padding: 0; display: flex; flex-direction: column; gap: 32px;">
         ${shellFooter('de', 'Datenschutz', 'LifeCorner')}
         ${shellFooter('en', 'Privacy policy', 'LifeCorner')}
+      </div>
+      <style>::ng-deep html:has(#storybook-root [data-lc-story-text="200%"]) { font-size: 200%; }</style>`,
+  }),
+};
+
+/** Four sections in German; "Unter­nehmen" carries a soft hyphen (U+00AD), where it may break. */
+const sectionsDe: FooterSection[] = [
+  {
+    title: 'Produkt',
+    links: [
+      { label: 'Funktionen', href: '#funktionen' },
+      { label: 'Preise', href: '#preise' },
+      { label: 'Changelog', href: '#changelog' },
+    ],
+  },
+  {
+    title: 'Unter­nehmen',
+    links: [
+      { label: 'Über uns', href: '#ueber-uns' },
+      { label: 'Karriere', href: '#karriere' },
+      { label: 'Blog', href: '#blog' },
+    ],
+  },
+  {
+    title: 'Ressourcen',
+    links: [
+      { label: 'Dokumentation', href: '#dokumentation' },
+      { label: 'API-Referenz', href: '#api', external: true },
+      { label: 'GitHub', href: '#github', external: true },
+    ],
+  },
+  {
+    title: 'Rechtliches',
+    links: [
+      { label: 'Datenschutzerklärung', href: '#datenschutz' },
+      { label: 'Impressum', href: '#impressum' },
+      { label: 'Barrierefreiheit', href: '#barrierefreiheit' },
+    ],
+  },
+];
+
+/** The same four sections in English. */
+const sectionsEn: FooterSection[] = [
+  {
+    title: 'Product',
+    links: [
+      { label: 'Features', href: '#features' },
+      { label: 'Pricing', href: '#pricing' },
+      { label: 'Changelog', href: '#changelog' },
+    ],
+  },
+  {
+    title: 'Company',
+    links: [
+      { label: 'About us', href: '#about' },
+      { label: 'Careers', href: '#careers' },
+      { label: 'Blog', href: '#blog' },
+    ],
+  },
+  {
+    title: 'Resources',
+    links: [
+      { label: 'Documentation', href: '#docs' },
+      { label: 'API reference', href: '#api', external: true },
+      { label: 'GitHub', href: '#github', external: true },
+    ],
+  },
+  {
+    title: 'Legal',
+    links: [
+      { label: 'Privacy policy', href: '#privacy' },
+      { label: 'Imprint', href: '#imprint' },
+      { label: 'Accessibility', href: '#accessibility' },
+    ],
+  },
+];
+
+/**
+ * 3.11.1 (G-36): four sections on a phone at 200 % text. The root text size
+ * is raised in the canvas only (`#storybook-root`), so the docs page keeps
+ * 100 %.
+ */
+export const SectionsLargeText: LargeTextStory = {
+  name: 'Sections at 200 % Text (phone)',
+  args: { textSize: '200%' },
+  argTypes: { textSize: textSizeArgType },
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        story:
+          "3.11.1 (G-36, WCAG 1.4.10): four sections with the root text at 200 %. The column minimum is `min(10rem, 100%)`: at 320 px, 10rem (320 px at 200 %) is wider than the 224 px content box, so the sections stack in one full-width column instead of scrolling the page sideways; from 10rem up the columns are as in 3.11.0. A word wider than the column breaks inside the word (`overflow-wrap: anywhere` on the sections), here \"Datenschutzerklärung\", with no hyphen. To choose the break, put a soft hyphen (U+00AD) into a compound, as \"Unter­nehmen\" has: the browser hyphenates there only when it has to. At 100 % (`textSize`) nothing changes. German, then English. Open it in the canvas at 320 or 360 px.",
+      },
+    },
+  },
+  render: (args) => ({
+    props: { ...args, sectionsDe, sectionsEn },
+    template: `
+      <div [attr.data-lc-story-text]="textSize" style="background: var(--color-background); padding: 0; display: flex; flex-direction: column; gap: 32px;">
+        <lc-footer lang="de" [sections]="sectionsDe" navAriaLabel="Fußzeile" externalLinkHint="(öffnet in neuem Tab)" copyright="© 2026 LifeCorner" />
+        <lc-footer lang="en" [sections]="sectionsEn" copyright="© 2026 LifeCorner" />
       </div>
       <style>::ng-deep html:has(#storybook-root [data-lc-story-text="200%"]) { font-size: 200%; }</style>`,
   }),

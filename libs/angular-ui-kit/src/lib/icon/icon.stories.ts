@@ -100,9 +100,15 @@ const meta: Meta<IconComponent> = {
     size: {
       control: 'select',
       options: ['xs', 'sm', 'md', 'lg', 'xl'],
-      description: 'Icon dimensions — xs: 16px, sm: 20px, md: 24px, lg: 32px, xl: 40px',
+      description:
+        'Icon dimensions — xs: 16px, sm: 20px, md: 24px, lg: 32px, xl: 40px. Set by the `icon-<size>` class in the component stylesheet; no inline size (3.11.1)',
+      table: { defaultValue: { summary: "'md'" } },
     },
-    color: { description: 'CSS color value (default: currentColor, inherits text color)' },
+    color: {
+      description:
+        "Default: inherits the text colour through CSS, no style attribute (works under `style-src 'self'`). Other values (`#FF5733`, `var(--color-primary-500)`) are an inline colour on the svg, set through CSSOM; in prerendered HTML that is a style attribute",
+      table: { defaultValue: { summary: "'currentColor'" } },
+    },
     ariaLabel: { description: 'Accessible label for screen readers (omit for decorative icons)' },
     decorative: { description: 'If true, icon is hidden from screen readers (aria-hidden)' },
     strict: {
@@ -439,6 +445,62 @@ export const IconConstants: Story = {
           </li>
         }
       </ul>`,
+  }),
+};
+
+/**
+ * 3.11.1 (G-37): with the default colour lc-icon renders no `style`
+ * attribute. The box takes its size from the `icon-<size>` class and the
+ * glyph its colour from the parent's text (`color: inherit` in the stylesheet),
+ * so it renders under a `style-src 'self'` CSP. A custom `color` is the one
+ * opt-in that writes an inline colour.
+ */
+export const InheritedColor: Story = {
+  name: 'Inherited color, no inline style (3.11.1)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "3.11.1 (G-37): every icon here but the last two has the default `color` and renders **no `style` attribute** on `lc-icon`, its box or its `<svg>`, so a website under `style-src 'self'` (no `unsafe-inline`, no hashes) shows it as designed, before and after hydration. The size comes from the `icon-<size>` class (16 / 20 / 24 / 32 / 40 px) and the svg's `width`/`height` attributes; the colour from the parent: the page ink, secondary text, a link (`--color-link`) and error ink set by a class on the row. In forced-colors mode the glyph follows CanvasText, or LinkText in a link. The last two pass `color` (`var(--color-primary-500)`, `#FF5733`): an inline colour on the svg, set through CSSOM, which that CSP allows in the browser; in prerendered HTML it is a `style` attribute, which it blocks until the app hydrates. Under a strict CSP, colour the icon from your stylesheet instead, as the rows above do.",
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      sizes: [
+        { size: 'xs', px: 16 },
+        { size: 'sm', px: 20 },
+        { size: 'md', px: 24 },
+        { size: 'lg', px: 32 },
+        { size: 'xl', px: 40 },
+      ],
+    },
+    template: `
+      <div class="ic-demo">
+        <div class="ic-demo__sizes">
+          @for (s of sizes; track s.size) {
+            <div class="ic-demo__size"><lc-icon name="star" [size]="s.size" [decorative]="true" /><div class="ic-demo__caption">{{ s.size }} · {{ s.px }}px</div></div>
+          }
+        </div>
+        <div class="ic-demo__row ic-demo__row--secondary"><lc-icon name="information-circle" [decorative]="true" />Secondary text: the icon takes the parent's colour</div>
+        <div class="ic-demo__row"><a class="ic-demo__link" href="#"><lc-icon name="external-link" size="sm" [decorative]="true" />A link: the icon follows the link colour</a></div>
+        <div class="ic-demo__row ic-demo__row--error"><lc-icon name="exclamation-triangle" [decorative]="true" />Error ink, set by a class on the row</div>
+        <div class="ic-demo__row">
+          <lc-icon name="check-circle" variant="solid" color="var(--color-primary-500)" ariaLabel="Done (primary-500)" />
+          <lc-icon name="check-circle" variant="solid" color="#FF5733" ariaLabel="Done (#FF5733)" />
+          <span class="ic-demo__caption">color="…": inline colour through CSSOM; a style attribute in prerendered HTML</span>
+        </div>
+      </div>
+      <style>
+        .ic-demo { display: flex; flex-direction: column; gap: 16px; color: var(--color-text-primary); font-size: 14px; }
+        .ic-demo__sizes { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; }
+        .ic-demo__size { text-align: center; }
+        .ic-demo__row { display: flex; align-items: center; gap: 8px; }
+        .ic-demo__row--secondary { color: var(--color-text-secondary); }
+        .ic-demo__row--error { color: var(--color-error-default); }
+        .ic-demo__link { display: inline-flex; align-items: center; gap: 8px; color: var(--color-link); }
+        .ic-demo__caption { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+      </style>`,
   }),
 };
 

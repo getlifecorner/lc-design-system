@@ -267,16 +267,26 @@ export class IconComponent {
    * - md: 24px (default)
    * - lg: 32px
    * - xl: 40px
+   *
+   * Set by the `icon-<size>` class in the component stylesheet; `lc-icon`
+   * writes no inline size (3.11.1).
    * @default "md"
    */
   readonly size = input<IconSize>('md');
 
   /**
-   * Icon color
-   * Can be:
-   * - CSS color: "#FF5733", "rgb(255, 87, 51)"
-   * - CSS variable: "var(--color-primary-500)"
-   * - "currentColor" (default - inherits from parent)
+   * Icon colour. By default the icon takes the text colour of its parent
+   * (`currentColor`, through the stylesheet) and `lc-icon` renders **no
+   * `style` attribute**, so it works under a `style-src 'self'` CSP (3.11.1).
+   *
+   * Any other value, a CSS colour (`#FF5733`, `rgb(…)`) or a variable
+   * (`var(--color-primary-500)`), becomes the `<svg>`'s inline `color`, set
+   * through CSSOM, which such a CSP allows in the browser. In prerendered HTML
+   * it is a `style` attribute, which that CSP blocks until the app hydrates,
+   * so the icon shows the parent's colour until then. Under a strict CSP,
+   * colour the icon from your stylesheet instead: set `color` on `lc-icon` or
+   * on its parent. `currentColor` in any letter case, and an empty string,
+   * mean the default.
    * @default "currentColor"
    */
   readonly color = input<string>('currentColor');
@@ -346,7 +356,8 @@ export class IconComponent {
   });
 
   /**
-   * Computed size in pixels
+   * Computed size in pixels, for the svg's `width`/`height` attributes; the
+   * same values as the `icon-<size>` rules in icon.component.scss
    * @internal
    */
   readonly sizeInPixels = computed(() => {
@@ -371,7 +382,8 @@ export class IconComponent {
   });
 
   /**
-   * Computed inline color style
+   * The `color` input as handed to the svg: a custom value becomes its inline
+   * colour (CSSOM), the default writes nothing (see `decorateSvg`)
    * @internal
    */
   readonly colorStyle = computed(() => {

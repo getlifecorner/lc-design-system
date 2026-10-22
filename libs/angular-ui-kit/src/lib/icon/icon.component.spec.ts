@@ -180,6 +180,8 @@ describe('IconComponent', () => {
   });
 
   describe('Icon Colors', () => {
+    // 3.11.1 (G-37): the default colour comes from the stylesheet
+    // (`svg { color: inherit }`), so the svg carries no inline colour at all.
     it('should apply currentColor by default', async () => {
       fixture.componentRef.setInput('name', 'anchor');
       fixture.detectChanges();
@@ -187,7 +189,8 @@ describe('IconComponent', () => {
       await waitForAsync();
 
       const svg = fixture.nativeElement.querySelector('svg');
-      expect(svg?.style.color).toBe('currentcolor');
+      expect(svg?.style.color).toBe('');
+      expect(svg?.hasAttribute('style')).toBe(false);
     });
 
     it('should apply custom hex color', async () => {
@@ -421,7 +424,8 @@ describe('IconComponent', () => {
       fixture.detectChanges();
       mockIconLoad('anchor');
       await waitForAsync();
-      expect(fixture.nativeElement.querySelector('svg')?.style.color).toBe('currentcolor');
+      // 3.11.1 (G-37): the default writes no inline colour.
+      expect(fixture.nativeElement.querySelector('svg')?.style.color).toBe('');
 
       fixture.componentRef.setInput('color', '#FF5733');
       fixture.detectChanges();
@@ -456,7 +460,8 @@ describe('IconComponent', () => {
       fixture.componentRef.setInput('name', 'home');
       fixture.detectChanges();
       httpMock.expectNone('/tabler-icons/outline/home.svg');
-      expect(fixture.nativeElement.querySelector('svg')?.style.color).toBe('currentcolor');
+      // 3.11.1 (G-37): the default writes no inline colour.
+      expect(fixture.nativeElement.querySelector('svg')?.style.color).toBe('');
 
       fixture.componentRef.setInput('color', '#FF5733');
       fixture.detectChanges();

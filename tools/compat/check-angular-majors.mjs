@@ -145,6 +145,22 @@ function shellFigurePrerendered(html) {
 }
 
 /**
+ * 3.11.1 (G-37): every prerendered `<lc-icon>` of a page but the custom-colour
+ * control `#compat-color` writes no `style=` on its host, container or
+ * `<svg>`, so a `style-src 'self'` CSP blocks nothing. At least `min` icons,
+ * and one whose opening tag has each of `required` (`id="…"`, `name="…"`), so
+ * a page that lost its icons doesn't pass.
+ */
+function iconsWithoutStyle(html, min, required = []) {
+  const icons = [...html.matchAll(/<lc-icon\b[^>]*>[^]*?<\/lc-icon>/g)]
+    .map(([icon]) => ({ icon, tag: icon.slice(0, icon.indexOf('>') + 1) }))
+    .filter(({ tag }) => !/\sid="compat-color"/.test(tag));
+  return icons.length >= min
+    && required.every((attr) => icons.some(({ tag }) => tag.includes(` ${attr}`)))
+    && icons.every(({ icon }) => !/\sstyle=/.test(icon));
+}
+
+/**
  * An attribute with the empty value, in both serialisations of the same DOM:
  * `alt=""` (Angular 22.2's prerender) and a bare `alt` (21.x and 22.0, whose
  * critical-CSS pass, Beasties 0.4.2 with dom-serializer 2, writes empty
@@ -226,6 +242,13 @@ const EXPECT_IN_HTML = [
   // 3.11 (request 010): the badge's wrap class is in the server HTML, so the
   // label wraps before JS (SI-15); the rules themselves are plain CSS
   ['badge wrap class before JS (SI-15)', /<span(?=[^>]*class="[^"]*\blc-badge--wrap\b)[^>]*>(?:<!--[^]*?-->|\s)*Geschlossene Beta, nur mit Einladung/],
+  // 3.11.1 (request 011): lc-icon writes no style attribute for the default
+  // colour (G-37); the size is the icon-<size> class, the svg keeps width/height
+  ['lc-icon: no style attribute, the registered glyph and the plain icon (G-37)', (html) => iconsWithoutStyle(html, 3, ['id="compat-registered"', 'name="check"'])],
+  ['tt: lc-icon without style, decorative and labelled (G-37)', (html) => iconsWithoutStyle(html, 2, ['name="clock"', 'name="shield-check"']), 'tt/index.html'],
+  ['tt: lc-icon without style, the bundled set (G-37)', (html) => iconsWithoutStyle(html, 101), 'tt/icons/index.html'],
+  ['lc-icon: the size is the class, no inline size (G-37)', /<lc-icon(?=[^>]*\sid="compat-registered")[^>]*><div(?=[^>]*class="[^"]*\bicon-md\b)(?![^>]*\sstyle=)[^>]*><svg(?=[^>]*\swidth="24px")(?=[^>]*\sheight="24px")(?![^>]*\sstyle=)[^>]*>/],
+  ['lc-icon: a custom colour is the svg\'s inline colour, and only there (G-37 control)', /<lc-icon(?=[^>]*\sid="compat-color")(?![^>]*\sstyle=)[^>]*><div(?![^>]*\sstyle=)[^>]*><svg(?=[^>]*\sstyle="color: var\(--color-primary-500\);?")[^>]*>/],
 ];
 
 /**

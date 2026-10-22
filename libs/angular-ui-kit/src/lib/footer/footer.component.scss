@@ -11,11 +11,17 @@
 
   }
 
+  // 3.11.1 (G-36): the column minimum never exceeds the container, so 320 px
+  // at 200 % text (10rem = 320 px) gets one full-width column instead of a
+  // sideways scroll; from 10rem up the columns are as before. A word wider
+  // than its column breaks inside the word (`anywhere`): set here only, the
+  // tracks don't size from content, and the bottom row keeps its min-content.
   &__sections {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(10rem, 100%), 1fr));
     gap: var(--lc-density-gap-xl, 2rem);
     margin-bottom: var(--lc-density-padding-xl, 2rem);
+    overflow-wrap: anywhere;
   }
 
   // Same look at every `headingLevel`: the level is outline, not size.

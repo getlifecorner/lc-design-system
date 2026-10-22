@@ -60,12 +60,30 @@ export interface IconDecoration {
   label: string | undefined;
 }
 
-/** Sets size, colour and accessibility on the element in place (the order 3.4 used). */
+/** `currentColor` in any letter case, or empty: the stylesheet's `color: inherit` colours the glyph. */
+export function isDefaultIconColor(color: string): boolean {
+  const value = color.trim();
+  return value === '' || value.toLowerCase() === 'currentcolor';
+}
+
+/**
+ * Sets size, colour and accessibility on the element in place (the order 3.4
+ * used). The default colour writes no `style` (3.11.1, G-37: a `style-src
+ * 'self'` CSP blocks every `style` attribute in prerendered HTML) and takes
+ * back a custom colour of an earlier decoration. A custom colour goes through
+ * CSSOM (`style.color`), which such a CSP allows in the browser; never
+ * `setAttribute('style', …)` or markup.
+ */
 export function decorateSvg(svg: SVGElement, decoration: IconDecoration): void {
   svg.setAttribute('width', decoration.size);
   svg.setAttribute('height', decoration.size);
   const style = (svg as Partial<ElementCSSInlineStyle>).style;
-  if (style) style.color = decoration.color;
+  if (!isDefaultIconColor(decoration.color)) {
+    if (style) style.color = decoration.color;
+  } else if (svg.hasAttribute('style')) {
+    style?.removeProperty('color');
+    if (!svg.getAttribute('style')?.trim()) svg.removeAttribute('style');
+  }
   if (decoration.decorative) {
     svg.setAttribute('aria-hidden', 'true');
     svg.removeAttribute('role');

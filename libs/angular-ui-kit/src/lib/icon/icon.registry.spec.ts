@@ -189,9 +189,11 @@ describe('lc-icon registration and the kit set (AS-17)', () => {
       expect(isPlaceholder(svgOf(sun))).toBe(true);
       expect(isPlaceholder(svgOf(home))).toBe(false);
       expect(isPlaceholder(svgOf(anchor))).toBe(false);
+      // 3.11.1 (G-37): the box is sized by the class, not an inline style.
       for (const f of [sun, home, anchor]) {
-        expect(container(f).style.width).toBe('24px');
-        expect(container(f).style.height).toBe('24px');
+        expect(container(f).classList.contains('icon-md')).toBe(true);
+        expect(container(f).hasAttribute('style')).toBe(false);
+        expect(svgOf(f)?.getAttribute('width')).toBe('24px');
       }
       expect(warnings()).toEqual([
         '[lc-icon] "sun" is not registered. Add ICON_SUN from @lifecorner/angular-ui-kit/icons to provideLcIcons(). Rendering a placeholder instead.',
@@ -238,14 +240,16 @@ describe('lc-icon registration and the kit set (AS-17)', () => {
       setup();
       const fixture = render({ name: 'logout', size: 'sm', ariaLabel: 'Abmelden' });
       expect(container(fixture).childNodes).toHaveLength(0);
-      expect(container(fixture).style.width).toBe('20px');
-      expect(container(fixture).style.height).toBe('20px');
+      // 3.11.1 (G-37): the empty box is sized by the class, not an inline style.
+      expect(container(fixture).classList.contains('icon-sm')).toBe(true);
+      expect(container(fixture).hasAttribute('style')).toBe(false);
       await fixture.whenStable();
       const svg = svgOf(fixture);
       expect(svg?.getAttribute('aria-label')).toBe('Abmelden');
       expect(svg?.getAttribute('width')).toBe('20px');
       expect(svg?.innerHTML).toContain('M14 8v-2a2 2 0 0 0 -2 -2h-7');
-      expect(container(fixture).style.width).toBe('20px');
+      expect(container(fixture).classList.contains('icon-sm')).toBe(true);
+      expect(container(fixture).hasAttribute('style')).toBe(false);
       httpMock.expectNone(() => true);
       expect(warnings()).toEqual([]);
     });

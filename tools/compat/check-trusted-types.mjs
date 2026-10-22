@@ -255,13 +255,33 @@ const PRESENT = `((selectors) => Object.fromEntries(selectors.map((s) => {
   return [s, !!el && r.width > 0 && r.height > 0];
 })))`;
 
-/** Every lc-icon: its number of <svg> children and their child tags. */
+/**
+ * Every lc-icon: its number of <svg> children and their child tags; 3.11.1
+ * (G-37): the elements with a `style` attribute (host included) and the
+ * container's size class and box.
+ */
 const ICONS = `[...document.querySelectorAll('lc-icon')].map((icon) => {
   const svgs = icon.querySelectorAll('.icon-container > svg');
+  const box = icon.querySelector('.icon-container');
+  const rect = box?.getBoundingClientRect();
   return { id: icon.id || icon.dataset.icon || icon.getAttribute('name'), svgs: svgs.length,
            children: svgs[0] ? [...svgs[0].children].map((c) => c.tagName).join(',') : '',
-           label: svgs[0]?.getAttribute('aria-label') ?? null, hidden: svgs[0]?.getAttribute('aria-hidden') ?? null };
+           label: svgs[0]?.getAttribute('aria-label') ?? null, hidden: svgs[0]?.getAttribute('aria-hidden') ?? null,
+           styled: [icon, ...icon.querySelectorAll('[style]')].filter((el) => el.hasAttribute('style')).length,
+           size: [...(box?.classList ?? [])].find((c) => /^icon-(xs|sm|md|lg|xl)$/.test(c)) ?? null,
+           box: rect ? Math.round(rect.width * 100) / 100 + 'x' + Math.round(rect.height * 100) / 100 : null };
 })`;
+
+/**
+ * 3.11.1 (G-37): no lc-icon has a `style` attribute, and every displayed
+ * `icon-md` box (one in a hidden part of the page measures 0 × 0) is 24 × 24
+ * from the class.
+ */
+function iconsUnstyled(icons) {
+  const md = icons.filter((i) => i.size === 'icon-md' && i.box !== '0x0');
+  return { ok: icons.length > 0 && icons.every((i) => i.styled === 0) && md.length > 0 && md.every((i) => i.box === '24x24'),
+           detail: icons.filter((i) => i.styled !== 0 || (i.size === 'icon-md' && i.box !== '24x24')).slice(0, 5) };
+}
 
 /** The side navigation's announced and painted links. */
 const SIDENAV = `(() => {
@@ -350,6 +370,8 @@ try {
       check(run, width, '/tt: lc-toast-outlet is in the page', await evaluate(`!!document.querySelector('lc-toast-outlet')`));
       const icons = await evaluate(ICONS);
       check(run, width, '/tt: every lc-icon has exactly one <svg> after hydration', icons.length > 5 && icons.every((i) => i.svgs === 1), icons.filter((i) => i.svgs !== 1));
+      const unstyled = iconsUnstyled(icons);
+      check(run, width, '/tt: no lc-icon has a style attribute after hydration, icon-md boxes are 24 × 24 (G-37)', unstyled.ok, unstyled.detail);
       if (run.refused) {
         await iconSetSettled();
         const refused = await evaluate(ICONS);
@@ -416,6 +438,8 @@ try {
       const inline = all.filter((i) => i.id && i.id.includes(':'));
       check(run, width, `/tt/icons: all ${INLINE.length} inline name × variant render exactly one <svg>`, inline.length === INLINE.length && inline.every((i) => i.svgs === 1 && i.children.length > 0), inline.filter((i) => i.svgs !== 1).slice(0, 5));
       check(run, width, '/tt/icons: they carry their aria-label', inline.every((i) => i.label === i.id.replace(':', ' ')));
+      const unstyledSet = iconsUnstyled(all);
+      check(run, width, '/tt/icons: no lc-icon has a style attribute after hydration, icon-md boxes are 24 × 24 (G-37)', unstyledSet.ok, unstyledSet.detail);
       if (run.refused) {
         check(run, width, '/tt/icons: all of them show the placeholder', inline.every((i) => i.children === 'rect,text'));
       } else {

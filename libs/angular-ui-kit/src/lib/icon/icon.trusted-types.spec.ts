@@ -69,35 +69,41 @@ const ALL_BUNDLED: string[] = [
   ...Object.values(INLINE_TABLER_SVGS).flatMap((v) => Object.values(v) as string[]),
 ];
 
-/** The DOM 3.4.1 rendered in jsdom for these inputs (captured from the 3.4.1 sources, request 001). */
-const ICON_DOM_341: ReadonlyArray<{ inputs: Record<string, unknown>; className: string; style: string; svg: string }> = [
+/**
+ * The DOM 3.4.1 rendered in jsdom for these inputs (captured from the 3.4.1
+ * sources, request 001), less the inline styles 3.11.1 dropped (G-37): the
+ * size moved to the `icon-<size>` class (container `style` is now `null`) and
+ * the default colour to the stylesheet (`style="color: currentcolor;"` is gone
+ * from the svg). Only the custom colour keeps its inline `color`.
+ */
+const ICON_DOM_341: ReadonlyArray<{ inputs: Record<string, unknown>; className: string; style: string | null; svg: string }> = [
   {
     inputs: {"name":"home"},
     className: "icon-container icon-md icon-outline",
-    style: "width: 24px; height: 24px;",
+    style: null,
     svg:
-      "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" width=\"24px\" height=\"24px\" style=\"color: currentcolor;\" role=\"img\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25\"></path></svg>",
+      "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" width=\"24px\" height=\"24px\" role=\"img\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25\"></path></svg>",
   },
   {
     inputs: {"name":"home","variant":"solid","size":"xl","color":"#FF5733","ariaLabel":"Start"},
     className: "icon-container icon-solid icon-xl",
-    style: "width: 40px; height: 40px;",
+    style: null,
     svg:
       "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"40px\" height=\"40px\" style=\"color: rgb(255, 87, 51);\" role=\"img\" aria-label=\"Start\"><path d=\"M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z\"></path><path d=\"m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 0 .091-.086L12 5.432Z\"></path></svg>",
   },
   {
     inputs: {"name":"logout","size":"sm","decorative":true},
     className: "icon-container icon-outline icon-sm",
-    style: "width: 20px; height: 20px;",
+    style: null,
     svg:
-      "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" width=\"20px\" height=\"20px\" style=\"color: currentcolor;\" aria-hidden=\"true\"><path d=\"M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2\"></path><path d=\"M9 12h12l-3 -3\"></path><path d=\"M18 15l3 -3\"></path></svg>",
+      "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" width=\"20px\" height=\"20px\" aria-hidden=\"true\"><path d=\"M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2\"></path><path d=\"M9 12h12l-3 -3\"></path><path d=\"M18 15l3 -3\"></path></svg>",
   },
   {
     inputs: {"name":"beaker"},
     className: "icon-container icon-md icon-outline",
-    style: "width: 24px; height: 24px;",
+    style: null,
     svg:
-      "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" width=\"24px\" height=\"24px\" style=\"color: currentcolor;\" role=\"img\"><rect x=\"3.5\" y=\"3.5\" width=\"17\" height=\"17\" rx=\"3\" stroke-dasharray=\"2.5 2.5\"></rect><text x=\"12\" y=\"16.5\" text-anchor=\"middle\" font-size=\"12\" font-weight=\"700\" font-family=\"system-ui, -apple-system, sans-serif\" fill=\"currentColor\" stroke=\"none\">?</text></svg>",
+      "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" width=\"24px\" height=\"24px\" role=\"img\"><rect x=\"3.5\" y=\"3.5\" width=\"17\" height=\"17\" rx=\"3\" stroke-dasharray=\"2.5 2.5\"></rect><text x=\"12\" y=\"16.5\" text-anchor=\"middle\" font-size=\"12\" font-weight=\"700\" font-family=\"system-ui, -apple-system, sans-serif\" fill=\"currentColor\" stroke=\"none\">?</text></svg>",
   },
 ];
 

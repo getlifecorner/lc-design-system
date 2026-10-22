@@ -95,13 +95,17 @@ describe('IconComponent: unknown names in development and production (AS-15)', (
     it('requests a well-formed unknown name once, then shows the placeholder with one warning (404)', () => {
       const fixture = render({ name: 'beaker' });
       expect(container(fixture).childNodes).toHaveLength(0);
-      expect(container(fixture).style.width).toBe('24px');
+      // 3.11.1 (G-37): the box is sized by the class, not an inline style.
+      expect(container(fixture).classList.contains('icon-md')).toBe(true);
+      expect(container(fixture).hasAttribute('style')).toBe(false);
       httpMock.expectOne('/tabler-icons/outline/beaker.svg').flush('Not Found', { status: 404, statusText: 'Not Found' });
       fixture.detectChanges();
 
       expect(placeholderShown(fixture)).toBe(true);
-      expect(container(fixture).style.width).toBe('24px');
-      expect(container(fixture).style.height).toBe('24px');
+      expect(container(fixture).classList.contains('icon-md')).toBe(true);
+      expect(container(fixture).hasAttribute('style')).toBe(false);
+      expect(container(fixture).querySelector('svg')?.getAttribute('width')).toBe('24px');
+      expect(container(fixture).querySelector('svg')?.getAttribute('height')).toBe('24px');
       expect(warnSpy).toHaveBeenCalledTimes(1);
       expect(warnSpy.mock.calls[0][0]).toBe(
         '[lc-icon] "beaker": /tabler-icons/outline/beaker.svg could not be loaded (404) — an unknown name or a missing asset. Rendering a placeholder instead.',
