@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.11.3] - 2026-10-23
+
+Edu's "comforts" pose looks worried instead of angry (G-42; life-os website v0, the 404). No API breaks.
+
+### Fixed
+
+- **`lc-character pose="comforts"` (Tröstet) is worried, no longer angry** (G-42): the inner ends of both brows now sit 3 units above the outer ends (in 3.11.2 they sat 1.5 units below, so the brows sloped down toward the centre and, with the down-turned mouth, Edu frowned on the website 404). The mouth is a soft curve that dips 0.6 units (it rose 0.6 before). After the −8° head tilt the inner ends sit 4.0 (left) and 1.9 (right) units above the outer ends, 3.9 / 1.8 px at 96 px. The tilt, the reaching arm, the eyes, the colours and the box are unchanged; the dark drawing follows the rule, and `CHARACTER_SVG.comforts` / `CHARACTER_SVG_COMFORTS` carry the new drawing. Contrast is unchanged (brows and mouth `#0c1722` on the head: 2.91 light, 9.56 dark).
+- **No pose frowns** (G-42): all 14 poses were checked. Only `comforts`, `discovered` (both brows raised) and `connection-paused` (one brow arched, "hm?") draw brows, and only `comforts` broke the rule; a test now checks every drawing, light and dark.
+
+### Compatibility
+
+- No API breaks: same inputs, exports, selector and file names. Only the three paths of `comforts-light.svg` / `comforts-dark.svg` changed (+4 bytes each); the other 26 drawings and their strings are byte-identical to 3.11.2. Of 144 character, horizon and app-shell screenshots (360 / 1024 / 1280, light and dark), only the 24 that show `comforts` differ from 3.11.2.
+- The file names are unchanged: if you serve `assets/character/comforts-*.svg` with a long cache lifetime, the old drawing can show until the cache revalidates.
+
+### Migration
+
+- life-os website: switch the 404 figure back from `shows-the-way` to `comforts` and drop the `G-42` label. Update the brand copy `docs/brand/character/comforts-light.svg` from the kit: the kit file is now the source for this pose.
+
 ## [3.11.2] - 2026-10-23
 
 Intrinsic image size for lc-logo and lc-avatar, lazy loading for lc-character and lc-avatar, and buttons that no longer grow on load (G-38, G-39, G-40, G-41; life-os website v0). No API breaks.

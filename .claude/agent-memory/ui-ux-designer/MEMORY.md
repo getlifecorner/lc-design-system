@@ -1,3 +1,3 @@
-- [Measured reference values](reference_measured-values.md) — sidenav/app-page/icon DOM, code-block, Edu, footer/page-header, bundle share, textarea, 200 % text, icon/footer grid, logo/avatar/CTA (012); baselines
+- [Measured reference values](reference_measured-values.md) — sidenav/app-page/icon DOM, code-block, Edu, footer/page-header, bundle share, textarea, 200 % text, icon/footer grid, logo/avatar/CTA (012), Edu face contrast/brows (013); baselines
 - [Design pitfalls](feedback_design-pitfalls.md) — entries, esbuild chunks, @defer, CSP hydration + style-src, DOM APIs, specificity, CSS limits, serialisers, flex wrap, `anywhere`, binding order prop→attr, dark-default story assets (012)
-- [Review techniques](reference_review-techniques.md) — --measure math, CSS-injection prototype + --compare, axe/fonts via CDN, Bash-safe syntax, pending-img/transition probes (012), worktree, NX root
+- [Review techniques](reference_review-techniques.md) — --measure math, CSS-injection prototype + --compare, axe/fonts via CDN, Bash-safe syntax, pending-img/transition probes (012), SVG variant prototyping (013), worktree, NX root

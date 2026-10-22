@@ -3,6 +3,7 @@
 - **Status:** ready
 - **Spec:** [spec.md](spec.md) — AC-1 … AC-9
 - **Target:** patch 3.11.3 (owner, 2026-10-23)
+- **Change note (review r1, 2026-10-23):** two figures corrected, no design change: §2 file size ≈ 1.3 KB (was "≈ 1.6 KB"); §3 rendered rise at 96 px L 3.9 / R 1.8 px (was 3.8 / 1.9, a rounding slip).
 
 ## 1. Approach
 
@@ -34,7 +35,7 @@ No change: no input, output, slot, CSS hook, type, export, selector or file name
 | right brow | `M54.5 32.5 L62 31` | `M54.5 29.5 L62 32.5` |
 | mouth | `M46 47.5 Q50 46.3 54 47.5` | `M46 47.5 Q50 48.7 54 47.5` |
 
-The light file grows by 4 bytes (≈ 1.6 KB). The dark file gets the same three values; brows and mouth stay `#0c1722` under the rule (`KEPT`).
+The light file grows by 4 bytes (1308 → 1312 bytes, ≈ 1.3 KB). The dark file gets the same three values; brows and mouth stay `#0c1722` under the rule (`KEPT`).
 
 Default rendering unchanged: the other 26 files and their 26 strings are byte-identical, and `lc-character` renders the same `<img>` elements with the same `src`. `git diff --stat main -- libs/angular-ui-kit/src` lists exactly `comforts-light.svg`, `comforts-dark.svg`, `character-svg.data.ts`, the stories and the specs.
 
@@ -59,7 +60,7 @@ head frame (before the -8° tilt), viewBox units
 | left brow | (38, 32.5) → (45.5, 29.5), 8.08 long | gap to the eye white 2.33 at the outer end (33.4 → 35.73), 4.62 at the inner end; after the tilt: inner end 4.01 higher, 29.8° |
 | right brow | mirror at x 50 | after the tilt: inner end 1.93 higher, 13.8° (3.11.2: 2.53 *lower*, −19.3°) |
 | mouth | (46, 47.5) Q (50, 48.7) (54, 47.5) | inside the head ellipse (max (x−50)²/22² + (y−38)²/20² = 0.29); rendered ends (46.39, 48.03) / (54.31, 46.92), as in 3.11.2 |
-| at 96 px | stroke 1.73 px | brow rise 2.9 px (L 3.8, R 1.9 after the tilt) |
+| at 96 px | stroke 1.73 px | brow rise 2.9 px (L 3.9, R 1.8 after the tilt: 4.015 / 1.927 units × 0.96) |
 | at 48 px | stroke 0.86 px | brow rise 1.4 px; the expression reads, the detail is soft (checked in the prototype) |
 
 The left brow lies on the white highlight (ellipse 43/29, 8 × 4.5) as in 3.11.2; its outer end sits on the highlight's edge (0.995). The right brow lies on the plain head, as before.
