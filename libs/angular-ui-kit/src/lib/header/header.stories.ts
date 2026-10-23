@@ -39,7 +39,7 @@ const meta: Meta<HeaderComponent> = {
       control: 'select',
       options: ['icon', 'avatar'],
       description:
-        'What the account button shows: `icon` (user icon and chevron, at least 44 px high) or `avatar` (the initials of `userName` in a 48 px round button; the avatar is decorative, the button is named by `userMenuAriaLabel`)',
+        'What the account button shows: `icon` (user icon and chevron, at least 44 px high) or `avatar` (the initials of `userName` in a 48 px round button; the avatar is decorative, the button is named `userMenuAriaLabel`, a comma and the initials, e.g. "Menü für Johanna Müller, JM")',
       table: { defaultValue: { summary: 'icon' } },
     },
     userAvatarSrc: {
@@ -126,7 +126,11 @@ const meta: Meta<HeaderComponent> = {
     },
     homeAriaLabel: { description: 'Accessible name of the brand link', table: { defaultValue: { summary: 'Go to home' } } },
     hamburgerAriaLabel: { description: 'Accessible name of the hamburger', table: { defaultValue: { summary: 'Toggle sidebar menu' } } },
-    userMenuAriaLabel: { description: 'Accessible name of the account menu trigger', table: { defaultValue: { summary: 'Open user menu' } } },
+    userMenuAriaLabel: {
+      description:
+        'Accessible name of the account menu trigger. With `userMenuTrigger="avatar"` the button is named this text, a comma and the initials it shows ("Menü für Johanna Müller, JM"), so a voice-control user can say what they see (WCAG 2.5.3). Nothing is added when `userName` gives no initials or the text already holds them as a word; a photo does not change the name',
+      table: { defaultValue: { summary: 'Open user menu' } },
+    },
     themeToDarkAriaLabel: { description: 'Theme button label in the light theme', table: { defaultValue: { summary: 'Switch to dark mode' } } },
     themeToLightAriaLabel: { description: 'Theme button label in the dark theme', table: { defaultValue: { summary: 'Switch to light mode' } } },
     contextAriaLabel: { description: 'Accessible name of the context button', table: { defaultValue: { summary: 'Context info' } } },
@@ -178,7 +182,9 @@ AppHeaderComponent - Global application header for the LifeCorner shell
 - \`variant="transparent"\` — no background and no border; use it with \`[sticky]="false"\`.
 - \`userMenuTrigger="avatar"\` — the account button is the person's initials avatar
   (\`userAvatarColor\`, \`userAvatarSrc\`) in a 48 px round button; the icon trigger is
-  44 px high in every density.
+  44 px high in every density. The avatar button is named \`userMenuAriaLabel\`, a comma
+  and the initials it shows ("Menü für Johanna Müller, JM", WCAG 2.5.3); see
+  *Avatar Trigger Names*.
 - The subtitle is one line with "…", its full text in \`title\`, shown as typed.
 - The account menu is at most \`min(18rem, 100vw − 2rem)\` wide; name and email wrap.
 
@@ -459,7 +465,7 @@ export const AppShellPhone: Story = {
     docs: {
       description: {
         story:
-          'The header on the page: no surface, no border, not sticky. The household name ends with "…" (hover shows it in full); the account button is the initials avatar in the member colour, named "Menü für …". Open the menu: the 49-character name and the 42-character email wrap in a menu that stays inside the 360 px screen.',
+          'The header on the page: no surface, no border, not sticky. The household name ends with "…" (hover shows it in full); the account button is the initials avatar in the member colour, named "Menü für …, JA" (the initials it shows). Open the menu: the 49-character name and the 42-character email wrap in a menu that stays inside the 360 px screen.',
       },
     },
   },
@@ -619,5 +625,65 @@ export const AppShellDesktop: Story = {
     profileLabel: 'Einstellungen',
     logoutLabel: 'Abmelden',
   },
+};
+
+/** One row of *Avatar Trigger Names*: the case, the inputs and the name the button gets. */
+interface AvatarTriggerNameRow {
+  caption: string;
+  lang: 'en' | 'de';
+  userName: string;
+  userMenuAriaLabel: string;
+  userAvatarSrc: string;
+}
+
+const avatarTriggerNameRows: readonly AvatarTriggerNameRow[] = [
+  { caption: 'EN — named "Menu for Johanna Müller, JM"', lang: 'en', userName: 'Johanna Müller', userMenuAriaLabel: 'Menu for Johanna Müller', userAvatarSrc: '' },
+  { caption: 'DE — named "Menü für Johanna Müller, JM"', lang: 'de', userName: 'Johanna Müller', userMenuAriaLabel: 'Menü für Johanna Müller', userAvatarSrc: '' },
+  {
+    caption: 'DE, long name — named "Menü für Johanna-Friederike Apfelbaum-Kieselbacher-Morgentau, JA"',
+    lang: 'de',
+    userName: 'Johanna-Friederike Apfelbaum-Kieselbacher-Morgentau',
+    userMenuAriaLabel: 'Menü für Johanna-Friederike Apfelbaum-Kieselbacher-Morgentau',
+    userAvatarSrc: '',
+  },
+  { caption: 'One word — named "Menü für Johanna, J"', lang: 'de', userName: 'Johanna', userMenuAriaLabel: 'Menü für Johanna', userAvatarSrc: '' },
+  { caption: 'No name (shows "?") — named "Benutzermenü öffnen", nothing added', lang: 'de', userName: '', userMenuAriaLabel: 'Benutzermenü öffnen', userAvatarSrc: '' },
+  { caption: 'Photo — named "Menü für Tom Ek, TE"', lang: 'de', userName: 'Tom Ek', userMenuAriaLabel: 'Menü für Tom Ek', userAvatarSrc: '/assets/lifecorner-emblem.svg' },
+  { caption: 'Broken photo, initials — named "Menü für Tom Ek, TE"', lang: 'de', userName: 'Tom Ek', userMenuAriaLabel: 'Menü für Tom Ek', userAvatarSrc: '/assets/no-such-photo.jpg' },
+];
+
+/** AS-33: the avatar trigger's accessible name holds the initials it shows (WCAG 2.5.3 Label in Name). */
+export const AvatarTriggerNames: Story = {
+  name: 'Avatar Trigger Names',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'AS-33 (WCAG 2.5.3 Label in Name): the avatar button is named `userMenuAriaLabel`, a comma and the initials it shows, so a voice-control user can say "JM" and a screen reader announces the name once ("Menü für Johanna Müller, JM"). Nothing is added for the "?" of a missing name, or when the label already holds the initials as a word. The photo does not change the name: the server cannot know whether it loads, and a broken photo shows the same initials again. The caption above each header gives the case and the name.',
+      },
+    },
+  },
+  render: () => ({
+    props: { rows: avatarTriggerNameRows },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 12px; background: var(--color-background);">
+        @for (row of rows; track row.caption) {
+          <div>
+            <div style="font-size: 12px; color: var(--color-text-secondary); margin: 0 24px 4px;">{{ row.caption }}</div>
+            <lc-header
+              [attr.lang]="row.lang"
+              variant="transparent"
+              size="sm"
+              [sticky]="false"
+              userMenuTrigger="avatar"
+              userAvatarColor="member-1"
+              [userName]="row.userName"
+              [userMenuAriaLabel]="row.userMenuAriaLabel"
+              [userAvatarSrc]="row.userAvatarSrc"
+            ></lc-header>
+          </div>
+        }
+      </div>`,
+  }),
 };
 

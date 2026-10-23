@@ -14,12 +14,20 @@
  *   node tools/agents/story-shots.mjs --stories=layout-hero--page-band[,…]
  *        [--widths=360,1024,1280] [--themes=light,dark] [--height=900] [--full]
  *        [--measure='<JS expression, may use await; result must be JSON>']
+ *        [--axe[=<tags>]]
  *        [--out=tmp/story-shots] [--compare=<baseline dir>]
  *
- * Prints one JSON line per shot: { story, width, theme, file, measure }. With
+ * Prints one JSON line per shot: { story, width, theme, file, measure, axe }. With
  * --compare, each shot is compared by hash with the file of the same name in the
  * baseline directory; only shots that differ or have no baseline are printed,
  * then a summary line { identical, different, missing }.
+ * --axe runs axe-core (the devDependency, node_modules/axe-core/axe.min.js) on
+ * the whole page after --measure and the screenshot, so a measure can open a
+ * menu first and the shot is untouched. Tags: comma-separated, default
+ * wcag2a,wcag2aa,wcag21a,wcag21aa,wcag22aa. Each shot's line gets
+ * "axe": { version, violations: [{ id, targets }], incomplete: ["id:n"] }, a
+ * summary line { axe: { shots, violations } } follows, and any violation
+ * makes the exit code 1 (request 014).
  * Refuses a Storybook build that is older than the library source (rebuild it).
  * CHROME_PATH overrides the browser.
  */
@@ -94,6 +102,13 @@ const baseline = typeof args.compare === 'string' ? resolve(ROOT, args.compare) 
 if (baseline && !existsSync(baseline)) fail(`no baseline directory ${args.compare}`);
 const counts = { identical: 0, different: 0, missing: 0 };
 const sha = (buffer) => createHash('sha256').update(buffer).digest('hex');
+
+const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
+const axeTags = args.axe ? list(args.axe === true ? undefined : args.axe, AXE_TAGS) : null;
+const axeFile = join(ROOT, 'node_modules/axe-core/axe.min.js');
+if (axeTags && !existsSync(axeFile)) fail('--axe needs the axe-core devDependency (node_modules/axe-core) - run `npm ci`');
+const axeSource = axeTags ? readFileSync(axeFile, 'utf8') : null;
+const axeCounts = { shots: 0, violations: 0 };
 
 // --- Static server for the Storybook build ---
 
@@ -217,6 +232,16 @@ async function waitForStory(story) {
   throw new Error(`${story}: not rendered within 20 s`);
 }
 
+/** axe-core on the whole page: violations with their targets, incomplete rules with their node count. */
+async function runAxe() {
+  await evaluate(axeSource);
+  return evaluate(`axe.run(document, { runOnly: { type: 'tag', values: ${JSON.stringify(axeTags)} } }).then((r) => ({
+    version: axe.version,
+    violations: r.violations.map((v) => ({ id: v.id, targets: v.nodes.map((n) => n.target.join(' ')) })),
+    incomplete: r.incomplete.map((i) => i.id + ':' + i.nodes.length),
+  }))`);
+}
+
 let failed = false;
 try {
   for (const story of stories) {
@@ -250,8 +275,14 @@ try {
             compare = !existsSync(before) ? 'missing' : sha(readFileSync(before)) === sha(png) ? 'identical' : 'different';
             counts[compare]++;
           }
-          if (compare !== 'identical' || measure !== undefined) {
-            console.log(JSON.stringify({ story, width, theme, file: file.replace(`${ROOT}/`, ''), ...(compare && { compare }), ...(measure !== undefined && { measure }) }));
+          const axe = axeSource ? await runAxe() : undefined;
+          if (axe) {
+            axeCounts.shots++;
+            axeCounts.violations += axe.violations.length;
+            if (axe.violations.length) failed = true;
+          }
+          if (compare !== 'identical' || measure !== undefined || axe) {
+            console.log(JSON.stringify({ story, width, theme, file: file.replace(`${ROOT}/`, ''), ...(compare && { compare }), ...(measure !== undefined && { measure }), ...(axe && { axe }) }));
           }
         } catch (error) {
           failed = true;
@@ -268,4 +299,5 @@ try {
   rmSync(profile, { recursive: true, force: true });
 }
 if (baseline) console.log(JSON.stringify(counts));
+if (axeSource) console.log(JSON.stringify({ axe: axeCounts }));
 process.exit(failed ? 1 : 0);

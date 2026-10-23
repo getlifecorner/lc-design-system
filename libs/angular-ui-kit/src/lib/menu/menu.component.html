@@ -46,7 +46,7 @@
               (click)="onItemClick(item, $event)"
             >
               @if (item.icon) {
-                <lc-icon [name]="item.icon" [size]="item.iconSize || 'sm'" />
+                <lc-icon [name]="item.icon" [size]="item.iconSize || 'sm'" [decorative]="true" />
               }
               <span class="lc-menu__item-content">
                 <span class="lc-menu__item-label">{{ item.label }}</span>
@@ -72,7 +72,7 @@
               (click)="onItemClick(item, $event)"
             >
               @if (item.icon) {
-                <lc-icon [name]="item.icon" [size]="item.iconSize || 'sm'" />
+                <lc-icon [name]="item.icon" [size]="item.iconSize || 'sm'" [decorative]="true" />
               }
               <span class="lc-menu__item-content">
                 <span class="lc-menu__item-label">{{ item.label }}</span>

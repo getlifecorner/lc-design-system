@@ -56,7 +56,8 @@ describe('HeaderComponent — app shell (AS-2, AS-3, LK-8)', () => {
       });
       const trigger = el.querySelector<HTMLButtonElement>('button.lc-header__profile-trigger--avatar');
       expect(trigger).toBeTruthy();
-      expect(trigger?.getAttribute('aria-label')).toBe(`Menü für ${longName}`);
+      // AS-33 (3.11.4): the name ends with the initials the avatar shows (WCAG 2.5.3).
+      expect(trigger?.getAttribute('aria-label')).toBe(`Menü für ${longName}, JA`);
       expect(trigger?.getAttribute('aria-haspopup')).toBe('menu');
       const avatar = trigger?.querySelector('.lc-avatar');
       expect(avatar?.textContent?.trim()).toBe('JA');

@@ -41,6 +41,40 @@ export const AVATAR_MEMBER_COLORS: readonly AvatarColor[] = [
 ];
 
 /**
+ * The initials `lc-avatar` shows for `name`: first and last word's first
+ * letter, upper case; one word: its first letter; empty: `?`. Kit-internal
+ * (used by `lc-header`, so the account button's name holds exactly the text
+ * the avatar shows, AS-33); no semver guarantee.
+ */
+export function ɵavatarInitials(name: string | undefined): string {
+  if (!name || name.trim() === '') {
+    return '?';
+  }
+
+  const parts = name
+    .trim()
+    .split(/\s+/)
+    .filter((p) => p.length > 0);
+
+  if (parts.length === 0) {
+    return '?';
+  }
+
+  if (parts.length === 1) {
+    return parts[0]?.[0]?.toUpperCase() ?? '?';
+  }
+
+  // First and last name initials
+  const firstInitial = parts[0]?.[0];
+  const lastInitial = parts[parts.length - 1]?.[0];
+
+  if (firstInitial && lastInitial) {
+    return (firstInitial + lastInitial).toUpperCase();
+  }
+  return '?';
+}
+
+/**
  * Avatar component for circular user representation.
  *
  * Features:
@@ -121,34 +155,7 @@ export class AvatarComponent {
   /**
    * Computed initials from name
    */
-  initials = computed(() => {
-    const fullName = this.name();
-    if (!fullName || fullName.trim() === '') {
-      return '?';
-    }
-
-    const parts = fullName
-      .trim()
-      .split(/\s+/)
-      .filter((p) => p.length > 0);
-
-    if (parts.length === 0) {
-      return '?';
-    }
-
-    if (parts.length === 1) {
-      return parts[0]?.[0]?.toUpperCase() ?? '?';
-    }
-
-    // First and last name initials
-    const firstInitial = parts[0]?.[0];
-    const lastInitial = parts[parts.length - 1]?.[0];
-
-    if (firstInitial && lastInitial) {
-      return (firstInitial + lastInitial).toUpperCase();
-    }
-    return '?';
-  });
+  initials = computed(() => ɵavatarInitials(this.name()));
 
   /**
    * Computed CSS classes for the avatar

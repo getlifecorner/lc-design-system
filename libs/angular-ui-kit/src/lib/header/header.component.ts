@@ -18,7 +18,7 @@ import { ButtonComponent } from '@lifecorner/angular-ui-kit/button';
 import { LogoComponent } from '@lifecorner/angular-ui-kit/logo';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
 import { ICON_BARS_3, ICON_CHEVRON_DOWN, ICON_LOGOUT, ICON_MOON, ICON_SUN, ICON_USER } from '@lifecorner/angular-ui-kit/icons';
-import { AvatarColor, AvatarComponent } from '@lifecorner/angular-ui-kit/avatar';
+import { AvatarColor, AvatarComponent, ɵavatarInitials } from '@lifecorner/angular-ui-kit/avatar';
 import { MenuComponent, MenuItem } from '@lifecorner/angular-ui-kit/menu';
 import { ThemeService } from '@lifecorner/angular-ui-kit/theme';
 
@@ -211,7 +211,9 @@ export class HeaderComponent {
   readonly userName = input('');
   /**
    * What the account-menu button shows: `icon` (user icon and chevron) or
-   * `avatar` (the initials of `userName` in a 48 px round button).
+   * `avatar` (the initials of `userName` in a 48 px round button; the button
+   * is named `userMenuAriaLabel`, a comma and the initials).
+   * @default 'icon'
    */
   readonly userMenuTrigger = input<HeaderUserMenuTrigger>('icon');
   /** Photo for the account avatar (trigger and menu header); initials when empty or broken. */
@@ -261,7 +263,15 @@ export class HeaderComponent {
   readonly homeAriaLabel = input('Go to home');
   /** Accessible name of the hamburger button. */
   readonly hamburgerAriaLabel = input('Toggle sidebar menu');
-  /** Accessible name of the account menu trigger. */
+  /**
+   * Accessible name of the account menu trigger. With `userMenuTrigger="avatar"`
+   * the button is named this text, a comma and the initials it shows
+   * (`Menü für Johanna Müller, JM`), so a voice-control user can say what they
+   * see (WCAG 2.5.3). Nothing is added when `userName` gives no initials, or
+   * when the text already contains them as a word. The name is the same with a
+   * photo.
+   * @default 'Open user menu'
+   */
   readonly userMenuAriaLabel = input('Open user menu');
   /** Accessible name of the `<nav>` around `navItems`. */
   readonly navAriaLabel = input('Main navigation');
@@ -318,6 +328,29 @@ export class HeaderComponent {
       }
     });
   }
+
+  /**
+   * Name of the avatar trigger (AS-33, WCAG 2.5.3 Label in Name):
+   * `userMenuAriaLabel`, a comma and the initials the avatar shows, so the
+   * visible text is a word of the name. Built from the same function as the
+   * avatar's initials and independent of the photo, so the prerendered name
+   * and the page's agree. Nothing is added for the `?` placeholder or when
+   * the label already holds the initials as a word (parentheticals dropped,
+   * as axe-core 4.14 does); an empty label becomes the initials alone.
+   */
+  protected readonly avatarTriggerAriaLabel = computed(() => {
+    const initials = ɵavatarInitials(this.userName());
+    const label = this.userMenuAriaLabel();
+    if (!/[\p{L}\p{N}]/u.test(initials)) return label;
+    // toLowerCase, not toLocaleLowerCase: server and browser must agree.
+    const words = label
+      .replace(/\([^()]*\)/g, ' ')
+      .toLowerCase()
+      .split(/[^\p{L}\p{N}]+/u);
+    if (words.includes(initials.toLowerCase())) return label;
+    if (label.trim() === '') return initials;
+    return `${label}, ${initials}`;
+  });
 
   /**
    * Get menu items for profile dropdown

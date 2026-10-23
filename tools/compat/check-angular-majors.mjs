@@ -266,6 +266,9 @@ const EXPECT_IN_HTML = [
   ['header logo: the emblem at md is 48 × 48 (G-38)', (html) => imagesCarry(html, /<a(?=[^>]*class="lc-header__logo")[^>]*>[^]*?<\/a>/, ['width="48"', 'height="48"'])],
   ['avatar image: lg 48 × 48, lazy (G-40)', (html) => imagesCarry(html, /<lc-avatar(?=[^>]*\sid="compat-avatar")[^>]*>[^]*?<\/lc-avatar>/, ['width="48"', 'height="48"', 'loading="lazy"', 'src="/compat-logo/character/hello-light.svg"'], 1)],
   ['character: both drawings lazy (G-39)', (html) => imagesCarry(html, /<lc-character(?=[^>]*\sid="compat-character-lazy")[^>]*>[^]*?<\/lc-character>/, ['loading="lazy"', 'width="100"', 'height="100"'], 2)],
+  // 3.11.4 (request 014): the avatar trigger's name holds the initials it shows
+  // (WCAG 2.5.3), already in the prerendered page (tt-shell.ts)
+  ['tt: avatar trigger named with its initials (AS-33)', /<button(?=[^>]*lc-header__profile-trigger--avatar)(?=[^>]*aria-label="Menü für Johanna Apfelbaum, JA")[^>]*>/, 'tt/index.html'],
 ];
 
 /**

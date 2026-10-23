@@ -21,7 +21,7 @@
       (clicked)="onHamburgerClick()"
       class="lc-header__hamburger"
     >
-      <lc-icon name="bars-3" size="sm" />
+      <lc-icon name="bars-3" size="sm" [decorative]="true" />
     </lc-button>
   }
 
@@ -107,7 +107,7 @@
         (clicked)="onThemeButtonClick()"
         class="lc-header__theme-toggle"
       >
-        <lc-icon [name]="themeService.isDark() ? 'sun' : 'moon'" size="sm" />
+        <lc-icon [name]="themeService.isDark() ? 'sun' : 'moon'" size="sm" [decorative]="true" />
       </lc-button>
     }
 
@@ -164,7 +164,7 @@
             trigger
             class="lc-header__profile-trigger lc-header__profile-trigger--avatar"
             type="button"
-            [attr.aria-label]="userMenuAriaLabel()"
+            [attr.aria-label]="avatarTriggerAriaLabel()"
             [attr.aria-expanded]="isDropdownOpen()"
             (click)="toggleDropdown()"
           >
@@ -185,8 +185,8 @@
             [attr.aria-expanded]="isDropdownOpen()"
             (click)="toggleDropdown()"
           >
-            <lc-icon name="user" size="sm" />
-            <lc-icon name="chevron-down" size="xs" />
+            <lc-icon name="user" size="sm" [decorative]="true" />
+            <lc-icon name="chevron-down" size="xs" [decorative]="true" />
           </button>
         }
       </lc-menu>
