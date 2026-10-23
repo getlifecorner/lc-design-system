@@ -17,3 +17,5 @@ metadata:
 - 3.10.1: pack 418 files, 1.1 MB (5.7 MB unpacked); build 8.3 s. Release commit amended-in request docs: stage review.md (untracked) by name.
 - 3.11.2: pack 418 files, 1.2 MB (5.8 MB unpacked); build 9.1 s. `git -C <path>` and multi-command Bash calls prompt for approval; plain `git` in the cwd, one command per call. Developer ran compat only on 22, so the release ran all four (a few minutes).
 - 3.11.1: pack 418 files, 1.1 MB (5.7 MB unpacked); build 9.3 s; full compat matrix (21.0, 21, 22.0, 22) took a few minutes, all PASS. Stage ui-ux-designer memory files and review.md by name.
+- 3.11.3: pack 418 files, 1.2 MB; build 8.9 s. CI ~12 min this time (chrome-headless-shell install took 9 min); macOS has no `timeout` command, and a Bash call over 600 s is backgrounded: re-check with `gh run view <id> --json status,conclusion`, then run `gh run watch` again. Tag push also starts a second Deploy Docs run. Stage ID: npm E401 again.
+- 3.11.4: pack 418 files, 1.2 MB (5.8 MB unpacked); build 9.4 s. Pack lists 7 `src/styles/*.spec.ts` (not 5), same as before; ignore.

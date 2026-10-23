@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.11.4] - 2026-10-23
+
+The avatar account button is named with the initials it shows (AS-33; life-os app shell, axe-core 4.14). No API breaks.
+
+### Fixed
+
+- **`lc-header` `userMenuTrigger="avatar"`: the button's name contains its initials** (AS-33, WCAG 2.5.3 Label in Name): it is named `userMenuAriaLabel`, a comma and the initials the avatar shows, "Menü für Johanna Müller, JM" / "Menu for Johanna Müller, JM" (was "Menü für Johanna Müller", which axe-core 4.14 fails as `label-content-name-mismatch`, now under `wcag21a`). Voice-control users can say "JM"; screen readers announce the person's name once, purpose first. Nothing is appended for the "?" of a missing name or when the label already holds the initials as a word ("Menu for Al Lee"); an empty label gives the initials alone. The name is the same with a photo, loaded or broken, and is in the prerendered HTML.
+- **Header and menu icons are decorative** (`svg-img-alt`, WCAG 1.1.1): the hamburger, theme, user and chevron icons of `lc-header` and the item icons of `lc-menu` are `aria-hidden` instead of unnamed `<svg role="img">`.
+- axe-core 4.14.0 on the header stories (both triggers, EN and DE, menu open, light and dark, 360 and 1280 px): 0 violations in 24 runs; the kit's tests now run axe-core 4.14 on the header.
+
+### Compatibility
+
+- No API breaks: same inputs, outputs and exports; only the avatar trigger's `aria-label` and the icons' ARIA attributes change, and 126 of 132 header, app-shell, avatar, list and chat screenshots are identical (the other 6 differ in the chat story's clock times). The icon trigger's name is unchanged. Queries on the start of the name keep matching (`/^Menü für/`, `startsWith('Menu for ')`); exact-name checks need `, <initials>`.
+- Still failing axe-core 4.14's `label-content-name-mismatch` (follow-up): `lc-header`'s context button, `lc-stepper` steps, `lc-pagination` with localised labels, `lc-calendar` week columns, the `lc-rich-text-editor` toolbar, `lc-gallery` items, `lc-accordion` rich headers, the `lc-file-upload` drop zone. None holds an `lc-avatar`; life-os uses none of them.
+
+### Migration
+
+- life-os: lift the `@axe-core/playwright` 4.14 hold with this bump; update exact-name assertions (`shell.de.spec.ts:420`) to `…, <initials>`.
+
 ## [3.11.3] - 2026-10-23
 
 Edu's "comforts" pose looks worried instead of angry (G-42; life-os website v0, the 404). No API breaks.

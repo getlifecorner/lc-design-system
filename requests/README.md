@@ -45,4 +45,5 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [010](010-reflow-200-text-phone/) Reflow gaps at 200 % text on a phone | life-os | AS-30 (2), AS-32, SI-15 | 3.11.0 (staged, awaiting 2FA) | 3.11.0 |
 | [011](011-icon-csp-footer-reflow/) lc-icon without inline styles, footer at 320 px with 200 % text | life-os | G-37, G-36 | 3.11.1 (staged, awaiting 2FA) | 3.11.1 |
 | [012](012-image-size-lazy-button-transition/) Image size and lazy loading for logo, character, avatar; narrower button transition | life-os | G-38, G-39, G-40, G-41 | 3.11.2 (staged, awaiting 2FA) | 3.11.2 |
-| [013](013-comforts-pose-worried-brows/) Edu's "comforts" pose reads angry: worried brows | life-os | G-42 | 3.11.3 | 3.11.3 |
+| [013](013-comforts-pose-worried-brows/) Edu's "comforts" pose reads angry: worried brows | life-os | G-42 | 3.11.3 (staged, awaiting 2FA) | 3.11.3 |
+| [014](014-avatar-trigger-label-in-name/) lc-header avatar trigger: Label in Name under axe-core 4.14 | life-os | AS-33 | 3.11.4 | — |

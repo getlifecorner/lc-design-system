@@ -33,6 +33,8 @@ metadata:
 
 - **Template binding order (012).** Angular applies every property binding before any attribute binding (`UPDATE_ORDERING` in @angular/compiler), so `[src]` lands before `[attr.loading]`. For lazy images, bind `[attr.loading]` and then `[attr.src]`. `[width]="undefined"` writes `width="0"`, so use `[attr.width]` (null means absent). The `loading` name collides with the kit's boolean busy flag (button, select); a `'eager' | 'lazy'` union keeps them apart. **Story assets (012 r1):** the Storybook preview defaults to dark (canvas rgb(10,18,27)), so a custom-src story needs a dark partner: the mono emblem (#111827) was 1.06:1 and cost a round. In timing protocols, toggle every element first, then read: toggle-and-read in turn measures a half-toggled wrapping row.
 
+- **axe 4.14 label in name (014).** `label-content-name-mismatch` is in `wcag21a` and matches whole words (NFKD, **parentheticals dropped**, non-letters → space): `Label, JM` passes, `Label (JM)` fails; one-character visible text ("J", "?") is always `incomplete`. It counts `aria-hidden` text as visible. An `lc-icon` without `decorative`/`ariaLabel` renders an unnamed `svg role="img"` (`svg-img-alt`): inside named controls use `[decorative]`. Before promising "no violations", run the full tag set on the stories: 014 found `svg-img-alt` and 8 other components the spec didn't know about.
+
 **Why:** each of these cost a round trip or would have broken the build.
 
 **How to apply:** name the relevant ones in the design's risk list.
