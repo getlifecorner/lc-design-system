@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.11.5] - 2026-10-23
+
+The remaining eight components name their controls with the text they show (AS-33 follow-up; axe-core 4.14 `label-content-name-mismatch`, WCAG 2.5.3 Label in Name). No API breaks.
+
+### Fixed
+
+- **`lc-header` context button**: named `contextAriaLabel`, a comma and the label and name it shows: "Context info, Tenant Acme Corp" (was "Context info"); DE "Haushalt, Familie F.". The tooltip with the full name (`title`) moved from the button to the name text, so it no longer competes with the accessible name.
+- **`lc-stepper` steps**: the description and the optional label are part of the name, "Step 2 of 3: Profile, Set up your profile" (was "Step 2 of 3: Profile", with the description as `aria-describedby`); DE "Schritt 2 von 4: Persönliche Angaben, Bitte geben Sie Ihre vollständige Anschrift ein". The step number is drawn by CSS from `data-step`, so it is no longer text inside the button.
+- **`lc-pagination` with localised labels**: "Vorherige Seite, Zurück" / "Nächste Seite, Weiter" (was "Vorherige Seite" / "Nächste Seite"). The English defaults are unchanged ("Previous page" already contains "Previous").
+- **`lc-calendar` week view**: each column header is named with its visible label plus the day's month and year, "Mo., 19. Oktober 2026" (was "Montag, 19. Oktober 2026"); en-US "19 Mon October 2026" (was "Monday, October 19, 2026"). A week across two months names each day with its own month. Month and day views are unchanged.
+- **`lc-rich-text-editor` toolbar**: buttons that show a word or number carry it: "Heading 1, H1" to "Heading 3, H3", "Ordered List, 1." (DE "Überschrift 1, H1", "Nummerierte Liste, 1."); the tooltip shows the same text. Single-letter and symbol buttons (B, I, U, S, •, ", <>, { }, link, image, rule) keep "Bold", "Fett" and so on: WCAG 2.5.3 treats them like icons, and axe reports them as "incomplete", not as violations.
+- **`lc-gallery` items with `showCaptions`**: "Photo 1, Sunset over the lake" (was "Photo 1"); DE "Bild 3, Sonnenuntergang am See". When the caption already contains the alt text, the caption alone. Without captions the name is unchanged.
+- **`lc-accordion` with an `lcAccordionHeader` template and `ariaLabel` or `title`**: the header button and its panel are named by the label and the template's text, "Pipeline run, Item One Complete 12:04" (was "Item one details", an `aria-label` that hid the visible text), through `aria-labelledby`. Plain-title headers and rich headers without a label are unchanged.
+- **`lc-file-upload` drop zone**: hint, accepted types and maximum size, "Upload your documents (PDF, PNG, JPG), Accepted: .pdf,.png,.jpg,.jpeg, Max: 5.0 MB" (was the hint alone); DE "Dateien hierher ziehen oder zum Auswählen klicken, Erlaubt: .pdf, Max.: 10.0 MB". Without `accept` and `maxSizeBytes` the name is unchanged.
+- Visible text parts now have a space between them in the DOM (header label and name, stepper description and "Optional", file-upload lines), so names no longer run together ("TenantAcme Corp").
+- axe-core 4.14.0 over the whole Storybook (899 stories, 360 and 1280 px, light and dark): `label-content-name-mismatch` in 0 stories (was 31 at 1280 px and 23 at 360 px); no other rule changed. The kit's tests now run axe-core 4.14 on all eight components.
+
+### Compatibility
+
+- No API breaks: same inputs, outputs, selectors and exports. Only accessible names change (`aria-label`, `aria-labelledby`, where `title` sits), and all 372 screenshots of the eight components (plus three sidenav stories with a header; 360 / 1024 / 1280 px, light and dark) are identical to 3.11.4.
+- Tests that match a name exactly need the new name (`{ name: 'Vorherige Seite' }` → `'Vorherige Seite, Zurück'`). Queries on the start of the name keep matching (`/^Vorherige Seite/`, `startsWith('Step 2 of 3: Profile')`), except the calendar week headers (the name now starts with the visible text) and gallery items whose caption contains the alt text.
+- `lc-stepper` buttons no longer have `aria-describedby`; in prerendered HTML the number is `<span class="lc-stepper__number" data-step="1">` without text.
+- `lc-accordion` rich headers: the label (`ariaLabel` or `title`) now starts the name and the template's text follows. If your label only repeats the template ("Item one" over "Item One …"), the name stutters ("Item one, Item One Complete 12:04"); remove the label, or keep only context the template doesn't show ("Pipeline run"). The 3.11.4 docs advised setting one on every `lcAccordionHeader`.
+- In your own `lcAccordionHeader` template, put `&ngsp;` between text elements (Angular removes plain whitespace between tags), or the name runs the parts together ("Item OneComplete").
+- No known axe-core 4.14 `label-content-name-mismatch` hits remain in the kit. The 31 stories that failed at 1280 px before (23 at 360 px) are listed per story in the request's `tmp/015/axe-baseline-1280-light.log` (`out`, `label-content-name-mismatch:<n>`); after, the same sweep reports none.
+- New internal entry `@lifecorner/angular-ui-kit/internal/a11y` (used by the components, not public API).
+
+### Migration
+
+- None required. life-os uses none of these components; elsewhere, update exact-name assertions as above.
+
 ## [3.11.4] - 2026-10-23
 
 The avatar account button is named with the initials it shows (AS-33; life-os app shell, axe-core 4.14). No API breaks.
