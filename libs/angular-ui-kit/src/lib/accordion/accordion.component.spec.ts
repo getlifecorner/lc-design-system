@@ -3,6 +3,7 @@ import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/cor
 import { AccordionComponent } from './accordion.component';
 import { AccordionHeaderDirective } from './accordion-header.directive';
 import { AccordionContentDirective } from './accordion-content.directive';
+import { computedName } from '../../testing/axe-jsdom';
 
 /** Probe whose ngOnInit we spy on to prove lazy instantiation. */
 @Component({
@@ -119,8 +120,12 @@ describe('AccordionComponent', () => {
       expect(fixture.nativeElement.querySelector('.lc-accordion__title')).toBeNull();
     });
 
+    // 3.11.5 (AS-33, WCAG 2.5.3): the title still starts the name, and the
+    // template's visible text follows it through aria-labelledby.
     it('keeps the title as the accessible label fallback', () => {
-      expect(header(fixture).getAttribute('aria-label')).toBe('fallback-label');
+      const btn = header(fixture);
+      expect(btn.hasAttribute('aria-label')).toBe(false);
+      expect(computedName(fixture.nativeElement, btn).startsWith('fallback-label, ')).toBe(true);
     });
   });
 

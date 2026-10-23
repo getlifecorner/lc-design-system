@@ -6,7 +6,7 @@
         type="button"
         class="lc-pagination__button lc-pagination__button--prev"
         [disabled]="isFirstPage()"
-        [attr.aria-label]="previousAriaLabel()"
+        [attr.aria-label]="previousButtonAriaLabel()"
         (click)="goToPreviousPage()"
       >
         <svg class="lc-pagination__icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -42,7 +42,7 @@
         type="button"
         class="lc-pagination__button lc-pagination__button--next"
         [disabled]="isLastPage()"
-        [attr.aria-label]="nextAriaLabel()"
+        [attr.aria-label]="nextButtonAriaLabel()"
         (click)="goToNextPage()"
       >
         <span class="lc-pagination__button-text">{{ nextLabel() }}</span>

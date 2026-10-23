@@ -431,8 +431,9 @@ describe('PaginationComponent', () => {
       const next = fixture.debugElement.query(By.css('.lc-pagination__button--next'));
       expect(prev.nativeElement.textContent.trim()).toBe('Zurück');
       expect(next.nativeElement.textContent.trim()).toBe('Weiter');
-      expect(prev.nativeElement.getAttribute('aria-label')).toBe('Vorherige Seite');
-      expect(next.nativeElement.getAttribute('aria-label')).toBe('Nächste Seite');
+      // 3.11.5 (AS-33, WCAG 2.5.3): the visible text follows the label it lacks.
+      expect(prev.nativeElement.getAttribute('aria-label')).toBe('Vorherige Seite, Zurück');
+      expect(next.nativeElement.getAttribute('aria-label')).toBe('Nächste Seite, Weiter');
     });
 
     it('should build page button names from the pageAriaLabel template', () => {

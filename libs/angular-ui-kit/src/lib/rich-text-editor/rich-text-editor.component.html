@@ -6,8 +6,8 @@
         <button
           type="button"
           class="lc-rich-text-editor__toolbar-btn"
-          [title]="getActionTitle(action)"
-          [attr.aria-label]="getActionTitle(action)"
+          [title]="getActionName(action)"
+          [attr.aria-label]="getActionName(action)"
           [disabled]="!editable()"
           (click)="onToolbarAction(action)"
         >

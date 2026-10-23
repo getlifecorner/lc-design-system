@@ -116,14 +116,16 @@
       <button
         type="button"
         class="lc-header__context-info"
-        [attr.title]="contextName()"
-        [attr.aria-label]="contextAriaLabel()"
+        [attr.aria-label]="contextButtonAriaLabel()"
         (click)="contextClick.emit()"
       >
+        <!-- A real space between label and name: the visible text reads
+             "Tenant Acme Corp", not "TenantAcme Corp" (WCAG 2.5.3). The
+             tooltip sits on the name, so it is not a description of the button. -->
         @if (contextLabel()) {
-          <span class="lc-header__context-label">{{ contextLabel() }}</span>
+          <span class="lc-header__context-label">{{ contextLabel() }}</span>&ngsp;
         }
-        <span class="lc-header__context-name">{{ contextName() }}</span>
+        <span class="lc-header__context-name" [attr.title]="contextName()">{{ contextName() }}</span>
       </button>
     }
 

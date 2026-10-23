@@ -33,6 +33,17 @@ Use it for onboarding flows, checkout, wizards, and form sequences.
       description: 'Zero-based index of the current step',
       table: { defaultValue: { summary: '0' } },
     },
+    stepAriaLabel: {
+      control: 'text',
+      description:
+        "Accessible name template of a step button (`{n}`, `{m}`, `{label}`); the step's description and `optionalLabel` follow it. Keep `{label}` last, so the name contains the visible text.",
+      table: { defaultValue: { summary: 'Step {n} of {m}: {label}' } },
+    },
+    optionalLabel: {
+      control: 'text',
+      description: "Text shown under optional steps; it also ends the step's accessible name.",
+      table: { defaultValue: { summary: 'Optional' } },
+    },
   },
 };
 
@@ -103,6 +114,28 @@ export const WithOptionalStep: Story = {
       { label: 'Done' },
     ],
     activeStep: 1,
+  },
+};
+
+export const Localized: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'German step names with a long description: the name is the filled `stepAriaLabel`, then the description and `optionalLabel`, so it contains the visible text once.',
+      },
+    },
+  },
+  args: {
+    steps: [
+      { label: 'Konto' },
+      { label: 'Persönliche Angaben', description: 'Bitte geben Sie Ihre vollständige Anschrift ein' },
+      { label: 'Zahlungsmethode', optional: true },
+      { label: 'Bestätigung' },
+    ],
+    activeStep: 1,
+    orientation: 'vertical',
+    stepAriaLabel: 'Schritt {n} von {m}: {label}',
   },
 };
 

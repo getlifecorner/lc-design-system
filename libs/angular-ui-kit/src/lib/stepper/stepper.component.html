@@ -13,9 +13,10 @@
           [disabled]="!isStepNavigable(i)"
           [attr.aria-current]="getStepState(i) === 'active' ? 'step' : null"
           [attr.aria-label]="getStepAriaLabel(i)"
-          [attr.aria-describedby]="getDescriptionId(i)"
           (click)="goToStep(i)"
         >
+          <!-- The number is generated content (data-step), not text: as text,
+               the visible label would read "2Profile" (WCAG 2.5.3). -->
           <span class="lc-stepper__indicator" aria-hidden="true">
             @if (getStepState(i) === 'completed') {
               <!-- Checkmark for completed -->
@@ -27,18 +28,20 @@
                 />
               </svg>
             } @else {
-              <span class="lc-stepper__number">{{ i + 1 }}</span>
+              <span class="lc-stepper__number" [attr.data-step]="i + 1"></span>
             }
           </span>
+          <!-- Real spaces between the parts: the visible text reads
+               "Profile Set up your profile", which the name contains. -->
           <span class="lc-stepper__label">
             <span class="lc-stepper__title">{{ step.label }}</span>
             @if (step.description) {
-              <span class="lc-stepper__description" [attr.id]="getDescriptionId(i)">{{
+              &ngsp;<span class="lc-stepper__description" [attr.id]="getDescriptionId(i)">{{
                 step.description
               }}</span>
             }
             @if (step.optional) {
-              <span class="lc-stepper__optional">{{ optionalLabel() }}</span>
+              &ngsp;<span class="lc-stepper__optional">{{ optionalLabel() }}</span>
             }
           </span>
         </button>

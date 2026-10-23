@@ -8,7 +8,7 @@
   tabindex="0"
   (keydown.enter)="openFilePicker()"
   (keydown.space)="openFilePicker()"
-  [attr.aria-label]="hint()"
+  [attr.aria-label]="dropzoneAriaLabel()"
   [attr.aria-disabled]="disabled()"
 >
   <input
@@ -24,12 +24,14 @@
   />
   <div class="file-upload__content">
     <lc-icon name="cloud-arrow-up" class="file-upload__icon"></lc-icon>
+    <!-- Real spaces between the lines, so the visible text reads as words
+         that the drop zone's name contains (WCAG 2.5.3). -->
     <p class="file-upload__hint">{{ hint() }}</p>
     @if (accept()) {
-      <p class="file-upload__accept">{{ acceptedLabel() }} {{ accept() }}</p>
+      &ngsp;<p class="file-upload__accept">{{ acceptedLabel() }} {{ accept() }}</p>
     }
     @if (maxSizeBytes() > 0) {
-      <p class="file-upload__accept">{{ maxSizeLabel() }} {{ formatSize(maxSizeBytes()) }}</p>
+      &ngsp;<p class="file-upload__accept">{{ maxSizeLabel() }} {{ formatSize(maxSizeBytes()) }}</p>
     }
   </div>
 </div>

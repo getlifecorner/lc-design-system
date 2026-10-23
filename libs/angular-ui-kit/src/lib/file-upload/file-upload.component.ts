@@ -81,15 +81,25 @@ export class FileUploadComponent {
   disabled = input<boolean>(false);
 
   /**
-   * Hint text shown in the dropzone.
+   * Hint text shown in the dropzone. The drop zone's accessible name is
+   * `hint`, then the shown accepted and max lines, comma-separated (WCAG 2.5.3
+   * Label in Name).
    * @default 'Drag & drop files here, or click to browse'
    */
   hint = input<string>('Drag & drop files here, or click to browse');
 
-  /** Prefix of the accepted file types line (`accept`). */
+  /**
+   * Prefix of the accepted file types line (`accept`). The shown line is part
+   * of the drop zone's accessible name, after `hint`.
+   * @default 'Accepted:'
+   */
   acceptedLabel = input('Accepted:');
 
-  /** Prefix of the maximum file size line (`maxSizeBytes`). */
+  /**
+   * Prefix of the maximum file size line (`maxSizeBytes`). The shown line is
+   * part of the drop zone's accessible name, after `hint`.
+   * @default 'Max:'
+   */
   maxSizeLabel = input('Max:');
 
   /** Accessible name of a selected file's remove button. */
@@ -118,6 +128,20 @@ export class FileUploadComponent {
       .filter(Boolean)
       .join(' ');
   });
+
+  /**
+   * Name of the drop zone (AS-33, WCAG 2.5.3 Label in Name): `hint`, then the
+   * accepted and max lines it shows, comma-separated.
+   */
+  protected readonly dropzoneAriaLabel = computed(() =>
+    [
+      this.hint(),
+      this.accept() ? `${this.acceptedLabel()} ${this.accept()}` : '',
+      this.maxSizeBytes() > 0 ? `${this.maxSizeLabel()} ${this.formatSize(this.maxSizeBytes())}` : '',
+    ]
+      .filter(Boolean)
+      .join(', '),
+  );
 
   protected onDragOver(event: DragEvent): void {
     event.preventDefault();

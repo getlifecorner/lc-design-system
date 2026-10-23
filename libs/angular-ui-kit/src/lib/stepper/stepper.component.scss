@@ -111,6 +111,11 @@
 
   &__number {
     line-height: 1;
+
+    // Generated, so it is not joined to the title as visible text (AS-33).
+    &::before {
+      content: attr(data-step);
+    }
   }
 
   // ── Labels ────────────────────────────────────────────────────────────

@@ -64,10 +64,12 @@ describe('secondary entries (AS-15)', () => {
 
   // 3.6 (request 002) added the public `icons` and `sidenav-placeholder` entries
   // and the internal `icon-set` (AS-17) and `navigation` (AS-18) entries;
-  // 3.8 (request 005, G-4) the public `character` and `character-svg` entries.
-  it('has one entry per folder: 113 public and 5 internal', () => {
+  // 3.8 (request 005, G-4) the public `character` and `character-svg` entries;
+  // 3.11.5 (request 015, AS-33) the internal `a11y` entry (Label in Name).
+  it('has one entry per folder: 113 public and 6 internal', () => {
     expect(publicEntries).toHaveLength(113);
     expect(entries.filter((e) => e.startsWith('internal/'))).toEqual([
+      'internal/a11y',
       'internal/chart',
       'internal/icon-set',
       'internal/navigation',

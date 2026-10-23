@@ -6,6 +6,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgClass } from '@angular/common';
+import { nameWithText } from '@lifecorner/angular-ui-kit/internal/a11y';
 
 export type PaginationSize = 'sm' | 'md' | 'lg';
 
@@ -54,9 +55,18 @@ export class PaginationComponent {
   readonly previousLabel = input('Previous');
   /** Visible text of the next button */
   readonly nextLabel = input('Next');
-  /** Accessible name of the previous button (the visible text is hidden on small screens) */
+  /**
+   * Accessible name of the previous button (the visible text is hidden on
+   * small screens). `previousLabel` is appended when this doesn't contain it
+   * (WCAG 2.5.3 Label in Name), e.g. `Vorherige Seite, Zurück`.
+   * @default 'Previous page'
+   */
   readonly previousAriaLabel = input('Previous page');
-  /** Accessible name of the next button */
+  /**
+   * Accessible name of the next button. `nextLabel` is appended when this
+   * doesn't contain it (WCAG 2.5.3 Label in Name), e.g. `Nächste Seite, Weiter`.
+   * @default 'Next page'
+   */
   readonly nextAriaLabel = input('Next page');
   /** Accessible name of a page button; `{page}` is replaced with the page number */
   readonly pageAriaLabel = input('Page {page}');
@@ -67,6 +77,14 @@ export class PaginationComponent {
   readonly infoText = input('Showing {first} to {last} of {total} items');
 
   readonly pageChange = output<number>();
+
+  /** Name of the previous button: its label, then the visible text unless contained (AS-33). */
+  protected readonly previousButtonAriaLabel = computed(() =>
+    nameWithText(this.previousAriaLabel(), this.previousLabel()),
+  );
+
+  /** Name of the next button: its label, then the visible text unless contained (AS-33). */
+  protected readonly nextButtonAriaLabel = computed(() => nameWithText(this.nextAriaLabel(), this.nextLabel()));
 
   // Computed properties
   totalPages = computed(() => {

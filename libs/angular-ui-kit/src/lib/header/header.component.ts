@@ -21,6 +21,7 @@ import { ICON_BARS_3, ICON_CHEVRON_DOWN, ICON_LOGOUT, ICON_MOON, ICON_SUN, ICON_
 import { AvatarColor, AvatarComponent, ɵavatarInitials } from '@lifecorner/angular-ui-kit/avatar';
 import { MenuComponent, MenuItem } from '@lifecorner/angular-ui-kit/menu';
 import { ThemeService } from '@lifecorner/angular-ui-kit/theme';
+import { nameWithText } from '@lifecorner/angular-ui-kit/internal/a11y';
 
 /** A link in the header's main navigation (`navItems`). */
 export interface HeaderNavItem {
@@ -279,7 +280,12 @@ export class HeaderComponent {
   readonly themeToDarkAriaLabel = input('Switch to dark mode');
   /** Label of the theme button while the dark theme is active. */
   readonly themeToLightAriaLabel = input('Switch to light mode');
-  /** Accessible name of the context button (`contextName`). */
+  /**
+   * Start of the context button's accessible name. The visible `contextLabel`
+   * and `contextName` follow it (WCAG 2.5.3 Label in Name), unless the label
+   * already contains them: `Context info, Tenant Acme Corp`.
+   * @default 'Context info'
+   */
   readonly contextAriaLabel = input('Context info');
   /** Label of the Profile entry in the account menu. */
   readonly profileLabel = input('Profile');
@@ -351,6 +357,15 @@ export class HeaderComponent {
     if (label.trim() === '') return initials;
     return `${label}, ${initials}`;
   });
+
+  /**
+   * Name of the context button (AS-33, WCAG 2.5.3 Label in Name):
+   * `contextAriaLabel`, a comma and the visible `contextLabel` and
+   * `contextName`, so a voice-control user can say what they see.
+   */
+  protected readonly contextButtonAriaLabel = computed(() =>
+    nameWithText(this.contextAriaLabel(), [this.contextLabel(), this.contextName()].filter(Boolean).join(' ')),
+  );
 
   /**
    * Get menu items for profile dropdown

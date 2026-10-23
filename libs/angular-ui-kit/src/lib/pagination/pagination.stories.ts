@@ -26,8 +26,8 @@ const meta: Meta<PaginationComponent> = {
     showInfo: { description: 'Show "Showing X-Y of Z items" text' },
     previousLabel: { description: 'Visible text of the previous button', table: { defaultValue: { summary: 'Previous' } } },
     nextLabel: { description: 'Visible text of the next button', table: { defaultValue: { summary: 'Next' } } },
-    previousAriaLabel: { description: 'Accessible name of the previous button', table: { defaultValue: { summary: 'Previous page' } } },
-    nextAriaLabel: { description: 'Accessible name of the next button', table: { defaultValue: { summary: 'Next page' } } },
+    previousAriaLabel: { description: 'Accessible name of the previous button; `previousLabel` is appended unless contained', table: { defaultValue: { summary: 'Previous page' } } },
+    nextAriaLabel: { description: 'Accessible name of the next button; `nextLabel` is appended unless contained', table:{ defaultValue: { summary: 'Next page' } } },
     pageAriaLabel: { description: 'Accessible name of a page button; `{page}` is replaced', table: { defaultValue: { summary: 'Page {page}' } } },
     infoText: {
       description: 'Info line template; `{first}`, `{last}`, `{total}` are replaced',

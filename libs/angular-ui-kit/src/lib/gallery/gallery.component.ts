@@ -18,6 +18,7 @@ import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/ico
 import { ICON_CHEVRON_LEFT, ICON_CHEVRON_RIGHT, ICON_PLUS, ICON_X_MARK } from '@lifecorner/angular-ui-kit/icons';
 import { NgStyle } from '@angular/common';
 import { isSafeImageUrl } from '@lifecorner/angular-ui-kit/internal/url';
+import { nameWithText } from '@lifecorner/angular-ui-kit/internal/a11y';
 
 export type GalleryLayout = 'grid' | 'masonry';
 export type GallerySize = 'sm' | 'md' | 'lg';
@@ -91,7 +92,12 @@ export class GalleryComponent implements OnDestroy {
   /** Custom column count (overrides size preset) */
   readonly columns = input<number | null>(null);
 
-  /** Whether to show captions below thumbnails */
+  /**
+   * Whether to show captions below thumbnails. A shown caption is part of the
+   * item's accessible name: `alt` (or `imageFallbackLabel` and its number),
+   * then the caption (WCAG 2.5.3 Label in Name).
+   * @default false
+   */
   readonly showCaptions = input(false);
 
   /** Whether clicking a thumbnail opens the lightbox */
@@ -130,7 +136,11 @@ export class GalleryComponent implements OnDestroy {
   /** Accessible name of the next-image button. */
   readonly nextAriaLabel = input('Next image');
 
-  /** Accessible name of a thumbnail without `alt`, followed by its number. */
+  /**
+   * Accessible name of a thumbnail without `alt`, followed by its number. A
+   * shown caption follows (`Bild 3, Sonnenuntergang am See`).
+   * @default 'Image'
+   */
   readonly imageFallbackLabel = input('Image');
 
   /** Emitted when lightbox opens with item index */
@@ -324,6 +334,16 @@ export class GalleryComponent implements OnDestroy {
 
   protected getThumbnail(item: GalleryItem): string {
     return item.thumbnail || item.src;
+  }
+
+  /**
+   * Name of a thumbnail (AS-33, WCAG 2.5.3 Label in Name): `alt` (or
+   * `imageFallbackLabel` and its number), then the shown caption unless one
+   * contains the other.
+   */
+  protected itemAriaLabel(item: GalleryItem, index: number): string {
+    const label = item.alt || `${this.imageFallbackLabel()} ${index + 1}`;
+    return nameWithText(label, this.showCaptions() ? (item.caption ?? '') : '');
   }
 
   protected trackByIndex(index: number): number {

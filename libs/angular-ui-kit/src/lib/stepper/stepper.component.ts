@@ -59,13 +59,19 @@ export class StepperComponent {
   /** Orientation */
   readonly orientation = input<'horizontal' | 'vertical'>('horizontal');
 
-  /** Text shown under optional steps */
+  /**
+   * Text shown under optional steps; it also ends the step's accessible name.
+   * @default 'Optional'
+   */
   readonly optionalLabel = input('Optional');
 
   /**
    * Accessible name template for each step button. Placeholders: `{n}`
-   * (1-based step number), `{m}` (step count), `{label}`. Optional steps get
-   * `optionalLabel` appended.
+   * (1-based step number), `{m}` (step count), `{label}`. The step's visible
+   * description and `optionalLabel` follow the filled template,
+   * comma-separated (`Step 2 of 3: Profile, Set up your profile`). Keep
+   * `{label}` last, so that the name contains the visible text (WCAG 2.5.3).
+   * @default 'Step {n} of {m}: {label}'
    */
   readonly stepAriaLabel = input('Step {n} of {m}: {label}');
 
@@ -100,18 +106,27 @@ export class StepperComponent {
     return !this.linear() || index <= this.activeStep();
   }
 
-  /** Accessible name for the step button at `index` */
+  /**
+   * Accessible name for the step button at `index` (AS-33, WCAG 2.5.3 Label
+   * in Name): the filled `stepAriaLabel`, then the visible description and
+   * `optionalLabel`, comma-separated, so the name contains the visible text.
+   * A template that doesn't end with `{label}` gets the label after it.
+   */
   getStepAriaLabel(index: number): string {
     const step = this.steps()[index];
     if (!step) return '';
-    const name = this.stepAriaLabel()
+    const template = this.stepAriaLabel();
+    const name = template
       .replace('{n}', String(index + 1))
       .replace('{m}', String(this.totalSteps()))
       .replace('{label}', step.label);
-    return step.optional ? `${name}, ${this.optionalLabel()}` : name;
+    const label = template.trimEnd().endsWith('{label}') ? '' : step.label;
+    return [name, label, step.description ?? '', step.optional ? this.optionalLabel() : '']
+      .filter(Boolean)
+      .join(', ');
   }
 
-  /** Id of the description element for `aria-describedby` (or null) */
+  /** Id of the description element (or null); the description is part of the step's name. */
   getDescriptionId(index: number): string | null {
     return this.steps()[index]?.description ? `${this.instanceId}-desc-${index}` : null;
   }

@@ -188,22 +188,27 @@ describe('StepperComponent', () => {
       buttons.forEach((b) => expect(b.nativeElement.disabled).toBe(false));
     });
 
+    // 3.11.5 (AS-33, WCAG 2.5.3): the visible description is part of the name.
     it('should give every step an accessible name with its position', () => {
       const buttons = stepButtons();
-      expect(buttons[0]?.nativeElement.getAttribute('aria-label')).toBe('Step 1 of 4: Step 1');
+      expect(buttons[0]?.nativeElement.getAttribute('aria-label')).toBe('Step 1 of 4: Step 1, First step');
       expect(buttons[2]?.nativeElement.getAttribute('aria-label')).toBe(
-        'Step 3 of 4: Step 3, Optional',
+        'Step 3 of 4: Step 3, Third step, Optional',
       );
+      expect(buttons[3]?.nativeElement.getAttribute('aria-label')).toBe('Step 4 of 4: Step 4');
     });
 
-    it('should link the description via aria-describedby', () => {
+    // 3.11.5 (AS-33): the description is in the name, so it is no longer also
+    // the description (it would be read twice); the element keeps its id.
+    it('should put the description into the name, without aria-describedby', () => {
       const buttons = stepButtons();
-      const describedBy = buttons[0]?.nativeElement.getAttribute('aria-describedby');
-      expect(describedBy).toBeTruthy();
-      const desc = fixture.nativeElement.querySelector(`#${describedBy}`);
+      for (const button of buttons) expect(button.nativeElement.hasAttribute('aria-describedby')).toBe(false);
+      const desc = buttons[0]?.nativeElement.querySelector('.lc-stepper__description');
+      expect(desc?.id).toBe(component.getDescriptionId(0));
       expect(desc?.textContent?.trim()).toBe('First step');
+      expect(buttons[0]?.nativeElement.getAttribute('aria-label')).toContain('First step');
       // step 4 has no description
-      expect(buttons[3]?.nativeElement.hasAttribute('aria-describedby')).toBe(false);
+      expect(buttons[3]?.nativeElement.querySelector('.lc-stepper__description')).toBeNull();
     });
 
     it('should navigate when a completed step button is clicked', () => {

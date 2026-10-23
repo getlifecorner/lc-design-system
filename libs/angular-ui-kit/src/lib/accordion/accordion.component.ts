@@ -13,6 +13,7 @@ import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/ico
 import { ICON_CHEVRON_DOWN } from '@lifecorner/angular-ui-kit/icons';
 import { AccordionHeaderDirective } from './accordion-header.directive';
 import { AccordionContentDirective } from './accordion-content.directive';
+import { nameWithText } from '@lifecorner/angular-ui-kit/internal/a11y';
 
 /** Unique id source for header/panel wiring (aria-controls / aria-labelledby). */
 let accordionUid = 0;
@@ -45,8 +46,8 @@ export type AccordionChevronPosition = 'leading' | 'trailing';
  * ```html
  * <lc-accordion variant="flat" chevronPosition="leading" [lazy]="true">
  *   <ng-template lcAccordionHeader>
- *     <span class="title">Item label</span>
- *     <lc-badge variant="success" size="sm">Done</lc-badge>
+ *     <span class="title">Item label</span>&ngsp;
+ *     <lc-badge variant="success" size="sm">Done</lc-badge>&ngsp;
  *     <span style="margin-left: auto;">12:04</span>
  *   </ng-template>
  *   <ng-template lcAccordionContent>
@@ -68,14 +69,19 @@ export class AccordionComponent {
   /**
    * Title displayed in the accordion header. Optional: when a
    * `lcAccordionHeader` template is projected it takes precedence, and `title`
-   * (if set) becomes the header's accessible label fallback.
+   * (if set) starts the header's accessible name when `ariaLabel` is empty.
+   * @default ''
    */
   readonly title = input<string>('');
 
   /**
-   * Explicit accessible label for the header button. Use this when the header
-   * is a rich template with no meaningful plain-text title. Falls back to
-   * `title` when omitted.
+   * Start of the header button's accessible name; falls back to `title`. A
+   * plain `title` is appended unless contained (WCAG 2.5.3 Label in Name).
+   * With an `lcAccordionHeader` template, the name is this label (or `title`)
+   * followed by the template's text, through `aria-labelledby`. Separate the
+   * template's parts with whitespace (`&ngsp;`), and set a label only for
+   * context that the template doesn't show.
+   * @default ''
    */
   readonly ariaLabel = input<string>('');
 
@@ -142,9 +148,26 @@ export class AccordionComponent {
     });
   }
 
-  /** Accessible label for the header button (explicit override, else title). */
-  protected readonly headerAriaLabel = computed(
-    () => this.ariaLabel() || this.title() || null
+  /**
+   * Label that starts a rich header's name (`ariaLabel`, else `title`); empty
+   * without a header template.
+   */
+  protected readonly richHeaderLabel = computed(() =>
+    this.headerTemplate() ? (this.ariaLabel() || this.title()).trim() : '',
+  );
+
+  /**
+   * Accessible label of a plain header button (AS-33, WCAG 2.5.3 Label in
+   * Name): the explicit override, else the title, then the visible title
+   * unless contained. A rich header has none: it is named by its content.
+   */
+  protected readonly headerAriaLabel = computed(() =>
+    this.headerTemplate() ? null : nameWithText(this.ariaLabel() || this.title(), this.title()) || null,
+  );
+
+  /** A labelled rich header: its hidden label, then the template's text. */
+  protected readonly headerLabelledBy = computed(() =>
+    this.richHeaderLabel() ? `${this.headerId}-label ${this.headerId}-content` : null,
   );
 
   /**

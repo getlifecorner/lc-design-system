@@ -1,55 +1,27 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withXhr } from '@angular/common/http';
-import * as axe from 'axe-core';
 import { HeaderComponent } from './header.component';
+import { type AxeOutcome as Outcome, LABEL_IN_NAME as RULE, audit, axe, computedName, installFakeCanvas, outcome, violations } from '../../testing/axe-jsdom';
 
 /**
  * Request 014 (AS-33, AC-2, AC-3, AC-4, AC-6): the header audited with
  * axe-core 4.14 (devDependency) on the WCAG 2.0–2.2 A/AA tags, both account
- * triggers, EN and DE names, menu closed and open. `color-contrast` and
- * `target-size` need layout, which jsdom does not have: `story-shots --axe`
- * runs them in the browser, in light and dark, at 360 and 1280 px.
+ * triggers, EN and DE names, menu closed and open. Request 015 adds the
+ * context button. The helpers (fake canvas, audit without the layout rules)
+ * are shared in `src/testing/axe-jsdom.ts`.
  */
-
-const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const RULE = 'label-content-name-mismatch';
-
-type Outcome = 'violation' | 'pass' | 'incomplete' | 'inapplicable' | 'not run';
-
-/**
- * jsdom has no 2D canvas, and axe's icon-ligature check (part of
- * `label-content-name-mismatch`) draws the visible text. Every glyph here is
- * 10 px wide and fully inked, so no text counts as an icon ligature and the
- * rule decides as in a browser with a text font.
- */
-function fakeCanvasContext(canvas: HTMLCanvasElement): unknown {
-  return {
-    canvas,
-    font: '',
-    textAlign: 'left',
-    textBaseline: 'top',
-    measureText: (text: string) => ({ width: 10 * Array.from(text).length }),
-    fillText: () => undefined,
-    clearRect: () => undefined,
-    getImageData: (_x: number, _y: number, width: number, height: number) => ({
-      data: new Uint8ClampedArray(Math.max(1, Math.ceil(width) * Math.ceil(height)) * 4).fill(255),
-    }),
-  };
-}
 
 describe('HeaderComponent — axe-core 4.14 (AS-33)', () => {
   let fixture: ComponentFixture<HeaderComponent>;
-  const originalGetContext = HTMLCanvasElement.prototype.getContext;
+  let restoreCanvas: () => void;
 
   beforeAll(() => {
-    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement) {
-      return fakeCanvasContext(this);
-    } as unknown as typeof originalGetContext;
+    restoreCanvas = installFakeCanvas();
   });
 
   afterAll(() => {
-    HTMLCanvasElement.prototype.getContext = originalGetContext;
+    restoreCanvas();
   });
 
   beforeEach(async () => {
@@ -67,37 +39,6 @@ describe('HeaderComponent — axe-core 4.14 (AS-33)', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     return fixture.nativeElement as HTMLElement;
-  }
-
-  /** One axe run at a time (axe refuses parallel runs): every caller awaits it. */
-  function audit(context: Element): Promise<axe.AxeResults> {
-    return axe.run(context, {
-      runOnly: { type: 'tag', values: TAGS },
-      rules: { 'color-contrast': { enabled: false }, 'target-size': { enabled: false } },
-    });
-  }
-
-  /** Violations as `rule: targets`, so a failure names what failed. */
-  function violations(results: axe.AxeResults): string[] {
-    return results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(' | ')}`);
-  }
-
-  function outcome(results: axe.AxeResults, id: string): Outcome {
-    if (results.violations.some((r) => r.id === id)) return 'violation';
-    if (results.incomplete.some((r) => r.id === id)) return 'incomplete';
-    if (results.passes.some((r) => r.id === id)) return 'pass';
-    if (results.inapplicable.some((r) => r.id === id)) return 'inapplicable';
-    return 'not run';
-  }
-
-  /** The accessible name as axe computes it (not just the attribute). */
-  function computedName(root: HTMLElement, element: Element): string {
-    axe.setup(root);
-    try {
-      return axe.commons.text.accessibleText(element);
-    } finally {
-      axe.teardown();
-    }
   }
 
   function trigger(root: HTMLElement): HTMLButtonElement {
@@ -209,5 +150,79 @@ describe('HeaderComponent — axe-core 4.14 (AS-33)', () => {
     const nodes = results.violations[0]?.nodes ?? [];
     expect(nodes.length).toBe(1);
     expect(document.querySelector(String(nodes[0]?.target[0]))).toBe(trigger(root));
+  });
+
+  // Request 015 (AC-1, AC-2, AC-5 … AC-8): the context button. jsdom ignores
+  // media queries, so the label and name count as visible (the strict case;
+  // below 640 px the button is display: none in a browser).
+  describe('context button', () => {
+    function context(root: HTMLElement): HTMLButtonElement {
+      const button = root.querySelector<HTMLButtonElement>('button.lc-header__context-info');
+      if (!button) throw new Error('no context button rendered');
+      return button;
+    }
+
+    /** design.md §4: inputs, the computed name, the rule's result. */
+    const contextRows: readonly { case: string; contextName: string; contextLabel?: string; label?: string; name: string }[] = [
+      { case: 'EN', contextName: 'Acme Corp', contextLabel: 'Tenant', name: 'Context info, Tenant Acme Corp' },
+      { case: 'EN, without a label', contextName: 'Acme Corp', name: 'Context info, Acme Corp' },
+      { case: 'DE', contextName: 'Familie F.', label: 'Haushalt', name: 'Haushalt, Familie F.' },
+      { case: 'DE with a label', contextName: 'Familie F.', contextLabel: 'Haushalt', label: 'Kontext', name: 'Kontext, Haushalt Familie F.' },
+      {
+        case: 'long DE',
+        contextName: 'Wohngemeinschaft Kieselbacher-Morgentau-Straße 12',
+        contextLabel: 'Haushalt',
+        label: 'Kontext',
+        name: 'Kontext, Haushalt Wohngemeinschaft Kieselbacher-Morgentau-Straße 12',
+      },
+      // The label already holds the visible text: nothing is appended.
+      { case: 'label holds the text', contextName: 'Acme Corp', contextLabel: 'Tenant', label: 'Tenant Acme Corp', name: 'Tenant Acme Corp' },
+    ];
+
+    describe.each(contextRows)('$case', (row) => {
+      it(`is named "${row.name}" and passes ${RULE}, no violations`, async () => {
+        const root = await render({
+          contextName: row.contextName,
+          ...(row.contextLabel === undefined ? {} : { contextLabel: row.contextLabel }),
+          ...(row.label === undefined ? {} : { contextAriaLabel: row.label }),
+        });
+        const button = context(root);
+        expect(computedName(root, button)).toBe(row.name);
+        // AC-5: the consumer's label stays the prefix.
+        expect(button.getAttribute('aria-label')?.startsWith(row.label ?? 'Context info')).toBe(true);
+        // AC-6: the visible name appears exactly once.
+        expect(button.getAttribute('aria-label')?.split(row.contextName).length).toBe(2);
+        const results = await audit(root);
+        expect(violations(results)).toEqual([]);
+        expect(outcome(results, RULE)).toBe('pass');
+      });
+    });
+
+    it('reads "Tenant Acme Corp" as words: a real space between label and name', async () => {
+      const root = await render({ contextName: 'Acme Corp', contextLabel: 'Tenant' });
+      expect(context(root).textContent?.replace(/\s+/g, ' ').trim()).toBe('Tenant Acme Corp');
+    });
+
+    it('keeps the tooltip on the name, not on the button (AC-8: no description repeating the name)', async () => {
+      const root = await render({ contextName: 'Acme Corp', contextLabel: 'Tenant' });
+      expect(context(root).hasAttribute('title')).toBe(false);
+      expect(root.querySelector('.lc-header__context-name')?.getAttribute('title')).toBe('Acme Corp');
+    });
+
+    it('follows a new contextName in the same change detection pass (AC-7)', async () => {
+      const root = await render({ contextName: 'Acme Corp', contextLabel: 'Tenant' });
+      fixture.componentRef.setInput('contextName', 'Globex');
+      fixture.detectChanges();
+      expect(context(root).getAttribute('aria-label')).toBe('Context info, Tenant Globex');
+    });
+
+    it('fails label-content-name-mismatch with the pre-3.11.5 name (negative control, AC-2)', async () => {
+      const root = await render({ contextName: 'Acme Corp', contextLabel: 'Tenant' });
+      context(root).setAttribute('aria-label', 'Context info');
+      const results = await audit(root);
+      expect(outcome(results, RULE)).toBe('violation');
+      expect(results.violations.map((v) => v.id)).toEqual([RULE]);
+      expect(document.querySelector(String(results.violations[0]?.nodes[0]?.target[0]))).toBe(context(root));
+    });
   });
 });

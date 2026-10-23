@@ -163,7 +163,8 @@ describe('HeaderComponent — public site (G-2)', () => {
       expect(el.querySelector('.lc-header__hamburger button')?.getAttribute('aria-label')).toBe('Seitenleiste umschalten');
       expect(el.querySelector('.lc-header__profile-trigger')?.getAttribute('aria-label')).toBe('Benutzermenü öffnen');
       expect(el.querySelector('.lc-header__theme-toggle button')?.getAttribute('aria-label')).toBe('Dunkles Design');
-      expect(el.querySelector('.lc-header__context-info')?.getAttribute('aria-label')).toBe('Haushalt');
+      // 3.11.5 (AS-33, WCAG 2.5.3): the visible context name follows the label.
+      expect(el.querySelector('.lc-header__context-info')?.getAttribute('aria-label')).toBe('Haushalt, Familie F.');
       expect(fixture.componentInstance['menuItems']().map((i) => i.label)).toEqual(['Profil', 'Abmelden']);
     });
 

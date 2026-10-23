@@ -159,7 +159,9 @@ export const WithDisabled: Story = {
  * The full composition: a single-open group of flat rows, each with a rich
  * projected header (label, status badge, meta, right-aligned value) and a lazy
  * templated body that only mounts when its row is first opened. Opening one row
- * collapses the others.
+ * collapses the others. Without `ariaLabel`, each header is named by its
+ * template's text ("Item One Complete Meta · detail · info 12:04"); `&ngsp;`
+ * between the parts keeps them words.
  */
 export const RichHeaderList: Story = {
   name: 'Rich Header List (Lazy, Single Expand)',
@@ -176,11 +178,11 @@ export const RichHeaderList: Story = {
     template: `
       <div style="max-width: 600px;">
         <lc-accordion-group [multi]="false">
-          <lc-accordion variant="flat" chevronPosition="leading" [lazy]="true" ariaLabel="Item one">
+          <lc-accordion variant="flat" chevronPosition="leading" [lazy]="true">
             <ng-template lcAccordionHeader>
-              <span style="font-weight: 600;">Item One</span>
-              <lc-badge variant="success" size="sm">Complete</lc-badge>
-              <span style="color: var(--lc-color-neutral-500); font-weight: 400;">Meta · detail · info</span>
+              <span style="font-weight: 600;">Item One</span>&ngsp;
+              <lc-badge variant="success" size="sm">Complete</lc-badge>&ngsp;
+              <span style="color: var(--lc-color-neutral-500); font-weight: 400;">Meta · detail · info</span>&ngsp;
               <span style="margin-left: auto; color: var(--lc-color-neutral-500); font-weight: 400; font-variant-numeric: tabular-nums;">12:04</span>
             </ng-template>
             <ng-template lcAccordionContent>
@@ -188,11 +190,11 @@ export const RichHeaderList: Story = {
             </ng-template>
           </lc-accordion>
 
-          <lc-accordion variant="flat" chevronPosition="leading" [lazy]="true" ariaLabel="Item two">
+          <lc-accordion variant="flat" chevronPosition="leading" [lazy]="true">
             <ng-template lcAccordionHeader>
-              <span style="font-weight: 600;">Item Two</span>
-              <lc-badge variant="info" size="sm">Running</lc-badge>
-              <span style="color: var(--lc-color-neutral-500); font-weight: 400;">Meta · detail · info</span>
+              <span style="font-weight: 600;">Item Two</span>&ngsp;
+              <lc-badge variant="info" size="sm">Running</lc-badge>&ngsp;
+              <span style="color: var(--lc-color-neutral-500); font-weight: 400;">Meta · detail · info</span>&ngsp;
               <span style="margin-left: auto; color: var(--lc-color-neutral-500); font-weight: 400; font-variant-numeric: tabular-nums;">12:07</span>
             </ng-template>
             <ng-template lcAccordionContent>
@@ -200,11 +202,11 @@ export const RichHeaderList: Story = {
             </ng-template>
           </lc-accordion>
 
-          <lc-accordion variant="flat" chevronPosition="leading" [lazy]="true" ariaLabel="Item three">
+          <lc-accordion variant="flat" chevronPosition="leading" [lazy]="true">
             <ng-template lcAccordionHeader>
-              <span style="font-weight: 600;">Item Three</span>
-              <lc-badge variant="error" size="sm">Failed</lc-badge>
-              <span style="color: var(--lc-color-neutral-500); font-weight: 400;">Meta · detail · info</span>
+              <span style="font-weight: 600;">Item Three</span>&ngsp;
+              <lc-badge variant="error" size="sm">Failed</lc-badge>&ngsp;
+              <span style="color: var(--lc-color-neutral-500); font-weight: 400;">Meta · detail · info</span>&ngsp;
               <span style="margin-left: auto; color: var(--lc-color-neutral-500); font-weight: 400; font-variant-numeric: tabular-nums;">12:09</span>
             </ng-template>
             <ng-template lcAccordionContent>

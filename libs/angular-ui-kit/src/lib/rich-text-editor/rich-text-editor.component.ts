@@ -18,6 +18,7 @@ import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { isSafeImageUrl, isSafeLinkUrl } from '@lifecorner/angular-ui-kit/internal/url';
+import { nameWithText } from '@lifecorner/angular-ui-kit/internal/a11y';
 
 export type RichTextEditorMode = 'rich' | 'markdown' | 'split';
 export type ToolbarAction =
@@ -149,7 +150,13 @@ export class RichTextEditorComponent implements ControlValueAccessor {
   /** Whether to show word count */
   showWordCount = input<boolean>(true);
 
-  /** Tooltips and accessible names of the toolbar actions, by action (`{ bold: 'Fett' }`); missing ones keep the English default. */
+  /**
+   * Tooltips and accessible names of the toolbar actions, by action
+   * (`{ bold: 'Fett' }`); missing ones keep the English default. A visible
+   * button label with letters or digits that the title doesn't contain is
+   * appended (`Heading 1, H1`, WCAG 2.5.3 Label in Name).
+   * @default {}
+   */
   actionTitles = input<Partial<Record<ToolbarAction, string>>>({});
 
   /** Label of the rich-text mode button. */
@@ -498,6 +505,15 @@ export class RichTextEditorComponent implements ControlValueAccessor {
       hr: 'Horizontal Rule',
     };
     return this.actionTitles()[action] || titles[action] || action;
+  }
+
+  /**
+   * Tooltip and accessible name of a toolbar button (AS-33, WCAG 2.5.3 Label
+   * in Name): the title, then the visible label when it has letters or digits
+   * the title doesn't contain (`Heading 1, H1`). Symbol labels keep the title.
+   */
+  protected getActionName(action: ToolbarAction): string {
+    return nameWithText(this.getActionTitle(action), this.getActionLabel(action));
   }
 
   // -- Markdown <-> HTML conversion (simple built-in) --

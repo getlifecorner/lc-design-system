@@ -8,13 +8,19 @@
       [attr.aria-expanded]="expanded()"
       [attr.aria-controls]="panelId"
       [attr.aria-label]="headerAriaLabel()"
+      [attr.aria-labelledby]="headerLabelledBy()"
       [attr.aria-disabled]="disabled()"
       [disabled]="disabled()"
       (click)="toggle()"
       (keydown)="onKeydown($event)"
     >
       @if (headerTemplate(); as header) {
-        <span class="lc-accordion__header-content">
+        <!-- The label starts the name and the template's text follows it, so
+             the name contains what is shown (WCAG 2.5.3). -->
+        @if (richHeaderLabel()) {
+          <span hidden [id]="headerId + '-label'">{{ richHeaderLabel() }},</span>
+        }
+        <span class="lc-accordion__header-content" [attr.id]="richHeaderLabel() ? headerId + '-content' : null">
           <ng-container *ngTemplateOutlet="header.template"></ng-container>
         </span>
       } @else {
@@ -37,7 +43,7 @@
     class="lc-accordion__panel"
     [id]="panelId"
     role="region"
-    [attr.aria-labelledby]="headerId"
+    [attr.aria-labelledby]="headerLabelledBy() ?? headerId"
     [attr.aria-hidden]="!expanded()"
     [attr.inert]="expanded() ? null : ''"
   >

@@ -51,7 +51,8 @@ const meta: Meta<AccordionComponent> = {
     },
     ariaLabel: {
       description:
-        'Explicit accessible label for the header button, used when the header is a rich template with no plain-text title. Falls back to `title`.',
+        "Start of the header button's accessible name; falls back to `title`. A plain `title` is appended unless contained; with a rich template, the template's text follows it (`aria-labelledby`), so set it only for context the template doesn't show.",
+      table: { defaultValue: { summary: "''" } },
     },
   },
 
@@ -75,8 +76,8 @@ Accordion component for collapsible content sections.
 \`\`\`html
 <lc-accordion variant="flat" chevronPosition="leading" [lazy]="true">
   <ng-template lcAccordionHeader>
-    <span>Item label</span>
-    <lc-badge variant="success" size="sm">Done</lc-badge>
+    <span>Item label</span>&ngsp;
+    <lc-badge variant="success" size="sm">Done</lc-badge>&ngsp;
     <span style="margin-left: auto;">12:04</span>
   </ng-template>
   <ng-template lcAccordionContent>
@@ -87,9 +88,10 @@ Accordion component for collapsible content sections.
 
 **A11y constraint:** because the header is itself a \`<button>\`, the \`lcAccordionHeader\`
 template must contain **no nested interactive elements** (no button / link / input) —
-text, badges and other non-interactive nodes only. When the header is a template with no
-plain-text \`title\`, set \`ariaLabel\` (or \`title\` as a fallback) so the button has an
-accessible name.
+text, badges and other non-interactive nodes only. The button is named by the template's
+text, so separate its parts with \`&ngsp;\` to keep them words; \`ariaLabel\` (or \`title\`)
+comes first in the name, so set it only for context the template doesn't show (WCAG 2.5.3
+Label in Name).
 
 Fully backward compatible: without \`lcAccordionHeader\` / \`lcAccordionContent\` / the new
 inputs, the accordion behaves exactly as before (\`title\` + eager \`<ng-content>\` body).
@@ -235,7 +237,9 @@ export const SettingsPanel: Story = {
  * `<ng-template lcAccordionHeader>` — badges, meta text, a right-aligned value.
  * The accordion still owns the chevron, click/keyboard handling and focus ring.
  * Use `chevronPosition="leading"` so a right-aligned element (here pinned with
- * `margin-left: auto`) stays at the edge.
+ * `margin-left: auto`) stays at the edge. The header is named "Pipeline run,
+ * Item One Complete Meta · detail · info 12:04": `ariaLabel` adds context the
+ * template doesn't show, and `&ngsp;` between the parts keeps them words.
  */
 export const RichHeader: Story = {
   name: 'Rich Header (Template)',
@@ -243,11 +247,11 @@ export const RichHeader: Story = {
   render: () => ({
     template: `
       <div style="max-width: 560px;">
-        <lc-accordion variant="outlined" chevronPosition="leading" ariaLabel="Item one details">
+        <lc-accordion variant="outlined" chevronPosition="leading" ariaLabel="Pipeline run">
           <ng-template lcAccordionHeader>
-            <span style="font-weight: 600;">Item One</span>
-            <lc-badge variant="success" size="sm">Complete</lc-badge>
-            <span style="color: var(--lc-color-neutral-500); font-weight: 400;">Meta · detail · info</span>
+            <span style="font-weight: 600;">Item One</span>&ngsp;
+            <lc-badge variant="success" size="sm">Complete</lc-badge>&ngsp;
+            <span style="color: var(--lc-color-neutral-500); font-weight: 400;">Meta · detail · info</span>&ngsp;
             <span style="margin-left: auto; color: var(--lc-color-neutral-500); font-weight: 400; font-variant-numeric: tabular-nums;">12:04</span>
           </ng-template>
           <p style="margin: 0; color: var(--lc-color-neutral-600);">Body content revealed on expand. The header above is fully projected, while the chevron, keyboard handling and focus ring are owned by the component.</p>

@@ -79,7 +79,7 @@
             type="button"
             class="lc-calendar__time-col-header"
             [class.lc-calendar__time-col-header--today]="day.isToday"
-            [attr.aria-label]="dateLabel(day.date)"
+            [attr.aria-label]="day.ariaLabel"
             [attr.aria-current]="day.isToday ? 'date' : null"
             (click)="onDateClick(day.date)"
           >

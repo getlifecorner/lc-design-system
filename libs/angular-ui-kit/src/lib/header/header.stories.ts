@@ -133,7 +133,7 @@ const meta: Meta<HeaderComponent> = {
     },
     themeToDarkAriaLabel: { description: 'Theme button label in the light theme', table: { defaultValue: { summary: 'Switch to dark mode' } } },
     themeToLightAriaLabel: { description: 'Theme button label in the dark theme', table: { defaultValue: { summary: 'Switch to light mode' } } },
-    contextAriaLabel: { description: 'Accessible name of the context button', table: { defaultValue: { summary: 'Context info' } } },
+    contextAriaLabel: { description: 'Start of the context button\'s accessible name; the visible `contextLabel` and `contextName` follow it unless contained', table:{ defaultValue: { summary: 'Context info' } } },
     profileLabel: { description: 'Label of the Profile menu entry', table: { defaultValue: { summary: 'Profile' } } },
     logoutLabel: { description: 'Label of the Logout menu entry', table: { defaultValue: { summary: 'Logout' } } },
   },

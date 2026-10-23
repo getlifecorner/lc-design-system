@@ -36,7 +36,7 @@
       (keyup.space)="openLightbox(i, $event)"
       [attr.tabindex]="enableLightbox() ? 0 : null"
       [attr.role]="enableLightbox() ? 'button' : null"
-      [attr.aria-label]="item.alt || imageFallbackLabel() + ' ' + (i + 1)"
+      [attr.aria-label]="itemAriaLabel(item, i)"
     >
       @if (!isLoaded(i)) {
         <div class="gallery__placeholder"></div>

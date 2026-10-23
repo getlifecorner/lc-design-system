@@ -183,9 +183,13 @@ export class CalendarComponent {
     return Array.from({ length: 7 }, (_, i) => {
       const day = new Date(start);
       day.setDate(start.getDate() + i);
+      const label = day.toLocaleDateString(loc, { weekday: 'short', day: 'numeric' });
       return {
         date: day,
-        label: day.toLocaleDateString(loc, { weekday: 'short', day: 'numeric' }),
+        label,
+        // The visible text, then the day's own month and year (AS-33, WCAG
+        // 2.5.3 Label in Name): "Mo., 19. Oktober 2026".
+        ariaLabel: `${label} ${day.toLocaleDateString(loc, { month: 'long', year: 'numeric' })}`,
         isToday: this.isSameDay(day, today),
         events: evts.filter(e => this.isEventOnDate(e, day)),
       };
