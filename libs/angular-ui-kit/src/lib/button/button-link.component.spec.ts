@@ -72,7 +72,8 @@ describe('ButtonLinkComponent (a[lcButton])', () => {
     expect(anchor.querySelector('button')).toBeNull();
   });
 
-  it.each<ButtonVariant>(['primary', 'secondary', 'outline', 'ghost', 'link', 'danger', 'warning', 'info'])(
+  // 3.13 (G-WL1): `inverse` joins the list (and the class filter).
+  it.each<ButtonVariant>(['primary', 'secondary', 'outline', 'ghost', 'link', 'danger', 'warning', 'info', 'inverse'])(
     'supports the %s variant like lc-button',
     (variant) => {
       const { fixture, host, anchor } = setup();
@@ -80,11 +81,23 @@ describe('ButtonLinkComponent (a[lcButton])', () => {
       fixture.detectChanges();
       expect(anchor.classList).toContain(`btn-${variant}`);
       const variantClasses = [...anchor.classList].filter((c) =>
-        /^btn-(primary|secondary|outline|ghost|link|danger|warning|info)$/.test(c),
+        /^btn-(primary|secondary|outline|ghost|link|danger|warning|info|inverse)$/.test(c),
       );
       expect(variantClasses).toEqual([`btn-${variant}`]);
     },
   );
+
+  it('an inverse lg link stays a plain link: href, no listeners, class "btn btn-inverse btn-lg" (G-WL1, AC-9)', () => {
+    const { fixture, host, anchor } = setup();
+    host.variant.set('inverse');
+    host.size.set('lg');
+    fixture.detectChanges();
+    expect(anchor.getAttribute('href')).toBe('/de/neuigkeiten');
+    expect(anchor.querySelector('button')).toBeNull();
+    expect([...anchor.classList].filter((c) => c.startsWith('btn'))).toEqual(['btn', 'btn-inverse', 'btn-lg']);
+    const debugAnchor = fixture.debugElement.query((de) => de.nativeElement.tagName === 'A');
+    expect(debugAnchor.listeners).toEqual([]);
+  });
 
   it.each<ButtonSize>(['xs', 'sm', 'md', 'lg'])('supports the %s size like lc-button', (size) => {
     const { fixture, host, anchor } = setup();

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { HeroComponent } from './hero.component';
+import { ButtonLinkComponent } from '../button/button-link.component';
 
 const meta: Meta<HeroComponent> = {
   title: 'Layout/Hero',
@@ -387,6 +388,49 @@ export const PageBand: Story = {
       </lc-hero>
       <div style="max-width: 1024px; margin: 0 auto; padding: 32px 48px; box-sizing: border-box;">
         <p style="margin: 0;">Page content on the same column (here a plain 1024 px container with 48 px sides).</p>
+      </div>`,
+  }),
+};
+
+export const BandLink: StoryObj<HeroComponent & { linkLabel: string }> = {
+  name: 'Band Link (G-WL1)',
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        story:
+          '3.13 (G-WL1): one link button in the default body of a page band, as on the life-os home band. `<a lcButton variant="inverse" size="lg">` is a white pill with dark ink whose fill and white focus ring stay at 3.62:1 or more against the teal band, with the label at 9.28:1 (under the body\'s 85 % opacity, at the band\'s light end). The long German label wraps onto two lines at 360 px and stays on one from 1024 px; the link is 48.5 px high on one line. A flex row with `align-items: flex-start` keeps the link as wide as its label.',
+      },
+    },
+  },
+  argTypes: {
+    linkLabel: {
+      control: 'text',
+      description: 'Label of the inverse link button in the band body',
+      table: { defaultValue: { summary: 'Trag dich jetzt in die Warteliste ein' } },
+    },
+  },
+  args: {
+    ...PageBand.args,
+    linkLabel: 'Trag dich jetzt in die Warteliste ein',
+  },
+  render: (args) => ({
+    props: args,
+    moduleMetadata: { imports: [ButtonLinkComponent] },
+    template: `
+      <lc-hero [label]="label" [title]="title" [color]="color" [size]="size" [borderRadius]="borderRadius" [contentWidth]="contentWidth">
+        <p style="margin: 0;">Shows you every day what matters, and why.</p>
+        <div style="display: flex; align-items: flex-start; margin-top: 16px;">
+          <a lcButton variant="inverse" size="lg" href="#warteliste">{{ linkLabel }}</a>
+        </div>
+        <div hero-media style="${mediaCardStyle}">
+          <div style="${mediaRowStyle} width: 60%;"></div>
+          <div style="${mediaRowStyle}"></div>
+          <div style="${mediaRowStyle} width: 80%;"></div>
+        </div>
+      </lc-hero>
+      <div id="warteliste" style="max-width: 1024px; margin: 0 auto; padding: 32px 48px; box-sizing: border-box;">
+        <p style="margin: 0;">Die Warteliste: das Ziel des Links.</p>
       </div>`,
   }),
 };

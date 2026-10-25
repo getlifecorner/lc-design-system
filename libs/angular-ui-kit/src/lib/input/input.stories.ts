@@ -283,6 +283,36 @@ export const ErrorSummary: Story = {
 };
 
 /**
+ * 3.13 (G-WL3): a field keeps its height when it shows an error. The container's
+ * error state is the class `input-invalid`; the message keeps `p.input-error`.
+ * Until 3.12 both had `input-error`, so the field grew (lg 44 → 49 px).
+ */
+export const ErrorKeepsHeight: Story = {
+  name: 'Error Keeps the Height (G-WL3)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.13 (G-WL3): idle on the left, with an error on the right, in every size. The fields line up because the error state no longer changes the box: xs 24, sm 32, md 40 and lg 44 px in both columns, also when focused. The field container carries `input-invalid` in the error state; the message is `<p class="input-error">` as before. Until 3.12 the container also had `input-error` and took the message\'s `flex: 1`, which grew it to 28, 35, 42 and 49 px.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="max-width: 560px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start;">
+        <lc-input data-cell="xs-idle" size="xs" label="E-Mail (xs)" type="email" value="jana.mueller@beispiel.de"></lc-input>
+        <lc-input data-cell="xs-error" size="xs" label="E-Mail (xs)" type="email" value="jana.mueller@" error="Bitte gib eine gültige E-Mail-Adresse ein"></lc-input>
+        <lc-input data-cell="sm-idle" size="sm" label="E-Mail (sm)" type="email" value="jana.mueller@beispiel.de"></lc-input>
+        <lc-input data-cell="sm-error" size="sm" label="E-Mail (sm)" type="email" value="jana.mueller@" error="Bitte gib eine gültige E-Mail-Adresse ein"></lc-input>
+        <lc-input data-cell="md-idle" size="md" label="E-Mail (md)" type="email" value="jana.mueller@beispiel.de"></lc-input>
+        <lc-input data-cell="md-error" size="md" label="E-Mail (md)" type="email" value="jana.mueller@" error="Bitte gib eine gültige E-Mail-Adresse ein"></lc-input>
+        <lc-input data-cell="lg-idle" size="lg" label="E-Mail (lg)" type="email" value="jana.mueller@beispiel.de"></lc-input>
+        <lc-input data-cell="lg-error" size="lg" label="E-Mail (lg)" type="email" value="jana.mueller@" error="Bitte gib eine gültige E-Mail-Adresse ein"></lc-input>
+      </div>`,
+  }),
+};
+
+/**
  * 3.12 (G-CF6): the `*` sits 4 px after the label in every size of both
  * fields, is hidden from assistive technology (the native required state says
  * it once) and never wraps onto a line by itself.

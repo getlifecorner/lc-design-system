@@ -50,7 +50,11 @@
     border-color: var(--color-primary-500);
   }
 
-  &.input-error {
+  // The error state has its own class (3.13, G-WL3). Until 3.12 the container
+  // carried `input-error`, the message's class, so the message rule below gave
+  // it `flex: 1 1 0%`: in the column-flex wrapper that basis replaced the
+  // height, and the field grew to its content (lg 44 → 49 px, md 40 → 42).
+  &.input-invalid {
     border-color: var(--color-error-600);
 
     &:focus-within {
@@ -220,6 +224,8 @@
   min-height: 1.25rem;
 }
 
+// The error message `<p class="input-error">`: a stable class for consumer CSS.
+// Only the message carries it; the field container's state is `input-invalid`.
 .input-error {
   flex: 1;
   font-size: var(--font-size-xs);

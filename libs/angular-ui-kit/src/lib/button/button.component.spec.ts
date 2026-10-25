@@ -57,6 +57,23 @@ describe('ButtonComponent', () => {
       fixture.detectChanges();
       expect(buttonElement.classList).toContain('btn-danger');
     });
+
+    // 3.13 (G-WL1): the same list as a[lcButton] (button-link.component.spec.ts).
+    it.each(['primary', 'secondary', 'outline', 'ghost', 'link', 'danger', 'warning', 'info', 'inverse'])(
+      'sets exactly one variant class for %s',
+      (variant) => {
+        fixture.componentRef.setInput('variant', variant);
+        fixture.detectChanges();
+        const variantClasses = [...buttonElement.classList].filter((c) =>
+          /^btn-(primary|secondary|outline|ghost|link|danger|warning|info|inverse)$/.test(c),
+        );
+        expect(variantClasses).toEqual([`btn-${variant}`]);
+      },
+    );
+
+    it('the default button has exactly the classes of 3.12', () => {
+      expect([...buttonElement.classList]).toEqual(['btn', 'btn-primary', 'btn-md']);
+    });
   });
 
   describe('Sizes', () => {

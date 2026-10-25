@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { expect, within } from 'storybook/test';
 import { ButtonLinkComponent } from './button-link.component';
+import { HeroComponent } from '../hero/hero.component';
+import { IconComponent } from '../icon/icon.component';
 
 const meta: Meta<ButtonLinkComponent> = {
   title: 'Components/Button Link',
@@ -25,7 +27,7 @@ links to social profiles.
 - No event listeners: navigation is the browser's. After SSR or prerendering the
   markup is a plain \`<a class="btn btn-primary btn-lg" href="…">\`, so it works with
   JavaScript disabled. \`routerLink\` may sit on the same anchor for in-app navigation.
-- Same variants (\`primary | secondary | outline | ghost | link | danger | warning | info\`),
+- Same variants (\`primary | secondary | outline | ghost | link | danger | warning | info | inverse\`),
   sizes (\`xs | sm | md | lg\`) and modifiers (\`fullWidth\`, \`iconOnly\`, \`inline\`, \`flush\`) as
   \`lc-button\`, from the same stylesheet. Icon slots: \`[slot='icon-before']\`,
   \`[slot='icon-after']\`.
@@ -42,8 +44,9 @@ height + 2 × 1 px border) and meets the 44 px target; \`md\` is 42 px, \`sm\` 3
   argTypes: {
     variant: {
       control: 'select',
-      options: ['primary', 'secondary', 'outline', 'ghost', 'link', 'danger', 'warning', 'info'],
-      description: 'Visual style variant (same as lc-button)',
+      options: ['primary', 'secondary', 'outline', 'ghost', 'link', 'danger', 'warning', 'info', 'inverse'],
+      description:
+        'Visual style variant (same as lc-button). `inverse` (3.13, G-WL1): a white pill with dark ink and a white focus ring for dark, coloured or image backgrounds that don\'t follow the theme, such as the default `lc-hero` bands; the same in both themes. CSS hook `--lc-button-inverse-fg` (default `#0d353d`) sets its ink',
       table: { defaultValue: { summary: 'primary' } },
     },
     size: {
@@ -156,6 +159,37 @@ export const WithIcons: Story = {
       </div>
     `,
   }),
+};
+
+/**
+ * 3.13 (G-WL1): `variant="inverse"` on a link in an `lc-hero` band — the white pill with dark
+ * ink and a white focus ring that stays visible on the teal band (fill and ring 3.62:1, label
+ * 9.28:1 at the band's light end, under the body's 85 % opacity). Use `lg` for the 44 px target.
+ */
+export const Inverse: Story = {
+  name: 'Inverse (G-WL1)',
+  render: () => ({
+    moduleMetadata: { imports: [HeroComponent, IconComponent] },
+    template: `
+      <lc-hero title="Lightweight, private, yours" color="primary" size="sm">
+        <p style="margin: 0;">Inverse links on the teal band: sm, md, lg and one with an icon after the label.</p>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px;">
+          <a lcButton variant="inverse" size="sm" href="#warteliste-sm">Small</a>
+          <a lcButton variant="inverse" size="md" href="#warteliste-md">Medium</a>
+          <a lcButton variant="inverse" size="lg" href="#warteliste">Zur Warteliste</a>
+          <a lcButton variant="inverse" size="lg" href="#weiter">
+            To the waitlist
+            <lc-icon slot="icon-after" name="arrow-right" size="sm" [decorative]="true" />
+          </a>
+        </div>
+      </lc-hero>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const link = within(canvasElement).getByRole('link', { name: 'Zur Warteliste' });
+    await expect(link.getAttribute('href')).toBe('#warteliste');
+    await expect([...link.classList].filter((c) => c.startsWith('btn'))).toEqual(['btn', 'btn-inverse', 'btn-lg']);
+  },
 };
 
 /** `variant="link"` with `inline` reads as a link inside running text — underlined at rest since 3.6 (AS-19). */

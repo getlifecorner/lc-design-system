@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/angular';
 import { fn, expect, userEvent, within } from 'storybook/test';
 import { ButtonComponent } from './button.component';
 import { IconComponent } from '../icon/icon.component';
+import { HeroComponent } from '../hero/hero.component';
 
 const meta: Meta<ButtonComponent> = {
   title: 'Components/Button',
@@ -14,7 +15,7 @@ The Button component is the primary interactive element for triggering actions.
 It supports multiple variants, sizes, states, and slots for icons.
 
 **Key Features:**
-- 8 visual variants for different contexts
+- 9 visual variants for different contexts, including \`inverse\` for the dark \`lc-hero\` bands (since 3.13)
 - 4 sizes (xs, sm, md, lg)
 - Loading state with spinner
 - Icon slots (before/after)
@@ -37,8 +38,9 @@ same variants and sizes and works without JavaScript (see **Components / Button 
   argTypes: {
     variant: {
       control: 'select',
-      options: ['primary', 'secondary', 'outline', 'ghost', 'link', 'danger', 'warning', 'info'],
-      description: 'Visual style variant',
+      options: ['primary', 'secondary', 'outline', 'ghost', 'link', 'danger', 'warning', 'info', 'inverse'],
+      description:
+        'Visual style variant. `inverse` (3.13, G-WL1): a white pill with dark ink and a white focus ring for dark, coloured or image backgrounds that don\'t follow the theme, such as the default `lc-hero` bands; the same in both themes. CSS hook `--lc-button-inverse-fg` (default `#0d353d`) sets its ink',
       table: { defaultValue: { summary: 'primary' } },
     },
     size: {
@@ -254,6 +256,45 @@ export const InfoButton: Story = {
     props: args,
     template: `<lc-button [variant]="variant" [size]="size" (clicked)="clicked($event)" (focused)="focused($event)" (blurred)="blurred($event)">Show Details</lc-button>`,
   }),
+};
+
+export const Inverse: Story = {
+  name: 'Inverse (G-WL1)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.13 (G-WL1): `variant="inverse"` is a white pill with dark ink (`#0d353d`) and a white focus ring, for dark, coloured or image backgrounds that don\'t follow the theme, such as the default `lc-hero` bands. It looks the same in both themes. On the teal band, under the body\'s 85 % opacity: label 9.28:1, fill 3.62:1 and ring 3.62:1 at the band\'s light end (hover 8.69 / 3.39, active 8.11 / 3.16). It also passes on the neutral, info, accent-purple and accent-violet bands; not on light backgrounds. Use `lg` (48.5 px) for the 44 px target. CSS hook `--lc-button-inverse-fg` (default `#0d353d`) sets the ink. In forced colours the border becomes `ButtonText`.',
+      },
+    },
+  },
+  args: { variant: 'inverse', size: 'lg' },
+  render: (args) => ({
+    props: args,
+    moduleMetadata: { imports: [HeroComponent, IconComponent] },
+    template: `
+      <lc-hero title="Lightweight, private, yours" color="primary" size="sm">
+        <p style="margin: 0;">The inverse button on the teal band.</p>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px;">
+          <lc-button [variant]="variant" [size]="size" (clicked)="clicked($event)" (focused)="focused($event)" (blurred)="blurred($event)">To the waitlist</lc-button>
+          <lc-button [variant]="variant" [size]="size" (clicked)="clicked($event)">
+            <lc-icon slot="icon-before" name="plus" size="sm" [decorative]="true"></lc-icon>
+            Zur Warteliste
+          </lc-button>
+          <lc-button [variant]="variant" [size]="size" [loading]="true">Sending…</lc-button>
+          <lc-button [variant]="variant" [size]="size" [disabled]="true">Not available</lc-button>
+          <lc-button [variant]="variant" [size]="size" [iconOnly]="true" ariaLabel="Add" (clicked)="clicked($event)">
+            <lc-icon name="plus" size="sm" [decorative]="true"></lc-icon>
+          </lc-button>
+        </div>
+      </lc-hero>`,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: 'To the waitlist' });
+    await expect(button.classList.contains('btn-inverse')).toBe(true);
+    await expect(canvas.getByRole('button', { name: 'Add' }).classList.contains('btn-icon-only')).toBe(true);
+  },
 };
 
 // --- States ---

@@ -18,7 +18,8 @@ export type ButtonVariant =
   | 'link'
   | 'danger'
   | 'warning'
-  | 'info';
+  | 'info'
+  | 'inverse';
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 export type ButtonType = 'button' | 'submit' | 'reset';
 
@@ -35,7 +36,8 @@ export type ButtonType = 'button' | 'submit' | 'reset';
  * Button component for user actions and form submissions.
  *
  * Features:
- * - Multiple variants (primary, secondary, outline, ghost, danger, link)
+ * - Multiple variants (primary, secondary, outline, ghost, link, danger,
+ *   warning, info, inverse)
  * - Size options (xs, sm, md, lg)
  * - Loading state with spinner
  * - Icon-only mode
@@ -58,6 +60,15 @@ export type ButtonType = 'button' | 'submit' | 'reset';
  * ```
  */
 export class ButtonComponent {
+  /**
+   * Visual variant. `inverse` is a white pill with dark ink and a white focus
+   * ring for dark, coloured or image backgrounds that don't follow the theme,
+   * such as the default `lc-hero` bands (primary, neutral, info, accent-purple,
+   * accent-violet). It looks the same in both themes. Not for light backgrounds
+   * or `variant="light"` heroes. CSS hook `--lc-button-inverse-fg` (default
+   * `#0d353d`) sets its ink; keep 4.5:1 on white.
+   * @default 'primary'
+   */
   readonly variant = input<ButtonVariant>('primary');
   readonly size = input<ButtonSize>('md');
   readonly disabled = input(false);

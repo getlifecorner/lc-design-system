@@ -322,7 +322,10 @@ describe('InputComponent', () => {
       fixture.detectChanges();
 
       const container = fixture.nativeElement.querySelector('.input-container');
-      expect(container.classList.contains('input-error')).toBe(true);
+      // 3.13 (G-WL3): the container's error state is `input-invalid`; with the
+      // message's own class `input-error` it took the message rule's
+      // `flex: 1` and grew (lg 44 → 49 px). See input.error-class.spec.ts.
+      expect(container.classList.contains('input-invalid')).toBe(true);
     });
   });
 

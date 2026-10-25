@@ -177,6 +177,48 @@ a.btn {
   }
 }
 
+// Inverse (3.13, G-WL1): a white pill with dark ink and a white focus ring,
+// for dark, coloured or image backgrounds that don't follow the theme, such as
+// the default lc-hero bands. On the teal band no other variant had a boundary
+// (every fill reached 1.00:1 somewhere, the teal ring 1.00 / 2.06). The values
+// are the same in both themes, because the bands are: on the band's light end
+// #208497 under the hero body's .85 opacity, fill 3.62 / 3.39 / 3.16 (default,
+// hover, active), ink 9.28 / 8.69 / 8.11, ring 3.62. Hook
+// `--lc-button-inverse-fg` (default #0d353d, $color-primary-800) sets the ink;
+// keep it at 4.5:1 on white.
+.btn-inverse {
+  background-color: var(--color-neutral-white);
+  color: var(--lc-button-inverse-fg, #{$color-primary-800});
+
+  &:hover:not(:disabled) {
+    background-color: $color-primary-50;
+  }
+
+  &:active:not(:disabled) {
+    background-color: $color-primary-100;
+  }
+
+  // After the .btn focus ring at equal specificity, so the ring turns white.
+  &:focus-visible {
+    outline-color: var(--color-neutral-white);
+  }
+}
+
+// In forced colours the transparent border becomes the boundary.
+@media (forced-colors: active) {
+  .btn-inverse {
+    border-color: ButtonText;
+  }
+
+  a.btn-inverse {
+    border-color: LinkText;
+  }
+
+  .btn-inverse:focus-visible {
+    outline-color: Highlight;
+  }
+}
+
 // Sizes
 .btn-xs {
   padding: var(--spacing-1) var(--spacing-2);

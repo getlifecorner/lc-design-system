@@ -283,6 +283,13 @@ const EXPECT_IN_HTML = [
   }],
   ['alert text link in the action slot, styled before JS (G-CF8)', (html) => /<div[^>]*class="lc-alert__action"[^>]*>(?:<!--[^]*?-->|\s)*<a(?=[^>]*\sslot="action")(?=[^>]*\shref="mailto:kontakt@beispiel\.example")[^>]*>/.test(html)
     && /\.lc-alert__action\s*>\s*a:where\(:not\(\.btn\)\)\s*\{[^}]*min-height:\s*var\(--size-min-touch-height\)/.test(html)],
+  // 3.13 (request 017): the inverse link in the hero band and its rule before JS
+  // (G-WL1, probe-313.ts); lc-input's error state is `input-invalid` (G-WL3, probe-312.ts)
+  ['inverse link in the hero band, class before JS (G-WL1)', /<lc-hero(?=[^>]*\sid="compat-band")[^>]*>[^]*?<a(?=[^>]*\sid="compat-inverse")(?=[^>]*\shref="#warteliste")(?=[^>]*\sclass="btn btn-inverse btn-lg")[^>]*>(?:<!--[^]*?-->|\s)*Trag dich jetzt in die Warteliste ein/],
+  ['inverse rule in the page CSS (G-WL1)', /\.btn-inverse\s*\{[^}]*background-color:\s*var\(--color-neutral-white\)/],
+  ['lc-input error state is input-invalid, not input-error (G-WL3)', (html) => /<div[^>]*\sclass="input-container[^"]*\binput-invalid\b[^"]*"/.test(html)
+    && !/<div[^>]*\sclass="input-container[^"]*\binput-error\b/.test(html)
+    && /<p(?=[^>]*\sid="contact-email-error")(?=[^>]*\sclass="input-error")[^>]*>/.test(html)],
 ];
 
 /**

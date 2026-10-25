@@ -59,7 +59,15 @@ import type { ButtonSize, ButtonVariant } from './button.component';
   },
 })
 export class ButtonLinkComponent {
-  /** Visual variant, as on `lc-button`. */
+  /**
+   * Visual variant. `inverse` is a white pill with dark ink and a white focus
+   * ring for dark, coloured or image backgrounds that don't follow the theme,
+   * such as the default `lc-hero` bands (primary, neutral, info, accent-purple,
+   * accent-violet). It looks the same in both themes. Not for light backgrounds
+   * or `variant="light"` heroes. CSS hook `--lc-button-inverse-fg` (default
+   * `#0d353d`) sets its ink; keep 4.5:1 on white.
+   * @default 'primary'
+   */
   readonly variant = input<ButtonVariant>('primary');
   /** Size, as on `lc-button`. `lg` (48.5 px high) meets the 44 px touch target. */
   readonly size = input<ButtonSize>('md');

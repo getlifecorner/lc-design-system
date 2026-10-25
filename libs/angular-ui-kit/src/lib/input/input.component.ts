@@ -118,7 +118,11 @@ export class InputComponent implements ControlValueAccessor {
   readonly requiredIndicator = input<boolean>(true);
 
   /**
-   * Error message to display (if validation fails)
+   * Error message to display (if validation fails). While it is set, the field
+   * container carries the class `input-invalid` and the message renders as
+   * `<p class="input-error">`. Before 3.13 the container also carried
+   * `input-error` (G-WL3).
+   * @default undefined
    */
   readonly error = input<string>();
 
