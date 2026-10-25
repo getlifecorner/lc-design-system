@@ -51,4 +51,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [014](014-avatar-trigger-label-in-name/) lc-header avatar trigger: Label in Name under axe-core 4.14 | life-os | AS-33 | 3.11.4 | — |
 | [015](015-label-in-name-remaining-components/) Label in Name for the remaining eight components under axe-core 4.14 | life-os | AS-33 (follow-up) | 3.11.5 (staged, awaiting 2FA) | 3.11.5 |
 | [016](016-contact-form-field-gaps/) Contact form field and alert gaps | life-os | G-CF4, G-CF3 (reopened), G-CF6, G-CF7, G-CF8 | 3.12.0 | 3.12.0 |
-| [017](017-input-error-height-band-button/) lc-input error-state height; link button on the hero band | life-os | G-WL3, G-WL1 (wish) | build | — |
+| [017](017-input-error-height-band-button/) lc-input error-state height; link button on the hero band | life-os | G-WL3, G-WL1 (wish) | 3.13.0 | 3.13.0 |

@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.13.0] - 2026-10-25
+
+`lc-input` keeps its height when it shows an error, and the new `inverse` button variant gives a link button a visible boundary on the dark `lc-hero` bands (G-WL3, G-WL1; life-os website waitlist). No API breaks.
+
+### Added
+
+- **`variant="inverse"` on `lc-button` and `a[lcButton]`** (G-WL1): a white pill with dark ink (`#0d353d`) and a white focus ring for dark, coloured or image backgrounds that don't follow the theme, such as the default `lc-hero` bands; the same in both themes. On the teal (`primary`) band, under the hero body's 85 % opacity at the band's light end: label 9.28:1, fill 3.62:1, ring 3.62:1 (hover 8.69 / 3.39, active 8.11 / 3.16). Before, no variant had a boundary there (every fill reached 1.00:1, the ring 1.00 light / 2.06 dark). It also passes on the neutral, info, accent-purple and accent-violet bands, not on secondary, success, warning, accent-orange or light backgrounds. CSS hook `--lc-button-inverse-fg` (default `#0d353d`) sets the ink. In forced colours the border is `ButtonText` (`LinkText` on links) and the ring `Highlight`. With `size="lg"` (48.5 px), "Trag dich jetzt in die Warteliste ein" wraps onto two lines at 360 px (320 × 71 px) without horizontal scroll and stays on one from 1024 px.
+- Stories: Components/Button and Components/Button Link "Inverse (G-WL1)", Layout/Hero "Band Link (G-WL1)", Form/Input "Error Keeps the Height (G-WL3)".
+
+### Changed
+
+- **`lc-input`: the field container's error-state class is `input-invalid`** (was `input-error`, G-WL3). The message keeps `<p class="input-error">`, now documented as its stable class. CSS on `.input-container.input-error` must use `.input-container.input-invalid`.
+
+### Fixed
+
+- **`lc-input` no longer grows when it shows an error** (G-WL3; life-os waitlist and the contact form's 422 answer). The container shared the message's class and took its `flex: 1`: xs 24 → 28, sm 32 → 35, md 40 → 42, lg 44 → 49 px. Now xs 24, sm 32, md 40, lg 44 px idle, in error and in error with focus (360 and 1280 px, light and dark). Border, focus outline, message colour, 12 px size and `role="alert"` are unchanged.
+
+### Compatibility
+
+- No API breaks: `ButtonVariant` gains `'inverse'`, nothing is removed, defaults render as before. Of 300 screenshots (button, button link, hero, input, email input, and the error stories of alert, password and verification-code input) 280 are identical; 20 differ only because an error field shown at load is 2 px shorter, so the content below it moves up.
+- `lc-password-input` and `lc-verification-code-input` were not affected (own class names).
+
 ## [3.12.0] - 2026-10-25
 
 Contact form fields keep their ids, field errors under a summary stay quiet, the required `*` is decorative with one gap, and `lc-alert` takes a text link as its action (G-CF3, G-CF4, G-CF6, G-CF7, G-CF8; life-os website contact form). No API breaks.

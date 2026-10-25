@@ -138,7 +138,9 @@ Existing stories stay as they are (no new button in *All Variants*), so AC-11 ca
 
 ## 9. Verification
 
-Baseline: `tmp/story-shots/017/baseline` (77 stories, 360/1280, light/dark, `--full`, 300 shots, ddbd4cb). The stories are all form-input (16) and form-email-input (11), `feedback-alert--form-validation`, `form-password-input--with-error` and `form-verification-code-input--with-error`, all components-button (23) and components-button-link (10), and all layout-hero (12). **Expected diffs: 16 shots, and no others.** They are `form-input--with-error`, `form-input--error-summary`, `form-email-input--with-error` and `feedback-alert--form-validation` (a md field 2 px shorter, so everything below it moves up 2 px).
+Baseline: `tmp/story-shots/017/baseline` (75 stories, 360/1280, light/dark, `--full`, 300 shots, ddbd4cb). The stories are all form-input (16) and form-email-input (11), `feedback-alert--form-validation`, `form-password-input--with-error` and `form-verification-code-input--with-error`, all components-button (23) and components-button-link (10), and all layout-hero (12). **Expected diffs: 20 shots, and no others.** They are `form-input--with-error`, `form-input--error-summary`, `form-email-input--with-error`, `form-email-input--invite-form` and `feedback-alert--form-validation` (a md field 2 px shorter, so everything below it moves up 2 px).
+
+> **Change note (review r1, 2026-10-25):** the first version said 77 stories and 16 expected diffs. The sum of the list is 75, and `form-email-input--invite-form` also shows an error at load ("Email address is required"), so it differs too: 20 diffs, 280 identical. Found by the developer (build.md Deviations) and confirmed in review r1.
 
 | AC | How | Expected value |
 |---|---|---|
@@ -152,7 +154,7 @@ Baseline: `tmp/story-shots/017/baseline` (77 stories, 360/1280, light/dark, `--f
 | 8 | `layout-hero--band-link` at 360/1024/1280, light and dark: link rect, line count, `scrollWidth <= clientWidth` | 360: 320 × 71, 2 lines; 1024/1280: 338.2 × 48.5 at x 56/176; doc 360/1024/1280 = client |
 | 9 | Unit test: the anchor has `href`, no listeners, and class `btn-inverse`. Story: `a.focus()` → `:focus-visible`, ring 2 px white. A stylesheet scan finds the `forced-colors` rule from §5.2. | pass |
 | 10 | Compat: a probe page with `<a lcButton variant="inverse" size="lg" href="#warteliste">` inside an `lc-hero`, and `EXPECT_IN_HTML` `class="btn btn-inverse btn-lg"`. probe-312's error field prerenders `input-container[^"]*input-invalid` and has no container `input-error`. | in both prerender outputs (21, 22) |
-| 11 | `--compare` (above); `button-link.component.spec.ts:75` list plus `'inverse'`, and the same `it.each` for `lc-button` | 284 identical, 16 expected diffs |
+| 11 | `--compare` (above); `button-link.component.spec.ts:75` list plus `'inverse'`, and the same `it.each` for `lc-button` | 280 identical, 20 expected diffs |
 | 12 | JSDoc per §2, argTypes, `npm run test:tools`; the MCP manifest shows `inverse` and the hook text | pass |
 
 **Risks:** a hero story that renders no button doesn't register `.btn` styles, so `BandLink` must render a real `a[lcButton]`. `outlineColor` read back from a `var()` shorthand can come back as `currentColor`, so trust the rule or the shot. The `.btn-inverse:focus-visible` rule must come after `@include mix.focus-ring` in source order.
