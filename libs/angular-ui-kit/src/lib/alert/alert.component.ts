@@ -38,7 +38,9 @@ export type AlertActionsLayout = 'inline' | 'stacked';
  *   dismissed alert can be shown again
  * - Content projection for custom body
  * - Action slot for a button rendered right of the body (e.g. retry), or
- *   several actions stacked below it (`actionsLayout="stacked"`)
+ *   several actions stacked below it (`actionsLayout="stacked"`); 3.12: a text
+ *   link (`<a slot="action" href="…">`) as the one way forward gets a
+ *   44 × 44 px target, link colour, an underline and a focus ring
  * - The variant icon is decorative unless `iconAriaLabel` names it (the
  *   title and the colour carry the tone; no built-in English word)
  * - Accessible: `role="alert"` for error / warning, `role="status"` otherwise
@@ -52,6 +54,11 @@ export type AlertActionsLayout = 'inline' | 'stacked';
  * <lc-alert variant="error" title="Laden fehlgeschlagen">
  *   Die Liste konnte nicht geladen werden.
  *   <lc-button slot="action" variant="outline" size="sm">Erneut versuchen</lc-button>
+ * </lc-alert>
+ *
+ * <lc-alert variant="error" title="Senden gerade nicht möglich">
+ *   Wir können Ihre Nachricht gerade nicht senden.
+ *   <a slot="action" href="mailto:kontakt@beispiel.example">Schreiben Sie uns an kontakt@beispiel.example</a>
  * </lc-alert>
  * ```
  */

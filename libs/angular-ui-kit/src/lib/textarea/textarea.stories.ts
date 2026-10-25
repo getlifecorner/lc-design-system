@@ -72,8 +72,20 @@ const meta: Meta<TextareaComponent> = {
     requiredAriaLabel: {
       control: 'text',
       description:
-        '3.10: accessible name of the `*`, for parity with `lc-input`. The `*` stays hidden from assistive technology: the native required state is announced already (G-CF3)',
+        'Deprecated, no effect (3.12; it never had one here): the `*` is decorative and hidden from assistive technology; the native `required` state is announced, in the screen reader’s language (a name on the `*` would say "required" twice, G-CF3)',
       table: { defaultValue: { summary: 'required' } },
+    },
+    controlId: {
+      control: 'text',
+      description:
+        '3.12: id of the native textarea; the label `for`, `<id>-error`, `<id>-helper` and `aria-describedby` derive from it, so an error summary can link to the field and prerendered HTML is the same in every build (G-CF4). Unset = a generated `lc-textarea-<n>` in creation order',
+      table: { defaultValue: { summary: 'generated (lc-textarea-<n>)' } },
+    },
+    announceError: {
+      control: 'boolean',
+      description:
+        '3.12: announce the error the moment it appears (`role="alert"`). `false` under an `lc-alert` error summary, so errors aren’t read twice; the message stays visible and in `aria-describedby`, the control keeps `aria-invalid` (G-CF7)',
+      table: { defaultValue: { summary: 'true' } },
     },
   },
   parameters: {
@@ -91,6 +103,8 @@ Textarea component for multi-line text input.
 - Disabled and readonly states
 - ControlValueAccessor integration for reactive forms
 - Plain form posts without JavaScript: \`name\`, and a \`value\` that is prerendered into the native textarea (3.10)
+- 3.12: a stable id (\`controlId\`) for error-summary links and identical prerendered builds, and an error without
+  \`role="alert"\` under an \`lc-alert\` summary (\`announceError\`)
 `,
       },
     },
@@ -242,4 +256,23 @@ export const NoScriptContactForm: Story = {
         <lc-button type="submit" variant="primary" size="lg" [fullWidth]="true">Senden</lc-button>
       </form>`,
   }),
+};
+
+/**
+ * 3.12 (G-CF4, G-CF7): the message field of a 422 page whose `lc-alert`
+ * summary already announced the errors. The error has no `role="alert"`, but
+ * stays visible, keeps its id (`contact-message-error`) in `aria-describedby`,
+ * and the textarea keeps `aria-invalid`.
+ */
+export const ErrorWithoutAlertRole: Story = {
+  name: 'Error without Alert Role (G-CF7)',
+  args: {
+    label: 'Nachricht',
+    controlId: 'contact-message',
+    required: true,
+    error: true,
+    errorMessage: 'Schreiben Sie uns mindestens 20 Zeichen',
+    announceError: false,
+    rows: 4,
+  },
 };

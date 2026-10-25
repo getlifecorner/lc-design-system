@@ -19,6 +19,9 @@ Use it to inform users about important state changes, errors, warnings, or confi
 - Dismissible option with close button
 - Action slot (\`slot="action"\`) for a button right of the body, e.g. retry;
   3.3: \`actionsLayout="stacked"\` puts several actions in their own row below the text
+- 3.12: a text link as the one way forward (\`<a slot="action" href="…">\`, e.g. an address): a 44 × 44 px target,
+  link colour, an underline and a focus ring; inline it sits right of the text and drops below it under 576 px of
+  alert width. For a link that looks like a button use \`<a lcButton slot="action">\`
 - 3.3: the variant icon is decorative unless \`iconAriaLabel\` names it — no built-in English word
 - Accessible: role="alert" for error / warning, role="status" otherwise; \`visible\` is two-way bindable
         `,
@@ -45,7 +48,7 @@ Use it to inform users about important state changes, errors, warnings, or confi
       control: 'inline-radio',
       options: ['inline', 'stacked'],
       description:
-        '3.3: `inline` — one action right of the body (3.2). `stacked` — the actions in their own row below the text; below 576 px of alert width one per line at full width, 8 px apart, from 576 px side by side at natural width.',
+        '3.3: `inline` — one action right of the body (3.2); 3.12: a text link (`<a slot="action">`) takes up to half the row and drops below the text under 576 px of alert width. `stacked` — the actions in their own row below the text; below 576 px of alert width one per line at full width, 8 px apart, from 576 px side by side at natural width (a text link keeps its text width).',
       table: { defaultValue: { summary: 'inline' } },
     },
   },
@@ -162,3 +165,60 @@ export const StackedActions: Story = {
   }),
 };
 
+
+const CONTACT_LINK = `<a slot="action" href="mailto:kontakt-formular-adresse@beispiel-firma.example">Schreiben Sie uns direkt an kontakt-formular-adresse@beispiel-firma.example</a>`;
+const SHORT_LINK = `<a slot="action" href="mailto:kontakt@beispiel.example">kontakt@beispiel.example</a>`;
+
+/**
+ * 3.12 (G-CF8): a text link as the one way forward, e.g. the address on a
+ * 503 / 429 page. The box is at least 44 × 44 px with the text flush with the
+ * body; link colour and an underline. From 576 px of alert width it sits right
+ * of the text (up to half the row), below that it drops under the text.
+ */
+export const LinkAction: Story = {
+  name: 'Link Action (G-CF8)',
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <lc-alert variant="info" title="Lieber direkt?" message="Sie können uns auch ohne das Formular erreichen." [dismissible]="true" closeAriaLabel="Hinweis schließen">
+          ${CONTACT_LINK}
+        </lc-alert>
+        <lc-alert variant="success" title="Nachricht gesendet" message="Wir antworten in der Regel innerhalb von zwei Werktagen.">
+          ${CONTACT_LINK}
+        </lc-alert>
+        <lc-alert variant="warning" title="Zu viele Anfragen" message="Bitte versuchen Sie es in einer Stunde noch einmal.">
+          ${CONTACT_LINK}
+        </lc-alert>
+        <lc-alert variant="error" title="Senden gerade nicht möglich" message="Wir können Ihre Nachricht gerade nicht senden.">
+          ${CONTACT_LINK}
+        </lc-alert>
+      </div>`,
+  }),
+};
+
+/**
+ * 3.12 (G-CF8): text links in the stacked layout. The 503 alert offers a
+ * button and the address side by side from 576 px; the link keeps its text
+ * width (a short address stays short) and lines up with the text.
+ */
+export const LinkActionStacked: Story = {
+  name: 'Link Action, Stacked (G-CF8)',
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <lc-alert variant="info" title="Lieber direkt?" message="Sie können uns auch ohne das Formular erreichen." actionsLayout="stacked">
+          ${SHORT_LINK}
+        </lc-alert>
+        <lc-alert variant="success" title="Nachricht gesendet" message="Wir antworten in der Regel innerhalb von zwei Werktagen." actionsLayout="stacked">
+          ${SHORT_LINK}
+        </lc-alert>
+        <lc-alert variant="warning" title="Zu viele Anfragen" message="Bitte versuchen Sie es in einer Stunde noch einmal." actionsLayout="stacked">
+          ${CONTACT_LINK}
+        </lc-alert>
+        <lc-alert variant="error" title="Senden gerade nicht möglich" message="Wir können Ihre Nachricht gerade nicht senden." actionsLayout="stacked">
+          <lc-button slot="action" variant="outline" size="lg">Erneut senden</lc-button>
+          ${CONTACT_LINK}
+        </lc-alert>
+      </div>`,
+  }),
+};

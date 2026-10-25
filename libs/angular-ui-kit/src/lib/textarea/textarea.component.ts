@@ -16,6 +16,7 @@ import {
 import { isPlatformServer } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
+/** Counter for generated ids: they follow creation order, so prerendered HTML is the same in every build. */
 let nextUniqueId = 0;
 
 /**
@@ -97,13 +98,38 @@ export class TextareaComponent implements ControlValueAccessor {
   readonly requiredIndicator = input<boolean>(true);
 
   /**
-   * Accessible name of the `*` marker, for API parity with `lc-input`.
-   * `lc-textarea` hides the `*` from assistive technology, because the native
-   * `required` state is announced already and naming the `*` would say
-   * "required" twice.
+   * Deprecated, no effect (it never had one in `lc-textarea`). The `*` is
+   * decorative and hidden from assistive technology, because the native
+   * `required` state is announced already, in the screen reader's language; a
+   * name on the `*` would make the field say "required" twice. Kept so
+   * existing bindings compile.
+   * @deprecated No effect: the native `required` state is announced instead.
    * @default 'required'
    */
   readonly requiredAriaLabel = input<string>('required');
+
+  /**
+   * Id of the native `<textarea>`. The label's `for`, the error
+   * (`<id>-error`), the helper text (`<id>-helper`) and `aria-describedby`
+   * derive from it, so an error summary can link to the field
+   * (`<a href="#contact-message">`) and prerendered HTML is the same in every
+   * build. Unique in the document, no spaces. Unset (or empty) = a generated
+   * `lc-textarea-<n>`, which follows creation order (on the server it keeps
+   * counting across prerendered routes): set it on prerendered pages.
+   * @default generated (lc-textarea-<n>)
+   */
+  readonly controlId = input<string | undefined>(undefined);
+
+  /**
+   * Announce the error message the moment it appears (`role="alert"` on the
+   * message). Set `false` when an `lc-alert` error summary above the form
+   * already announces the errors (a page re-rendered after a failed submit,
+   * e.g. 422), so they aren't read twice. The message stays visible, stays
+   * linked through `aria-describedby` (read with the field), and the control
+   * keeps `aria-invalid`.
+   * @default true
+   */
+  readonly announceError = input<boolean>(true);
 
   /**
    * Whether the textarea is readonly
@@ -203,10 +229,25 @@ export class TextareaComponent implements ControlValueAccessor {
    */
   readonly valueChange: OutputRef<string> = this.value;
 
-  /** Per-instance id: links label, error and helper text to the control. */
-  readonly textareaId = `lc-textarea-${nextUniqueId++}`;
-  readonly errorId = `${this.textareaId}-error`;
-  readonly helperId = `${this.textareaId}-helper`;
+  /** Generated id, taken once per instance (also with `controlId`), so later ids don't shift. */
+  private readonly generatedId = `lc-textarea-${nextUniqueId++}`;
+
+  private readonly resolvedId = computed(() => this.controlId() || this.generatedId);
+
+  /** Id of the native textarea: `controlId`, or the generated `lc-textarea-<n>`. Links label, error and helper text to it. */
+  get textareaId(): string {
+    return this.resolvedId();
+  }
+
+  /** Id of the error message: `<textareaId>-error`. */
+  get errorId(): string {
+    return `${this.resolvedId()}-error`;
+  }
+
+  /** Id of the helper text: `<textareaId>-helper`. */
+  get helperId(): string {
+    return `${this.resolvedId()}-helper`;
+  }
 
   /**
    * The native textarea's value. On the server a leading line break gets one

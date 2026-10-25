@@ -1,11 +1,9 @@
 <div class="input-wrapper">
   <!-- Label -->
   @if (label()) {
+    <!-- No whitespace before the *: the gap is its margin, and it never wraps onto a line alone -->
     <label [id]="inputId + '-label'" [attr.for]="wrapsReadonlyValue() ? null : inputId" class="input-label">
-      {{ label() }}
-      @if (required() && requiredIndicator()) {
-        <span class="required-indicator" [attr.aria-label]="requiredAriaLabel()">*</span>
-      }
+      {{ label() }}@if (required() && requiredIndicator()) {<span class="required-indicator" aria-hidden="true">*</span>}
     </label>
   }
 
@@ -85,7 +83,7 @@
     <div class="input-footer">
       <!-- Error Message -->
       @if (error()) {
-        <p [id]="inputId + '-error'" class="input-error" role="alert">
+        <p [id]="inputId + '-error'" class="input-error" [attr.role]="announceError() ? 'alert' : null">
           {{ error() }}
         </p>
       }

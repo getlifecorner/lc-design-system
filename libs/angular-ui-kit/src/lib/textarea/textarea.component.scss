@@ -165,6 +165,9 @@
   width: 100%;
 }
 
+// 3.12 (G-CF6): the same 4 px gap as lc-input, from the margin alone (the
+// template has no space before the `*`, so it also can't wrap onto its own line)
 .lc-textarea-required-indicator {
   color: var(--color-text-error);
+  margin-inline-start: var(--spacing-1);
 }

@@ -1,10 +1,8 @@
 <div class="lc-textarea-wrapper">
   @if (label()) {
+    <!-- No whitespace before the *: the gap is its margin, and it never wraps onto a line alone -->
     <label [for]="textareaId" class="lc-textarea-label">
-      {{ label() }}
-      @if (required() && requiredIndicator()) {
-        <span class="lc-textarea-required-indicator" aria-hidden="true">*</span>
-      }
+      {{ label() }}@if (required() && requiredIndicator()) {<span class="lc-textarea-required-indicator" aria-hidden="true">*</span>}
     </label>
   }
 
@@ -33,7 +31,7 @@
   <div class="lc-textarea-footer">
     <div class="lc-textarea-messages">
       @if (showsError()) {
-        <span [id]="errorId" class="lc-textarea-error-message" role="alert">{{ errorMessage() }}</span>
+        <span [id]="errorId" class="lc-textarea-error-message" [attr.role]="announceError() ? 'alert' : null">{{ errorMessage() }}</span>
       } @else if (showsHelper()) {
         <span [id]="helperId" class="lc-textarea-helper-text">{{ helperText() }}</span>
       }

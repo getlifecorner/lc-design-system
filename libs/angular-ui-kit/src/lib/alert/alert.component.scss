@@ -77,8 +77,9 @@
   }
 
   &.lc-alert--with-icon .lc-alert__action {
-    // icon (24 px, `md`) + the container gap
-    padding-inline-start: calc(1.5rem + var(--spacing-3, 0.75rem));
+    // icon (24 px, `md`, at any text size) + the container gap; 3.12: px, not
+    // rem, so at 200 % text the actions still line up with the text
+    padding-inline-start: calc(24px + var(--spacing-3, 0.75rem));
   }
 }
 
@@ -103,6 +104,79 @@
 
   &:empty {
     display: none;
+  }
+}
+
+// Text link in the action slot (3.12, G-CF8): the one way forward when it is a
+// place, not a command, e.g. the address on a 503 / 429 page. A box of at least
+// 44 × 44 px (WCAG 2.5.8 without the inline exception), the text flush with the
+// body text, link colour, an underline at rest that thickens on hover (as
+// `.btn.btn-inline`: not colour alone, 1.4.1) and the kit's focus ring. Long
+// addresses break anywhere instead of overflowing. `a[lcButton]` (`.btn`) keeps
+// its button look; `:where()` keeps the selector at (0,1,1), so it beats the
+// reset's `a` and a consumer's own class still wins. No transition.
+$text-link: 'a:where(:not(.btn))';
+
+.lc-alert__action > #{$text-link} {
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  min-width: var(--size-min-touch-width);
+  min-height: var(--size-min-touch-height);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  color: var(--color-link);
+  text-align: start;
+  text-decoration-line: underline;
+  text-decoration-thickness: max(1px, 0.0625em);
+  text-underline-offset: 0.15em;
+  overflow-wrap: anywhere;
+  border-radius: var(--border-radius-sm);
+
+  &:hover {
+    color: var(--color-link-hover);
+    text-decoration-thickness: max(2px, 0.125em);
+  }
+
+  @include mix.focus-ring;
+}
+
+// The alert is a size container once it holds such a link (it is a full-width
+// block, so containment does not change its size); alerts without one render
+// as before.
+.lc-alert:has(> .lc-alert__container > .lc-alert__action > #{$text-link}) {
+  container: lc-alert / inline-size;
+}
+
+// Inline layout: the link may take up to half the row and wraps in it ...
+.lc-alert:not(.lc-alert--actions-stacked) .lc-alert__action:has(> #{$text-link}) {
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 50%;
+}
+
+// ... and below 576 px of alert width it drops below the text, lined up with it.
+@container lc-alert (width < 36rem) {
+  .lc-alert:not(.lc-alert--actions-stacked) .lc-alert__container:has(> .lc-alert__action > #{$text-link}) {
+    flex-wrap: wrap;
+
+    > .lc-alert__body {
+      flex: 1 1 0;
+    }
+
+    > .lc-alert__action {
+      order: 1;
+      flex: 1 1 100%;
+      max-width: none;
+      margin-top: var(--spacing-1);
+    }
+  }
+
+  .lc-alert--with-icon:not(.lc-alert--actions-stacked) .lc-alert__action:has(> #{$text-link}) {
+    // icon (24 px, `md`, at any text size) + the container gap
+    padding-inline-start: calc(24px + var(--spacing-3));
   }
 }
 

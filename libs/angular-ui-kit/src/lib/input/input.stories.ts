@@ -21,7 +21,9 @@ validation, accessibility, and customization features.
 - Input purpose and keyboard hints for autofill and on-screen keyboards:
   \`autocomplete\`, \`name\`, \`autocapitalize\`, \`spellcheck\`, \`enterkeyhint\`
 - Read-only values that wrap instead of being clipped (\`readonlyWrap\`)
-- \`required\` without the asterisk (\`requiredIndicator\`)
+- \`required\` without the asterisk (\`requiredIndicator\`); the \`*\` is decorative, the native required state is announced
+- 3.12: a stable id (\`controlId\`) for error-summary links and identical prerendered builds, and errors without
+  \`role="alert"\` under an \`lc-alert\` summary (\`announceError\`)
 - ControlValueAccessor for Angular forms integration
 
 **Autofill (WCAG 1.3.5 Identify Input Purpose):** set \`autocomplete\` on every field that
@@ -97,8 +99,21 @@ form \`username webauthn\` lets the browser offer passkeys in the email field.
     },
     requiredAriaLabel: {
       control: 'text',
-      description: 'Accessible name of the `*` marker',
+      description:
+        'Deprecated, no effect (3.12): the `*` is decorative and hidden from assistive technology; the native `required` state is announced, in the screen reader’s language (a name on the `*` said "required" twice, G-CF6)',
       table: { defaultValue: { summary: 'required' } },
+    },
+    controlId: {
+      control: 'text',
+      description:
+        '3.12: id of the native input; the label `for`, `<id>-error`, `<id>-helper`, `<id>-label` and `aria-describedby` derive from it, so an error summary can link to the field and prerendered HTML is the same in every build (G-CF4). Unset = a generated `lc-input-<n>` in creation order',
+      table: { defaultValue: { summary: 'generated (lc-input-<n>)' } },
+    },
+    announceError: {
+      control: 'boolean',
+      description:
+        '3.12: announce the error the moment it appears (`role="alert"`). `false` under an `lc-alert` error summary, so errors aren’t read twice; the message stays visible and in `aria-describedby`, the control keeps `aria-invalid` (G-CF7)',
+      table: { defaultValue: { summary: 'true' } },
     },
   },
 };
@@ -239,4 +254,52 @@ export const ReadonlyWrap: Story = {
 export const RequiredWithoutIndicator: Story = {
   name: 'Required without Asterisk (SI-9)',
   args: { label: 'Name', required: true, requiredIndicator: false },
+};
+
+/**
+ * 3.12 (G-CF4, G-CF7): a 422 page. The `lc-alert` summary is the only alert;
+ * the field errors are quiet (`announceError=false`) but stay visible and in
+ * `aria-describedby`. The summary's links go to the fields by their
+ * `controlId` (`#contact-email`, `#contact-message`) and focus them.
+ */
+export const ErrorSummary: Story = {
+  name: 'Error Summary (G-CF4, G-CF7)',
+  render: () => ({
+    template: `
+      <div style="max-width: 560px; display: flex; flex-direction: column; gap: 16px;">
+        <lc-alert variant="error" title="Bitte prüfen Sie zwei Angaben">
+          <ul style="list-style: none; margin: 4px 0 0; padding: 0">
+            <li><a lcButton variant="link" size="sm" [flush]="true" href="#contact-email">E-Mail-Adresse</a></li>
+            <li><a lcButton variant="link" size="sm" [flush]="true" href="#contact-message">Nachricht</a></li>
+          </ul>
+        </lc-alert>
+        <lc-input label="Name" controlId="contact-name" name="name" autocomplete="name" [required]="true" value="Jana Müller"></lc-input>
+        <lc-input label="E-Mail-Adresse" controlId="contact-email" type="email" name="email" autocomplete="email" [required]="true"
+                  value="jana.mueller@" error="Geben Sie eine E-Mail-Adresse wie name@beispiel.de ein" [announceError]="false"></lc-input>
+        <lc-textarea label="Nachricht" controlId="contact-message" name="message" [required]="true" value="Hallo!"
+                     [error]="true" errorMessage="Schreiben Sie uns mindestens 20 Zeichen" [announceError]="false"></lc-textarea>
+      </div>`,
+  }),
+};
+
+/**
+ * 3.12 (G-CF6): the `*` sits 4 px after the label in every size of both
+ * fields, is hidden from assistive technology (the native required state says
+ * it once) and never wraps onto a line by itself.
+ */
+export const RequiredAsterisk: Story = {
+  name: 'Required Asterisk (G-CF6)',
+  render: () => ({
+    template: `
+      <div style="max-width: 400px; display: flex; flex-direction: column; gap: 16px;">
+        <lc-input size="xs" label="Name" [required]="true"></lc-input>
+        <lc-input size="sm" label="E-Mail-Adresse" type="email" [required]="true"></lc-input>
+        <lc-input size="md" label="Telefonnummer" type="tel" [required]="true"></lc-input>
+        <lc-input size="lg" label="Ihre vollständige Postanschrift für die Rücksendung" [required]="true"></lc-input>
+        <lc-textarea size="xs" label="Nachricht (xs)" [required]="true" [rows]="2"></lc-textarea>
+        <lc-textarea size="sm" label="Nachricht (sm)" [required]="true" [rows]="2"></lc-textarea>
+        <lc-textarea size="md" label="Nachricht (md)" [required]="true" [rows]="2"></lc-textarea>
+        <lc-textarea size="lg" label="Nachricht (lg)" [required]="true" [rows]="2"></lc-textarea>
+      </div>`,
+  }),
 };

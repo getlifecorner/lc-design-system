@@ -20,6 +20,9 @@ export type InputAutocapitalize = 'off' | 'none' | 'on' | 'sentences' | 'words' 
 /** Values of the native `enterkeyhint` attribute (label of the on-screen keyboard's Enter key). */
 export type InputEnterKeyHint = 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
 
+/** Counter for generated ids: they follow creation order, so prerendered HTML is the same in every build. */
+let nextUniqueId = 0;
+
 /**
  * Input component for single-line text form data entry.
  *
@@ -188,8 +191,38 @@ export class InputComponent implements ControlValueAccessor {
   /** Native `enterkeyhint`: the label of the on-screen keyboard's Enter key. Unset = no attribute. */
   readonly enterkeyhint = input<InputEnterKeyHint>();
 
-  /** Accessible name of the `*` marker shown for `required` fields. */
+  /**
+   * Deprecated, no effect since 3.12. The `*` is decorative and hidden from
+   * assistive technology, because the native `required` state is announced
+   * already, in the screen reader's language; a name on the `*` made the field
+   * say "required" twice. Kept so existing bindings compile.
+   * @deprecated No effect since 3.12: the native `required` state is announced instead.
+   * @default 'required'
+   */
   readonly requiredAriaLabel = input('required');
+
+  /**
+   * Id of the native `<input>`. The label's `for`, the error (`<id>-error`),
+   * the helper text (`<id>-helper`), the label id (`<id>-label`) and
+   * `aria-describedby` derive from it, so an error summary can link to the
+   * field (`<a href="#contact-email">`) and prerendered HTML is the same in
+   * every build. Unique in the document, no spaces. Unset (or empty) = a
+   * generated `lc-input-<n>`, which follows creation order (on the server it
+   * keeps counting across prerendered routes): set it on prerendered pages.
+   * @default generated (lc-input-<n>)
+   */
+  readonly controlId = input<string | undefined>(undefined);
+
+  /**
+   * Announce the error message the moment it appears (`role="alert"` on the
+   * message). Set `false` when an `lc-alert` error summary above the form
+   * already announces the errors (a page re-rendered after a failed submit,
+   * e.g. 422), so they aren't read twice. The message stays visible, stays
+   * linked through `aria-describedby` (read with the field), and the control
+   * keeps `aria-invalid`.
+   * @default true
+   */
+  readonly announceError = input<boolean>(true);
 
   /**
    * Current value (two-way bindable: `[value]` / `[(value)]`). Emits
@@ -215,7 +248,18 @@ export class InputComponent implements ControlValueAccessor {
   readonly enterPressed = output<void>();
 
   // Internal state
-  readonly inputId = `lc-input-${Math.random().toString(36).substr(2, 9)}`;
+  /** Generated id, taken once per instance (also with `controlId`), so later ids don't shift. */
+  private readonly generatedId = `lc-input-${nextUniqueId++}`;
+
+  private readonly resolvedId = computed(() => this.controlId() || this.generatedId);
+
+  /**
+   * Resolved id of the native control: `controlId`, or the generated
+   * `lc-input-<n>`. Read-only, same meaning as before 3.12.
+   */
+  get inputId(): string {
+    return this.resolvedId();
+  }
 
   // ViewChild reference
   private readonly inputElement = viewChild<ElementRef<HTMLInputElement>>('inputRef');

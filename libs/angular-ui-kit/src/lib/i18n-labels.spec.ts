@@ -157,11 +157,17 @@ describe('Translatable labels (i18n)', () => {
     expect(attr(f.nativeElement, '.search-input__clear')).toBe('Suche leeren');
   });
 
-  it('lc-input: requiredAriaLabel', () => {
+  // 3.12 (request 016, G-CF6): the `*` is decorative and unnamed, as in lc-textarea; the
+  // native required state is announced in the screen reader's own language, so the
+  // deprecated `requiredAriaLabel` has no effect (a name on the `*` said "required" twice).
+  it('lc-input: requiredAriaLabel (deprecated, no effect since 3.12)', () => {
     const f = create(InputComponent, { label: 'Name', required: true });
-    expect(attr(f.nativeElement, '.required-indicator')).toBe('required');
+    expect(attr(f.nativeElement, '.required-indicator')).toBeNull();
+    expect(attr(f.nativeElement, '.required-indicator', 'aria-hidden')).toBe('true');
     set(f, { requiredAriaLabel: 'Pflichtfeld' });
-    expect(attr(f.nativeElement, '.required-indicator')).toBe('Pflichtfeld');
+    expect(attr(f.nativeElement, '.required-indicator')).toBeNull();
+    expect(f.nativeElement.innerHTML).not.toContain('Pflichtfeld');
+    expect(attr(f.nativeElement, 'input', 'aria-required')).toBe('true');
   });
 
   it('lc-select: clear, search and no-results labels', () => {

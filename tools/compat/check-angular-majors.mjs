@@ -269,6 +269,20 @@ const EXPECT_IN_HTML = [
   // 3.11.4 (request 014): the avatar trigger's name holds the initials it shows
   // (WCAG 2.5.3), already in the prerendered page (tt-shell.ts)
   ['tt: avatar trigger named with its initials (AS-33)', /<button(?=[^>]*lc-header__profile-trigger--avatar)(?=[^>]*aria-label="Menü für Johanna Apfelbaum, JA")[^>]*>/, 'tt/index.html'],
+  // 3.12 (request 016): the contact form after a 422, before JS (probe-312.ts)
+  ['controlId: input, label and quiet error (G-CF4, G-CF7)', (html) => /<label(?=[^>]*\sid="contact-email-label")(?=[^>]*\sfor="contact-email")[^>]*>/.test(html)
+    && /<input(?=[^>]*\sid="contact-email")(?=[^>]*\saria-describedby="contact-email-error")(?=[^>]*\saria-invalid="true")[^>]*>/.test(html)
+    && /<p(?=[^>]*\sid="contact-email-error")(?![^>]*\srole=)[^>]*>/.test(html)],
+  ['controlId: textarea, label and quiet error (G-CF4, G-CF7)', (html) => /<label(?=[^>]*\sfor="contact-message")[^>]*>/.test(html)
+    && /<textarea(?=[^>]*\sid="contact-message")(?=[^>]*\saria-describedby="contact-message-error")[^>]*>/.test(html)
+    && /<span(?=[^>]*\sid="contact-message-error")(?![^>]*\srole=)[^>]*>/.test(html)],
+  ['422 form: the summary is the only alert (G-CF7)', (html) => (html.match(/<form[^>]*id="compat-contact-422"[^]*?<\/form>/)?.[0].match(/\srole="alert"/g) ?? []).length === 1],
+  ['generated lc-input ids have no random part (G-CF4)', (html) => {
+    const ids = [...html.matchAll(/\s(?:id|for)="lc-input-([^"]*)"/g)].map((m) => m[1]);
+    return ids.length >= 3 && ids.every((id) => /^\d+(?:-label|-error|-helper)?$/.test(id));
+  }],
+  ['alert text link in the action slot, styled before JS (G-CF8)', (html) => /<div[^>]*class="lc-alert__action"[^>]*>(?:<!--[^]*?-->|\s)*<a(?=[^>]*\sslot="action")(?=[^>]*\shref="mailto:kontakt@beispiel\.example")[^>]*>/.test(html)
+    && /\.lc-alert__action\s*>\s*a:where\(:not\(\.btn\)\)\s*\{[^}]*min-height:\s*var\(--size-min-touch-height\)/.test(html)],
 ];
 
 /**
