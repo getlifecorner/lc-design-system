@@ -11,7 +11,10 @@
 #   --from <name>     the requesting project (default: the calling directory's name)
 #   --resume <NNN>    continue an open request; text after it answers its questions
 #   --budget <usd>    stop the run at this estimated cost
+#   --no-wait         if another request is running, report it and exit with 75 instead of waiting
 #
+# One request runs at a time. While another one runs, the call waits in a queue (first come,
+# first served) and starts on its turn, so run it in the background (it can wait for hours).
 # A request that passes review and every gate is released without asking (its tag starts the
 # publish pipeline); the npm stage still needs the owner's 2FA approval to become public.
 # The calling directory is readable for the run (--add-dir), so referenced files resolve.
@@ -24,6 +27,7 @@ from=""
 file=""
 resume=""
 budget=""
+no_wait=""
 text=()
 
 while [ $# -gt 0 ]; do
@@ -32,7 +36,8 @@ while [ $# -gt 0 ]; do
     --from) from="$2"; shift 2 ;;
     --resume) resume="$2"; shift 2 ;;
     --budget) budget="$2"; shift 2 ;;
-    -h | --help) sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --no-wait) no_wait=1; shift ;;
+    -h | --help) sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) text+=("$1"); shift ;;
   esac
 done
@@ -65,6 +70,52 @@ allowed=(Read Grep Glob Edit Write Agent SendMessage)
 flags=(-p "/lc-request $args" --permission-mode acceptEdits --allowedTools "${allowed[@]}")
 [ "$CALLER" != "$REPO" ] && flags+=(--add-dir "$CALLER")
 [ -n "$budget" ] && flags+=(--max-budget-usd "$budget")
+
+# One run at a time: two runs in one working tree switch branches under each other and take the
+# same version. The running pipeline holds tmp/lc-request/lock with the id of its Claude process
+# (exec below keeps this script's id); an interactive /lc-request takes and frees the same lock.
+# A later call waits with a ticket in tmp/lc-request/queue/, oldest first.
+STATE="$REPO/tmp/lc-request"
+LOCK="$STATE/lock"
+QUEUE="$STATE/queue"
+mkdir -p "$QUEUE"
+
+# A process id counts only while it still runs the expected command: ids get reused.
+running() { [ -n "$1" ] && ps -p "$1" -o args= 2>/dev/null | grep -- "$2" >/dev/null; }
+holder() { sed -n 's/^pid=\([0-9][0-9]*\).*/\1/p' "$LOCK" 2>/dev/null || true; }
+first_ticket() {
+  local t
+  for t in $(ls "$QUEUE" | sort -n); do
+    if running "${t#*-}" lc-request.sh; then echo "${t#*-}"; return; fi
+    rm -f "$QUEUE/$t"
+  done
+}
+
+ticket="$QUEUE/$(date +%s)-$$"
+: > "$ticket"
+trap 'rm -f "$ticket"' EXIT
+trap 'exit 130' INT TERM HUP
+said=""
+while :; do
+  if ! running "$(holder)" claude && [ "$(first_ticket)" = "$$" ]; then
+    rm -f "$LOCK"
+    (set -C; echo "pid=$$ since=$(date '+%Y-%m-%d %H:%M') run=/lc-request $args" > "$LOCK") 2>/dev/null && break
+  fi
+  now="$(cat "$LOCK" 2>/dev/null || true)"
+  if [ -n "$no_wait" ]; then
+    echo "lc-request: another request is running (${now:-starting}); not queued (--no-wait)" >&2
+    exit 75
+  fi
+  if [ "$now" != "$said" ]; then
+    ahead=$(( $(ls "$QUEUE" | sort -n | sed "/-$$\$/,\$d" | wc -l) ))
+    echo "lc-request: another request is running (${now:-starting}); queued with $ahead call(s) ahead, checking every 30 s" >&2
+    said="$now"
+  fi
+  sleep 30
+done
+rm -f "$ticket"
+trap - EXIT INT TERM HUP
+[ -n "$said" ] && echo "lc-request: our turn, starting" >&2
 
 cd "$REPO"
 # A caller's Claude Code session (another Nx workspace) exports its own root; Nx would look there for angular-ui-kit.

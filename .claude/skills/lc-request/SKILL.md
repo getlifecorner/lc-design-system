@@ -14,8 +14,15 @@ Arguments: `$ARGUMENTS`
 
 - `--from <project>`: the requester. Without it: the name of the directory a file path points into, else `owner`.
 - `--headless`: nobody can answer questions (started by `scripts/lc-request.sh`). An owner question ends the run instead of asking.
-- `--resume <NNN>`: continue `requests/<NNN>-*/` from the last handoff in its `log.md`. Skip step 1; switch to the request's branch (named in `build.md`) if it already has one. Any text after the number is the owner's answer to the open questions: record it under *Owner decisions* in `log.md` and pass it on.
+- `--resume <NNN>`: continue `requests/<NNN>-*/` from the last handoff in its `log.md`. Skip step 1 (not step 0); switch to the request's branch (named in `build.md`) if it already has one. Any text after the number is the owner's answer to the open questions: record it under *Owner decisions* in `log.md` and pass it on.
 - Everything else is the requirement. If it starts with a path to a readable file, the file is the requirement, and the path is recorded; text after the path narrows it (for example "G-13 only" for a concept with many gaps).
+
+## 0. One run at a time
+
+Two runs in one working tree switch branches under each other and take the same version, so only one request is dispatched at a time, also on `--resume`. The dispatching run holds `tmp/lc-request/lock` (`pid=<its Claude process> since=<time> run=<arguments>`); calls of `scripts/lc-request.sh` wait for it with a ticket in `tmp/lc-request/queue/`, oldest first.
+
+- **Headless:** the script waited for its turn and holds the lock for you. Go on.
+- **Interactive:** run `cat tmp/lc-request/lock; echo "self=$PPID"; ls tmp/lc-request/queue` (`$PPID` of a Bash call is your own Claude process). The run is yours when the lock names your pid, or when it is missing or its pid no longer runs `claude` (`ps -p <pid> -o args=`) and no ticket's pid (the part after `-`) still runs `lc-request.sh`. Then take the lock: `mkdir -p tmp/lc-request && echo "pid=$PPID since=$(date '+%Y-%m-%d %H:%M') run=/lc-request <arguments>" > tmp/lc-request/lock`. Otherwise don't start: queue the request by running `scripts/lc-request.sh <the same arguments, without --headless>` with `run_in_background` (it waits its turn, then runs headless, and you are notified when it ends), tell the owner which request is running and how many calls wait ahead, and stop.
 
 ## 1. Start
 
@@ -48,6 +55,8 @@ Start with `next: spec-writer`, task "Write the spec for this request". Then rep
 5. **Loop guard:** if two agents hand back and forth more than three times on the same point, or a request reaches 15 handoffs, stop and put the disagreement in front of the owner as a question. Never break a tie yourself.
 
 ## 3. Finish
+
+Free the lock in every outcome (released, answered, stopped): interactive, `rm tmp/lc-request/lock` if it names your pid; headless, it is free once the process ends. The next queued call then starts by itself.
 
 Your final message is what the requester receives. In headless runs it is all the calling project gets, so it must stand on its own:
 

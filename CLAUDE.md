@@ -78,6 +78,7 @@ A requirement, usually from a consuming project, goes through four agents (`.cla
 | `release-manager` | Sets the version, writes the changelog, runs all gates and makes the release commit. When everything is green, without asking: pushes `main`, waits for CI, pushes the release tag, which starts the publish pipeline, and watches it until the package is staged | `release.md` |
 
 - **Start:** `/lc-request <requirement or file> [--from <project>]` in this repository. From another project: `<path>/lc-design-system/scripts/lc-request.sh "<requirement>"` (headless; see `requests/README.md`). Release on its own: `/lc-release`.
+- **One run at a time:** two runs in one working tree switch branches under each other and take the same version. The dispatching run holds `tmp/lc-request/lock`; `scripts/lc-request.sh` waits its turn in a queue (`tmp/lc-request/queue/`, first come, first served; `--no-wait` only reports), and an interactive `/lc-request` queues itself the same way while another run is active.
 - **Request folder** `requests/<NNN>-<slug>/` holds `request.md` (the requirement verbatim), `spec.md`, `design.md`, `build.md`, `review.md`, `release.md` and `log.md` (every handoff). The templates are in `requests/_templates/`.
 - **Handoff:** every agent ends its reply with exactly this block:
 

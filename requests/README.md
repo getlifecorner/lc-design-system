@@ -21,13 +21,15 @@ From the consuming project's directory, or from its Claude Code session through 
 
 The script runs Claude Code headless in this repository (`claude -p "/lc-request …"`). Its output is the pipeline's final message: the released version and how to use it, or the questions the owner has to answer. The requester is the name of the calling directory; `--from <name>` overrides it.
 
+**One request at a time.** Two runs in one working tree would switch branches under each other, so while another request runs, the script waits in a queue (`tmp/lc-request/queue/`, first come, first served) and starts on its turn. Run it in the background (in Claude Code: `run_in_background`), since it can wait for hours; it prints what it waits for. `--no-wait` only reports the running request and exits with 75. If a run died without freeing `tmp/lc-request/lock` while its Claude session lives on, delete the file.
+
 Nobody has to approve the release: once the review is approved and every gate is green, the release manager pushes `main`, waits for CI and pushes the release tag `vX.Y.Z`, which starts `publish-npm.yml` (the agents' GitHub token can't dispatch workflows). The release manager watches that run, which stages the package on npm. The package is public once the owner approves the npm stage with 2FA. The pipeline stops for the owner only for decisions agents may not make (a breaking change, a new runtime dependency, an npm or GitHub failure).
 
 Interactively, in this repository: `/lc-request <requirement or path> [--from <project>]`.
 
 ### For a consuming project's CLAUDE.md
 
-> **Design-system gaps** are closed in the kit, never rebuilt locally: run `../lc-design-system/scripts/lc-request.sh --file <concept file> "<gap ID>: <what is missing>"`. The pipeline answers with the kit version that closes it, or with questions for the owner.
+> **Design-system gaps** are closed in the kit, never rebuilt locally: run `../lc-design-system/scripts/lc-request.sh --file <concept file> "<gap ID>: <what is missing>"` in the background (it waits while another request runs). The pipeline answers with the kit version that closes it, or with questions for the owner.
 
 ## Index
 
