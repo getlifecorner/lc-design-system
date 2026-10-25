@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.12.0] - 2026-10-25
+
+Contact form fields keep their ids, field errors under a summary stay quiet, the required `*` is decorative with one gap, and `lc-alert` takes a text link as its action (G-CF3, G-CF4, G-CF6, G-CF7, G-CF8; life-os website contact form). No API breaks.
+
+### Added
+
+- **`controlId` on `lc-input` and `lc-textarea`** (G-CF4): the native control's id; the label `for`, `<id>-error`, `<id>-helper` (and `lc-input`'s `<id>-label`) and `aria-describedby` derive from it. An error summary can link to a field (`<a href="#contact-email">` focuses it), and prerendered pages are the same in every build: two builds of a consumer app gave a byte-identical page, and all 15 field ids were unchanged after hydration. Unset: `lc-input-<n>` / `lc-textarea-<n>` in creation order (`lc-input` ids no longer have a random part); the server keeps counting across prerendered routes, so set `controlId` on prerendered pages.
+- **`announceError`** on both (G-CF7), default `true`: `false` drops only `role="alert"` from the error; it stays visible and in `aria-describedby`, and the control keeps `aria-invalid`. Under an `lc-alert` error summary a 422 page now has one alert instead of three.
+- **`lc-alert`: a text link in `slot="action"`** (G-CF8), e.g. the address on a 503 / 429 page: `<a slot="action" href="mailto:…">` gets a 44 × 44 px target (was an inline link about 16 px high), link colour (≥ 4.78:1 light, ≥ 9.47:1 dark on all four variants), an underline (thicker on hover) and the focus ring. Inline it sits right of the text (up to half the row) and drops below it under 576 px of alert width; a long German address wraps without horizontal scroll at 360 px, also at 200 % text. `a[lcButton]` keeps its button look.
+- Stories: Form/Input "Error Summary", "Required Asterisk"; Form/Textarea "Error without Alert Role"; Feedback/Alert "Link Action", "Link Action, Stacked". In "Error Summary" the links are `a[lcButton] variant="link"` (44 px targets).
+
+### Changed
+
+- **The `*` of `lc-input` is decorative** (G-CF6): `aria-hidden`, no `aria-label`, as in `lc-textarea`. The field's name is its label ("E-Mail-Adresse", was "E-Mail-Adresse required"); the native `required` state is announced once, in the screen reader's language.
+- **One `*` gap**: 4 px (`--spacing-1`) in both fields at every size (was 5.69 px in `lc-input`, 3.69 px in `lc-textarea`), and the `*` can no longer wrap onto a line by itself.
+- `requiredAriaLabel` (both) is deprecated and has no effect (G-CF3; `lc-textarea` never used it). It is kept so bindings compile.
+
+### Fixed
+
+- `lc-alert` stacked actions with an icon line up with the text at 200 % text (the indent is the 24 px icon, was `1.5rem`, 24 px too far); identical at 100 %.
+
+### Compatibility
+
+- No API breaks: new inputs are optional and their defaults render as before, except the `*` (name and gap above). `inputId`, `textareaId`, `errorId` and `helperId` are getters now; reading them is unchanged. Of 200 existing screenshots (alert, input, email-input, textarea) 168 are identical; the other 32 differ only where a `*` moved.
+- Tests that match a required `lc-input` by `{ name: '… required' }` need the label alone. Don't rely on the format of generated ids.
+
+### Migration
+
+- life-os contact form: `controlId="contact-email"` / `"contact-message"` on the fields, `[announceError]="false"` under the summary, the address as `<a slot="action">` in the 503 / 429 alert; drop `requiredAriaLabel`.
+
 ## [3.11.5] - 2026-10-23
 
 The remaining eight components name their controls with the text they show (AS-33 follow-up; axe-core 4.14 `label-content-name-mismatch`, WCAG 2.5.3 Label in Name). No API breaks.
