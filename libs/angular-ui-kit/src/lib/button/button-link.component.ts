@@ -30,7 +30,7 @@ import type { ButtonSize, ButtonVariant } from './button.component';
  * ancestor that is a wrapping row or a column. In a non-wrapping row it lets a
  * one-word button shrink with its neighbours, which is why the default stays
  * `break-word`. The kit sets it in `lc-footer`'s link row, the page-header
- * actions and the next-step-card's narrow actions.
+ * actions, the next-step-card's narrow actions and the narrow alert's actions.
  *
  * @example
  * ```html

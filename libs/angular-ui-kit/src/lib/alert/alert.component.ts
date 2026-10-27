@@ -24,6 +24,9 @@ export type AlertVariant = 'success' | 'error' | 'warning' | 'info';
  * - `stacked`: the actions in their own row below the title and message;
  *   below 576 px of alert width one per line at full width, 8 px apart,
  *   from 576 px side by side at their natural width
+ *
+ * In the narrow layout (below 16rem) the actions start at the alert's inner
+ * edge, not under the text.
  */
 export type AlertActionsLayout = 'inline' | 'stacked';
 
@@ -41,6 +44,12 @@ export type AlertActionsLayout = 'inline' | 'stacked';
  *   several actions stacked below it (`actionsLayout="stacked"`); 3.12: a text
  *   link (`<a slot="action" href="…">`) as the one way forward gets a
  *   44 × 44 px target, link colour, an underline and a focus ring
+ * - 3.13.1: narrow layout below 16rem inside the border (alerts under 258 px
+ *   at 100 % text, 514 px at 200 %): the icon shares the first row with the
+ *   title, message and actions take the full width below, the padding is one
+ *   density step smaller (`--lc-density-padding-sm`), and long words
+ *   hyphenate (`hyphens: auto`, needs the page's `lang`) or break instead of
+ *   leaving the box
  * - The variant icon is decorative unless `iconAriaLabel` names it (the
  *   title and the colour carry the tone; no built-in English word)
  * - Accessible: `role="alert"` for error / warning, `role="status"` otherwise

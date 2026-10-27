@@ -22,6 +22,11 @@ Use it to inform users about important state changes, errors, warnings, or confi
 - 3.12: a text link as the one way forward (\`<a slot="action" href="…">\`, e.g. an address): a 44 × 44 px target,
   link colour, an underline and a focus ring; inline it sits right of the text and drops below it under 576 px of
   alert width. For a link that looks like a button use \`<a lcButton slot="action">\`
+- 3.13.1 (G-WL4): when the space inside the alert's border is below 16rem (alerts under 258 px at 100 % text,
+  514 px at 200 %), the alert switches to a narrow layout (TD-1): the icon shares the first row with the title,
+  message and actions take the full width below, and the padding is one density step smaller. There, long words
+  hyphenate with \`hyphens: auto\`, which needs the page's \`lang\` (for example \`<html lang="de">\`). Without a
+  \`lang\`, a word wider than the line still breaks, without a hyphen, so no text leaves the alert
 - 3.3: the variant icon is decorative unless \`iconAriaLabel\` names it — no built-in English word
 - Accessible: role="alert" for error / warning, role="status" otherwise; \`visible\` is two-way bindable
         `,
@@ -219,6 +224,135 @@ export const LinkActionStacked: Story = {
           <lc-button slot="action" variant="outline" size="lg">Erneut senden</lc-button>
           ${CONTACT_LINK}
         </lc-alert>
+      </div>`,
+  }),
+};
+
+/** Root text size of a large-text story: `200%` is a phone set to large text (not browser zoom). */
+type StoryTextSize = '200%' | '100%';
+type LargeTextStory = StoryObj<AlertComponent & { textSize: StoryTextSize }>;
+
+const textSizeArgType = {
+  control: 'inline-radio',
+  options: ['200%', '100%'],
+  description:
+    "Root font size of the canvas (`html { font-size }`), the way a phone's large-text setting raises it; every rem value doubles at `200%`. Story only, not a component input; the docs page stays at 100 %",
+  table: { defaultValue: { summary: "'200%'" } },
+} as const;
+
+/** Raises the root text in the canvas only (`#storybook-root`), so the docs page keeps 100 %. */
+const TEXT_SIZE_STYLE = `<style>::ng-deep html:has(#storybook-root [data-lc-story-text="200%"]) { font-size: 200%; }</style>`;
+
+/** One 123 px box (the alert in `lc-next-step-card` `[slot='body']` at 320 px and 200 % text). */
+const narrowBox = (lang = 'de', title = '', message = '') => `
+  <div lang="${lang}" style="width: 123px;">
+    <lc-alert variant="error" title="${title}" message="${message}" />
+  </div>`;
+
+/**
+ * 3.13.1 (G-WL4): the reproduction from the life-os waitlist's DE 503 answer —
+ * a 123 px alert at 200 % text. Below 16rem inside the border the alert uses
+ * the narrow layout, and long words hyphenate (with `lang`) or break (without)
+ * instead of leaving the box.
+ */
+export const NarrowContainer: LargeTextStory = {
+  name: 'Narrow Container at 200 % Text (G-WL4)',
+  args: { textSize: '200%' },
+  argTypes: { textSize: textSizeArgType },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "3.13.1 (G-WL4): three 123 px boxes, as the alert sits in `lc-next-step-card` `[slot='body']` at 320 px and 200 % text on the life-os waitlist's 503 answer: German (`lang=\"de\"`), English (`lang=\"en\"`) and the German text without a language (`lang=\"\"`). When the space inside the alert's border is below 16rem (alerts under 258 px at 100 % text, 514 px at 200 %), the alert switches to a narrow layout (TD-1). There, long words hyphenate with `hyphens: auto`, which needs the page's `lang` (for example `<html lang=\"de\">`). Without a `lang`, a word wider than the line still breaks, without a hyphen, so no text leaves the alert. Open it in the canvas at 320 or 360 px.",
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div [attr.data-lc-story-text]="textSize" style="display: flex; flex-direction: column; gap: 16px;">
+        ${narrowBox('de', 'Nicht eingetragen', 'Wir haben nichts gespeichert. Versuch es später noch einmal.')}
+        ${narrowBox('en', 'Not registered', 'We kept nothing. Please try again later.')}
+        ${narrowBox('', 'Nicht eingetragen', 'Wir haben nichts gespeichert. Versuch es später noch einmal.')}
+      </div>
+      ${TEXT_SIZE_STYLE}`,
+  }),
+};
+
+/**
+ * 3.13.1 (G-WL4): the narrow layout on a phone at 200 % text with every
+ * optional part — dismiss button, inline button, text link, stacked actions
+ * and no title. At 100 % text the same alerts show the wide layout.
+ */
+export const NarrowLayout: LargeTextStory = {
+  name: 'Narrow Layout (phone at 200 % text)',
+  args: { textSize: '200%' },
+  argTypes: { textSize: textSizeArgType },
+  decorators: [moduleMetadata({ imports: [ButtonComponent] })],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.13.1 (G-WL4): at 200 % text a phone alert is below 16rem inside its border, so it uses the narrow layout: the icon shares the first row with the title (the title moves below the icon when its longest word does not fit beside it), the × stays at the end of that row, message and actions take the full width below, starting at the inner edge, and the padding is one density step smaller. DOM and focus order are unchanged. Plain, dismissible, an inline button, a text link, stacked actions and an alert without a title, in German. Switch `textSize` to `100%` to see the unchanged wide layout. Open it in the canvas at 320 or 360 px.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div [attr.data-lc-story-text]="textSize" lang="de" style="display: flex; flex-direction: column; gap: 16px;">
+        <lc-alert variant="error" title="Nicht eingetragen" message="Wir haben nichts gespeichert. Versuch es später noch einmal." />
+        <lc-alert variant="info" title="Benachrichtigungseinstellungen gespeichert" message="Sie gelten ab sofort auf allen Geräten." [dismissible]="true" closeAriaLabel="Hinweis schließen" />
+        <lc-alert variant="error" title="Laden fehlgeschlagen" message="Die Vorhaben-Liste konnte nicht geladen werden.">
+          <lc-button slot="action" variant="outline" size="sm">Erneut versuchen</lc-button>
+        </lc-alert>
+        <lc-alert variant="error" title="Senden gerade nicht möglich" message="Wir können Ihre Nachricht gerade nicht senden.">
+          ${CONTACT_LINK}
+        </lc-alert>
+        <lc-alert variant="warning" title="Du hast nur einen Passkey" message="Ohne einen zweiten kommst du nicht mehr in dein Konto, wenn dieses Gerät fehlt." iconAriaLabel="Warnung" actionsLayout="stacked">
+          <lc-button slot="action" variant="outline" size="lg">Zweiten Passkey einrichten</lc-button>
+          <lc-button slot="action" variant="ghost" size="lg">Später</lc-button>
+        </lc-alert>
+        <lc-alert variant="success" message="Ihre Änderungen wurden gespeichert." />
+      </div>
+      ${TEXT_SIZE_STYLE}`,
+  }),
+};
+
+/** The first alert of the side column, in a box of the given width (the threshold). */
+const thresholdBox = (width = '257px') => `
+  <div style="width: ${width};">
+    <lc-alert variant="info" title="Export ready" message="Your CSV file is ready to download." />
+  </div>`;
+
+/**
+ * 3.13.1 (G-WL4): the narrow layout at 100 % text in a 240 px side column,
+ * then the threshold: a 257 px alert (narrow) and a 258 px alert (wide).
+ */
+export const NarrowColumn: Story = {
+  name: 'Narrow Layout in a Side Column (100 % text)',
+  decorators: [moduleMetadata({ imports: [ButtonComponent] })],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.13.1 (G-WL4): a 240 px side column at 100 % text — alerts under 258 px use the narrow layout at any text size. Then the threshold: the same alert at 257 px (narrow, 12 px padding) and at 258 px (wide, 16 px padding, as before 3.13.1).',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div lang="en" style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="width: 240px; display: flex; flex-direction: column; gap: 16px;">
+          <lc-alert variant="info" title="Export ready" message="Your CSV file is ready to download." />
+          <lc-alert variant="warning" title="Storage almost full" message="You have used 90% of your quota." [dismissible]="true" />
+          <lc-alert variant="error" title="Connection failed" message="Unable to reach the server.">
+            <lc-button slot="action" variant="outline" size="sm">Retry</lc-button>
+          </lc-alert>
+          <lc-alert variant="success" message="Your changes have been saved." />
+        </div>
+        ${thresholdBox('257px')}
+        ${thresholdBox('258px')}
       </div>`,
   }),
 };

@@ -1,8 +1,14 @@
 @use '../../styles/mixins' as mix;
 
+// Every alert is a size container (3.13.1, G-WL4), so the narrow layout below
+// follows the alert's own width, not the viewport. The host is a full-width
+// block, so containment does not change its size in block, flex or grid flow;
+// in a shrink-to-fit box (inline-block, float, `fit-content`, an `auto` grid
+// track) it no longer takes its width from its text.
 .lc-alert {
   display: block;
   width: 100%;
+  container: lc-alert / inline-size;
   border-radius: var(--border-radius-md);
   border-width: 1px;
   border-style: solid;
@@ -48,8 +54,8 @@
 // title and message (aligned with the text when the icon shows). Below 576 px
 // of alert width — about a 640 px phone or tablet screen minus the page
 // gutters — one per line at full width, 8 px apart; from there side by side
-// at their natural width. The host is a size container only in this layout
-// (it is a full-width block, so containment does not change its size).
+// at their natural width. The host was a size container only in this layout
+// until 3.13.1; the declaration stays (every alert is one now).
 .lc-alert--actions-stacked {
   container: lc-alert / inline-size;
 
@@ -143,9 +149,8 @@ $text-link: 'a:where(:not(.btn))';
   @include mix.focus-ring;
 }
 
-// The alert is a size container once it holds such a link (it is a full-width
-// block, so containment does not change its size); alerts without one render
-// as before.
+// The alert is a size container once it holds such a link (3.12; since 3.13.1
+// every alert is one, the declaration stays).
 .lc-alert:has(> .lc-alert__container > .lc-alert__action > #{$text-link}) {
   container: lc-alert / inline-size;
 }
@@ -198,6 +203,84 @@ $text-link: 'a:where(:not(.btn))';
   }
 
   @include mix.focus-ring;
+}
+
+// ── Narrow layout (3.13.1, G-WL4): below 16rem inside the border ───────────
+// Alerts under 258 px at 100 % text and 514 px at 200 % (rem follows the root
+// text size; the query measures the content box, 2 px inside the border).
+// As `lc-next-step-card` TD-1 and AS-32: the body dissolves, so icon and title
+// share the first row of a wrapping flex row; the title moves below the icon
+// only when its smallest unbreakable piece doesn't fit beside it. Message and
+// actions take full-width rows below (`order: 1`, the 3.3 mechanism; DOM and
+// focus order are unchanged), and the padding drops one density step.
+// Word breaking stays inside this query: in the wide layout `hyphens` and
+// `break-word` would re-break existing alerts (measured in request 018).
+// This block comes after `.lc-alert__close`, so the × margin and the link's
+// min-width cap win by source order.
+@container lc-alert (width < 16rem) {
+  .lc-alert__container {
+    flex-wrap: wrap;
+    column-gap: var(--spacing-3);
+    row-gap: var(--spacing-1);
+    padding: var(--lc-density-padding-sm, var(--spacing-3));
+  }
+
+  .lc-alert__body {
+    display: contents;
+  }
+
+  // Long words hyphenate with the page's `lang` and, without one, still break
+  // where the line ends, so no text leaves the alert.
+  .lc-alert__title,
+  .lc-alert__content {
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  .lc-alert__title {
+    flex: 1 1 0%;
+    max-width: 100%;
+    margin-bottom: 0;
+  }
+
+  .lc-alert__content {
+    order: 1;
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  // No title: the message sits beside the icon like a title would, and moves
+  // below it when its smallest piece doesn't fit there.
+  .lc-alert__content:first-child {
+    order: 0;
+    flex: 1 1 0%;
+    min-width: auto;
+    max-width: 100%;
+  }
+
+  // Every action layout: its own row from the inner edge, no indent. The
+  // repeated classes (0,6,0) beat the 3.12 link rules ((0,5,1) below 36rem,
+  // the indent (0,3,1)) and the 3.3 stacked indent (0,3,0) and margin (0,2,0)
+  // without rewriting them. Button labels wider than the line break (TD-1).
+  .lc-alert.lc-alert .lc-alert__container > .lc-alert__action.lc-alert__action.lc-alert__action {
+    order: 1;
+    flex: 1 1 100%;
+    min-width: 0;
+    max-width: none;
+    align-self: auto;
+    margin-top: var(--spacing-3);
+    padding-inline-start: 0;
+    --lc-btn-overflow-wrap: anywhere;
+  }
+
+  // 2.75rem is 88 px at 200 % text, wider than the narrowest line.
+  .lc-alert__action > #{$text-link} {
+    min-width: min(var(--size-min-touch-width), 100%);
+  }
+
+  .lc-alert__close {
+    margin-inline-start: auto;
+  }
 }
 
 // DS2.0: translucent tinted surfaces with a tinted border and bright semantic

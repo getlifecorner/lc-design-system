@@ -33,11 +33,12 @@ describe('--lc-btn-overflow-wrap (3.11, AS-30)', () => {
     expect(css.match(/overflow-wrap:/g)).toHaveLength(1);
   });
 
-  it('is set to anywhere in exactly three places: the footer links, the page-header actions, the narrow card actions', () => {
+  it('is set to anywhere in exactly four places: the footer links, the page-header actions, the narrow card actions, the narrow alert actions (3.13.1)', () => {
     const setters = stylesheets()
       .filter((f) => /--lc-btn-overflow-wrap:/.test(readFileSync(join(lib, f), 'utf-8')))
       .map((f) => f.split('\\').join('/'));
     expect(setters).toEqual([
+      'alert/alert.component.scss',
       'footer/footer.component.scss',
       'next-step-card/next-step-card.component.scss',
       'page-header/page-header.component.scss',
@@ -69,11 +70,23 @@ describe('--lc-btn-overflow-wrap (3.11, AS-30)', () => {
     );
   });
 
+  it('lc-alert: only the narrow actions, not the wide alert (3.13.1, G-WL4)', () => {
+    const css = compiled('alert/alert.component.scss');
+    const narrowAt = css.indexOf('@container lc-alert (width < 16rem)');
+    expect(narrowAt).toBeGreaterThan(-1);
+    const hookAt = css.indexOf('--lc-btn-overflow-wrap: anywhere');
+    expect(hookAt).toBeGreaterThan(narrowAt);
+    expect(css.indexOf('--lc-btn-overflow-wrap', hookAt + 1)).toBe(-1);
+    expect(css.slice(narrowAt, css.indexOf('\n@', narrowAt + 1))).toMatch(
+      /\.lc-alert__action\s*{[^}]*--lc-btn-overflow-wrap:\s*anywhere/,
+    );
+  });
+
   it.each(['button.component.ts', 'button-link.component.ts'])('documents the hook in the class JSDoc of %s', (file) => {
     const source = readFileSync(resolve(__dirname, file), 'utf-8').replace(/\s*\n\s*\*\s?/g, ' ');
     expect(source).toContain('CSS hook `--lc-btn-overflow-wrap` (`break-word | anywhere`, default `break-word`)');
     expect(source).toContain(
-      "The kit sets it in `lc-footer`'s link row, the page-header actions and the next-step-card's narrow actions.",
+      "The kit sets it in `lc-footer`'s link row, the page-header actions, the next-step-card's narrow actions and the narrow alert's actions.",
     );
   });
 });
