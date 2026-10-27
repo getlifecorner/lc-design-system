@@ -3,6 +3,7 @@
 - **Status:** ready
 - **Spec:** [spec.md](spec.md) — AC-1 … AC-12
 - **Prototyped** with injected CSS on the 3.13.0 Storybook build (main 5faaaf5); logs in `tmp/018/`, shots in `tmp/story-shots/018/`.
+- **Change note (review r1, 2026-10-27):** §1 premise on the wide layout corrected (known limit S1); §9 AC-5 values at 200 % (× + 8, stacked 16 apart); R1b added. No code change follows from it.
 
 ## 1. Approach
 
@@ -14,7 +15,7 @@ Extend `lc-alert` with **SCSS only**: no template change, no new input, slot, ty
    - `hyphens: auto` on every alert changed 6 of 81 light shots in 5 stories at 360 (all-variants, with-action, 3 error-display stories).
    - `break-word` alone breaks the *With Action* title at 360 into "fehlgeschlage|n". The body there is 101.7 px, squeezed by the inline button, and the word overflowed it by only 1.3 px.
 
-   In the wide layout the text column is at least 186 px at 100 % and at least 398 px at 200 % text, so long words don't matter there. All of G-WL4's overflows happen in the narrow layout.
+   All of G-WL4's overflows happen in the narrow layout. The wide layout keeps 3.13's word handling, which is a **known limit** (review r1, S1). A single word wider than its column still leaves it: "Benachrichtigungseinstellungen" (218 px at 100 %) runs 24 px under the × in a 288 px dismissible alert. *(Corrected in r1: the original sentence "the column is at least 186 px, so long words don't matter" was wrong.)*
 
 **Threshold `@container lc-alert (width < 16rem)`**, because rem in a container query follows the root text size. The query measures the content box inside the 1 px border, so alerts narrower than **258 px at 100 %** and **514 px at 200 %** use the narrow layout (measured: 257 narrow, 258 wide; 513 narrow, 514 wide). The 3.3 and 3.12 36rem queries have the same 2 px offset. Below the threshold, the wide layout's text column (alert − 70 px at 100 %, − 114 px at 200 %) would be under about 13em, roughly 26 characters, which is too short for German compounds.
 
@@ -170,7 +171,7 @@ Baseline: `tmp/story-shots/018/baseline`, 27 stories (13 alert, 8 error-display,
 | AC-2 | story 1 at 320 and 360, light, 200 %: `scrollWidth ≤ clientWidth` (alert, title, content); max line-rect right ≤ alert right | DE: 0 px outside (3.13: title +111.4, content +106.7). Icon x = alert x + 25, title and content x = alert x + 25, w 73, alert h 895 (SF). Page `scrollWidth` 320 / 360. |
 | AC-3 | same, EN block | 0 px outside (3.13: +87.5 / +54.8); h 566 |
 | AC-4 | Jest: the query text `(width < 16rem)`, `display: contents`, `padding: var(--lc-density-padding-sm`, content `order: 1`. Story 2 at 360 / 200 %: boxes. Story 3: 240 vs 256. | 296 alert: padding 24, icon x 57, title x 105 y = icon y, content x 57 w 246. 240 and 257: padding 12, title x = alert x + 49. 258: padding 16, title x = alert x + 53 (wide). Story 2 at 100 %: padding 16, title x 69. |
-| AC-5 | story 2 at 320 / 360 (200 %) and story 3: × box, action and link rects | × 36 × 36 (200 %) / 28 × 28 (100 %), right edge = inner right + 4. Every action and link x = inner start, right ≤ inner right. Stacked buttons full width, 8 apart. Over = −1 everywhere (measured in prototype). |
+| AC-5 | story 2 at 320 / 360 (200 %) and story 3: × box, action and link rects | × 36 × 36 (200 %) / 28 × 28 (100 %), right edge = inner right + 8 (200 %) / + 4 (100 %), the `−spacing-1` margin as wide *(r1: was "+ 4")*. Every action and link x = inner start, right ≤ inner right. Stacked buttons full width, 16 apart at 200 % (8 at 100 %) *(r1)*. Over = −1 everywhere (measured in prototype). |
 | AC-6 | `--compare` against the baseline plus a measure of `lc-alert` widths | widths as in the sweep (for example 328 / 992 / 1248 alert stories) |
 | AC-7 | `story-shots --stories=<27 ids> --widths=360,1024,1280 --themes=light,dark --full --compare=tmp/story-shots/018/baseline` | 160 identical; **2 expected diffs**: `design-tokens-density--side-by-side` at 360, light and dark (51.3 px alerts, narrow) |
 | AC-8 | story 2, light and dark; colours computed as in §5; SCSS scan: no `forced-color-adjust`, no new `transition` | colours equal 3.13 (§5 values) |
@@ -191,4 +192,5 @@ Baseline: `tmp/story-shots/018/baseline`, 27 stories (13 alert, 8 error-display,
 - **R2 order.** Put the narrow block after the `.lc-alert__close` rule. The link `min-width` cap and the × margin win by source order. The specs' `ruleFor()` reads the *first* rule with a given selector, which must stay the base rule.
 - **R3** Keep `hyphens` and `break-word` inside the query (§1, measured). Don't change `.lc-alert__body { flex: 1; min-width: 0 }`.
 - **R4 shot noise.** `design-tokens-density--side-by-side` at 1024 differs after any 400 ms wait in a measure, even with no CSS change. Compare it without a measure.
+- **R1b (r1).** `button.overflow-wrap.spec.ts` pins the exact list of `--lc-btn-overflow-wrap` setters; the alert makes it four, and the button JSDoc sentence names it (build.md deviation 1).
 - **R5 out of scope, for the changelog's "known" note.** Between 256 px and about 400 px at 100 %, an inline (3.2) button action still squeezes the text column: at 288 px (320 viewport) the body is 61.7 px wide; it is 101.7 px in *With Action* at 360. This is unchanged from 3.13; `actionsLayout="stacked"` avoids it.

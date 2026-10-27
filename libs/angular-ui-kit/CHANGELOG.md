@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.13.1] - 2026-10-27
+
+`lc-alert` fits a narrow container: below 16rem of inner width it switches to a narrow layout, and long words hyphenate or break instead of leaving the box (G-WL4; life-os website waitlist). No API breaks.
+
+### Fixed
+
+- **`lc-alert` in a narrow container** (G-WL4; the DE 503 answer of the life-os waitlist, an alert in `lc-next-step-card` `[slot='body']` at 320 px and 200 % text). The alert was 123 px wide there, and "Nicht eingetragen" ran 111.4 px past the alert box (EN "Not registered" 87.5 px). Now no text leaves the alert in DE, EN or without `lang` (0 px; the page stays 320 px wide). When the space inside the border is below 16rem (alerts under 258 px at 100 % text, 514 px at 200 %), the alert uses a narrow layout like `lc-next-step-card`:
+  - The icon shares the first row with the title. A title whose longest word doesn't fit beside the icon moves below it.
+  - The message and the actions take the full width below, starting at the inner edge. Inline buttons, text links (3.12) and stacked actions (3.3) all line up there, and their labels break within the line.
+  - The padding is one density step smaller (`--lc-density-padding-sm`: 12 px, 24 px at 200 %).
+  - Title and message use `overflow-wrap: break-word` and `hyphens: auto`. Hyphens need the page's `lang` (`<html lang="de">`); without one, a word wider than the line breaks without a hyphen.
+  - The × stays at the end of the first row, the same size as before.
+
+  DOM, roles and focus order are unchanged. In a 240 px side column at 100 % text a plain alert is 96 px tall (was 118.5).
+
+### Added
+
+- Stories: Feedback/Alert "Narrow Container at 200 % Text (G-WL4)", "Narrow Layout (phone at 200 % text)", "Narrow Layout in a Side Column (100 % text)".
+
+### Compatibility
+
+- No API breaks: no new input, slot, type or hook. Alerts at or above the threshold render as before: of 162 screenshots of the 27 stories that show an alert, the only alert change is the density docs' 51.3 px alerts at 360 px, which now use the narrow layout.
+- Every `lc-alert` is now a size container (`container: lc-alert / inline-size`; before, only stacked and text-link alerts were). In a shrink-to-fit box (`inline-block`, a float, an absolutely positioned box without a width, `width: fit-content`, a grid `auto` / `max-content` track) the alert no longer takes its width from its text, so give that box a width. A `position: fixed` descendant is placed relative to the alert, and the alert has no baseline for `align-items: baseline`.
+- Screenshot tests: the containment can change the anti-aliasing of text elsewhere on the page (seen on a breadcrumb beside the density docs' alerts). No box moves (0 of 249 measured).
+
+### Known
+
+- The wide layout (16rem and up) is unchanged, so long words there still depend on the available width. At 320 px and 100 % text, a long compound title such as "Benachrichtigungseinstellungen" in a 288 px dismissible alert runs 24 px under the ×. Word breaking in the wide layout is a follow-up.
+- Between 258 px and about 400 px at 100 % text, an inline button action still narrows the text column (61.7 px in a 288 px alert), as in 3.13.0. `actionsLayout="stacked"` avoids it.
+- In the narrow layout the stacked `lg` button labels break at the last letter that fits, not between syllables (for example "einrichte|n" at 360 px and 200 % text). Nothing leaves the box. A hyphenation hook for the narrow rows is a follow-up.
+- The × of a dismissible alert sets no `color`, so in the dark theme it takes the browser's button text colour (about 1.26:1 on the info fill). Pre-existing since before 3.13.0; a fix follows in a patch.
+
 ## [3.13.0] - 2026-10-25
 
 `lc-input` keeps its height when it shows an error, and the new `inverse` button variant gives a link button a visible boundary on the dark `lc-hero` bands (G-WL3, G-WL1; life-os website waitlist). No API breaks.
