@@ -42,6 +42,14 @@ metadata:
 
 - **Container queries and word breaking (018).** A query measures the content box, so a 1 px border moves `16rem` to 258 px (border-box). `hyphens: auto` lowers min-content to syllables ("Nicht eingetragen" 153 → 68 px), so a title hyphenates beside the icon instead of the AS-32 wrap. On a `lang="en"` canvas it changes wrapped lines in existing stories. `break-word` turns a 1 px overflow into a one-letter orphan ("fehlgeschlage|n"). Scope both to the narrow layout. `container-type` also brings layout containment (fixed descendants, no baseline). **It also changes the raster of text elsewhere on the page (018 r1).** Density side-by-side 1280 showed breadcrumb anti-aliasing diffs 850 px above the alerts, with 0 of 249 boxes moved. To prove the cause, inject `container-type: normal`; that restored the baseline hash. Don't write it off as font noise. **Check "the column is wide enough" claims against a 30-character compound** ("Benachrichtigungseinstellungen" is 218 px at 100 %) and against the controls beside the text (×, inline button) at 320 px / 100 %.
 
+- **Theme hooks and projected content (019).**
+  - Custom properties declared on an *inner* element (`.lc-sidenav--dark { --lc-sidenav-bg: … }`) override what an app sets on the host. A theme input therefore has to set private host variables that the public hooks read first.
+  - `--color-primary-100…900` flip in dark. For a theme-stable look use `--color-primary-fill(-hover/-active)` and `--color-on-primary`.
+  - Projected `[slot]` children don't carry the wrapper's `_ngcontent`, so `.wrapper > *` never matches them. Fill them through grid stretch on the wrapper instead.
+  - A `theme=` rail re-themes only what reads the sidenav hooks. Focus rings (`--color-primary-500`), the active bar and child components (lc-badge) follow the *page*, and themes are `:root`-only. So list the "light rail on a dark page" pair in §5 (019 r1 must-fix: ring 1.89).
+  - Moving the brand into a full-height rail (019 r2): spell out the header's title (page, not product) and its phone state in §8, or the story shows the name twice from 1024 px and none below. `.lc-sidenav__logo` keeps a 1 px border-bottom on the transparent variant, so it stops at the rail edge under a borderless header.
+  - In `--measure` CSS, write `~` for `;` and call `.replaceAll("~", String.fromCharCode(59))`, so the Bash checker passes.
+
 **Why:** each of these cost a round trip or would have broken the build.
 
 **How to apply:** name the relevant ones in the design's risk list.

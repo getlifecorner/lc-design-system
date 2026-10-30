@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.14.0] - 2026-10-30
+
+A sidebar-first shell: `lc-app-shell navPlacement="full-height"` runs the side navigation from the top to the bottom of the viewport, `lc-sidenav` shows a text brand and a collapse button, the shell background hooks are documented, and `lc-stat-trend` colours a change by its meaning (G1–G4; finance-intelligence app shell, docs/ux/gaps/app-shell-2026-10-30.md). No API breaks.
+
+### Added
+
+- **`lc-app-shell navPlacement`** (`'below-header'` | `'full-height'`, default `'below-header'`, G1). From 1024 px the nav is 240 × 900 at the top left (280 at 1920), stays at top 0 while the page scrolls, and the header starts beside it (x 240). Put the brand at the top of the rail (`lc-sidenav brandName` or `showLogo`, `logoSize` matching the header's `size`) and turn the header's logo off: the first item then sits at y 112, as below the header. The footer spans the full width with its content beside the nav; the horizon runs under a transparent nav. Below 1024 px both placements render the same (measured at 360 and 768); an empty nav falls back to one column. CSS only, holds in prerendered HTML.
+- **`lc-sidenav` text brand** (G2): `brandName`, `brandIcon` (or the first letter), `brandHref` (default `routerLink="/"`), `brandAriaLabel`. One home link, 44 px high, a 32 px tile on the icon column, the name in at most two lines (German names at 240 px: two lines, no overflow); it never toggles. Collapsed: the tile, with the name as tooltip and accessible name. In the drawer it shares the 64 px block with the close button.
+- **`lc-sidenav showCollapseToggle`** and **`expandAriaLabel`**: a 44 × 44 button at the bottom of a docked rail that collapses and expands it (labels `collapseAriaLabel` / `expandAriaLabel`, focus stays).
+- Hooks `--lc-sidenav-brand-tile-bg`, `--lc-sidenav-brand-tile-fg` (default `--color-primary-fill` / `--color-on-primary`) and `--lc-sidenav-active-indicator` (default `--color-primary-500`; `#208497` on a `theme="light"` rail). A petrol rail (`--lc-sidenav-bg: var(--color-primary-fill-active)`) measures text 8.51, name 12.1, active item 6.21, tile 6.21, focus ring 3.02 / 6.97 (light / dark).
+- **`lc-stat-trend sentiment`** (`'positive'` | `'negative'` | `'neutral'`, default unset) and **`labels`** (G4): the colour and the default sparkline follow the meaning, the arrow the direction ("Costs +3.1 %" negative = red). With a sentiment, screen readers hear "+3.1%, up, unfavourable" (German via `labels`: "+3,1 %, gestiegen, ungünstig").
+- **Documented:** `--lc-app-shell-bg` (default `var(--color-background)`) and `--lc-app-shell-bg-image` (default `var(--app-background-image, none)`) in the JSDoc, the app-shell docs and Colors › Page sky, with the land gradient example (G3).
+- Stories: Layout/App Shell "Full Height Nav", "Full Height Nav Horizon", "Tinted Background"; Navigation/Sidenav "Text Brand", "Text Brand Collapsed Vs Expanded", "Text Brand German", "Text Brand Drawer German"; Charts/Stat Trend "Costs", "Sentiment".
+
+### Fixed
+
+- **`lc-sidenav theme` no longer overrides the app's hooks.** `theme="dark"` plus `--lc-sidenav-bg` on `lc-sidenav` stayed #070e15; the theme values are now private host variables that every `--lc-sidenav-*` hook reads first. The collapsed-rail badge ring now follows `theme`.
+- **A `theme="light"` sidenav keeps visible focus rings and current-item bar on a dark page.** They took the page's `--color-primary-500` (#84c7d4): ring 1.89:1 on the white rail, bar 1.76:1 on the current item. A light rail now uses #208497 on any page: ring 4.37:1, bar 4.06:1. `theme="dark"` and `"auto"` are unchanged (dark rail 4.44 / 3.98 on a light page, 10.25 / 9.2 on a dark one).
+- **`lc-stat-trend` pills meet AA.** Up was 2.33:1 (light), down 1.98:1 (dark); now positive / up 4.85 · 6.25, negative / down 10.98 · 8.38, neutral 6.87 · 9.97 (light · dark).
+
+### Compatibility
+
+- No API breaks: every new input is optional and renders as before (Jest pins the default DOM, including the stat-trend text node). Of 270 screenshots of the shell, header, sidenav and stat-trend stories, only the stat-trend pills (42) and three collapsed-rail stories differ, as intended: the badge ring follows `theme`, and on a dark page the light rail's bar and focus ring are #208497.
+- For a theme-stable brand colour use `--color-primary-fill*` and `--color-on-primary`: the `--color-primary-100…900` scale inverts in dark.
+- Consumer check (AOT, strictTemplates, prerender) passes on Angular 21.0, 21.2, 22.0 and 22.2.
+
+### Known
+
+- With `navPlacement="full-height"` the header's logo is off, so below 1024 px, where the rail is hidden, no brand shows. The consuming app decides the phone header until the kit offers a way to keep the header logo below 1024 px only.
+- Because the brand sits in the rail, the header's `title` should name the page, not the product. The "Full Height Nav Horizon" story still repeats the product name in the header and the rail, and the brand block's bottom divider (1 px) ends at the rail edge under a header without a border. Both are story/docs polish for a later release.
+
 ## [3.13.1] - 2026-10-27
 
 `lc-alert` fits a narrow container: below 16rem of inner width it switches to a narrow layout, and long words hyphenate or break instead of leaving the box (G-WL4; life-os website waitlist). No API breaks.
