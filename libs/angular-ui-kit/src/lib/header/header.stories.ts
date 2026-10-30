@@ -52,6 +52,13 @@ const meta: Meta<HeaderComponent> = {
       description: 'Colour of the account avatar: `default` or a member colour `member-1` … `member-6` (white initials)',
       table: { defaultValue: { summary: 'default' } },
     },
+    userAvatarFallback: {
+      control: 'inline-radio',
+      options: ['initials', 'person'],
+      description:
+        "3.15: what the account avatars (the trigger and the menu header) show without a photo and without `userName`. `'initials'`: \"?\" (as before). `'person'`: a neutral person glyph. The trigger's accessible name stays `userMenuAriaLabel`",
+      table: { defaultValue: { summary: "'initials'" } },
+    },
     logo: { description: 'URL to a logo image' },
     logoSize: {
       control: 'select',
@@ -685,5 +692,51 @@ export const AvatarTriggerNames: Story = {
         }
       </div>`,
   }),
+};
+
+/** 3.15 (finance-intelligence app-shell-prove 5): a signed-in user without a profile name. */
+export const AvatarPersonFallback: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`userName=""` with an email and `userAvatarFallback="person"`: the trigger and the open menu show a person instead of "?", neutral although `userAvatarColor="member-2"` is set. The trigger is named `userMenuAriaLabel` ("Benutzermenü"), nothing added; the menu lists the email.',
+      },
+    },
+  },
+  args: {
+    title: 'Finance Intelligence',
+    titleTag: 'span',
+    size: 'md',
+    showLogo: false,
+    variant: 'transparent',
+    sticky: false,
+    userMenuTrigger: 'avatar',
+    userAvatarColor: 'member-2',
+    userAvatarFallback: 'person',
+    userName: '',
+    userEmail: 'r.berger@example.org',
+    userMenuAriaLabel: 'Benutzermenü',
+    menuSize: 'md',
+    profileLabel: 'Profil',
+    logoutLabel: 'Abmelden',
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div lang="de" style="max-width: 640px; height: 320px; background: var(--color-background); border: 1px solid var(--color-border); border-radius: 12px;">
+        <lc-header
+          [title]="title" [titleTag]="titleTag" [size]="size" [showLogo]="showLogo" [variant]="variant" [sticky]="sticky"
+          [userMenuTrigger]="userMenuTrigger" [userAvatarColor]="userAvatarColor" [userAvatarFallback]="userAvatarFallback"
+          [userName]="userName" [userEmail]="userEmail" [userMenuAriaLabel]="userMenuAriaLabel" [menuSize]="menuSize"
+          [profileLabel]="profileLabel" [logoutLabel]="logoutLabel" />
+      </div>`,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Benutzermenü' }));
+    await expect(canvas.getByRole('menu')).toBeTruthy();
+    await expect(canvasElement.querySelectorAll('.lc-avatar--person').length).toBe(2);
+  },
 };
 

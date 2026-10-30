@@ -2,7 +2,9 @@ import type { Meta, StoryObj } from '@storybook/angular';
 import { moduleMetadata } from '@storybook/angular';
 import { AppShellComponent } from './app-shell.component';
 import { AppPageComponent } from './app-page.component';
+import type { AppPagePaddingTop, AppPagePaddingX } from './app-page.component';
 import { HeaderComponent } from '../header/header.component';
+import { PageHeaderComponent } from '../page-header/page-header.component';
 import { SidenavComponent } from '../sidenav/sidenav.component';
 import { SidenavPlaceholderComponent } from '../sidenav-placeholder/sidenav-placeholder.component';
 import { BottomNavComponent } from '../bottom-nav/bottom-nav.component';
@@ -77,6 +79,7 @@ const meta: Meta<AppShellComponent> = {
       imports: [
         AppPageComponent, HeaderComponent, SidenavComponent, SidenavPlaceholderComponent, BottomNavComponent,
         AvatarGroupComponent, ListComponent, SkeletonComponent, FooterComponent, CharacterComponent,
+        PageHeaderComponent,
       ],
     }),
   ],
@@ -125,6 +128,23 @@ Input \`navPlacement="full-height"\` (3.14) runs the \`[shell-nav]\` column from
 Input \`horizon\` closes the page with the horizon block (\`.lc-horizon\`, from the kit's styles). Its land is 112 px on a phone (more under a bar taller than 72 px, by the difference: 3.10.1, AS-31) and 72 · 80 · 96 · 128 px from 1024 · 1280 · 1440 · 1920 px (3.9, LK-12; \`--lc-horizon-land\`). With a \`[shell-footer]\` the footer's height is added below that, so a page with a footer needs no override: \`--lc-horizon-land\` is the land above the footer. The horizon is \`aria-hidden\` (decoration): a figure in it gets \`alt=""\` and nothing focusable; the footer is outside it and stays reachable.
 
 **\`lc-app-page\`** — the page inside the shell: \`<main [id]="mainId">\` (default \`main\`) with the content as a column (24 px apart, 40 px from 1024 px), centred and at most \`contentMaxWidth\` wide (880 px; side padding 24 · 32 · 48 · 56 · 72 · 96 px). \`[page-aside]\` is the right column: an \`<aside>\` after \`<main>\`, docked to the window's right edge from 1280 px (360 · 400 · 460 px; \`--lc-app-page-aside-width\`) with a fading tint and hairline that start behind the header (set a changed \`--lc-app-page-aside-width\` on the shell, so both parts line up), hidden below 1280 px (show a narrow equivalent inside main). It renders only with \`asideLabelledby\` or \`asideAriaLabel\`.
+
+Inputs \`paddingX\` and \`paddingTop\` (3.15) line a page up with the header. \`paddingX="header"\` takes \`lc-header\`'s padding (16 px up to 768 px, 24 px above), so the content starts at the header title's x and ends at the user menu's right edge; combine it with \`contentMaxWidth="none"\` (or a page narrower than the cap), because centred content doesn't align. \`paddingTop\` sets the space above the content: \`'none'\` 0, \`'sm'\` 8 px, \`'md'\` 16 px at every width; with \`lc-page-header paddingTop="none"\` the \`h1\` sits 16 px below the header. Both default to \`'default'\` (the steps above).
+
+**\`lc-app-page\` CSS hooks** (set them on \`lc-app-page\` or any ancestor; each wins over the inputs and holds one value at every width):
+| Hook | Default | What |
+|---|---|---|
+| \`--lc-app-page-padding-x\` | \`paddingX\`: 24 · 32 · 48 · 56 · 72 · 96 px, or the header's 16 / 24 px | the side padding of \`<main>\` |
+| \`--lc-app-page-padding-top\` | \`paddingTop\`: 24 · 32 · 48 · 56 · 72 · 112 px, or 0 / 8 / 16 px | the space above the content |
+| \`--lc-app-page-gap\` | \`24px\` (\`40px\` from 1024) | the space between the content's children |
+| \`--lc-app-page-aside-width\` | \`360px\` (\`400px\` from 1440, \`460px\` from 1920) | the right column |
+
+For a value per breakpoint, set the hook inside your own media query (story *Page Padding Per Breakpoint*). A fixed 16 / 32 px does **not** line up with the header, which pads 16 / 24 px: at 1280 px the \`h1\` would start 8 px right of the header title. Use \`paddingX="header"\` for alignment and the hook for any other value.
+
+\`\`\`css
+lc-app-page { --lc-app-page-padding-x: 16px; }
+@media (min-width: 1024px) { lc-app-page { --lc-app-page-padding-x: 32px; } }
+\`\`\`
 
 \`busy\` marks the page as loading: \`aria-busy="true"\` on its \`<main>\` while \`true\`, no attribute while \`false\` (default). Set it while a skeleton stands in for the content. Screen readers may hold back changes inside a busy region until it clears, so a loading message that must be heard belongs outside \`<main>\` (for example a \`.sr-only\` \`role="status"\` next to the page, in the shell's default slot) or is static text such as a \`.sr-only\` line inside the page, read when reached. No visual change (3.5, AS-12).
 
@@ -645,5 +665,154 @@ export const TodayLargeText: LargeTextStory = {
     template: `
       <div lang="de" [attr.data-lc-story-text]="textSize">${today()}</div>
       ${largeTextStyle}`,
+  }),
+};
+
+/** The texts of the state pages, by locale (3.15, finance-intelligence app-shell-prove). */
+const statePageTexts = {
+  de: {
+    title: 'Noch keine Rolle',
+    message: 'Ihrem Konto ist noch keine Rolle zugeordnet. Bitte wenden Sie sich an die Administration.',
+    signOut: 'Abmelden',
+    menu: 'Benutzermenü',
+  },
+  en: {
+    title: 'No role yet',
+    message: 'Your account has no role yet. Please contact your administration.',
+    signOut: 'Sign out',
+    menu: 'User menu',
+  },
+};
+
+/**
+ * A state page without a nav column (as on "sign-in failed"): `lc-header` md
+ * without a logo and a user menu without a name, and `lc-app-page` lined up
+ * with the header (`paddingX`, `paddingTop`, `contentMaxWidth="none"`).
+ * `body` goes into the page; `pageAttrs` onto `lc-app-page`.
+ */
+const statePage = (body: string, pageAttrs = '') => `
+  <div [attr.lang]="locale">
+    <lc-app-shell>
+      <lc-header shell-header size="md" variant="transparent" [sticky]="false" [showLogo]="false"
+                 title="Finance Intelligence" titleTag="span" userMenuTrigger="avatar" userName=""
+                 userAvatarFallback="person" [userMenuAriaLabel]="t.menu" [logoutLabel]="t.signOut" />
+      <lc-app-page [paddingX]="paddingX" [paddingTop]="paddingTop" contentMaxWidth="none"${pageAttrs}>
+        ${body}
+      </lc-app-page>
+    </lc-app-shell>
+  </div>`;
+
+const statePageAlignedTemplate = statePage(`
+        <lc-page-header size="comfortable" [noPaddingX]="true" paddingTop="none" [title]="t.title" />
+        <lc-empty-state icon="user-x" iconTone="primary" messageSize="md" [message]="t.message">
+          <lc-button variant="outline" tone="primary" size="lg">
+            <lc-icon slot="icon-before" name="logout" size="sm" [decorative]="true" />
+            {{ t.signOut }}
+          </lc-button>
+        </lc-empty-state>`);
+
+const statePageLoadingTemplate = statePage(
+  `
+        <lc-page-header size="comfortable" [noPaddingX]="true" paddingTop="none">
+          <lc-skeleton slot="breadcrumbs" width="12rem" height="2.375rem" />
+        </lc-page-header>`,
+  ' [busy]="true"',
+);
+
+type StatePageStory = StoryObj<AppShellComponent & { locale: 'de' | 'en'; paddingX: AppPagePaddingX; paddingTop: AppPagePaddingTop }>;
+
+const statePageArgTypes: StatePageStory['argTypes'] = {
+  locale: {
+    control: 'inline-radio',
+    options: ['de', 'en'],
+    description: 'Language of the story texts (`lang` on the wrapper). German is the longer one.',
+    table: { defaultValue: { summary: "'de'" } },
+  },
+  paddingX: {
+    control: 'inline-radio',
+    options: ['default', 'header'],
+    description:
+      "`lc-app-page` side padding. `'header'`: `lc-header`'s padding (16 px up to 768 px, 24 px above), so the `h1` starts at the header title's x. `'default'`: 24 · 32 · 48 · 56 · 72 · 96 px by width",
+    table: { defaultValue: { summary: "'default'" } },
+  },
+  paddingTop: {
+    control: 'inline-radio',
+    options: ['default', 'none', 'sm', 'md'],
+    description: "`lc-app-page` space above the content: `'none'` 0, `'sm'` 8 px, `'md'` 16 px at every width; `'default'`: 24 · 32 · 48 · 56 · 72 · 112 px by width",
+    table: { defaultValue: { summary: "'default'" } },
+  },
+};
+
+/**
+ * The state page of finance-intelligence (3.15, app-shell-prove 1–6): header,
+ * `h1` and empty state on one left edge, 16 px below the header.
+ */
+export const StatePageAligned: StatePageStory = {
+  args: { locale: 'de', paddingX: 'header', paddingTop: 'md' },
+  argTypes: statePageArgTypes,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`lc-app-page paddingX="header" paddingTop="md" contentMaxWidth="none"` with `lc-page-header size="comfortable" [noPaddingX]="true" paddingTop="none"`: the `h1` starts at the header title\'s x (16 px at 360, 24 px from 769 px) and 16 px below the header. The empty state has `iconTone="primary"` (a 48 px circle), `messageSize="md"` (16/24 text, 24 px before the action) and an outline button with `tone="primary"`. The header trigger has no name, so `userAvatarFallback="person"` shows a person instead of "?"; its accessible name stays `userMenuAriaLabel`.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: { ...args, t: statePageTexts[args.locale] },
+    template: statePageAlignedTemplate,
+  }),
+};
+
+/**
+ * The same state page while it loads: a skeleton in the page header's
+ * breadcrumbs slot starts where the `h1` will (same `paddingTop`), in a busy page.
+ */
+export const StatePageLoading: StatePageStory = {
+  args: { locale: 'de', paddingX: 'header', paddingTop: 'md' },
+  argTypes: statePageArgTypes,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The frame of *State Page Aligned* while the page loads: `lc-page-header paddingTop="none"` with an `lc-skeleton slot="breadcrumbs"` (12rem × 2.375rem, the `h1`\'s line) and no title, so the skeleton\'s top is the `h1`\'s top; `lc-app-page [busy]="true"`.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: { ...args, t: statePageTexts[args.locale] },
+    template: statePageLoadingTemplate,
+  }),
+};
+
+/**
+ * A page padding per breakpoint through the documented hook: 16 px, 32 px
+ * from 1024 px, set in the app's own CSS (here a `<style>` in the story).
+ */
+export const PagePaddingPerBreakpoint: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The app sets `--lc-app-page-padding-x` itself, one value per media query: `lc-app-page { --lc-app-page-padding-x: 16px }` and `@media (min-width: 1024px) { lc-app-page { --lc-app-page-padding-x: 32px } }`. The hook wins over `paddingX` at every width. The header pads 16 / 24 px, so from 769 px the `h1` starts 8 px right of the header title; for alignment use `paddingX="header"` (*State Page Aligned*).',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <lc-app-shell class="story-page-padding">
+        <lc-header shell-header size="md" variant="transparent" [sticky]="false" [showLogo]="false"
+                   title="Finance Intelligence" titleTag="span" userMenuTrigger="avatar" userName="Rita Berger"
+                   userMenuAriaLabel="Menü für Rita Berger" />
+        <lc-app-page contentMaxWidth="none">
+          <h1 style="margin: 0; font-size: 30px; line-height: 1.25; color: var(--color-text-primary);">Berichte</h1>
+          ${placeholder('‹Seiteninhalt: 16 px Rand, 32 px ab 1024 px›', 240)}
+        </lc-app-page>
+      </lc-app-shell>
+      <style>
+        .story-page-padding lc-app-page { --lc-app-page-padding-x: 16px; }
+        @media (min-width: 1024px) { .story-page-padding lc-app-page { --lc-app-page-padding-x: 32px; } }
+      </style>`,
   }),
 };

@@ -162,7 +162,8 @@ hidden below 1024 px, so on a phone the trigger never fires and the sidenav's Ja
   never inside it when it is swapped. The landmark, \`aria-current\` and the tab order arrive with \`lc-sidenav\`.
   Static: no shimmer, nothing for reduced motion to stop.
 - CSS hook: \`--lc-sidenav-placeholder-fill\` (default \`color-mix(in srgb, var(--lc-sidenav-fg) 16%, transparent)\`),
-  \`GrayText\` in forced colours. The \`--lc-sidenav-*\` hooks apply as on \`lc-sidenav\` (set them on an ancestor of both).
+  \`GrayText\` in forced colours. The \`--lc-sidenav-*\` colour hooks apply as on \`lc-sidenav\`: set them on the element or
+  any ancestor (3.15), e.g. one rule on an ancestor of both; a value on the element wins, and both win over \`theme\`.
 `,
       },
     },
@@ -197,4 +198,52 @@ export const SectionsGroupsAndLogo: Story = {
   name: 'Sections, groups and logo',
   args: { items: sectioned, activeRoute: '/money/accounts', showLogo: true },
   render: (args) => ({ props: args, template: pair() }),
+};
+
+/**
+ * One placeholder and one sidenav with a `theme`, in 150 px columns (a
+ * pair fits 360 px); `elementStyle` goes onto both elements (an override
+ * on the element).
+ */
+const hookPair = (theme: string, caption: string, elementStyle = '') => `
+  <figure style="margin: 0;">
+    <div style="display: flex; gap: 12px;">
+      <div style="height: 320px; width: 150px;">
+        <lc-sidenav-placeholder [items]="items" activeRoute="/" [isOpen]="true" width="100%" theme="${theme}"${elementStyle} />
+      </div>
+      <div style="height: 320px; width: 150px;">
+        <lc-sidenav mode="docked" [mobileBreakpoint]="0" [items]="items" activeRoute="/" [isOpen]="true" width="100%" theme="${theme}"${elementStyle} />
+      </div>
+    </div>
+    <figcaption style="font-size: 12px; color: var(--color-text-tertiary); margin-top: 8px;">${caption}</figcaption>
+  </figure>`;
+
+/**
+ * 3.15 (finance-intelligence app-shell-prove 7): the nine colour hooks set
+ * once on an ancestor reach the placeholder and the sidenav, whatever their `theme`.
+ */
+export const HooksOnAnAncestor: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'One wrapper sets all nine colour hooks: `--lc-sidenav-bg: var(--color-primary-fill-active)`, `--lc-sidenav-hover-bg: var(--color-primary-fill-hover)`, `--lc-sidenav-active-bg: var(--color-primary-fill)`, `--lc-sidenav-fg`, `-fg-active`, `-section-fg`, `-active-fg` and `-active-icon: var(--color-on-primary)`, `--lc-sidenav-border: transparent`. Placeholder (left) and sidenav (right) with `theme` `dark`, `light` and `auto` all take them (white on `#0d353d`, 13.18:1). The last pair is `dark` with `--lc-sidenav-bg: var(--color-primary-fill)` on the elements themselves: a value on the element wins over the ancestor, and both win over `theme`.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div style="--lc-sidenav-bg: var(--color-primary-fill-active); --lc-sidenav-hover-bg: var(--color-primary-fill-hover);
+                  --lc-sidenav-active-bg: var(--color-primary-fill); --lc-sidenav-fg: var(--color-on-primary);
+                  --lc-sidenav-fg-active: var(--color-on-primary); --lc-sidenav-section-fg: var(--color-on-primary);
+                  --lc-sidenav-active-fg: var(--color-on-primary); --lc-sidenav-active-icon: var(--color-on-primary);
+                  --lc-sidenav-border: transparent;
+                  display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start;">
+        ${hookPair('dark', 'theme="dark", hooks on the ancestor')}
+        ${hookPair('light', 'theme="light", hooks on the ancestor')}
+        ${hookPair('auto', 'theme="auto", hooks on the ancestor')}
+        ${hookPair('dark', 'theme="dark", --lc-sidenav-bg on the element', ' style="--lc-sidenav-bg: var(--color-primary-fill)"')}
+      </div>`,
+  }),
 };

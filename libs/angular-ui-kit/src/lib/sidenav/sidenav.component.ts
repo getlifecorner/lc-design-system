@@ -66,8 +66,11 @@ export type SidenavVariant = 'default' | 'transparent';
  * - Optional backdrop overlay
  * - Theme variants: auto, light, dark (with teal accent for dark mode). The
  *   theming hooks (`--lc-sidenav-bg`, `-fg`, `-fg-active`, `-border`,
- *   `-hover-bg`, `-section-fg`, `-active-bg`, `-active-fg`, `-active-icon`)
- *   set on `lc-sidenav` win over `theme` (3.14); `--lc-sidenav-active-indicator`
+ *   `-hover-bg`, `-section-fg`, `-active-bg`, `-active-fg`, `-active-icon`,
+ *   `-badge-ring`) can be set on `lc-sidenav` or any ancestor (3.15); a value
+ *   on the element wins over an ancestor's, and both win over `theme` (3.14).
+ *   Set the same ones for `lc-sidenav-placeholder`, e.g. on a shared ancestor;
+ *   `--lc-sidenav-active-indicator`
  *   (the current item's 2 px bar, default `--color-primary-500`; on a
  *   `theme="light"` rail #208497 on any page, like its focus rings),
  *   `--lc-sidenav-brand-tile-bg` (default `--color-primary-fill`) and

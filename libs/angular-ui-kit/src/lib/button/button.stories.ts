@@ -43,6 +43,13 @@ same variants and sizes and works without JavaScript (see **Components / Button 
         'Visual style variant. `inverse` (3.13, G-WL1): a white pill with dark ink and a white focus ring for dark, coloured or image backgrounds that don\'t follow the theme, such as the default `lc-hero` bands; the same in both themes. CSS hook `--lc-button-inverse-fg` (default `#0d353d`) sets its ink',
       table: { defaultValue: { summary: 'primary' } },
     },
+    tone: {
+      control: 'inline-radio',
+      options: ['neutral', 'primary'],
+      description:
+        "3.15: the colour of `variant=\"outline\"`. `'neutral'`: as before. `'primary'`: border `--color-primary-600`, text `--color-primary-700` (≥ 7.86:1 text, ≥ 5.34:1 border in both themes), hover `--color-surface-selected`, pressed `--color-primary-200`. Ignored on the other variants",
+      table: { defaultValue: { summary: "'neutral'" } },
+    },
     size: {
       control: 'select',
       options: ['xs', 'sm', 'md', 'lg'],
@@ -556,6 +563,45 @@ export const DestructiveAction: Story = {
           <lc-icon slot="icon-before" name="trash" size="sm"></lc-icon>
           Delete Account
         </lc-button>
+      </div>`,
+  }),
+};
+
+/** 3.15 (finance-intelligence app-shell-prove 6): `tone="primary"` on the outline variant. */
+export const OutlinePrimaryTone: Story = {
+  args: { tone: 'primary' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Row 1: `variant="outline"` with the default `tone="neutral"`. Row 2: the same with the control\'s `tone` (`primary`: border `--color-primary-600`, text `--color-primary-700`; hover `--color-surface-selected`, pressed `--color-primary-200`). Each row: sm, md, lg, lg with an icon, disabled, loading. Row 3: `tone` on `variant="primary"` is ignored. The geometry, focus ring and spinner are unchanged.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    moduleMetadata: { imports: [IconComponent] },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+          <lc-button variant="outline" size="sm">Abmelden</lc-button>
+          <lc-button variant="outline" size="md">Abmelden</lc-button>
+          <lc-button variant="outline" size="lg">Abmelden</lc-button>
+          <lc-button variant="outline" size="lg"><lc-icon slot="icon-before" name="logout" size="sm" [decorative]="true" />Abmelden</lc-button>
+          <lc-button variant="outline" size="lg" [disabled]="true">Abmelden</lc-button>
+          <lc-button variant="outline" size="lg" [loading]="true">Abmelden</lc-button>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+          <lc-button variant="outline" [tone]="tone" size="sm">Abmelden</lc-button>
+          <lc-button variant="outline" [tone]="tone" size="md">Abmelden</lc-button>
+          <lc-button variant="outline" [tone]="tone" size="lg">Abmelden</lc-button>
+          <lc-button variant="outline" [tone]="tone" size="lg"><lc-icon slot="icon-before" name="logout" size="sm" [decorative]="true" />Abmelden</lc-button>
+          <lc-button variant="outline" [tone]="tone" size="lg" [disabled]="true">Abmelden</lc-button>
+          <lc-button variant="outline" [tone]="tone" size="lg" [loading]="true">Abmelden</lc-button>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+          <lc-button variant="primary" [tone]="tone" size="lg">Abmelden</lc-button>
+        </div>
       </div>`,
   }),
 };

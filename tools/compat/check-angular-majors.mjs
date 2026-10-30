@@ -297,6 +297,18 @@ const EXPECT_IN_HTML = [
   ['sidenav text brand: one plain link home, tile hidden, name as text (G2)', /<a(?=[^>]*\sclass="lc-sidenav__brand")(?=[^>]*\shref="\/")(?=[^>]*\saria-label="Finance Intelligence – Startseite")[^>]*>(?:(?!<\/a>)[^])*?<span(?=[^>]*\sclass="lc-sidenav__brand-tile")(?=[^>]*\saria-hidden="true")[^>]*>(?:(?!<\/a>)[^])*?<span[^>]*\sclass="lc-sidenav__brand-name"[^>]*>Finance Intelligence<\/span>/],
   // The hidden text follows the change without a space (review r1 N2: "+3,1 % , gestiegen").
   ['stat-trend sentiment: negative class and the hidden text (G4)', /<span(?=[^>]*\sclass="lc-stat-trend__change lc-stat-trend__change--negative")[^>]*>(?:<!--[^]*?-->|\s)*<span(?=[^>]*\sclass="lc-stat-trend__icon")(?=[^>]*\saria-hidden="true")[^>]*>↑<\/span>(?:<!--[^]*?-->|[^<])*\+3,1 %(?:<!--[^]*?-->)*<span[^>]*\sclass="lc-stat-trend__sr-only"[^>]*>, gestiegen, ungünstig<\/span>/],
+  // 3.15 (request 020, probe-315.ts): the state page's modifiers are classes in
+  // the server HTML and the person glyph is the template's SVG, final before JS
+  ['app page lined up with the header: pad-x-header, pad-top-md (app-shell-prove 1–2)', /<lc-app-page(?=[^>]*\sid="compat-page-315")[^>]*>(?:<!--[^]*?-->|\s)*<div(?=[^>]*\sclass="[^"]*\blc-app-page--pad-x-header\b)(?=[^>]*\sclass="[^"]*\blc-app-page--pad-top-md\b)[^>]*>/],
+  ['page header pad-top-none (app-shell-prove 2)', /<lc-page-header(?=[^>]*\sid="compat-page-header-315")(?=[^>]*\sclass="[^"]*\blc-page-header--pad-top-none\b)[^>]*>/],
+  ['empty state: tone-primary circle, message-md (app-shell-prove 3–4)', /<lc-empty-state(?=[^>]*\sid="compat-empty-315")[^>]*>(?:<!--[^]*?-->|\s)*<div(?=[^>]*\sclass="[^"]*\bempty-state--tone-primary\b)(?=[^>]*\sclass="[^"]*\bempty-state--message-md\b)[^>]*>(?:<!--[^]*?-->|\s)*<span(?=[^>]*\sclass="empty-state__icon empty-state__icon--primary")(?=[^>]*\saria-hidden="true")[^>]*>/],
+  ['outline btn-tone-primary on a button and a link (app-shell-prove 6)', (html) => /<lc-button(?=[^>]*\sid="compat-tone-315")[^>]*>(?:<!--[^]*?-->|\s)*<button(?=[^>]*\sclass="[^"]*\bbtn-outline\b)(?=[^>]*\sclass="[^"]*\bbtn-tone-primary\b)[^>]*>/.test(html)
+    && /<a(?=[^>]*\sid="compat-tone-link-315")(?=[^>]*\sclass="[^"]*\bbtn-outline\b)(?=[^>]*\sclass="[^"]*\bbtn-tone-primary\b)[^>]*>/.test(html)],
+  ['avatar lc-avatar--person with the template SVG, alone and in the header trigger (app-shell-prove 5)', (html) => {
+    const person = '<div(?=[^>]*\\sclass="[^"]*\\blc-avatar--person\\b)[^>]*>(?:<!--[^]*?-->|\\s)*<svg(?=[^>]*\\sclass="lc-avatar__person")(?=[^>]*\\saria-hidden="true")(?=[^>]*\\sfocusable="false")[^>]*>(?:<!--[^]*?-->|\\s)*<path[^>]*\\sd="M7\\.5 6a4\\.5';
+    return new RegExp(`<lc-avatar(?=[^>]*\\sid="compat-avatar-315")[^>]*>(?:<!--[^]*?-->|\\s)*${person}`).test(html)
+      && new RegExp(`<button(?=[^>]*lc-header__profile-trigger--avatar)(?=[^>]*\\saria-label="Benutzermenü")[^>]*>(?:<!--[^]*?-->|\\s)*<lc-avatar[^>]*>(?:<!--[^]*?-->|\\s)*${person}`).test(html);
+  }],
 ];
 
 /**

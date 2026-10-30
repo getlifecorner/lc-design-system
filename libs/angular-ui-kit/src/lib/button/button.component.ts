@@ -23,6 +23,12 @@ export type ButtonVariant =
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 export type ButtonType = 'button' | 'submit' | 'reset';
 
+/**
+ * Colour tone of `variant="outline"` (3.15). `primary`: text and border in the
+ * primary colour. Other variants ignore it.
+ */
+export type ButtonTone = 'neutral' | 'primary';
+
 @Component({
   selector: 'lc-button',
   standalone: true,
@@ -70,6 +76,15 @@ export class ButtonComponent {
    * @default 'primary'
    */
   readonly variant = input<ButtonVariant>('primary');
+
+  /**
+   * Colour tone of `variant="outline"`: `'primary'` sets text and border to
+   * the primary colour (`--color-primary-700` / `-600`; hover
+   * `--color-surface-selected`, active `--color-primary-200`). Other variants
+   * ignore it.
+   * @default 'neutral'
+   */
+  readonly tone = input<ButtonTone>('neutral');
   readonly size = input<ButtonSize>('md');
   readonly disabled = input(false);
   readonly loading = input(false);

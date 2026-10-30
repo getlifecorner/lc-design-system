@@ -18,7 +18,7 @@ import { ButtonComponent } from '@lifecorner/angular-ui-kit/button';
 import { LogoComponent } from '@lifecorner/angular-ui-kit/logo';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
 import { ICON_BARS_3, ICON_CHEVRON_DOWN, ICON_LOGOUT, ICON_MOON, ICON_SUN, ICON_USER } from '@lifecorner/angular-ui-kit/icons';
-import { AvatarColor, AvatarComponent, ɵavatarInitials } from '@lifecorner/angular-ui-kit/avatar';
+import { AvatarColor, AvatarComponent, AvatarFallback, ɵavatarInitials } from '@lifecorner/angular-ui-kit/avatar';
 import { MenuComponent, MenuItem } from '@lifecorner/angular-ui-kit/menu';
 import { ThemeService } from '@lifecorner/angular-ui-kit/theme';
 import { nameWithText } from '@lifecorner/angular-ui-kit/internal/a11y';
@@ -84,7 +84,8 @@ export type HeaderUserMenuTrigger = 'icon' | 'avatar';
  *   cannot stay over scrolling text).
  * - `userMenuTrigger="avatar"`: the account button is the person's initials
  *   avatar (`userAvatarColor` for the member colour, `userAvatarSrc` for a
- *   photo) in a 48 px round button; the icon trigger is 44 px high in every
+ *   photo, `userAvatarFallback="person"` for a person symbol while there is
+ *   no name) in a 48 px round button; the icon trigger is 44 px high in every
  *   density.
  * - The subtitle (e.g. a household name) stays on one line and ends with "…";
  *   the full text is its `title` and stays in the accessible text. It is shown
@@ -221,6 +222,13 @@ export class HeaderComponent {
   readonly userAvatarSrc = input('');
   /** Colour of the account avatar's initials: `default` or a member colour `member-1` … `member-6`. */
   readonly userAvatarColor = input<AvatarColor>('default');
+  /**
+   * Passed to the trigger avatar and the menu avatar as `fallback` (3.15):
+   * `person` shows a person symbol on a neutral disc instead of "?" while
+   * `userName` is empty.
+   * @default 'initials'
+   */
+  readonly userAvatarFallback = input<AvatarFallback>('initials');
   readonly showHamburger = input(false);
   /**
    * Open state of the sidenav the hamburger controls. When bound, the toggle

@@ -24,7 +24,8 @@
     'btn-icon-only': iconOnly(),
     'btn-full-width': fullWidth(),
     'btn-inline': inline(),
-    'btn-flush': flush()
+    'btn-flush': flush(),
+    'btn-tone-primary': variant() === 'outline' && tone() === 'primary'
   }"
   (click)="handleClick()"
   (focus)="handleFocus()"

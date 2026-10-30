@@ -2,9 +2,10 @@
  * lc-app-page (LK-6): <main> centred at a reading width, and the optional
  * right column docked to the window's right edge from 1280 px.
  *
- * Hooks: --lc-app-page-padding-x, --lc-app-page-padding-top,
- * --lc-app-page-gap, --lc-app-page-aside-width; the content cap comes from the
- * `contentMaxWidth` input (--lc-app-page-content-max).
+ * Public hooks (documented in the component JSDoc, 3.15): --lc-app-page-padding-x,
+ * --lc-app-page-padding-top, --lc-app-page-gap, --lc-app-page-aside-width; each
+ * holds one value at every width and wins over the inputs. The content cap
+ * comes from the `contentMaxWidth` input (--lc-app-page-content-max).
  */
 
 :host {
@@ -101,6 +102,31 @@
     --_pad-top: var(--lc-app-page-padding-top, 112px);
     --_aside-width: var(--lc-app-page-aside-width, 460px);
   }
+}
+
+// paddingX="header" (3.15): lc-header's padding (16 px up to 768 px, 24 px
+// above, the same density vars), so the content lines up with the header title
+// and the user menu. (0,2,0) beats every breakpoint block; the hook still wins.
+.lc-app-page.lc-app-page--pad-x-header {
+  --_pad-x: var(--lc-app-page-padding-x, var(--lc-density-padding-lg, var(--spacing-6)));
+
+  @media (max-width: 768px) {
+    --_pad-x: var(--lc-app-page-padding-x, var(--lc-density-padding-md, var(--spacing-4)));
+  }
+}
+
+// paddingTop (3.15): one value at every width. `0px`, not `0`: the right
+// column computes `calc(var(--_pad-top) - 32px)`, where a unitless 0 is invalid.
+.lc-app-page.lc-app-page--pad-top-none {
+  --_pad-top: var(--lc-app-page-padding-top, 0px);
+}
+
+.lc-app-page.lc-app-page--pad-top-sm {
+  --_pad-top: var(--lc-app-page-padding-top, var(--spacing-2));
+}
+
+.lc-app-page.lc-app-page--pad-top-md {
+  --_pad-top: var(--lc-app-page-padding-top, var(--spacing-4));
 }
 
 @media (forced-colors: active) {

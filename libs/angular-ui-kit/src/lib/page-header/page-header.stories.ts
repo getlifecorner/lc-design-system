@@ -63,6 +63,7 @@ Empty slots collapse automatically — they do not produce phantom gaps.
 | \`size\` | \`'compact' \\| 'secondary' \\| 'default' \\| 'comfortable' \\| 'title' \\| 'display' \\| 'auth'\` | \`'default'\` | Visual scale of the whole block |
 | \`badge\` | \`string\` | — | Pill rendered next to the title (e.g. \`Beta\`, \`New\`) |
 | \`showDivider\` | \`boolean\` | \`false\` | Render a border-bottom divider below the header |
+| \`paddingTop\` | \`'default' \\| 'none' \\| 'sm' \\| 'md'\` | \`'default'\` | 3.15: only the top padding: the size's (\`'default'\`), 0, 8 or 16 px. The bottom keeps the size's padding |
 
 ---
 
@@ -164,6 +165,13 @@ input for a header-specific override.
       options: ['sm', 'md'],
       description: 'Size of the leading icon tile.',
       table: { defaultValue: { summary: 'md' } },
+    },
+    paddingTop: {
+      control: 'inline-radio',
+      options: ['default', 'none', 'sm', 'md'],
+      description:
+        "3.15: the top padding only. `'default'`: the size's padding (e.g. 40 px for `comfortable`); `'none'` 0, `'sm'` 8 px, `'md'` 16 px. The bottom keeps the size's padding.",
+      table: { defaultValue: { summary: "'default'" } },
     },
   },
 };
@@ -632,5 +640,31 @@ export const LargeText: LargeTextStory = {
         ${largeTextHeaders('en', 'Hello, Johanna-Friederike', 'Household', 'Invite', 'Sign in to LifeCorner')}
       </div>
       <style>::ng-deep html:has(#storybook-root [data-lc-story-text="200%"]) { font-size: 200%; }</style>`,
+  }),
+};
+
+/**
+ * 3.15 (finance-intelligence app-shell-prove 2): `paddingTop` sets only the
+ * top padding; the bottom keeps the size's padding.
+ */
+export const PaddingTop: Story = {
+  args: { paddingTop: 'md' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Four `size="comfortable"` headers, each in a 1 px dashed frame: `paddingTop` `default` (40 px, the size\'s padding), `none` (0), `sm` (8 px) and `md` (16 px; the control sets this frame). The bottom stays 40 px. With `lc-app-page paddingTop="md"`, `paddingTop="none"` puts the `h1` 16 px below the app header (*Layout/App Shell → State Page Aligned*).',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="border: 1px dashed var(--color-border-strong);"><lc-page-header title="Standard" subtitle="paddingTop: default" size="comfortable" /></div>
+        <div style="border: 1px dashed var(--color-border-strong);"><lc-page-header title="Ohne Abstand" subtitle="paddingTop: none" size="comfortable" paddingTop="none" /></div>
+        <div style="border: 1px dashed var(--color-border-strong);"><lc-page-header title="Klein" subtitle="paddingTop: sm" size="comfortable" paddingTop="sm" /></div>
+        <div style="border: 1px dashed var(--color-border-strong);"><lc-page-header title="Mittel" subtitle="paddingTop: {{ paddingTop }}" size="comfortable" [paddingTop]="paddingTop" /></div>
+      </div>`,
   }),
 };

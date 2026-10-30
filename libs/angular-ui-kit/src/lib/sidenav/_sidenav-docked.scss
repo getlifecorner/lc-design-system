@@ -30,34 +30,33 @@
   }
 }
 
-// Theming hooks live on the HOST, not on the inner .lc-sidenav element, so an
-// app can retheme the rail with an ordinary rule on `lc-sidenav` (qualified by
-// anything — `.light lc-sidenav`, `[data-shell] lc-sidenav`). While these sat
-// on the inner element, an app had to target `lc-sidenav .lc-sidenav` to reach
-// past the component's own specificity.
+// The public colour hooks (`--lc-sidenav-bg`, `-fg`, `-fg-active`, `-border`,
+// `-hover-bg`, `-section-fg`, `-active-bg`, `-active-fg`, `-active-icon`,
+// `-badge-ring`) are NOT declared by the kit (020). Their defaults are private
+// host variables (`--_lc-sidenav-t-*`) and every read is
+// `var(--lc-sidenav-X, var(--_lc-sidenav-t-X))`, so an app's value reaches the
+// rail from `lc-sidenav` or any ancestor, the element's own value wins, and both
+// win over `theme`. Until 3.14 the hooks were declared on `:host`, which beat
+// every value an ancestor set (the placeholder stayed #070e15 under
+// `theme="dark"`). The geometry vars stay on the host.
 @mixin host-tokens {
   :host {
-    // DS2.0 dark-first: default sidenav tokens are the brand dark surface.
+    // DS2.0 dark-first: the auto defaults are the brand dark surface.
     // `theme="light"` opts back into the light treatment, and `"dark"` forces
-    // the dark rail even under a light root. Their values are private host
-    // variables (`--_lc-sidenav-t-*`, see `themes`) that each hook reads
-    // first, so an app's `--lc-sidenav-*` on `lc-sidenav` still wins (019).
-    --lc-sidenav-bg: var(--_lc-sidenav-t-bg, var(--color-sidebar, var(--color-surface)));
-    --lc-sidenav-fg: var(--_lc-sidenav-t-fg, var(--color-text-secondary));
-    --lc-sidenav-fg-active: var(--_lc-sidenav-t-fg-active, var(--color-text-primary));
-    --lc-sidenav-border: var(--_lc-sidenav-t-border, var(--color-border));
-    --lc-sidenav-hover-bg: var(--_lc-sidenav-t-hover-bg, var(--color-surface-hover));
-    --lc-sidenav-section-fg: var(--_lc-sidenav-t-section-fg, var(--color-text-tertiary));
-    --lc-sidenav-active-bg: var(--_lc-sidenav-t-active-bg, var(--color-surface-selected));
+    // the dark rail even under a light root (`themes` overrides these).
+    --_lc-sidenav-t-bg: var(--color-sidebar, var(--color-surface));
+    --_lc-sidenav-t-fg: var(--color-text-secondary);
+    --_lc-sidenav-t-fg-active: var(--color-text-primary);
+    --_lc-sidenav-t-border: var(--color-border);
+    --_lc-sidenav-t-hover-bg: var(--color-surface-hover);
+    --_lc-sidenav-t-section-fg: var(--color-text-tertiary);
+    --_lc-sidenav-t-active-bg: var(--color-surface-selected);
     // AS-4 (a): the selected tint's own ink. `--color-primary-500` gave
     // 4.06:1 on the light tint and failed WCAG 1.4.3.
-    --lc-sidenav-active-fg: var(--_lc-sidenav-t-active-fg, var(--color-on-surface-selected, var(--color-link)));
-    --lc-sidenav-active-icon: var(--_lc-sidenav-t-active-icon, var(--color-on-surface-selected, var(--color-link)));
-    // Backdrop + ring behind the collapsed-rail count badge. Must stay opaque:
-    // it is what the badge variant's translucent tint composites over, and what
-    // separates the badge from the icon it sits on. Follows --lc-sidenav-bg, so
-    // the light/dark modifiers below carry it automatically.
-    --lc-sidenav-badge-ring: var(--lc-sidenav-bg);
+    --_lc-sidenav-t-active-fg: var(--color-on-surface-selected, var(--color-link));
+    --_lc-sidenav-t-active-icon: var(--color-on-surface-selected, var(--color-link));
+    // The collapsed-rail badge's backdrop and ring (`--lc-sidenav-badge-ring`)
+    // has no default of its own: it reads --lc-sidenav-bg, then the theme's bg.
 
     // ── Icon-column geometry ───────────────────────────────────────────────
     // Expanded and collapsed deliberately SHARE these gutters, so the nav icons
@@ -76,9 +75,9 @@
 
 @mixin host-tokens-boxes {
   :host {
-    --lc-sidenav-bg: var(--_lc-sidenav-t-bg, var(--color-sidebar, var(--color-surface)));
-    --lc-sidenav-fg: var(--_lc-sidenav-t-fg, var(--color-text-secondary));
-    --lc-sidenav-border: var(--_lc-sidenav-t-border, var(--color-border));
+    --_lc-sidenav-t-bg: var(--color-sidebar, var(--color-surface));
+    --_lc-sidenav-t-fg: var(--color-text-secondary);
+    --_lc-sidenav-t-border: var(--color-border);
     --lc-sidenav-rail-width: 56px;
     --lc-sidenav-nav-padding-x: 0.5rem;
     --lc-sidenav-item-padding-x: 0.625rem;
@@ -90,7 +89,7 @@
   position: fixed;
   top: 0;
   bottom: 0;
-  background-color: var(--lc-sidenav-bg);
+  background-color: var(--lc-sidenav-bg, var(--_lc-sidenav-t-bg));
   box-shadow: var(--elevation-3, 0 10px 15px -3px rgba(0, 0, 0, 0.1));
   z-index: 1001;
   display: flex;
@@ -110,7 +109,7 @@
 
 // Inside `.lc-sidenav`, for a rail that is always docked: the panel's box and surface.
 @mixin panel-boxes {
-  background-color: var(--lc-sidenav-bg);
+  background-color: var(--lc-sidenav-bg, var(--_lc-sidenav-t-bg));
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -119,7 +118,7 @@
   &--docked {
     position: static;
     height: 100%;
-    border-right: 1px solid var(--lc-sidenav-border, #e5e7eb);
+    border-right: 1px solid var(--lc-sidenav-border, var(--_lc-sidenav-t-border, #e5e7eb));
 
     &:not(.lc-sidenav--open) {
       width: 0 !important;
@@ -136,7 +135,7 @@
     z-index: auto;
     height: 100%;
     box-shadow: none;
-    border-right: 1px solid var(--lc-sidenav-border, #e5e7eb);
+    border-right: 1px solid var(--lc-sidenav-border, var(--_lc-sidenav-t-border, #e5e7eb));
     transform: translateX(0);
     transition: width 0.3s ease, transform 0.3s ease;
 
@@ -225,7 +224,7 @@
     justify-content: space-between;
     gap: var(--spacing-3);
     padding: 0 var(--spacing-4);
-    border-bottom: 1px solid var(--lc-sidenav-border);
+    border-bottom: 1px solid var(--lc-sidenav-border, var(--_lc-sidenav-t-border));
     min-height: 64px;
     flex-shrink: 0;
 
@@ -285,7 +284,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--lc-sidenav-section-fg);
+    color: var(--lc-sidenav-section-fg, var(--_lc-sidenav-t-section-fg));
     line-height: 28px;
   }
 
@@ -416,11 +415,11 @@
   }
 }
 
-// The theme values live on the HOST as private variables (019). Until 3.13
-// they were the public hooks themselves, set on the inner `.lc-sidenav--light`
-// / `--dark`: that overrode an app's hooks on `lc-sidenav` (`theme="dark"` plus
-// a petrol `--lc-sidenav-bg` stayed #070e15), and the badge ring, which reads
-// `--lc-sidenav-bg` on the host, kept the auto colour. The inner classes stay.
+// The theme values live on the HOST as private variables (019), behind every
+// public hook (see `host-tokens`). Until 3.13 they were the public hooks
+// themselves, set on the inner `.lc-sidenav--light` / `--dark`: that overrode
+// an app's hooks on `lc-sidenav` (`theme="dark"` plus a petrol `--lc-sidenav-bg`
+// stayed #070e15), and the badge ring kept the auto colour. The inner classes stay.
 @mixin themes {
   // ── Light theme opt-in ─────────────────────────
   // DS2.0 is dark-first, so the default sidenav is dark. This modifier restores

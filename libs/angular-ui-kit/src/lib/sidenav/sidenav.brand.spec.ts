@@ -225,7 +225,9 @@ describe('SidenavComponent text brand (019)', () => {
       expect(tile).toContain('background-color: var(--lc-sidenav-brand-tile-bg, var(--color-primary-fill))');
       expect(tile).toContain('color: var(--lc-sidenav-brand-tile-fg, var(--color-on-primary))');
       expect(tile).toContain('width: 32px');
-      expect(ruleOf(css, '.lc-sidenav__brand')).toContain('color: var(--lc-sidenav-fg-active)');
+      // 020: hooks are no longer declared on `:host`, so ancestor values reach
+      // the rail; the read falls back to the theme's private variable.
+      expect(ruleOf(css, '.lc-sidenav__brand')).toContain('color: var(--lc-sidenav-fg-active, var(--_lc-sidenav-t-fg-active))');
       expect(css).toMatch(
         /\n\.lc-sidenav__brand:focus-visible \{\s*outline: 2px solid var\(--_lc-sidenav-t-accent, var\(--color-primary-500\)\);\s*outline-offset: 2px;/,
       );
@@ -290,9 +292,14 @@ describe('SidenavComponent text brand (019)', () => {
       expect(dark).toContain('--_lc-sidenav-t-bg: #070e15');
       expect(dark).not.toMatch(/\s--lc-sidenav-/);
       expect(ruleOf(css, ':host(.lc-sidenav-container--light)')).toContain('--_lc-sidenav-t-bg: #ffffff');
+      // 020: hooks are no longer declared on `:host`, so ancestor values reach
+      // the rail. The host holds each hook's auto default as the private
+      // variable, which every read of the hook falls back to.
       const host = ruleOf(css, ':host');
       for (const hook of ['bg', 'fg', 'fg-active', 'border', 'hover-bg', 'section-fg', 'active-bg', 'active-fg', 'active-icon']) {
-        expect(host).toContain(`--lc-sidenav-${hook}: var(--_lc-sidenav-t-${hook}, `);
+        expect(host).toContain(`--_lc-sidenav-t-${hook}: var(--color-`);
+        expect(host).not.toContain(`--lc-sidenav-${hook}:`);
+        expect(css).toContain(`var(--lc-sidenav-${hook}, var(--_lc-sidenav-t-${hook}`);
       }
       // No rule on the inner element redefines a public hook for a theme.
       expect(css).not.toMatch(/\n\.lc-sidenav--(dark|light) \{/);

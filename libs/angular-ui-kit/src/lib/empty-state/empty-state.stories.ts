@@ -24,6 +24,20 @@ const meta: Meta<EmptyStateComponent> = {
       options: ['sm', 'md', 'lg'],
       description: 'Controls icon size and text sizing',
     },
+    iconTone: {
+      control: 'inline-radio',
+      options: ['neutral', 'primary'],
+      description:
+        "3.15: how the icon is drawn. `'neutral'`: the bare icon (40 px, `--color-text-tertiary`). `'primary'`: a 24 px icon in a 48 px circle (`--color-primary-100`, icon `--color-primary-700`; 7.85:1 light, 9.68:1 dark). Decorative in both",
+      table: { defaultValue: { summary: "'neutral'" } },
+    },
+    messageSize: {
+      control: 'inline-radio',
+      options: ['sm', 'md'],
+      description:
+        "3.15: the text scale, independent of `size` (the padding). `'sm'`: as before (14 px message). `'md'`: the state-page scale: 16/24 message up to 32rem wide, 20 px heading, 16 px below the icon, 24 px before the action",
+      table: { defaultValue: { summary: "'sm'" } },
+    },
   },
 
   parameters: {
@@ -119,6 +133,70 @@ export const InCard: Story = {
           icon="clock"
           size="sm"
         ></lc-empty-state>
+      </div>`,
+  }),
+};
+
+/**
+ * 3.15 (finance-intelligence app-shell-prove 3): the neutral icon (left)
+ * next to the primary circle (right) at every size.
+ */
+export const PrimaryTone: Story = {
+  args: { iconTone: 'primary', messageSize: 'sm' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`iconTone` `'neutral'` (left, the default) and the control's value (right, `'primary'`: a 24 px icon in a 48 px `--color-primary-100` circle, icon `--color-primary-700`) at `size` sm, md and lg. The circle is `aria-hidden`; the icon is decorative in both tones. `messageSize` applies to the right column.",
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; max-width: 880px;">
+        <div style="border: 1px solid var(--color-border); border-radius: 8px;"><lc-empty-state heading="Keine Belege" message="Hier erscheinen Ihre Belege." icon="inbox" size="sm" /></div>
+        <div style="border: 1px solid var(--color-border); border-radius: 8px;"><lc-empty-state heading="Keine Belege" message="Hier erscheinen Ihre Belege." icon="inbox" size="sm" [iconTone]="iconTone" [messageSize]="messageSize" /></div>
+        <div style="border: 1px solid var(--color-border); border-radius: 8px;"><lc-empty-state heading="Keine Belege" message="Hier erscheinen Ihre Belege." icon="inbox" size="md" /></div>
+        <div style="border: 1px solid var(--color-border); border-radius: 8px;"><lc-empty-state heading="Keine Belege" message="Hier erscheinen Ihre Belege." icon="inbox" size="md" [iconTone]="iconTone" [messageSize]="messageSize" /></div>
+        <div style="border: 1px solid var(--color-border); border-radius: 8px;"><lc-empty-state heading="Keine Belege" message="Hier erscheinen Ihre Belege." icon="inbox" size="lg" /></div>
+        <div style="border: 1px solid var(--color-border); border-radius: 8px;"><lc-empty-state heading="Keine Belege" message="Hier erscheinen Ihre Belege." icon="inbox" size="lg" [iconTone]="iconTone" [messageSize]="messageSize" /></div>
+      </div>`,
+  }),
+};
+
+/**
+ * 3.15 (finance-intelligence app-shell-prove 3–4): the state page's empty
+ * state, without a heading (the page's `h1` names it) and with one.
+ */
+export const StatePage: Story = {
+  args: { iconTone: 'primary', messageSize: 'md' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`iconTone=\"primary\"` with `messageSize=\"md\"`: the message 16/24 (up to 32rem), 16 px between circle and text, 24 px before the action, which is an `lc-button variant=\"outline\" tone=\"primary\" size=\"lg\"`. First without a heading (the page's `h1` names the state), then with the long compound \"Zugriffsberechtigungsverwaltung\" as the heading (20 px). German strings; check them at 360 px.",
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 32px; max-width: 880px;">
+        <lc-empty-state icon="user-x" [iconTone]="iconTone" [messageSize]="messageSize"
+                        message="Ihrem Konto ist noch keine Rolle zugeordnet. Bitte wenden Sie sich an die Administration.">
+          <lc-button variant="outline" tone="primary" size="lg">
+            <lc-icon slot="icon-before" name="logout" size="sm" [decorative]="true" />
+            Abmelden
+          </lc-button>
+        </lc-empty-state>
+        <lc-empty-state icon="user-x" [iconTone]="iconTone" [messageSize]="messageSize" heading="Zugriffsberechtigungsverwaltung"
+                        message="Ihrem Konto ist noch keine Rolle zugeordnet. Bitte wenden Sie sich an die Administration.">
+          <lc-button variant="outline" tone="primary" size="lg">
+            <lc-icon slot="icon-before" name="logout" size="sm" [decorative]="true" />
+            Abmelden
+          </lc-button>
+        </lc-empty-state>
       </div>`,
   }),
 };

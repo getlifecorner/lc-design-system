@@ -26,6 +26,14 @@ import { IconComponent } from '@lifecorner/angular-ui-kit/icon';
 export type PageHeaderSize = 'compact' | 'secondary' | 'default' | 'comfortable' | 'title' | 'display' | 'auth';
 
 /**
+ * Space above the page header's content (3.15).
+ * - `default` — the size's block padding (24 px; `comfortable` 40, `compact`
+ *               and `secondary` 12)
+ * - `none` 0 · `sm` 8 px · `md` 16 px
+ */
+export type PageHeaderPaddingTop = 'default' | 'none' | 'sm' | 'md';
+
+/**
  * Page header — top-of-page title block with optional subtitle,
  * breadcrumbs, badge, description and an actions area.
  *
@@ -150,6 +158,15 @@ export class PageHeaderComponent {
   noPaddingX = input<boolean>(false);
 
   /**
+   * Space above the header content. `'default'`: the size's block padding
+   * (24, comfortable 40, compact/secondary 12). `'none'` 0, `'sm'` 8 px,
+   * `'md'` 16 px. The bottom padding is unchanged. Use `'none'` with
+   * `lc-app-page` `paddingTop="md"` to put the `h1` 16 px below `lc-header`.
+   * @default 'default'
+   */
+  paddingTop = input<PageHeaderPaddingTop>('default');
+
+  /**
    * Classes of the heading: the global type-scale class (`lc-title`,
    * `lc-display`, `lc-auth-title`) joins the component class for the 3.3 sizes.
    */
@@ -169,6 +186,7 @@ export class PageHeaderComponent {
       this.showDivider() ? 'lc-page-header--divided' : null,
       this.overline() ? 'lc-page-header--has-overline' : null,
       this.noPaddingX() ? 'lc-page-header--flush-x' : null,
+      this.paddingTop() !== 'default' ? `lc-page-header--pad-top-${this.paddingTop()}` : null,
     ]
       .filter(Boolean)
       .join(' '),

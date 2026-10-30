@@ -86,10 +86,13 @@ describe('SidenavComponent — app shell (AS-4, LK-8)', () => {
 
   describe('AS-4', () => {
     it('(a) inks the current item with the selected tint’s own colour, not primary-500', () => {
-      // 019: the hooks read the theme's private host variable first (unset for
-      // theme="auto"), so the auto ink is still the selected tint's own colour.
-      expect(scss).toMatch(/--lc-sidenav-active-fg: var\(--_lc-sidenav-t-active-fg, var\(--color-on-surface-selected, var\(--color-link\)\)\);/);
-      expect(scss).toMatch(/--lc-sidenav-active-icon: var\(--_lc-sidenav-t-active-icon, var\(--color-on-surface-selected, var\(--color-link\)\)\);/);
+      // 020: hooks are no longer declared on `:host`, so ancestor values reach
+      // the rail. The auto default is the private host variable, and it is
+      // still the selected tint's own colour; every read falls back to it.
+      expect(scss).toMatch(/--_lc-sidenav-t-active-fg: var\(--color-on-surface-selected, var\(--color-link\)\);/);
+      expect(scss).toMatch(/--_lc-sidenav-t-active-icon: var\(--color-on-surface-selected, var\(--color-link\)\);/);
+      expect(scss).toMatch(/color: var\(--lc-sidenav-active-fg, var\(--_lc-sidenav-t-active-fg\)\);/);
+      expect(scss).toMatch(/color: var\(--lc-sidenav-active-icon, var\(--_lc-sidenav-t-active-icon\)\);/);
       expect(scss).not.toMatch(/--lc-sidenav-active-fg: var\(--color-primary-500\)/);
       // "Weite" light values: ink #144F5B on the pill #E0F1F4; the fallback --color-link #1A6A79 on the old tint #F0F8FA.
       expect(contrast('#144f5b', '#e0f1f4')).toBeGreaterThanOrEqual(4.5);

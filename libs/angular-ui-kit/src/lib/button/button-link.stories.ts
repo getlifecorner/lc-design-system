@@ -28,7 +28,7 @@ links to social profiles.
   markup is a plain \`<a class="btn btn-primary btn-lg" href="…">\`, so it works with
   JavaScript disabled. \`routerLink\` may sit on the same anchor for in-app navigation.
 - Same variants (\`primary | secondary | outline | ghost | link | danger | warning | info | inverse\`),
-  sizes (\`xs | sm | md | lg\`) and modifiers (\`fullWidth\`, \`iconOnly\`, \`inline\`, \`flush\`) as
+  sizes (\`xs | sm | md | lg\`) and modifiers (\`fullWidth\`, \`iconOnly\`, \`inline\`, \`flush\`, \`tone\` since 3.15) as
   \`lc-button\`, from the same stylesheet. Icon slots: \`[slot='icon-before']\`,
   \`[slot='icon-after']\`.
 - Labels wrap instead of overflowing the viewport (WCAG 1.4.10 reflow).
@@ -48,6 +48,13 @@ height + 2 × 1 px border) and meets the 44 px target; \`md\` is 42 px, \`sm\` 3
       description:
         'Visual style variant (same as lc-button). `inverse` (3.13, G-WL1): a white pill with dark ink and a white focus ring for dark, coloured or image backgrounds that don\'t follow the theme, such as the default `lc-hero` bands; the same in both themes. CSS hook `--lc-button-inverse-fg` (default `#0d353d`) sets its ink',
       table: { defaultValue: { summary: 'primary' } },
+    },
+    tone: {
+      control: 'inline-radio',
+      options: ['neutral', 'primary'],
+      description:
+        "3.15 (same as lc-button): the colour of `variant=\"outline\"`. `'neutral'`: as before. `'primary'`: border `--color-primary-600`, text `--color-primary-700`, hover `--color-surface-selected`, pressed `--color-primary-200`. Ignored on the other variants",
+      table: { defaultValue: { summary: "'neutral'" } },
     },
     size: {
       control: 'select',
@@ -356,5 +363,39 @@ export const OverlongWord: StoryObj<ButtonLinkComponent & { textSize: StoryTextS
         ${overlongWordBlock('en', 'Privacy statement')}
       </div>
       <style>::ng-deep html:has(#storybook-root [data-lc-story-text="200%"]) { font-size: 200%; }</style>`,
+  }),
+};
+
+/** 3.15 (finance-intelligence app-shell-prove 6): `tone="primary"` on an outline link. */
+export const OutlinePrimaryTone: Story = {
+  args: { tone: 'primary' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Row 1: `a[lcButton] variant="outline"` with the default `tone="neutral"`. Row 2: the same with the control\'s `tone` (`primary`: border `--color-primary-600`, text `--color-primary-700`; hover `--color-surface-selected`, pressed `--color-primary-200`). Each row: sm, md, lg, lg with an icon; a link has no disabled or loading state (see *Components / Button → Outline Primary Tone*). Row 3: `tone` on `variant="primary"` is ignored.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+          <a lcButton variant="outline" size="sm" href="#abmelden">Abmelden</a>
+          <a lcButton variant="outline" size="md" href="#abmelden">Abmelden</a>
+          <a lcButton variant="outline" size="lg" href="#abmelden">Abmelden</a>
+          <a lcButton variant="outline" size="lg" href="#abmelden"><lc-icon slot="icon-before" name="logout" size="sm" [decorative]="true" />Abmelden</a>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+          <a lcButton variant="outline" [tone]="tone" size="sm" href="#abmelden">Abmelden</a>
+          <a lcButton variant="outline" [tone]="tone" size="md" href="#abmelden">Abmelden</a>
+          <a lcButton variant="outline" [tone]="tone" size="lg" href="#abmelden">Abmelden</a>
+          <a lcButton variant="outline" [tone]="tone" size="lg" href="#abmelden"><lc-icon slot="icon-before" name="logout" size="sm" [decorative]="true" />Abmelden</a>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+          <a lcButton variant="primary" [tone]="tone" size="lg" href="#abmelden">Abmelden</a>
+        </div>
+      </div>`,
   }),
 };

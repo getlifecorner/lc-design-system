@@ -30,6 +30,14 @@ export type AvatarColor =
   | 'member-5'
   | 'member-6';
 
+/**
+ * What `lc-avatar` shows with no image and no name (3.15).
+ * - `initials`: "?"
+ * - `person`: a person symbol on a neutral disc (`--color-neutral-300`, glyph
+ *   `--color-neutral-700`; `color` is ignored while it shows)
+ */
+export type AvatarFallback = 'initials' | 'person';
+
 /** The six member colours in their order (`AvatarColor` without `default`). */
 export const AVATAR_MEMBER_COLORS: readonly AvatarColor[] = [
   'member-1',
@@ -86,6 +94,8 @@ export function ɵavatarInitials(name: string | undefined): string {
  * - `ring`: a gap in the page colour around the avatar, for stacks and for
  *   avatars on images or tints
  * - Accessible with alt text support
+ * - `fallback="person"`: a person symbol on a neutral disc instead of "?"
+ *   when there is no name (3.15)
  *
  * @example
  * ```html
@@ -153,9 +163,23 @@ export class AvatarComponent {
   decorative = input<boolean>(false);
 
   /**
+   * What shows with no image and no name: `'initials'` shows "?"; `'person'`
+   * shows a person symbol on a neutral disc (`color` is ignored while it
+   * shows). With a `name`, both show the initials. The accessible name stays
+   * `alt`, then `name`, then "Avatar".
+   * @default 'initials'
+   */
+  fallback = input<AvatarFallback>('initials');
+
+  /**
    * Computed initials from name
    */
   initials = computed(() => ɵavatarInitials(this.name()));
+
+  /** The person symbol: `fallback="person"`, no image (or a broken one) and no name. */
+  protected readonly showPerson = computed(
+    () => this.fallback() === 'person' && !this.showImage() && !this.name()?.trim(),
+  );
 
   /**
    * Computed CSS classes for the avatar
@@ -169,7 +193,9 @@ export class AvatarComponent {
       classes.push('lc-avatar--with-status');
     }
 
-    if (this.color() !== 'default') {
+    if (this.showPerson()) {
+      classes.push('lc-avatar--person');
+    } else if (this.color() !== 'default') {
       classes.push('lc-avatar--member', `lc-avatar--${this.color()}`);
     }
 

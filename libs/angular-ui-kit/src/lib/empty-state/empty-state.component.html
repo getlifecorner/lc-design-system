@@ -1,5 +1,10 @@
 <div [class]="hostClasses()" role="status">
-  @if (icon()) {
+  <!-- One @if chain, so the neutral icon keeps its DOM (one anchor, the
+       lc-icon a direct child). The primary circle sets its colours in CSS, so
+       it renders under `style-src 'self'`. -->
+  @if (icon() && iconTone() === 'primary') {
+    <span class="empty-state__icon empty-state__icon--primary" aria-hidden="true"><lc-icon [name]="icon()!" size="md" [decorative]="true" /></span>
+  } @else if (icon()) {
     <lc-icon [name]="icon()!" size="xl" color="var(--color-text-tertiary)" [decorative]="true" />
   }
   @if (heading()) {

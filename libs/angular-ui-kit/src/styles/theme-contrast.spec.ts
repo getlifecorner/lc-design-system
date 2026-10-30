@@ -228,3 +228,55 @@ describe('Theme contrast (WCAG 2.2 AA)', () => {
     }
   });
 });
+
+// Request 020: the pairings the new component options read, computed from the
+// theme tokens (no new token). The outline tint is the button stylesheet's own.
+describe('Component pairings of 3.15 (request 020)', () => {
+  const buttonCss = compile(resolve(__dirname, '../lib/button/button.component.scss')).css;
+  const tint = parse(buttonCss.match(/\n\.btn-outline \{[^}]*background-color: (rgba\([^)]+\))/)?.[1] ?? '');
+  const pages = ['--color-background', '--color-land-1', '--color-land-3', '--color-surface'];
+
+  /** Design 020 §5, per palette: [light, dark]. */
+  const expected = {
+    emptyStateIcon: [7.85, 9.68],
+    avatarGlyph: [7.0, 6.1],
+    outlineActiveText: [6.71, 6.71],
+  };
+
+  describe.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('%s palette', (_palette, tokens, i) => {
+    /** A token's colour, translucent ones composited over `base`. */
+    const solid = (name: string, base = '--color-background') => over(color(tokens, name), color(tokens, base));
+
+    it('AC-8: the primary empty-state icon on its circle (--color-primary-700 on -100)', () => {
+      const r = ratio(solid('--color-primary-700'), solid('--color-primary-100'));
+      expect(r).toBeCloseTo(expected.emptyStateIcon[i], 2);
+      expect(r).toBeGreaterThanOrEqual(3);
+    });
+
+    it('AC-12: the avatar person glyph on its disc (--color-neutral-700 on -300)', () => {
+      const r = ratio(solid('--color-neutral-700'), solid('--color-neutral-300'));
+      expect(r).toBeCloseTo(expected.avatarGlyph[i], 2);
+      expect(r).toBeGreaterThanOrEqual(3);
+    });
+
+    it.each(pages)('AC-13: outline primary at rest on %s: text 4.5:1 on the tint, border 3:1', (page) => {
+      const ground = solid(page);
+      expect(ratio(solid('--color-primary-700'), over(tint, ground))).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(solid('--color-primary-600'), ground)).toBeGreaterThanOrEqual(3);
+    });
+
+    it.each(pages)('AC-13: outline primary on hover over %s: text 4.5:1 on --color-surface-selected, border 3:1', (page) => {
+      const fill = solid('--color-surface-selected', page);
+      expect(ratio(solid('--color-primary-700'), fill)).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(solid('--color-primary-600'), solid(page))).toBeGreaterThanOrEqual(3);
+    });
+
+    it('AC-13: outline primary active: text on --color-primary-200 and the border beside it', () => {
+      const fill = solid('--color-primary-200');
+      const text = ratio(solid('--color-primary-700'), fill);
+      expect(text).toBeCloseTo(expected.outlineActiveText[i], 2);
+      expect(text).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(solid('--color-primary-600'), fill)).toBeGreaterThanOrEqual(3);
+    });
+  });
+});

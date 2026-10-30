@@ -187,10 +187,10 @@ The header sets internal CSS tokens that you can override without touching globa
 
 ```html
 <!-- Always dark sidenav with light page -->
-<lc-sidenav [theme]="'dark'" [isOpenInput]="true" modeInput="docked"></lc-sidenav>
+<lc-sidenav [theme]="'dark'" [isOpen]="true" mode="docked"></lc-sidenav>
 ```
 
-Internal tokens:
+Colour hooks. Set them on `lc-sidenav` or any ancestor (3.15): a value on the element wins over an ancestor's, and both win over `theme`. `lc-sidenav-placeholder` reads the same hooks, so one rule on an ancestor of both recolours the rail and its placeholder alike.
 
 | Token | Purpose |
 |---|---|
@@ -200,6 +200,18 @@ Internal tokens:
 | `--lc-sidenav-border` | Border color |
 | `--lc-sidenav-hover-bg` | Item hover background |
 | `--lc-sidenav-section-fg` | Section title color |
+| `--lc-sidenav-active-bg` | Current item background |
+| `--lc-sidenav-active-fg` | Current item text color |
+| `--lc-sidenav-active-icon` | Current item icon color |
+| `--lc-sidenav-badge-ring` | Backdrop and ring of a badge on the collapsed rail (default: the rail background) |
+
+```css
+/* A petrol rail for the sidenav and its placeholder; theme-stable tokens only */
+.app-nav {
+  --lc-sidenav-bg: var(--color-primary-fill-active);
+  --lc-sidenav-border: transparent;
+}
+```
 
 ### Logo
 

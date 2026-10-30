@@ -120,8 +120,8 @@
       display: flex;
       margin-left: 0;
       border-radius: var(--border-radius-full, 9999px);
-      background-color: var(--lc-sidenav-badge-ring);
-      box-shadow: 0 0 0 2px var(--lc-sidenav-badge-ring);
+      background-color: var(--lc-sidenav-badge-ring, var(--lc-sidenav-bg, var(--_lc-sidenav-t-bg)));
+      box-shadow: 0 0 0 2px var(--lc-sidenav-badge-ring, var(--lc-sidenav-bg, var(--_lc-sidenav-t-bg)));
       // Never swallow hover from the item — the collapsed rail shows its label
       // tooltip on item hover.
       pointer-events: none;
@@ -140,7 +140,7 @@
   min-width: 0;
   max-width: 100%;
   text-decoration: none;
-  color: var(--lc-sidenav-fg);
+  color: var(--lc-sidenav-fg, var(--_lc-sidenav-t-fg));
   background: transparent;
   border: none;
   padding: 0;
@@ -162,14 +162,14 @@
   border: none;
   border-radius: var(--border-radius-md, 0.375rem);
   background: transparent;
-  color: var(--lc-sidenav-fg);
+  color: var(--lc-sidenav-fg, var(--_lc-sidenav-t-fg));
   opacity: 0.8;
   flex-shrink: 0;
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
 
   &:hover {
-    background-color: var(--lc-sidenav-hover-bg);
+    background-color: var(--lc-sidenav-hover-bg, var(--_lc-sidenav-t-hover-bg));
     opacity: 1;
   }
 
@@ -224,7 +224,7 @@
 .lc-sidenav__nav-item {
   @include docked.item;
   text-decoration: none;
-  color: var(--lc-sidenav-fg);
+  color: var(--lc-sidenav-fg, var(--_lc-sidenav-t-fg));
   border-radius: var(--border-radius-md, 0.375rem);
   transition: background-color 0.2s ease, color 0.2s ease;
   font-size: var(--font-size-sm, 0.875rem);
@@ -232,8 +232,8 @@
   cursor: pointer;
 
   &:hover {
-    background-color: var(--lc-sidenav-hover-bg);
-    color: var(--lc-sidenav-fg-active);
+    background-color: var(--lc-sidenav-hover-bg, var(--_lc-sidenav-t-hover-bg));
+    color: var(--lc-sidenav-fg-active, var(--_lc-sidenav-t-fg-active));
   }
 
   &:focus-visible {
@@ -247,8 +247,8 @@
   // announced and what is shown agree even before the router has matched.
   &--active,
   &[aria-current='page'] {
-    background-color: var(--lc-sidenav-active-bg);
-    color: var(--lc-sidenav-active-fg);
+    background-color: var(--lc-sidenav-active-bg, var(--_lc-sidenav-t-active-bg));
+    color: var(--lc-sidenav-active-fg, var(--_lc-sidenav-t-active-fg));
     font-weight: 600;
     // Hook (019): the bar's colour, e.g. white when --lc-sidenav-active-bg is
     // close to primary-500 (a petrol rail). Default: the theme's accent
@@ -256,22 +256,22 @@
     box-shadow: inset 2px 0 0 var(--lc-sidenav-active-indicator, var(--_lc-sidenav-t-accent, var(--color-primary-500)));
 
     .lc-sidenav__nav-icon {
-      color: var(--lc-sidenav-active-icon);
+      color: var(--lc-sidenav-active-icon, var(--_lc-sidenav-t-active-icon));
     }
 
     &:hover {
-      background-color: var(--lc-sidenav-active-bg);
-      color: var(--lc-sidenav-active-fg);
+      background-color: var(--lc-sidenav-active-bg, var(--_lc-sidenav-t-active-bg));
+      color: var(--lc-sidenav-active-fg, var(--_lc-sidenav-t-active-fg));
     }
   }
 
   // Parent has an active child — subtle text color only, no background
   &--has-active-child {
-    color: var(--lc-sidenav-fg-active);
+    color: var(--lc-sidenav-fg-active, var(--_lc-sidenav-t-fg-active));
     font-weight: 600;
 
     .lc-sidenav__nav-icon {
-      color: var(--lc-sidenav-fg-active);
+      color: var(--lc-sidenav-fg-active, var(--_lc-sidenav-t-fg-active));
     }
   }
 }
@@ -359,13 +359,13 @@
   background: transparent;
   border: none;
   border-radius: var(--border-radius-sm, 0.25rem);
-  color: var(--lc-sidenav-section-fg);
+  color: var(--lc-sidenav-section-fg, var(--_lc-sidenav-t-section-fg));
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease;
 
   &:hover {
-    background-color: var(--lc-sidenav-hover-bg);
-    color: var(--lc-sidenav-fg-active);
+    background-color: var(--lc-sidenav-hover-bg, var(--_lc-sidenav-t-hover-bg));
+    color: var(--lc-sidenav-fg-active, var(--_lc-sidenav-t-fg-active));
   }
 
   &:focus-visible {
@@ -499,12 +499,12 @@
   box-sizing: border-box;
   padding: var(--spacing-1-5, 0.375rem) var(--spacing-2, 0.5rem) var(--spacing-1-5, 0.375rem) var(--spacing-1, 0.25rem);
   border-radius: var(--border-radius-md, 0.75rem);
-  color: var(--lc-sidenav-fg-active);
+  color: var(--lc-sidenav-fg-active, var(--_lc-sidenav-t-fg-active));
   text-decoration: none;
   transition: background-color 0.2s ease;
 
   &:hover {
-    background-color: var(--lc-sidenav-hover-bg);
+    background-color: var(--lc-sidenav-hover-bg, var(--_lc-sidenav-t-hover-bg));
   }
 
   &:focus-visible {
@@ -548,7 +548,7 @@
   display: flex;
   flex-shrink: 0;
   margin-top: auto;
-  border-top: 1px solid var(--lc-sidenav-border);
+  border-top: 1px solid var(--lc-sidenav-border, var(--_lc-sidenav-t-border));
   padding: var(--spacing-2, 0.5rem) calc(var(--lc-sidenav-nav-padding-x) - 2px);
 }
 
@@ -563,12 +563,12 @@
   border: none;
   border-radius: var(--border-radius-md, 0.75rem);
   background: transparent;
-  color: var(--lc-sidenav-fg);
+  color: var(--lc-sidenav-fg, var(--_lc-sidenav-t-fg));
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease;
 
   &:hover {
-    background-color: var(--lc-sidenav-hover-bg);
+    background-color: var(--lc-sidenav-hover-bg, var(--_lc-sidenav-t-hover-bg));
   }
 
   &:focus-visible {

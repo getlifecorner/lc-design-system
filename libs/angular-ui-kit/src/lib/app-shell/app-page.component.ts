@@ -1,6 +1,21 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
 /**
+ * Horizontal padding of `lc-app-page` (3.15).
+ * - `default`: 24 · 32 · 48 · 56 · 72 · 96 px from 0 · 640 · 1024 · 1280 · 1440 · 1920 px.
+ * - `header`: `lc-header`'s padding (16 px up to 768 px, 24 px above), so the
+ *   content lines up with the header title and the user menu.
+ */
+export type AppPagePaddingX = 'default' | 'header';
+
+/**
+ * Space above `lc-app-page`'s content (3.15).
+ * - `default`: 24 · 32 · 48 · 56 · 72 · 112 px by width.
+ * - `none` 0, `sm` 8 px, `md` 16 px at every width.
+ */
+export type AppPagePaddingTop = 'default' | 'none' | 'sm' | 'md';
+
+/**
  * A page inside `lc-app-shell`: the `<main>` landmark with the page's content
  * centred at a reading width, and an optional right column docked to the
  * window's right edge (LK-6).
@@ -19,6 +34,22 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
  *   `asideAriaLabel`.
  * - `busy` marks the page as loading: `aria-busy="true"` on `<main>` while a
  *   skeleton stands in for the content (AS-12). No visual change.
+ * - `paddingX="header"` lines the content up with `lc-header` (3.15): its
+ *   title and its user menu. Combine it with `contentMaxWidth="none"` (or a
+ *   page narrower than the cap); centred content doesn't align.
+ *   `paddingTop` sets the space above the content (`none`, `sm` 8 px, `md`
+ *   16 px), e.g. `md` with `lc-page-header paddingTop="none"` puts the `h1`
+ *   16 px below the header.
+ *
+ * CSS hooks (set them on `lc-app-page` or any ancestor; each wins over the
+ * inputs and holds one value at every width):
+ * - `--lc-app-page-padding-x`: the side padding (default: `paddingX`).
+ *   Per breakpoint, set it inside your own media query:
+ *   `lc-app-page { --lc-app-page-padding-x: 16px }` and
+ *   `@media (min-width: 1024px) { lc-app-page { --lc-app-page-padding-x: 32px } }`.
+ * - `--lc-app-page-padding-top`: the space above the content (default: `paddingTop`).
+ * - `--lc-app-page-gap`: the space between the content's children (24 px, 40 px from 1024 px).
+ * - `--lc-app-page-aside-width`: the right column (360 px, 400 from 1440, 460 from 1920).
  *
  * @example
  * ```html
@@ -66,12 +97,33 @@ export class AppPageComponent {
    */
   readonly busy = input(false);
 
+  /**
+   * Horizontal page padding. `'default'`: 24/32/48/56/72/96 px from
+   * 0/640/1024/1280/1440/1920 px. `'header'`: the same padding as `lc-header`
+   * (16 px up to 768 px, 24 px above, from `--lc-density-padding-md`/`-lg`),
+   * so the content lines up with the header title and the user menu. Combine
+   * it with `contentMaxWidth="none"` (or a page narrower than the cap).
+   * `--lc-app-page-padding-x` wins over both.
+   * @default 'default'
+   */
+  readonly paddingX = input<AppPagePaddingX>('default');
+
+  /**
+   * Space above the page content. `'default'`: 24/32/48/56/72/112 px by
+   * width. `'none'` 0, `'sm'` 8 px, `'md'` 16 px at every width.
+   * `--lc-app-page-padding-top` wins.
+   * @default 'default'
+   */
+  readonly paddingTop = input<AppPagePaddingTop>('default');
+
   /** The right column renders only when it has an accessible name. */
   protected readonly hasAside = computed(() => !!(this.asideLabelledby() || this.asideAriaLabel()));
 
   protected readonly pageClasses = computed(() => {
     const classes = ['lc-app-page'];
     if (this.hasAside()) classes.push('lc-app-page--aside');
+    if (this.paddingX() === 'header') classes.push('lc-app-page--pad-x-header');
+    if (this.paddingTop() !== 'default') classes.push(`lc-app-page--pad-top-${this.paddingTop()}`);
     return classes.join(' ');
   });
 }

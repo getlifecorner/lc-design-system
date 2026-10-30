@@ -180,9 +180,9 @@ interface NavigationItem {
 
 **Theming tokens:** \`--lc-sidenav-bg\`, \`--lc-sidenav-fg\`, \`--lc-sidenav-fg-active\`, \`--lc-sidenav-border\`, \`--lc-sidenav-hover-bg\`, \`--lc-sidenav-section-fg\`
 
-Dark mode adds: \`--lc-sidenav-active-bg\`, \`--lc-sidenav-active-fg\`, \`--lc-sidenav-active-icon\`
+Dark mode adds: \`--lc-sidenav-active-bg\`, \`--lc-sidenav-active-fg\`, \`--lc-sidenav-active-icon\`; the collapsed rail's badge ring is \`--lc-sidenav-badge-ring\` (default: the rail's background).
 
-Set on \`lc-sidenav\` (or a rule such as \`.app lc-sidenav\`), these win over \`theme="light"\` / \`"dark"\` since 3.14, so a themed rail can be recoloured. Theme-stable hooks, read where used (set them on any ancestor): \`--lc-sidenav-active-indicator\` (the current item's 2 px bar, default \`var(--color-primary-500)\`; on a \`theme="light"\` rail \`#208497\` on any page, the colour of its focus rings: 4.37:1 on the rail, 4.06:1 on the current item), \`--lc-sidenav-brand-tile-bg\` (default \`var(--color-primary-fill)\`) and \`--lc-sidenav-brand-tile-fg\` (default \`var(--color-on-primary)\`).
+Set them on \`lc-sidenav\` or any ancestor (3.15; until 3.14 only on the element): a value on the element wins over an ancestor's, and both win over \`theme="light"\` / \`"dark"\` (3.14), so a themed rail can be recoloured. A rule on a shared ancestor recolours \`lc-sidenav-placeholder\` the same way. Theme-stable hooks, read where used (set them on any ancestor): \`--lc-sidenav-active-indicator\` (the current item's 2 px bar, default \`var(--color-primary-500)\`; on a \`theme="light"\` rail \`#208497\` on any page, the colour of its focus rings: 4.37:1 on the rail, 4.06:1 on the current item), \`--lc-sidenav-brand-tile-bg\` (default \`var(--color-primary-fill)\`) and \`--lc-sidenav-brand-tile-fg\` (default \`var(--color-on-primary)\`).
 
 **Icon-column geometry:** \`--lc-sidenav-rail-width\` (56px), \`--lc-sidenav-nav-padding-x\` (8px),
 \`--lc-sidenav-item-padding-x\` (10px). Expanded and collapsed share the gutters, so the icon

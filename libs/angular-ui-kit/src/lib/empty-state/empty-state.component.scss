@@ -42,6 +42,51 @@
       font-size: 1.25rem;
     }
   }
+
+  // ── iconTone="primary" (3.15) ─────────────────────────────────
+  // A 24 px icon on a 48 px tinted circle, from tokens only (7.85:1 light,
+  // 9.68:1 dark). In forced colours the circle becomes Canvas, the icon CanvasText.
+  &__icon--primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--border-radius-full);
+    background-color: var(--color-primary-100);
+    color: var(--color-primary-700);
+  }
+
+  // ── messageSize="md" (3.15): the state-page scale ─────────────
+  // 16 px icon → text (gap 8 + 8), 24 px last text → projected action (gap 8
+  // + 16). The action margin sits on the kit's own text element: projected
+  // children carry no _ngcontent attribute.
+  &--message-md {
+    gap: var(--spacing-2);
+
+    > lc-icon,
+    > .empty-state__icon {
+      margin-bottom: var(--spacing-2);
+    }
+
+    .empty-state__heading {
+      font-size: var(--font-size-xl);
+      line-height: var(--line-height-tight);
+    }
+
+    .empty-state__message {
+      max-width: 32rem;
+      font-size: var(--font-size-base);
+      line-height: var(--line-height-normal);
+      overflow-wrap: break-word;
+    }
+
+    .empty-state__message:not(:last-child),
+    .empty-state__heading:not(:last-child):not(:has(+ .empty-state__message)) {
+      margin-bottom: var(--spacing-4);
+    }
+  }
 }
 
 // ── Dark mode ─────────────────────────────────────────────────────

@@ -49,8 +49,10 @@ const LABEL_WIDTHS = ['64%', '48%', '72%', '56%'] as const;
  * it when it is swapped. The navigation landmark, the current item
  * (`aria-current`) and the tab order arrive with `lc-sidenav`. Static, no
  * shimmer. The skeleton shapes are filled with
- * `--lc-sidenav-placeholder-fill`; the `--lc-sidenav-*` hooks apply as on
- * `lc-sidenav` (set them on an ancestor of both).
+ * `--lc-sidenav-placeholder-fill`; the `--lc-sidenav-*` colour hooks apply as
+ * on `lc-sidenav`: set them on the element or any ancestor (3.15), e.g. one
+ * rule on an ancestor of both. A value on the element wins over an
+ * ancestor's, and both win over `theme`.
  */
 @Component({
   selector: 'lc-sidenav-placeholder',

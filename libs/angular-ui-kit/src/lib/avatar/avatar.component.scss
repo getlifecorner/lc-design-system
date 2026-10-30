@@ -158,6 +158,31 @@ $lc-avatar-member-colors: (
   }
 }
 
+// ── Person fallback (3.15) ────────────────────────────────────────────────
+// No name and no image with `fallback="person"`: the kit's user glyph at 60 %
+// of the box on a neutral disc (glyph 7.00:1 light, 6.10:1 dark). After the
+// base rule, so it wins its background at equal specificity.
+.lc-avatar--person {
+  background-color: var(--color-neutral-300);
+  color: var(--color-neutral-700);
+}
+
+.lc-avatar__person {
+  display: block;
+  width: 60%;
+  height: 60%;
+  fill: currentColor;
+}
+
+// In forced colours the disc becomes Canvas and the glyph CanvasText: a 1 px
+// outline keeps the round shape (border-box, so the size stays).
+@media (forced-colors: active) {
+  .lc-avatar--person {
+    box-sizing: border-box;
+    border: 1px solid CanvasText;
+  }
+}
+
 // ── Ring (LK-7): a gap to whatever the avatar overlaps ────────────────────
 // A box-shadow, so it adds no layout size and is not clipped by the avatar's
 // own `overflow: hidden`.

@@ -187,7 +187,11 @@ describe('SidenavPlaceholderComponent (AS-18)', () => {
 
     it('fills the shapes through --lc-sidenav-placeholder-fill, GrayText in forced colours, no animation', () => {
       const text = css('sidenav-placeholder.component.scss');
-      expect(text).toMatch(/background-color: var\(--lc-sidenav-placeholder-fill, color-mix\(in srgb, var\(--lc-sidenav-fg\) 16%, transparent\)\)/);
+      // 020: hooks are no longer declared on `:host`, so ancestor values reach
+      // the rail; the fill reads the ink hook, then the theme's private value.
+      expect(text).toMatch(
+        /background-color: var\(--lc-sidenav-placeholder-fill, color-mix\(in srgb, var\(--lc-sidenav-fg, var\(--_lc-sidenav-t-fg\)\) 16%, transparent\)\)/,
+      );
       expect(text).toMatch(/@media \(forced-colors: active\) \{\s*\.lc-sidenav-placeholder__shape \{\s*forced-color-adjust: none;\s*background-color: GrayText;/);
       const skeleton = text.slice(text.indexOf('.lc-sidenav-placeholder__shape'));
       expect(skeleton).not.toMatch(/animation|transition|@keyframes/);

@@ -5,7 +5,7 @@ import {
   computed,
   input,
 } from '@angular/core';
-import type { ButtonSize, ButtonVariant } from './button.component';
+import type { ButtonSize, ButtonTone, ButtonVariant } from './button.component';
 
 /**
  * `lc-button` styling on a native link: `<a lcButton href="…">`.
@@ -69,6 +69,14 @@ export class ButtonLinkComponent {
    * @default 'primary'
    */
   readonly variant = input<ButtonVariant>('primary');
+  /**
+   * Colour tone of `variant="outline"`, as on `lc-button`: `'primary'` sets
+   * text and border to the primary colour (`--color-primary-700` / `-600`;
+   * hover `--color-surface-selected`, active `--color-primary-200`). Other
+   * variants ignore it.
+   * @default 'neutral'
+   */
+  readonly tone = input<ButtonTone>('neutral');
   /** Size, as on `lc-button`. `lg` (48.5 px high) meets the 44 px touch target. */
   readonly size = input<ButtonSize>('md');
   /** Stretch the link to the full width of its container. */
@@ -98,6 +106,7 @@ export class ButtonLinkComponent {
     if (this.fullWidth()) classes.push('btn-full-width');
     if (this.inline()) classes.push('btn-inline');
     if (this.flush()) classes.push('btn-flush');
+    if (this.variant() === 'outline' && this.tone() === 'primary') classes.push('btn-tone-primary');
     return classes.join(' ');
   });
 }

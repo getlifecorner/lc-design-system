@@ -7,6 +7,22 @@ export type EmptyStateSize = 'sm' | 'md' | 'lg';
 export type EmptyStateHeadingLevel = 2 | 3 | 4 | 5 | 6;
 
 /**
+ * Look of `lc-empty-state`'s icon (3.15).
+ * - `neutral`: the bare 40 px icon in `--color-text-tertiary`
+ * - `primary`: a 24 px icon in `--color-primary-700` on a 48 px
+ *   `--color-primary-100` circle
+ */
+export type EmptyStateIconTone = 'neutral' | 'primary';
+
+/**
+ * Text scale of `lc-empty-state` (3.15), beside `size` (the padding).
+ * - `sm`: 14 px message
+ * - `md`: the state-page scale — 16/24 px message, 20 px heading, 16 px below
+ *   the icon and 24 px before the projected action
+ */
+export type EmptyStateMessageSize = 'sm' | 'md';
+
+/**
  * Empty state component for "no data" placeholder displays.
  *
  * Features:
@@ -66,5 +82,26 @@ export class EmptyStateComponent {
    */
   readonly message = input<string>();
 
-  protected readonly hostClasses = computed(() => `empty-state empty-state--${this.size()}`);
+  /**
+   * `'neutral'`: the bare 40 px icon in `--color-text-tertiary`. `'primary'`:
+   * a 24 px icon in `--color-primary-700` on a 48 px `--color-primary-100`
+   * circle. Decorative in both tones.
+   * @default 'neutral'
+   */
+  readonly iconTone = input<EmptyStateIconTone>('neutral');
+
+  /**
+   * `'sm'`: 14 px message. `'md'`, for a state page: 16/24 px message, 20 px
+   * heading, 16 px below the icon and 24 px before the projected action.
+   * Wrap several actions in one row element.
+   * @default 'sm'
+   */
+  readonly messageSize = input<EmptyStateMessageSize>('sm');
+
+  protected readonly hostClasses = computed(() => {
+    const classes = ['empty-state', `empty-state--${this.size()}`];
+    if (this.iconTone() === 'primary') classes.push('empty-state--tone-primary');
+    if (this.messageSize() === 'md') classes.push('empty-state--message-md');
+    return classes.join(' ');
+  });
 }

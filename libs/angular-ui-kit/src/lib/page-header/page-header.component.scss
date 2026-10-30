@@ -26,6 +26,20 @@
     padding-inline: 0;
   }
 
+  // paddingTop (3.15): the space above the content only; the bottom keeps the
+  // size's padding. (0,2,0), so it beats `padding-block` and every size.
+  &.lc-page-header--pad-top-none {
+    padding-top: 0;
+  }
+
+  &.lc-page-header--pad-top-sm {
+    padding-top: var(--spacing-2, 0.5rem);
+  }
+
+  &.lc-page-header--pad-top-md {
+    padding-top: var(--spacing-4, 1rem);
+  }
+
   // ── Slot wrappers ────────────────────────────────────────────────────────
   &__breadcrumbs,
   &__body {

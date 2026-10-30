@@ -57,7 +57,7 @@
   display: block;
   background-color: var(
     --lc-sidenav-placeholder-fill,
-    color-mix(in srgb, var(--lc-sidenav-fg) 16%, transparent)
+    color-mix(in srgb, var(--lc-sidenav-fg, var(--_lc-sidenav-t-fg)) 16%, transparent)
   );
 
   @media (forced-colors: active) {

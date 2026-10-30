@@ -41,6 +41,13 @@ const meta: Meta<AvatarComponent> = {
         'How the browser loads the image. `lazy`: for an avatar below the fold; writes `loading="lazy"`. `eager` writes no attribute (the browser default). The initials still replace an image that fails.',
       table: { defaultValue: { summary: "'eager'" } },
     },
+    fallback: {
+      control: 'inline-radio',
+      options: ['initials', 'person'],
+      description:
+        "3.15: what shows without an image and without a `name`. `'initials'`: \"?\" (as before). `'person'`: a person glyph (60 % of the circle, `--color-neutral-700` on `--color-neutral-300`; 7.00:1 light, 6.10:1 dark), neutral whatever the `color`. A `name` still shows its initials; a failed image falls back to the person",
+      table: { defaultValue: { summary: "'initials'" } },
+    },
   },
 
   parameters: {
@@ -262,5 +269,37 @@ export const LazyImage: Story = {
       },
     },
   },
+};
+
+/** 3.15 (finance-intelligence app-shell-prove 5): a person instead of "?" when there is no name. */
+export const PersonFallback: Story = {
+  args: { fallback: 'person' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Row 1: `fallback` (the control) without a `name`, xs to xl (24 … 64 px, glyph 60 %). Row 2: with a `name` the initials show; `color="member-1"` without a name stays neutral; a broken `src` without a name falls back to the person; `decorative` drops `role="img"` and the label. Without `alt` the accessible name stays "Avatar".',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <lc-avatar size="xs" [fallback]="fallback" />
+          <lc-avatar size="sm" [fallback]="fallback" />
+          <lc-avatar size="md" [fallback]="fallback" />
+          <lc-avatar size="lg" [fallback]="fallback" />
+          <lc-avatar size="xl" [fallback]="fallback" />
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <lc-avatar size="lg" name="Rita Berger" [fallback]="fallback" />
+          <lc-avatar size="lg" color="member-1" [fallback]="fallback" />
+          <lc-avatar size="lg" src="/assets/avatar-does-not-exist.png" [fallback]="fallback" />
+          <lc-avatar size="lg" [decorative]="true" [fallback]="fallback" />
+        </div>
+      </div>`,
+  }),
 };
 

@@ -103,6 +103,26 @@ a.btn {
   }
 }
 
+// Outline, tone="primary" (3.15): text and border in the primary colour on the
+// outline tint. Text 7.86–8.81:1 light, 10.90–12.58:1 dark; border ≥ 5.34 / 9.28
+// against the page. Hover keeps text and border on the selected tint (7.85 /
+// 10.57); active is primary-200 without the outline's brightness filter.
+.btn-outline.btn-tone-primary {
+  border-color: var(--color-primary-600);
+  color: var(--color-primary-700);
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-surface-selected);
+    border-color: var(--color-primary-600);
+    color: var(--color-primary-700);
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--color-primary-200);
+    filter: none;
+  }
+}
+
 .btn-ghost {
   background-color: var(--lc-button-ghost-bg, transparent);
   color: var(--lc-button-ghost-fg, var(--color-text-secondary));
