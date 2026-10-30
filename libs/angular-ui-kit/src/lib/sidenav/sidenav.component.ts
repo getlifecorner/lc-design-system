@@ -49,6 +49,10 @@ export type SidenavVariant = 'default' | 'transparent';
  * - Responsive mobile mode — docked automatically switches to drawer below a configurable breakpoint
  * - Collapsed icon-rail mode (narrow 56px sidebar with icons only and hover tooltips)
  * - Integrated logo area with collapse-toggle (sidebar-first layouts)
+ * - Text brand (`brandName`, `brandIcon`): an icon tile and the product name,
+ *   one link to home (`brandHref`, else `routerLink="/"`), as high as the
+ *   `lc-header` next to it; the rail shows only the tile. It never toggles:
+ *   `showCollapseToggle` adds a collapse button at the bottom of the rail
  * - Hierarchical navigation with collapsible groups (up to 3 levels)
  * - Section headlines for item grouping with optional action buttons
  * - Action buttons on any item (hover-reveal)
@@ -60,7 +64,15 @@ export type SidenavVariant = 'default' | 'transparent';
  * - Keyboard navigation support (Escape closes drawer)
  * - Configurable width and position (left/right)
  * - Optional backdrop overlay
- * - Theme variants: auto, light, dark (with teal accent for dark mode)
+ * - Theme variants: auto, light, dark (with teal accent for dark mode). The
+ *   theming hooks (`--lc-sidenav-bg`, `-fg`, `-fg-active`, `-border`,
+ *   `-hover-bg`, `-section-fg`, `-active-bg`, `-active-fg`, `-active-icon`)
+ *   set on `lc-sidenav` win over `theme` (3.14); `--lc-sidenav-active-indicator`
+ *   (the current item's 2 px bar, default `--color-primary-500`; on a
+ *   `theme="light"` rail #208497 on any page, like its focus rings),
+ *   `--lc-sidenav-brand-tile-bg` (default `--color-primary-fill`) and
+ *   `--lc-sidenav-brand-tile-fg` (default `--color-on-primary`) can be set on
+ *   any ancestor
  * - `variant="transparent"`: no rail background or border, items as 48 px
  *   pills with 16 px labels, the current one on `--color-surface-selected`
  * - Items are at least 44 px high in every density; the current item's ink is
@@ -98,6 +110,11 @@ export type SidenavVariant = 'default' | 'transparent';
     '[class.lc-sidenav-container]': 'true',
     '[class.lc-sidenav-container--docked]': "effectiveMode() === 'docked'",
     '[class.lc-sidenav-container--open]': 'isOpen()',
+    // `theme` on the host (019): the themed values are private host variables
+    // that the public `--lc-sidenav-*` hooks fall back to, so an app's hooks
+    // on `lc-sidenav` win over `theme="dark"` / `"light"`.
+    '[class.lc-sidenav-container--light]': "theme() === 'light'",
+    '[class.lc-sidenav-container--dark]': "theme() === 'dark'",
   },
 })
 export class SidenavComponent implements OnDestroy {
@@ -127,8 +144,57 @@ export class SidenavComponent implements OnDestroy {
   /** Alt text for the brand logo. */
   readonly logoAlt = input('');
 
-  /** Size of the brand logo (forwarded to inner `<lc-logo>`). Defaults to `md` for a prominent brand block aligned with `<lc-header size="md">` (both 64px). */
+  /** Size of the brand logo (forwarded to inner `<lc-logo>`). Defaults to `md` for a prominent brand block aligned with `<lc-header size="md">` (both 64px). Also sets the height of the text brand (`brandName`). */
   readonly logoSize = input<'xs' | 'sm' | 'md' | 'lg' | 'xl'>('md');
+
+  /**
+   * Product name shown as a text brand at the top: an icon tile and the name,
+   * one link to home. Replaces the image logo (`showLogo`). The block is as
+   * high as the image logo (`logoSize`: 64 px for `md`, matching
+   * `lc-header size="md"`); the name wraps to two lines at most, and the full
+   * name stays the link's accessible name. Collapsed, only the tile shows.
+   * The brand never toggles the rail (see `showCollapseToggle`). Under
+   * `@defer`, give the `lc-sidenav-placeholder` `[showLogo]="true"` and the
+   * same `logoSize` to reserve the block. Empty: no text brand.
+   * @default ''
+   */
+  readonly brandName = input('');
+
+  /**
+   * `lc-icon` name in the brand tile (decorative). Empty: the tile shows the
+   * name's first letter. Renders nothing without `brandName`.
+   * @default ''
+   */
+  readonly brandIcon = input('');
+
+  /**
+   * Plain URL of the brand link (a native `<a href>`, works without the
+   * router). Empty: `routerLink="/"`, as `lc-header`'s `homeHref`.
+   * @default ''
+   */
+  readonly brandHref = input('');
+
+  /**
+   * Accessible name of the brand link. Empty: the brand name. Start it with
+   * the visible name, e.g. `'Finance Intelligence – home'`.
+   * @default ''
+   */
+  readonly brandAriaLabel = input('');
+
+  /**
+   * Docked mode: a button at the bottom of the rail collapses and expands it
+   * (`collapsed`). Independent of the brand. With `showLogo` the image logo
+   * toggles already, so use one of the two.
+   * @default false
+   */
+  readonly showCollapseToggle = input(false);
+
+  /**
+   * Accessible name of the collapse button (`showCollapseToggle`) while the
+   * rail is collapsed. Expanded, it uses `collapseAriaLabel`.
+   * @default 'Expand navigation'
+   */
+  readonly expandAriaLabel = input('Expand navigation');
 
   /** Whether the sidenav is open */
   readonly isOpen = input(false);
@@ -346,11 +412,38 @@ export class SidenavComponent implements OnDestroy {
     width: this.isMobile() ? this.width() : (this.collapsed() ? '56px' : this.width()),
   }));
 
+  /** The brand tile's letter when there is no `brandIcon`: the name's first character, upper-cased. */
+  protected readonly brandInitial = computed(() => ([...this.brandName().trim()][0] ?? '').toUpperCase());
+
+  /** Whether the rail shows only icons (as `lc-sidenav--collapsed`). */
+  protected readonly isRail = computed(() => this.collapsed() && !this.isMobile());
+
+  /** The collapse button's accessible name: what a press does. */
+  protected readonly collapseToggleLabel = computed(() =>
+    this.collapsed()
+      ? this.expandAriaLabel()
+      : this.collapseAriaLabel() ||
+        (this.position() === 'right' ? 'Collapse navigation to the right' : 'Collapse navigation to the left'),
+  );
+
+  /** The collapse button's chevron points where the rail moves: ⟨ to collapse a left rail, ⟩ to expand it (mirrored on the right). */
+  protected readonly collapseToggleIcon = computed(() => {
+    const towardsLeft = this.position() === 'right' ? this.collapsed() : !this.collapsed();
+    return towardsLeft ? 'chevron-left' : 'chevron-right';
+  });
+
   /**
    * Toggle collapsed state
    */
   toggleCollapsed(): void {
     this.collapsed.set(!this.collapsed());
+  }
+
+  /** The brand link closes the drawer on a phone, as the items do. */
+  handleBrandClick(): void {
+    if (this.isMobile()) {
+      this.handleClose();
+    }
   }
 
   /**

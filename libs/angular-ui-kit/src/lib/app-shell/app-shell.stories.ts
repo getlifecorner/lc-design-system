@@ -11,6 +11,8 @@ import { ListComponent } from '../list/list.component';
 import { SkeletonComponent } from '../skeleton/skeleton.component';
 import { FooterComponent } from '../footer/footer.component';
 import { CharacterComponent } from '../character/character.component';
+import { StatTrendComponent } from '../stat-trend/stat-trend.component';
+import { CardComponent } from '../card/card.component';
 
 const nav = [
   { id: 'today', icon: 'sun', label: 'Heute', route: '/', displayOrder: 1 },
@@ -29,11 +31,13 @@ const placeholder = (text: string, height = 160, fontSize = '13px', attrs = '') 
 
 /**
  * Today in the "Weite" frame: every slot of the shell and the page's right
- * column. `figure` goes into the shell's figure slot (3.9; empty: as before).
+ * column. `figure` goes into the shell's figure slot (3.9; empty: as before),
+ * `shellAttrs` onto `lc-app-shell`, `footer` before the bar, `headerAttrs`
+ * onto `lc-header` and `navAttrs` onto `lc-sidenav` (3.14; empty: as before).
  */
-const today = (figure = '') => `
-  <lc-app-shell [horizon]="horizon">
-    <lc-header shell-header variant="transparent" [sticky]="false" title="Produkt" titleTag="span"
+const today = (figure = '', shellAttrs = '', footer = '', headerAttrs = '', navAttrs = '') => `
+  <lc-app-shell [horizon]="horizon"${shellAttrs}>
+    <lc-header shell-header variant="transparent" [sticky]="false"${headerAttrs} title="Produkt" titleTag="span"
                subtitle="Unser Haushalt" homeAriaLabel="Produkt – Startseite"
                userMenuTrigger="avatar" userAvatarColor="member-1"
                userName="Johanna-Friederike Apfelbaum-Kieselbacher-Morgentau"
@@ -41,7 +45,7 @@ const today = (figure = '') => `
                userMenuAriaLabel="Menü für Johanna-Friederike Apfelbaum-Kieselbacher-Morgentau"
                profileLabel="Einstellungen" logoutLabel="Abmelden" menuSize="md" />
     <lc-sidenav shell-nav mode="docked" [isOpen]="true" width="100%" [mobileBreakpoint]="0"
-                variant="transparent" ariaLabel="Hauptnavigation" [items]="nav" activeRoute="/" />
+                variant="transparent"${navAttrs} ariaLabel="Hauptnavigation" [items]="nav" activeRoute="/" />
     <lc-app-page asideLabelledby="story-members">
       <div>
         <p style="margin: 0 0 12px; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--color-overline, var(--color-link));">Donnerstag, 15. Oktober</p>
@@ -57,7 +61,7 @@ const today = (figure = '') => `
         <lc-list [items]="members" size="lg" [showDividers]="true" />
       </section>
     </lc-app-page>
-    ${figure}<lc-bottom-nav shell-bottom-nav variant="floating" ariaLabel="Hauptnavigation" [items]="nav" activeRoute="/" />
+    ${figure}${footer}<lc-bottom-nav shell-bottom-nav variant="floating" ariaLabel="Hauptnavigation" [items]="nav" activeRoute="/" />
   </lc-app-shell>
   <style>
     @media (min-width: 1280px) { .story-member-row { display: none; } }
@@ -83,6 +87,13 @@ const meta: Meta<AppShellComponent> = {
         'Close the page with the "Weite" horizon (`.lc-horizon`): full width below the side navigation and the page, filling the rest of the screen; the footer (in a row of its own, which adds to the land) and the floating bar rest on its land, and `[shell-horizon-figure]` stands on its line',
       table: { defaultValue: { summary: 'false' } },
     },
+    navPlacement: {
+      control: 'inline-radio',
+      options: ['below-header', 'full-height'],
+      description:
+        "Where the side navigation sits from 1024 px. `'below-header'`: the header spans the full width and the nav starts below it. `'full-height'`: the nav runs from the top to the bottom of the viewport (sticky, 100dvh), with the header beside it. Below 1024 px both render the same. The DOM and tab order don't change (header, nav, page). `'full-height'` expects a brand block at the top of the rail (`lc-sidenav brandName` or `showLogo`, with a `logoSize` that matches the header's `size`, e.g. both `md`: 64 px) and the header's `showLogo` off",
+      table: { defaultValue: { summary: "'below-header'" } },
+    },
   },
   parameters: {
     layout: 'fullscreen',
@@ -100,6 +111,16 @@ The frame of an app: header, side navigation, page, bottom bar, footer and the h
 | \`[shell-bottom-nav]\` | \`lc-bottom-nav\` (fixed); the shell keeps the bar's real height free at the end: 112 px + the inset, more when the bar grows with the text size (\`--lc-app-shell-bottom-clearance\`) | hidden |
 | \`[shell-footer]\` | after the page; with \`horizon\` in a row of its own below it, in the land's colour (\`--color-land-3\`), so the land grows by the footer's height (3.9) | the same |
 | \`[shell-horizon-figure]\` | with \`horizon\`: Edu (\`lc-character\`, \`<img alt="">\`, \`<picture>\` or an inline \`<svg>\`) on the line, left of the sun, as a direct child of \`.lc-horizon\`; 64 px (3.9) | 96 px, 128 px from 1920 px |
+
+Input \`navPlacement="full-height"\` (3.14) runs the \`[shell-nav]\` column from the top to the bottom of the viewport (sticky, \`100dvh\`) with the header beside it, from 1024 px; below 1024 px it renders like the default \`'below-header'\`. The DOM and tab order stay header → nav → page → footer, so the header's controls come before a brand at the top of the nav (banner, navigation, content). Put that brand block at the top of the rail (\`lc-sidenav brandName\` or \`showLogo\`, with a \`logoSize\` that matches the header's \`size\`, e.g. both \`md\`: 64 px) and turn the header's \`showLogo\` off. The land and the footer run under the nav; the footer's content starts at the nav width. An empty \`[shell-nav]\` keeps one column.
+
+**CSS hooks** (set them on \`lc-app-shell\` or any ancestor):
+| Hook | Default | What |
+|---|---|---|
+| \`--lc-app-shell-nav-width\` | \`240px\` (\`248px\` from 1440, \`280px\` from 1920) | the nav column from 1024 px |
+| \`--lc-app-shell-bottom-clearance\` | the bar's height + 40 px + the inset, at least \`112px\` + the inset | the space kept free for the bottom bar below 1024 px |
+| \`--lc-app-shell-bg\` | \`var(--color-background)\` | the page colour behind everything (the sky) |
+| \`--lc-app-shell-bg-image\` | \`var(--app-background-image, none)\` | a layer over the page colour, e.g. a tint: \`linear-gradient(to bottom, var(--color-land-1), var(--color-land-2), var(--color-land-3))\`. The horizon's land still paints over it |
 
 Input \`horizon\` closes the page with the horizon block (\`.lc-horizon\`, from the kit's styles). Its land is 112 px on a phone (more under a bar taller than 72 px, by the difference: 3.10.1, AS-31) and 72 · 80 · 96 · 128 px from 1024 · 1280 · 1440 · 1920 px (3.9, LK-12; \`--lc-horizon-land\`). With a \`[shell-footer]\` the footer's height is added below that, so a page with a footer needs no override: \`--lc-horizon-land\` is the land above the footer. The horizon is \`aria-hidden\` (decoration): a figure in it gets \`alt=""\` and nothing focusable; the footer is outside it and stays reachable.
 
@@ -365,6 +386,149 @@ export const FigureOnTheHorizon: Story = {
       memberAvatars: members.map((m) => ({ name: m.label, color: m.avatarColor })),
     },
     template: today('<lc-character shell-horizon-figure pose="comforts" />\n    '),
+  }),
+};
+
+/** The documented tint of `--lc-app-shell-bg-image` (3.14): the land's colours, top to bottom. */
+const landTint = 'linear-gradient(to bottom, var(--color-land-1), var(--color-land-2), var(--color-land-3))';
+
+/** Finance Intelligence's destinations (request 019), German. */
+const fiNav = [
+  { id: 'overview', icon: 'home', label: 'Übersicht', route: '/', displayOrder: 1 },
+  { id: 'costs', icon: 'banknotes', label: 'Kosten', route: '/kosten', displayOrder: 2 },
+  { id: 'budgets', icon: 'calculator', label: 'Budgets', route: '/budgets', displayOrder: 3 },
+  { id: 'contracts', icon: 'document-text', label: 'Verträge', route: '/vertraege', displayOrder: 4 },
+  { id: 'reports', icon: 'chart-pie', label: 'Berichte', route: '/berichte', displayOrder: 5 },
+  { id: 'settings', icon: 'cog-6-tooth', label: 'Einstellungen', route: '/einstellungen', displayOrder: 6 },
+];
+
+/** German words of lc-stat-trend's sentiment text. */
+const statTrendDe = { up: 'gestiegen', down: 'gesunken', unchanged: 'unverändert', positive: 'günstig', negative: 'ungünstig', neutral: 'neutral' };
+
+/** A white elevated card on the tint. */
+const fiCard = (body: string) => `<lc-card variant="elevated" padding="md" borderRadius="md">${body}</lc-card>`;
+
+/**
+ * Sidebar-first (3.14, request 019): `navPlacement="full-height"` with a petrol
+ * `lc-sidenav theme="dark"` (the sidenav hooks, set by the app on
+ * `.fi-shell lc-sidenav`), the text brand at the top, the land tint on the
+ * shell and white elevated cards.
+ */
+const fullHeightTemplate = `
+  <div class="fi-shell" lang="de">
+    <a class="skip-to-content" href="#main">Zum Inhalt springen</a>
+    <lc-app-shell [horizon]="horizon" [navPlacement]="navPlacement" [style.--lc-app-shell-bg-image]="landTint">
+      <lc-header shell-header size="md" variant="transparent" [sticky]="false" [showLogo]="false" title="Übersicht" titleTag="span"
+                 userMenuTrigger="avatar" userAvatarColor="member-2" userName="Tom Ek" userEmail="tom.ek@example.org"
+                 userMenuAriaLabel="Menü für Tom Ek" profileLabel="Einstellungen" logoutLabel="Abmelden" />
+      <lc-sidenav shell-nav mode="docked" [isOpen]="true" width="100%" [mobileBreakpoint]="0" theme="dark"
+                  brandName="Finance Intelligence" brandIcon="presentation-chart-line" brandAriaLabel="Finance Intelligence – Startseite"
+                  [showCollapseToggle]="true" collapseAriaLabel="Navigation nach links einklappen" expandAriaLabel="Navigation ausklappen"
+                  ariaLabel="Hauptnavigation" [items]="fiNav" activeRoute="/" />
+      <lc-app-page>
+        <div>
+          <p style="margin: 0 0 12px; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--color-overline, var(--color-link));">IT-Finanzcontrolling</p>
+          <h1 style="margin: 0; font-size: 32px; line-height: 1.1; color: var(--color-text-primary);">Oktober 2026</h1>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+          ${fiCard('<lc-stat-trend label="Kosten (Monat)" value="48,2 Mio. €" change="+3,1 %" sentiment="negative" [labels]="statTrendDe" [sparklineData]="costs" />')}
+          ${fiCard('<lc-stat-trend label="Budgetabweichung" value="0,2 Mio. €" change="+0,4 %" sentiment="neutral" [labels]="statTrendDe" [sparklineData]="variance" />')}
+        </div>
+        ${fiCard(placeholder('‹Kostenstellen›', 240))}
+        ${fiCard(placeholder('‹Verträge mit Fristen›', 320))}
+      </lc-app-page>
+      <lc-bottom-nav shell-bottom-nav variant="floating" ariaLabel="Hauptnavigation" [items]="fiBar" activeRoute="/" />
+    </lc-app-shell>
+  </div>
+  <style>
+    /* The app's petrol rail: theme-stable tokens only (the primary-100…900 scale inverts in dark). */
+    .fi-shell lc-sidenav {
+      --lc-sidenav-bg: var(--color-primary-fill-active);
+      --lc-sidenav-border: transparent;
+      --lc-sidenav-active-bg: var(--color-primary-fill);
+      --lc-sidenav-active-fg: var(--color-on-primary);
+      --lc-sidenav-active-icon: var(--color-on-primary);
+      --lc-sidenav-active-indicator: var(--color-on-primary);
+      --lc-sidenav-brand-tile-bg: var(--color-on-primary);
+      --lc-sidenav-brand-tile-fg: var(--color-primary-fill);
+    }
+  </style>`;
+
+export const FullHeightNav: Story = {
+  args: { horizon: false, navPlacement: 'full-height' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'From 1024 px the petrol nav column runs from the top to the bottom of the viewport and stays there while the page scrolls; the header (`size="md"`, 64 px) sits beside it, level with the 64 px brand block. Below 1024 px: the phone layout, unchanged (header, page, bottom bar). Tab order: skip link, header, brand, nav items, collapse button, page — the header comes first although the brand sits top left (banner, navigation, content). The rail is `theme="dark"` with the hooks `--lc-sidenav-bg: var(--color-primary-fill-active)`, `--lc-sidenav-border: transparent`, `--lc-sidenav-active-bg: var(--color-primary-fill)`, `--lc-sidenav-active-fg` / `-active-icon` / `-active-indicator: var(--color-on-primary)` and the tile inverted (`--lc-sidenav-brand-tile-bg: var(--color-on-primary)`, `-fg: var(--color-primary-fill)`); the shell has `--lc-app-shell-bg-image: linear-gradient(to bottom, var(--color-land-1), var(--color-land-2), var(--color-land-3))`.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: {
+      ...args,
+      fiNav,
+      fiBar: fiNav.slice(0, 5),
+      landTint,
+      statTrendDe,
+      costs: [44.1, 44.8, 45.2, 45.0, 45.9, 46.4, 46.1, 47.0, 47.6, 48.2],
+      variance: [0.1, 0.15, 0.12, 0.18, 0.14, 0.16, 0.2, 0.17, 0.19, 0.2],
+    },
+    template: fullHeightTemplate,
+    moduleMetadata: { imports: [StatTrendComponent, CardComponent] },
+  }),
+};
+
+export const FullHeightNavHorizon: Story = {
+  args: { horizon: true, navPlacement: 'full-height' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Today with `navPlacement="full-height"`, the horizon, the right column and a footer, on the default transparent rail. The brand moves from the header to the top of the rail (`lc-sidenav brandName="Produkt"`, `logoSize="md"` like the header\'s `size="md"`: 64 px; `lc-header [showLogo]="false"`), so the first item sits at y 112 as with `\'below-header\'`. The land runs under the nav across the full width; the footer takes its row below the land, its content starting at the nav width; from 1280 px the right column\'s tint and hairline still start behind the header.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: {
+      ...args,
+      nav,
+      members,
+      memberAvatars: members.map((m) => ({ name: m.label, color: m.avatarColor })),
+    },
+    template: today(
+      '',
+      ' [navPlacement]="navPlacement"',
+      `<lc-footer shell-footer variant="default" [compact]="true" [showBorder]="false" copyright="© 2026 LifeCorner">
+      <a lcButton variant="link" size="lg" href="#privacy">Datenschutz</a>
+      <a lcButton variant="link" size="lg" href="#legal">Impressum</a>
+    </lc-footer>
+    `,
+      ' [showLogo]="false"',
+      ' brandName="Produkt" brandAriaLabel="Produkt – Startseite"',
+    ),
+  }),
+};
+
+export const TintedBackground: Story = {
+  args: { horizon: true },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`--lc-app-shell-bg-image: linear-gradient(to bottom, var(--color-land-1), var(--color-land-2), var(--color-land-3))` on `lc-app-shell` (or any ancestor): a tinted page behind the header, the nav and the page. The horizon\'s land still paints over it, and the bar keeps its clearance below 1024 px. `--lc-app-shell-bg` sets the colour under the layer (default `var(--color-background)`).',
+      },
+    },
+  },
+  render: (args) => ({
+    props: {
+      ...args,
+      nav,
+      members,
+      landTint,
+      memberAvatars: members.map((m) => ({ name: m.label, color: m.avatarColor })),
+    },
+    template: today('', ' [style.--lc-app-shell-bg-image]="landTint"'),
   }),
 };
 

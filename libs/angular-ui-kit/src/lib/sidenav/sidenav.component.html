@@ -35,8 +35,39 @@
     [cdkTrapFocus]="effectiveMode() === 'drawer'"
     [cdkTrapFocusAutoCapture]="effectiveMode() === 'drawer'">
 
-    <!-- Logo area (sidebar-first layout) -->
-    @if (showLogo()) {
+    <!-- Text brand (019): one link to home, never a toggle. Replaces the image logo. -->
+    @if (brandName()) {
+      <div
+        class="lc-sidenav__logo lc-sidenav__logo--brand"
+        [class.lc-sidenav__logo--size-xs]="logoSize() === 'xs'"
+        [class.lc-sidenav__logo--size-sm]="logoSize() === 'sm'"
+        [class.lc-sidenav__logo--size-md]="logoSize() === 'md'"
+        [class.lc-sidenav__logo--size-lg]="logoSize() === 'lg'"
+        [class.lc-sidenav__logo--size-xl]="logoSize() === 'xl'"
+      >
+        @if (brandHref()) {
+          <!-- Plain link: works without the router and without JavaScript. -->
+          <a
+            [href]="brandHref()"
+            class="lc-sidenav__brand"
+            [attr.aria-label]="brandAriaLabel() || null"
+            [attr.data-tooltip]="brandName()"
+            (click)="handleBrandClick()">
+            <ng-container [ngTemplateOutlet]="brandContent" />
+          </a>
+        } @else {
+          <a
+            routerLink="/"
+            class="lc-sidenav__brand"
+            [attr.aria-label]="brandAriaLabel() || null"
+            [attr.data-tooltip]="brandName()"
+            (click)="handleBrandClick()">
+            <ng-container [ngTemplateOutlet]="brandContent" />
+          </a>
+        }
+      </div>
+    } @else if (showLogo()) {
+      <!-- Logo area (sidebar-first layout) -->
       <div
         class="lc-sidenav__logo"
         [class.lc-sidenav__logo--size-xs]="logoSize() === 'xs'"
@@ -290,5 +321,33 @@
     <div class="lc-sidenav__content" [class.lc-sidenav__content--docked]="effectiveMode() === 'docked'">
       <ng-content></ng-content>
     </div>
+
+    <!-- Collapse button at the bottom of the rail (019, docked only): on the icon column in both states. -->
+    @if (showCollapseToggle() && effectiveMode() === 'docked') {
+      <div class="lc-sidenav__collapse-row">
+        <button
+          type="button"
+          class="lc-sidenav__collapse-toggle"
+          (click)="toggleCollapsed()"
+          [attr.aria-label]="collapseToggleLabel()">
+          <lc-icon
+            [name]="collapseToggleIcon()"
+            size="sm"
+            [decorative]="true" />
+        </button>
+      </div>
+    }
   </aside>
+</ng-template>
+
+<!-- The brand link's content: the tile (decorative) and the name. -->
+<ng-template #brandContent>
+  <span class="lc-sidenav__brand-tile" aria-hidden="true">
+    @if (brandIcon()) {
+      <lc-icon [name]="brandIcon()" size="sm" [decorative]="true" />
+    } @else {
+      {{ brandInitial() }}
+    }
+  </span>
+  <span class="lc-sidenav__brand-name" [class.lc-sidenav__sr-only]="isRail()">{{ brandName() }}</span>
 </ng-template>

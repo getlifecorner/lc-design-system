@@ -74,6 +74,38 @@ const meta: Meta<SidenavComponent> = {
       description:
         'Navigation items (`NavigationItem[]`): `id`, `icon`, `label`, `route`, `displayOrder`; optional `children` (collapsible group), `isSection` (section headline), `badge { value, variant? }`, `action { icon, ariaLabel? }` (emits `itemAction`), `requiredRole` (for the app\'s own filtering)',
     },
+    brandName: {
+      control: 'text',
+      description:
+        'Product name shown as a text brand at the top: an icon tile and the name, one link to home. Replaces the image logo (`showLogo`). As high as the image logo (`logoSize`, 64 px for `md` = `lc-header size="md"`); the name wraps to two lines at most and stays the accessible name; collapsed, only the tile shows. Never toggles the rail. Empty: no text brand',
+      table: { defaultValue: { summary: "''" } },
+    },
+    brandIcon: {
+      control: 'text',
+      description: '`lc-icon` name in the brand tile (decorative). Empty: the tile shows the name\'s first letter. Renders nothing without `brandName`',
+      table: { defaultValue: { summary: "''" } },
+    },
+    brandHref: {
+      control: 'text',
+      description: 'Plain URL of the brand link (a native `<a href>`, no router). Empty: `routerLink="/"`, as `lc-header`\'s `homeHref`',
+      table: { defaultValue: { summary: "''" } },
+    },
+    brandAriaLabel: {
+      control: 'text',
+      description: "Accessible name of the brand link. Empty: the brand name. Start it with the visible name, e.g. `'Finance Intelligence – home'`",
+      table: { defaultValue: { summary: "''" } },
+    },
+    showCollapseToggle: {
+      control: 'boolean',
+      description:
+        'Docked mode: a button at the bottom of the rail collapses and expands it, on the icon column in both states. Independent of the brand. With `showLogo` the image logo toggles already, so use one of the two',
+      table: { defaultValue: { summary: 'false' } },
+    },
+    expandAriaLabel: {
+      control: 'text',
+      description: 'Accessible name of the collapse button while the rail is collapsed. Expanded, it uses `collapseAriaLabel`',
+      table: { defaultValue: { summary: "'Expand navigation'" } },
+    },
   },
 
   parameters: {
@@ -117,6 +149,12 @@ Sidenav component for application navigation sidebar.
 | \`ariaLabel\` | \`string\` | \`'Side navigation'\` | ARIA label |
 | \`theme\` | \`'auto' \\| 'light' \\| 'dark'\` | \`'auto'\` | Theme variant |
 | \`variant\` | \`'default' \\| 'transparent'\` | \`'default'\` | Rail surface, or none with pill items (docked) |
+| \`brandName\` | \`string\` | \`''\` | Text brand: icon tile + product name, one link to home (replaces the image logo) |
+| \`brandIcon\` | \`string\` | \`''\` | Icon in the brand tile; empty: the name's first letter |
+| \`brandHref\` | \`string\` | \`''\` | Plain URL of the brand link; empty: \`routerLink="/"\` |
+| \`brandAriaLabel\` | \`string\` | \`''\` | Accessible name of the brand link; empty: the name |
+| \`showCollapseToggle\` | \`boolean\` | \`false\` | Collapse button at the bottom of the docked rail |
+| \`expandAriaLabel\` | \`string\` | \`'Expand navigation'\` | Name of that button while collapsed |
 
 **Outputs:**
 | Output | Payload | Description |
@@ -143,6 +181,8 @@ interface NavigationItem {
 **Theming tokens:** \`--lc-sidenav-bg\`, \`--lc-sidenav-fg\`, \`--lc-sidenav-fg-active\`, \`--lc-sidenav-border\`, \`--lc-sidenav-hover-bg\`, \`--lc-sidenav-section-fg\`
 
 Dark mode adds: \`--lc-sidenav-active-bg\`, \`--lc-sidenav-active-fg\`, \`--lc-sidenav-active-icon\`
+
+Set on \`lc-sidenav\` (or a rule such as \`.app lc-sidenav\`), these win over \`theme="light"\` / \`"dark"\` since 3.14, so a themed rail can be recoloured. Theme-stable hooks, read where used (set them on any ancestor): \`--lc-sidenav-active-indicator\` (the current item's 2 px bar, default \`var(--color-primary-500)\`; on a \`theme="light"\` rail \`#208497\` on any page, the colour of its focus rings: 4.37:1 on the rail, 4.06:1 on the current item), \`--lc-sidenav-brand-tile-bg\` (default \`var(--color-primary-fill)\`) and \`--lc-sidenav-brand-tile-fg\` (default \`var(--color-on-primary)\`).
 
 **Icon-column geometry:** \`--lc-sidenav-rail-width\` (56px), \`--lc-sidenav-nav-padding-x\` (8px),
 \`--lc-sidenav-item-padding-x\` (10px). Expanded and collapsed share the gutters, so the icon
@@ -832,4 +872,110 @@ export const RouterMatched: Story = {
     // Leave the current item without the click's focus ring, so the canvas shows its plain look.
     (current[0] as HTMLElement).blur();
   },
+};
+
+/** German destinations of the text-brand stories (request 019). */
+const germanItems = [
+  { id: 'overview', icon: 'home', label: 'Übersicht', route: '/', displayOrder: 1 },
+  { id: 'costs', icon: 'banknotes', label: 'Kosten', route: '/kosten', displayOrder: 2 },
+  { id: 'cost-centres', icon: 'calculator', label: 'Kostenstellen', route: '/kostenstellen', displayOrder: 3 },
+  { id: 'contracts', icon: 'document-text', label: 'Verträge', route: '/vertraege', displayOrder: 4 },
+  { id: 'reports', icon: 'chart-pie', label: 'Berichte', route: '/berichte', displayOrder: 5 },
+  { id: 'settings', icon: 'cog-6-tooth', label: 'Einstellungen', route: '/einstellungen', displayOrder: 6 },
+];
+
+/**
+ * A docked rail of 240 px (or `width`) in a 480 px frame: tall enough for the
+ * brand, six items and the collapse button (the panel scrolls when shorter).
+ * `frame` styles the frame: a collapsed rail's tooltips need `overflow: visible`
+ * and a z-index above the frame to its right.
+ */
+const brandRail = (attrs: string, width = '240px', frame = 'overflow: hidden;') => `
+  <div style="display: flex; height: 480px; border: 1px solid var(--color-border); border-radius: 8px; ${frame} flex: 0 0 auto;">
+    <lc-sidenav [isOpen]="true" mode="docked" width="${width}" [mobileBreakpoint]="0" [items]="items" [activeRoute]="activeRoute"
+                ${attrs} />
+  </div>`;
+
+/** 3.14 (request 019): the text brand on the light and the dark rail. */
+export const TextBrand: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`brandName="Finance Intelligence" brandIcon="presentation-chart-line"`: one link to home (`routerLink="/"`, or a plain `brandHref`) with a 32 px tile on the icon column and the name. The block is as high as the image logo (`logoSize="md"`: 64 px, the height of `lc-header size="md"`). The tile takes `--lc-sidenav-brand-tile-bg` / `-fg` (defaults `--color-primary-fill` / `--color-on-primary`, the same in both themes). Left `theme="light"`, right `theme="dark"`.',
+      },
+    },
+  },
+  render: () => ({
+    props: { items: standardItems, activeRoute: '/dashboard' },
+    template: `
+      <div style="display: flex; flex-wrap: wrap; gap: 24px;">
+        ${brandRail('theme="light" brandName="Finance Intelligence" brandIcon="presentation-chart-line" brandAriaLabel="Finance Intelligence – home" ariaLabel="Main navigation"')}
+        ${brandRail('theme="dark" brandName="Finance Intelligence" brandIcon="presentation-chart-line" brandAriaLabel="Finance Intelligence – home" ariaLabel="Main navigation"')}
+      </div>`,
+  }),
+};
+
+/** 3.14 (request 019): the collapse button at the bottom of the rail; collapsed, the brand shows only its tile. */
+export const TextBrandCollapsedVsExpanded: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`showCollapseToggle`: a 44 px button at the bottom of the rail, on the icon column in both states, collapses and expands it; the brand stays a link and never toggles. Collapsed, the brand shows only its tile (the name stays the accessible name and shows as a tooltip on hover and focus). Right: no `brandIcon`, so the tile shows the first letter.',
+      },
+    },
+  },
+  render: () => ({
+    props: { items: standardItems, activeRoute: '/dashboard' },
+    template: `
+      <div style="display: flex; flex-wrap: wrap; gap: 24px;">
+        ${brandRail('brandName="Finance Intelligence" brandIcon="presentation-chart-line" brandAriaLabel="Finance Intelligence – home" [showCollapseToggle]="true" ariaLabel="Main navigation"', '240px', 'overflow: visible; position: relative; z-index: 3;')}
+        ${brandRail('[collapsed]="true" brandName="Finance Intelligence" brandIcon="presentation-chart-line" brandAriaLabel="Finance Intelligence – home" [showCollapseToggle]="true" ariaLabel="Main navigation"', '240px', 'overflow: visible; position: relative; z-index: 2;')}
+        ${brandRail('[collapsed]="true" brandName="Finance Intelligence" brandAriaLabel="Finance Intelligence – home" [showCollapseToggle]="true" ariaLabel="Main navigation"', '240px', 'overflow: visible; position: relative; z-index: 1;')}
+      </div>`,
+  }),
+};
+
+/** 3.14 (request 019): long German brand names on the 240 px dark rail. */
+export const TextBrandGerman: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`lang="de"`: "Finanz-Controlling Cockpit" wraps to two lines at 240 px; "Haushaltsmitgliederverwaltung" is hyphenated (`hyphens: auto` needs the `lang`) and clamped at two lines. Neither overflows, and the full name stays the accessible name. The collapse button and the brand take German labels (`collapseAriaLabel`, `expandAriaLabel`, `brandAriaLabel`).',
+      },
+    },
+  },
+  render: () => ({
+    props: { items: germanItems, activeRoute: '/kosten' },
+    template: `
+      <div lang="de" style="display: flex; flex-wrap: wrap; gap: 24px;">
+        ${brandRail('theme="dark" brandName="Finanz-Controlling Cockpit" brandIcon="presentation-chart-line" brandAriaLabel="Finanz-Controlling Cockpit – Startseite" [showCollapseToggle]="true" collapseAriaLabel="Navigation nach links einklappen" expandAriaLabel="Navigation ausklappen" ariaLabel="Hauptnavigation"')}
+        ${brandRail('theme="dark" brandName="Haushaltsmitgliederverwaltung" brandIcon="users" ariaLabel="Hauptnavigation"')}
+      </div>`,
+  }),
+};
+
+/** 3.14 (request 019): the text brand in the drawer, German, with the close button beside it. */
+export const TextBrandDrawerGerman: Story = {
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        story:
+          'In the drawer the brand and the 44 px close button share the 64 px block (brand first in the DOM, then close, then the items; focus starts on close). A click on the brand closes the drawer on a phone, as the items do.',
+      },
+    },
+  },
+  render: () => ({
+    props: { items: germanItems },
+    template: `
+      <div lang="de" style="min-height: 100vh;">
+        <lc-sidenav [isOpen]="true" mode="drawer" theme="dark" [items]="items" activeRoute="/kosten"
+                    brandName="Finanz-Controlling Cockpit" brandIcon="presentation-chart-line"
+                    brandAriaLabel="Finanz-Controlling Cockpit – Startseite"
+                    closeAriaLabel="Navigation schließen" ariaLabel="Hauptnavigation" />
+      </div>`,
+  }),
 };

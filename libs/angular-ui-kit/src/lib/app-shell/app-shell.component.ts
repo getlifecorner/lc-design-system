@@ -17,6 +17,13 @@ import {
 const BAR_VAR = '--_lc-app-shell-bar';
 
 /**
+ * Where the side navigation sits from 1024 px: `'below-header'` (the header
+ * spans the full width, the nav starts below it) or `'full-height'` (the nav
+ * runs from the top to the bottom of the viewport, the header beside it).
+ */
+export type AppShellNavPlacement = 'below-header' | 'full-height';
+
+/**
  * App shell: the frame around every page of an app — header, side navigation,
  * page, bottom navigation bar, footer and the horizon — laid out for phones
  * first, with the DOCUMENT scrolling (not an inner container), so the iOS
@@ -55,6 +62,27 @@ const BAR_VAR = '--_lc-app-shell-bar';
  * kit's styles): full-bleed, below the side navigation and the page, filling
  * the rest of the screen — on Today, the sign-in pages and the shell pages.
  *
+ * `navPlacement="full-height"` (3.14) runs the nav column from the top to the
+ * bottom of the viewport (sticky, 100dvh) with the header beside it, from
+ * 1024 px; below 1024 px it renders like the default. The DOM and tab order
+ * stay header → nav → page → footer, so in full-height the header's controls
+ * come before a brand at the top of the nav (banner, then navigation, then
+ * content). The land and the footer run under the nav; the footer's content
+ * starts at the nav width.
+ *
+ * CSS hooks (set them on `lc-app-shell` or any ancestor):
+ * - `--lc-app-shell-nav-width` — the nav column from 1024 px. Default
+ *   `240px` (`248px` from 1440, `280px` from 1920).
+ * - `--lc-app-shell-bottom-clearance` — the space kept free for the bottom
+ *   bar below 1024 px. Default: the bar's height + 40 px + the inset, at
+ *   least `112px` + the inset.
+ * - `--lc-app-shell-bg` — the page colour behind everything (the sky).
+ *   Default `var(--color-background)`.
+ * - `--lc-app-shell-bg-image` — a layer over the page colour. Default
+ *   `var(--app-background-image, none)`. A tint, for example:
+ *   `linear-gradient(to bottom, var(--color-land-1), var(--color-land-2), var(--color-land-3))`.
+ *   The horizon's land still paints over it.
+ *
  * Needs `<meta name="viewport" content="width=device-width, initial-scale=1,
  * viewport-fit=cover">` for the safe-area insets. Breakpoints are fixed
  * (1024 px side navigation, 1440 / 1920 px widths), so the layout works
@@ -88,9 +116,23 @@ export class AppShellComponent {
    */
   readonly horizon = input(false);
 
+  /**
+   * Where the side navigation sits from 1024 px. `'below-header'`: the header
+   * spans the full width and the nav starts below it. `'full-height'`: the nav
+   * runs from the top to the bottom of the viewport, with the header beside
+   * it. Below 1024 px both render the same. The DOM and tab order don't change
+   * (header, nav, page). CSS only, so it holds before JavaScript runs.
+   * `'full-height'` expects a brand block at the top of the rail
+   * (`lc-sidenav brandName` or `showLogo`, with a `logoSize` that matches the
+   * header's `size`, e.g. both `md`: 64 px) and the header's `showLogo` off.
+   * @default 'below-header'
+   */
+  readonly navPlacement = input<AppShellNavPlacement>('below-header');
+
   protected readonly shellClasses = computed(() => {
     const classes = ['lc-app-shell'];
     if (this.horizon()) classes.push('lc-app-shell--horizon');
+    if (this.navPlacement() === 'full-height') classes.push('lc-app-shell--nav-full-height');
     return classes.join(' ');
   });
 

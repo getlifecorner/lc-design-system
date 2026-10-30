@@ -279,6 +279,24 @@ body {
 }
 ```
 
+`lc-app-shell` paints the sky itself through two public hooks (3.14). Set them
+on `lc-app-shell` or any ancestor:
+
+| Hook | Default | What |
+|---|---|---|
+| `--lc-app-shell-bg` | `var(--color-background)` | the page colour behind everything |
+| `--lc-app-shell-bg-image` | `var(--app-background-image, none)` | a layer over the page colour |
+
+A tinted page, for example behind white elevated cards, takes the land's
+colours from top to bottom. The horizon's land still paints over it, in both
+themes:
+
+```css
+lc-app-shell {
+  --lc-app-shell-bg-image: linear-gradient(to bottom, var(--color-land-1), var(--color-land-2), var(--color-land-3));
+}
+```
+
 | Token | Light | Dark |
 |---|---|---|
 | `--color-background` | `#ffffff` (was `#f3f4f6`) | `#0a121b` |

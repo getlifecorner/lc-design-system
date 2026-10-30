@@ -13,8 +13,14 @@
 
     @if (change()) {
       <span class="lc-stat-trend__change" [class]="trendColorClass()">
-        <span class="lc-stat-trend__icon">{{ trendIcon() }}</span>
-        {{ change() }}
+        <span class="lc-stat-trend__icon" [attr.aria-hidden]="sentiment() ? 'true' : null">{{ trendIcon() }}</span>
+        <!-- The hidden text follows the change without a space ("+3,1 %, gestiegen", review r1 N2);
+             without a sentiment the text node stays " +3.1% " as before 3.14. -->
+        @if (sentiment()) {
+          {{ change() }}<span class="lc-stat-trend__sr-only">{{ srText() }}</span>
+        } @else {
+          {{ change() }}
+        }
       </span>
     }
   </div>

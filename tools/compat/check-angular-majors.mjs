@@ -290,6 +290,13 @@ const EXPECT_IN_HTML = [
   ['lc-input error state is input-invalid, not input-error (G-WL3)', (html) => /<div[^>]*\sclass="input-container[^"]*\binput-invalid\b[^"]*"/.test(html)
     && !/<div[^>]*\sclass="input-container[^"]*\binput-error\b/.test(html)
     && /<p(?=[^>]*\sid="contact-email-error")(?=[^>]*\sclass="input-error")[^>]*>/.test(html)],
+  // 3.14 (request 019, probe-314.ts): the sidebar-first shell, the sidenav's
+  // text brand as a plain link and a rising cost in the negative colour, before JS
+  ['full-height nav: class and grid in the page before JS (G1)', (html) => /<lc-app-shell(?=[^>]*\sid="compat-shell-314")[^>]*>\s*<div[^>]*\sclass="lc-app-shell lc-app-shell--nav-full-height"/.test(html)
+    && /grid-template-areas:\s*"nav header"\s*"nav body"\s*"end end"/.test(html)],
+  ['sidenav text brand: one plain link home, tile hidden, name as text (G2)', /<a(?=[^>]*\sclass="lc-sidenav__brand")(?=[^>]*\shref="\/")(?=[^>]*\saria-label="Finance Intelligence – Startseite")[^>]*>(?:(?!<\/a>)[^])*?<span(?=[^>]*\sclass="lc-sidenav__brand-tile")(?=[^>]*\saria-hidden="true")[^>]*>(?:(?!<\/a>)[^])*?<span[^>]*\sclass="lc-sidenav__brand-name"[^>]*>Finance Intelligence<\/span>/],
+  // The hidden text follows the change without a space (review r1 N2: "+3,1 % , gestiegen").
+  ['stat-trend sentiment: negative class and the hidden text (G4)', /<span(?=[^>]*\sclass="lc-stat-trend__change lc-stat-trend__change--negative")[^>]*>(?:<!--[^]*?-->|\s)*<span(?=[^>]*\sclass="lc-stat-trend__icon")(?=[^>]*\saria-hidden="true")[^>]*>↑<\/span>(?:<!--[^]*?-->|[^<])*\+3,1 %(?:<!--[^]*?-->)*<span[^>]*\sclass="lc-stat-trend__sr-only"[^>]*>, gestiegen, ungünstig<\/span>/],
 ];
 
 /**

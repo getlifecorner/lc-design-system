@@ -47,15 +47,21 @@
   padding: 0.0625rem 0.5rem;
 }
 
-// DS2.0: translucent tinted change pills, single definition for both themes.
-.lc-stat-trend__change--up {
-  color: var(--color-success);
-  background-color: rgba(142, 164, 117, 0.18);
+// Tinted change pills. `--up`/`--down` come from the direction, `--positive`/
+// `--negative`/`--neutral` from `sentiment` (which wins). The text tokens are
+// the AA pairs of the subtle fills (light 4.85 / 10.98:1; dark 5.17 / 7.21:1
+// over a raised card); the old --color-success / --color-error measured
+// 2.33:1 (up, light) and 1.98:1 (down, dark).
+.lc-stat-trend__change--up,
+.lc-stat-trend__change--positive {
+  color: var(--color-text-success);
+  background-color: var(--color-success-subtle);
 }
 
-.lc-stat-trend__change--down {
-  color: var(--color-error);
-  background-color: rgba(157, 14, 14, 0.18);
+.lc-stat-trend__change--down,
+.lc-stat-trend__change--negative {
+  color: var(--color-text-error);
+  background-color: var(--color-error-subtle);
 }
 
 .lc-stat-trend__change--neutral {
@@ -65,4 +71,17 @@
 
 .lc-stat-trend__icon {
   font-size: 0.75em;
+}
+
+// Direction and sentiment for screen readers (rendered only with `sentiment`).
+.lc-stat-trend__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

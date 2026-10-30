@@ -61,6 +61,9 @@ const LABEL_WIDTHS = ['64%', '48%', '72%', '56%'] as const;
   host: {
     class: 'lc-sidenav-container lc-sidenav-container--docked',
     '[class.lc-sidenav-container--open]': 'isOpen()',
+    // The theme's values sit on the host, as on lc-sidenav (019).
+    '[class.lc-sidenav-container--light]': "theme() === 'light'",
+    '[class.lc-sidenav-container--dark]': "theme() === 'dark'",
     'aria-hidden': 'true',
     inert: '',
   },

@@ -37,20 +37,22 @@
 // past the component's own specificity.
 @mixin host-tokens {
   :host {
-    // DS2.0 dark-first: default sidenav tokens are the brand dark surface. The
-    // `.lc-sidenav--light` modifier opts back into the light treatment, and
-    // `--dark` forces the dark rail even under a light root.
-    --lc-sidenav-bg: var(--color-sidebar, var(--color-surface));
-    --lc-sidenav-fg: var(--color-text-secondary);
-    --lc-sidenav-fg-active: var(--color-text-primary);
-    --lc-sidenav-border: var(--color-border);
-    --lc-sidenav-hover-bg: var(--color-surface-hover);
-    --lc-sidenav-section-fg: var(--color-text-tertiary);
-    --lc-sidenav-active-bg: var(--color-surface-selected);
+    // DS2.0 dark-first: default sidenav tokens are the brand dark surface.
+    // `theme="light"` opts back into the light treatment, and `"dark"` forces
+    // the dark rail even under a light root. Their values are private host
+    // variables (`--_lc-sidenav-t-*`, see `themes`) that each hook reads
+    // first, so an app's `--lc-sidenav-*` on `lc-sidenav` still wins (019).
+    --lc-sidenav-bg: var(--_lc-sidenav-t-bg, var(--color-sidebar, var(--color-surface)));
+    --lc-sidenav-fg: var(--_lc-sidenav-t-fg, var(--color-text-secondary));
+    --lc-sidenav-fg-active: var(--_lc-sidenav-t-fg-active, var(--color-text-primary));
+    --lc-sidenav-border: var(--_lc-sidenav-t-border, var(--color-border));
+    --lc-sidenav-hover-bg: var(--_lc-sidenav-t-hover-bg, var(--color-surface-hover));
+    --lc-sidenav-section-fg: var(--_lc-sidenav-t-section-fg, var(--color-text-tertiary));
+    --lc-sidenav-active-bg: var(--_lc-sidenav-t-active-bg, var(--color-surface-selected));
     // AS-4 (a): the selected tint's own ink. `--color-primary-500` gave
     // 4.06:1 on the light tint and failed WCAG 1.4.3.
-    --lc-sidenav-active-fg: var(--color-on-surface-selected, var(--color-link));
-    --lc-sidenav-active-icon: var(--color-on-surface-selected, var(--color-link));
+    --lc-sidenav-active-fg: var(--_lc-sidenav-t-active-fg, var(--color-on-surface-selected, var(--color-link)));
+    --lc-sidenav-active-icon: var(--_lc-sidenav-t-active-icon, var(--color-on-surface-selected, var(--color-link)));
     // Backdrop + ring behind the collapsed-rail count badge. Must stay opaque:
     // it is what the badge variant's translucent tint composites over, and what
     // separates the badge from the icon it sits on. Follows --lc-sidenav-bg, so
@@ -74,9 +76,9 @@
 
 @mixin host-tokens-boxes {
   :host {
-    --lc-sidenav-bg: var(--color-sidebar, var(--color-surface));
-    --lc-sidenav-fg: var(--color-text-secondary);
-    --lc-sidenav-border: var(--color-border);
+    --lc-sidenav-bg: var(--_lc-sidenav-t-bg, var(--color-sidebar, var(--color-surface)));
+    --lc-sidenav-fg: var(--_lc-sidenav-t-fg, var(--color-text-secondary));
+    --lc-sidenav-border: var(--_lc-sidenav-t-border, var(--color-border));
     --lc-sidenav-rail-width: 56px;
     --lc-sidenav-nav-padding-x: 0.5rem;
     --lc-sidenav-item-padding-x: 0.625rem;
@@ -414,20 +416,30 @@
   }
 }
 
+// The theme values live on the HOST as private variables (019). Until 3.13
+// they were the public hooks themselves, set on the inner `.lc-sidenav--light`
+// / `--dark`: that overrode an app's hooks on `lc-sidenav` (`theme="dark"` plus
+// a petrol `--lc-sidenav-bg` stayed #070e15), and the badge ring, which reads
+// `--lc-sidenav-bg` on the host, kept the auto colour. The inner classes stay.
 @mixin themes {
   // ── Light theme opt-in ─────────────────────────
   // DS2.0 is dark-first, so the default sidenav is dark. This modifier restores
   // the light treatment for surfaces that explicitly want a light rail.
-  .lc-sidenav--light {
-    --lc-sidenav-bg: #ffffff;
-    --lc-sidenav-fg: #374151; // neutral-700
-    --lc-sidenav-fg-active: #111827; // neutral-900
-    --lc-sidenav-border: #e5e7eb; // neutral-200
-    --lc-sidenav-hover-bg: #f3f4f6; // neutral-100
-    --lc-sidenav-section-fg: #6b7280; // neutral-500
-    --lc-sidenav-active-bg: #f0f8fa; // primary-50
-    --lc-sidenav-active-fg: #144f5b; // primary-700
-    --lc-sidenav-active-icon: #1a6a79; // primary-600
+  :host(.lc-sidenav-container--light) {
+    --_lc-sidenav-t-bg: #ffffff;
+    --_lc-sidenav-t-fg: #374151; // neutral-700
+    --_lc-sidenav-t-fg-active: #111827; // neutral-900
+    --_lc-sidenav-t-border: #e5e7eb; // neutral-200
+    --_lc-sidenav-t-hover-bg: #f3f4f6; // neutral-100
+    --_lc-sidenav-t-section-fg: #6b7280; // neutral-500
+    --_lc-sidenav-t-active-bg: #f0f8fa; // primary-50
+    --_lc-sidenav-t-active-fg: #144f5b; // primary-700
+    --_lc-sidenav-t-active-icon: #1a6a79; // primary-600
+    // The focus rings and the active bar (review r1, AC-13): the light
+    // primary-500. A dark page's #84c7d4 gave 1.89:1 on this white rail; this
+    // holds 4.37 on #fff and 4.06 on the active tint on either page. The dark
+    // theme sets none: the page's primary-500 holds ≥ 3.98 on its rail.
+    --_lc-sidenav-t-accent: #208497; // primary-500 (light)
   }
 
   // ── Explicit dark variant ──────────────────────────────────────────────────
@@ -436,30 +448,30 @@
   // the values were identical to the default block. Hard-coding them is what
   // makes the two-tone shell (light content area, dark navigation) reachable
   // through the documented input instead of an app-side override.
-  .lc-sidenav--dark {
-    --lc-sidenav-bg: #070e15; // $color-sidebar-dark
-    --lc-sidenav-fg: #c4d2d9; // dark --color-text-secondary
-    --lc-sidenav-fg-active: #f1f6f8; // dark --color-text-primary
-    --lc-sidenav-border: rgba(255, 255, 255, 0.08);
-    --lc-sidenav-hover-bg: rgba(132, 199, 212, 0.06);
-    --lc-sidenav-section-fg: #93a4ad; // dark --color-text-tertiary
-    --lc-sidenav-active-bg: rgba(32, 132, 151, 0.12);
-    --lc-sidenav-active-fg: #84c7d4; // $color-primary-400
-    --lc-sidenav-active-icon: #84c7d4;
+  :host(.lc-sidenav-container--dark) {
+    --_lc-sidenav-t-bg: #070e15; // $color-sidebar-dark
+    --_lc-sidenav-t-fg: #c4d2d9; // dark --color-text-secondary
+    --_lc-sidenav-t-fg-active: #f1f6f8; // dark --color-text-primary
+    --_lc-sidenav-t-border: rgba(255, 255, 255, 0.08);
+    --_lc-sidenav-t-hover-bg: rgba(132, 199, 212, 0.06);
+    --_lc-sidenav-t-section-fg: #93a4ad; // dark --color-text-tertiary
+    --_lc-sidenav-t-active-bg: rgba(32, 132, 151, 0.12);
+    --_lc-sidenav-t-active-fg: #84c7d4; // $color-primary-400
+    --_lc-sidenav-t-active-icon: #84c7d4;
   }
 }
 
 @mixin themes-boxes {
-  .lc-sidenav--light {
-    --lc-sidenav-bg: #ffffff;
-    --lc-sidenav-fg: #374151;
-    --lc-sidenav-border: #e5e7eb;
+  :host(.lc-sidenav-container--light) {
+    --_lc-sidenav-t-bg: #ffffff;
+    --_lc-sidenav-t-fg: #374151;
+    --_lc-sidenav-t-border: #e5e7eb;
   }
 
-  .lc-sidenav--dark {
-    --lc-sidenav-bg: #070e15;
-    --lc-sidenav-fg: #c4d2d9;
-    --lc-sidenav-border: rgba(255, 255, 255, 0.08);
+  :host(.lc-sidenav-container--dark) {
+    --_lc-sidenav-t-bg: #070e15;
+    --_lc-sidenav-t-fg: #c4d2d9;
+    --_lc-sidenav-t-border: rgba(255, 255, 255, 0.08);
   }
 }
 

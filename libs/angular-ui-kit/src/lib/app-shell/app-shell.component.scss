@@ -3,10 +3,12 @@
  * and bottom bar on one CSS grid. The document scrolls; nothing here sets an
  * overflow or a fixed height.
  *
- * Hooks: --lc-app-shell-nav-width (240 / 248 / 280 px from 1024 / 1440 /
- * 1920), --lc-app-shell-bottom-clearance (space kept free for the bottom bar
- * below 1024 px), --lc-app-shell-bg / --lc-app-shell-bg-image (the sky:
- * --color-background and --app-background-image).
+ * Hooks (documented in the class JSDoc and docs/app-shell.mdx):
+ * --lc-app-shell-nav-width (240 / 248 / 280 px from 1024 / 1440 / 1920),
+ * --lc-app-shell-bottom-clearance (space kept free for the bottom bar below
+ * 1024 px), --lc-app-shell-bg / --lc-app-shell-bg-image (the sky:
+ * --color-background and --app-background-image; read on .lc-app-shell with
+ * no :host declaration, so they can be set on lc-app-shell or higher).
  *
  * Empty slots take no space: `:empty` ignores Angular's comment anchors, and
  * `:has()` switches the grid when there is no side navigation.
@@ -162,6 +164,45 @@
 
   .lc-app-shell__bottom-nav {
     display: none;
+  }
+
+  // navPlacement="full-height" (019, G1): the nav column runs from the top to
+  // the bottom of the viewport, the header sits beside it. The DOM order is
+  // unchanged (header → nav → body), only the grid moves. The nav spans every
+  // row, so the land and the footer run under it (z-index 2); the footer's
+  // content starts at the nav width. An empty nav keeps the one-column layout.
+  .lc-app-shell--nav-full-height:not(:has(> .lc-app-shell__nav:empty)) {
+    grid-template-areas:
+      'nav header'
+      'nav body'
+      'end end';
+
+    // The left inset is inside the nav column.
+    > .lc-app-shell__header {
+      padding-left: 0;
+    }
+
+    > .lc-app-shell__nav {
+      grid-row: 1 / -1;
+      grid-column: 1;
+      box-sizing: border-box;
+      height: 100vh;
+      height: 100dvh;
+      max-height: none;
+      z-index: 2;
+      padding-top: env(safe-area-inset-top, 0px);
+      // The projected nav (or a `<div shell-nav>` around `@defer`) fills the
+      // column's height: projected children carry no shell attribute, so the
+      // nav sizes them through its own grid row.
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(100%, auto);
+    }
+
+    > .lc-app-shell__footer {
+      grid-column: 1 / -1;
+      padding-left: var(--_nav-width);
+    }
   }
 }
 

@@ -19,6 +19,7 @@ import { DateRangePickerComponent } from './date-range-picker/date-range-picker.
 import { DatepickerComponent } from './datepicker/datepicker.component';
 import { SidenavComponent } from './sidenav/sidenav.component';
 import { SpinnerComponent } from './spinner/spinner.component';
+import { StatTrendComponent } from './stat-trend/stat-trend.component';
 import { TreeViewComponent } from './tree-view/tree-view.component';
 import { FileUploadComponent } from './file-upload/file-upload.component';
 import { KanbanBoardComponent } from './kanban-board/kanban-board.component';
@@ -290,6 +291,24 @@ describe('Translatable labels (i18n)', () => {
     expect((document.querySelector('.lc-sidenav__close') ?? f.nativeElement.querySelector('.lc-sidenav__close'))?.getAttribute('aria-label')).toBe(
       'Navigation schließen',
     );
+  });
+
+  it('lc-sidenav: collapse button labels and brandAriaLabel (3.14)', () => {
+    const f = create(SidenavComponent, { mode: 'docked', isOpen: true, showCollapseToggle: true, brandName: 'Finanz-Controlling Cockpit', items: [] });
+    expect(attr(f.nativeElement, '.lc-sidenav__collapse-toggle')).toBe('Collapse navigation to the left');
+    expect(attr(f.nativeElement, '.lc-sidenav__brand')).toBeNull();
+    set(f, { collapsed: true });
+    expect(attr(f.nativeElement, '.lc-sidenav__collapse-toggle')).toBe('Expand navigation');
+    set(f, { expandAriaLabel: 'Navigation ausklappen', brandAriaLabel: 'Finanz-Controlling Cockpit – Startseite' });
+    expect(attr(f.nativeElement, '.lc-sidenav__collapse-toggle')).toBe('Navigation ausklappen');
+    expect(attr(f.nativeElement, '.lc-sidenav__brand')).toBe('Finanz-Controlling Cockpit – Startseite');
+  });
+
+  it('lc-stat-trend: labels of the sentiment text (3.14)', () => {
+    const f = create(StatTrendComponent, { value: '48,2 Mio. €', change: '+3,1 %', sentiment: 'negative' });
+    expect(text(f.nativeElement, '.lc-stat-trend__sr-only')).toBe(', up, unfavourable');
+    set(f, { labels: { up: 'gestiegen', negative: 'ungünstig' } });
+    expect(text(f.nativeElement, '.lc-stat-trend__sr-only')).toBe(', gestiegen, ungünstig');
   });
 
   it('lc-spinner: loadingLabel', () => {
