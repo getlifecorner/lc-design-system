@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.15.0] - 2026-10-30
+
+State pages ("no role yet", "sign-in failed") line up with the header without local CSS: `lc-app-page` takes the header's padding and a set top spacing, `lc-empty-state` gets a primary icon and a larger message, `lc-avatar` a person fallback, outline buttons a primary tone, and `--lc-sidenav-*` hooks work when set on a layout wrapper (finance-intelligence app-shell prove, rows 1–7, docs/ux/gaps/app-shell-prove-2026-10-30.md). No API breaks.
+
+### Added
+
+- **`lc-app-page paddingX`** (`'default'` | `'header'`, default `'default'`, row 1): `'header'` uses `lc-header`'s padding, so the page title starts where the header title does (x 16 / 24 / 24 at 360 / 1024 / 1280). The hooks `--lc-app-page-padding-x`, `--lc-app-page-padding-top`, `--lc-app-page-gap` and `--lc-app-page-aside-width` are documented with their defaults; set your own per-breakpoint values in a media query (a fixed 16 / 32 px does not line up with the header's 24 px).
+- **`paddingTop` on `lc-app-page` and `lc-page-header`** (`'default'` | `'none'` | `'sm'` | `'md'`, default `'default'`, row 2): `lc-app-page paddingTop="md"` with `lc-page-header paddingTop="none"` puts the h1 16 px below the header (y 80) at every width; a skeleton in the breadcrumbs slot starts at the same y.
+- **`lc-empty-state iconTone`** (`'neutral'` | `'primary'`, row 3): a 48 px primary circle with a 24 px icon, 7.85 / 9.68:1 (light / dark). **`messageSize`** (`'sm'` | `'md'`, row 4): the message at 16 / 24 px, 16 px below the icon and 24 px above the action.
+- **`lc-avatar fallback`** (`'initials'` | `'person'`, row 5) and **`lc-header userAvatarFallback`**: without a name, or when the image fails, a person glyph on the neutral disc at 60 % of the size, 7.00 / 6.10:1, still named "Avatar" unless decorative. A name still shows its initials.
+- **`tone` on `lc-button` and `a[lcButton]`** (`'neutral'` | `'primary'`, default `'neutral'`, outline only, row 6): primary text ≥ 7.86:1 on the page and the land tints, border ≥ 5.34:1, hover 7.85 / 10.57:1, pressed 6.71 / 6.71:1. Other variants ignore it.
+- Stories: Layout/App Shell "State Page Aligned", "State Page Loading", "Page Padding Per Breakpoint"; Layout/Page Header "Padding Top"; Feedback/Empty State "Primary Tone", "State Page"; Data Display/Avatar "Person Fallback"; Navigation/Header "Avatar Person Fallback"; Components/Button and Button Link "Outline Primary Tone"; Navigation/Sidenav Placeholder "Hooks On An Ancestor".
+
+### Fixed
+
+- **`--lc-sidenav-*` hooks set on an ancestor reach `lc-sidenav` and `lc-sidenav-placeholder`** (row 7). The host declared its own defaults, so a value on the layout wrapper was ignored. Now `--lc-sidenav-bg: var(--color-primary-fill-active)` on a wrapper gives #0d353d with `theme` dark, light and auto, for both components; a value on the element still wins (#1a6a79), and both win over `theme`. Without hooks the colours are unchanged.
+
+### Compatibility
+
+- No API breaks: every new input is optional and renders as before (Jest pins the default DOM). 676 screenshots of 138 unchanged shell, header, page-header, empty-state, avatar, button and sidenav stories are identical apart from known noise.
+- `--lc-sidenav-*` rules an app set on an ancestor before, which had no effect, now apply: check such rules.
+- For a rail colour use the theme-stable `--color-primary-fill*` and `--color-on-primary`: the `--color-primary-100…900` scale inverts in dark.
+- Consumer check (AOT, strictTemplates, prerender) passes on Angular 22.
+
+### Known
+
+- `lc-empty-state messageSize="md"`: a very long unbreakable heading word (for example a 31-letter German compound at 20 px) is wider than the container at 320 px and overflows by about 10 px on each side; it fits at 360 px. The `size="lg"` heading behaves the same.
+- The default (neutral) outline button's hover in dark is white on #a3d5df, 1.60:1 (pre-existing, unchanged here).
+- The `--danger` item of `lc-menu` (for example "Abmelden" in the header's user menu) is 2.06:1 in dark, 8.39:1 in light (pre-existing, unchanged here; a follow-up request will fix it).
+
 ## [3.14.0] - 2026-10-30
 
 A sidebar-first shell: `lc-app-shell navPlacement="full-height"` runs the side navigation from the top to the bottom of the viewport, `lc-sidenav` shows a text brand and a collapse button, the shell background hooks are documented, and `lc-stat-trend` colours a change by its meaning (G1–G4; finance-intelligence app shell, docs/ux/gaps/app-shell-2026-10-30.md). No API breaks.

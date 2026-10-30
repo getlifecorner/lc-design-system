@@ -54,3 +54,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [017](017-input-error-height-band-button/) lc-input error-state height; link button on the hero band | life-os | G-WL3, G-WL1 (wish) | 3.13.0 | 3.13.0 |
 | [018](018-alert-narrow-container-words/) lc-alert in a narrow container: long words and a narrow layout | life-os | G-WL4 | 3.13.1 | 3.13.1 |
 | [019](019-app-shell-full-height-nav/) App shell full-height nav, sidenav text brand, shell background, stat-trend sentiment | finance-intelligence | gap file rows 1–4 (app-shell-2026-10-30) | 3.14.0 | 3.14.0 |
+| [020](020-app-shell-prove-gaps/) App shell prove gaps: page spacing, empty state, avatar fallback, outline tone, sidenav theme | finance-intelligence | gap file rows 1–7 (app-shell-prove-2026-10-30) | 3.15.0 | 3.15.0 |

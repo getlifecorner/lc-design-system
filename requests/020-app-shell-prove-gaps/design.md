@@ -1,6 +1,6 @@
 # Design 020: App shell prove gaps (page spacing, empty state, avatar fallback, outline tone, sidenav theme)
 
-- **Status:** ready
+- **Status:** ready · **Changed in review r1 (2026-10-30):** §3 h1 → circle 96 / 112 px (the app-page gap was missing), heading md wrap (S1); §5 border at rest as measured; §6 menu avatar; §7 2 lines; §9 AC-15 spec list
 - **Spec:** [spec.md](spec.md) — AC-1 … AC-18
 - **Baseline:** `tmp/story-shots/020/baseline` (main db2da64, 676 shots, §9). Expected diffs: **0**.
 
@@ -60,7 +60,7 @@ x 0 |16|                 content 328                 |16| 360
 ├──────────────────────────────────────────────────────┤ y 64
 │  ↕ 16  app-page paddingTop="md"                      │
 │  Noch keine Rolle                                    │ h1 x 16, y 80; 30/37.5, 700 (comfortable, noPaddingX, paddingTop="none")
-│  ↕ 40 page-header bottom + 32 empty-state md         │
+│  ↕ 96: page-header bottom 40 + page gap 24 + md 32   │
 │                    ( ⊘ 48 )                          │ circle centred (x 156–204), icon 24
 │  ↕ 16                                                │
 │       Ihrem Konto ist noch keine Rolle               │ message 16/24, text-tertiary, centred
@@ -80,7 +80,7 @@ x 0 |24|                         content 1232 (at 1280)                         
 ├───────────────────────────────────────────────────────────────────────────────────┤ y 64
 │ ↕ 16                                                                              │
 │ Noch keine Rolle                                                                  │ h1 x 24, y 80
-│ ↕ 72                                                                              │
+│ ↕ 112 (page-header bottom 40 + page gap 40 + empty-state 32)                      │
 │                                    ( ⊘ )                                          │ centred on x 640
 │                  Ihrem Konto ist noch keine Rolle zugeordnet. Bitte …             │ max-width 32rem (512); 16 / 24 as at 360
 │                                 [ ⇥ Abmelden ]                                    │
@@ -95,7 +95,7 @@ At 1024 px: the title and the h1 are at x 24, the trigger at x 952–1000. With 
 | page-header (`paddingTop="none"`) | top 0, bottom 40 (comfortable), inline 0 | h1 30/37.5, 700 | `--font-size-3xl` |
 | icon circle (primary) | 48 × 48, radius full, icon 24 centred | — | `--color-primary-100`, `color: --color-primary-700`, `--border-radius-full` |
 | icon → first text (md) | 16 = gap 8 + circle `margin-bottom` 8 | — | `--spacing-2` |
-| heading (md) | 8 to the message | 20/25, 600 | `--font-size-xl`, `--line-height-tight` |
+| heading (md) | 8 to the message; `overflow-wrap: break-word` (S1, missing here: at 320 px a 309 px compound sticks out) | 20/25, 600 | `--font-size-xl`, `--line-height-tight` |
 | message (md) | `max-width: 32rem`, `overflow-wrap: break-word` | 16/24, 400 | `--font-size-base`, `--line-height-normal` |
 | last text → action (md) | 24 = gap 8 + `margin-bottom` 16 on the message (or on the heading when there is no message), only when it isn't `:last-child` | — | `--spacing-4` |
 | avatar person | box 24/32/40/48/64; glyph 60 % (14.4/19.2/24/28.8/38.4) | — | `--color-neutral-300` disc, `--color-neutral-700` glyph |
@@ -126,7 +126,7 @@ At 1024 px: the title and the h1 are at x 24, the trigger at x 952–1000. With 
 | message `--color-text-tertiary` (16 px) on background, land-1…3, surface | min `#5c6672` on land-1 | min on land-1 | ≥ **5.17** / ≥ **6.47** |
 | avatar person glyph on disc | `#374151` on `#d1d5db` | `#e5e7eb` on `#4b5563` | **7.00** / **6.10**; disc vs the page 1.47 / 2.49 (the glyph carries the meaning) |
 | outline primary text on the tint (over bg, land-1, land-3, surface) | `#144f5b` | `#c1e3e9` | 8.81 / 7.86 / 8.57 / 8.81 · 12.58 / 10.90 / 12.47 / 11.34 |
-| outline primary border vs the page | `#1a6a79` | `#a3d5df` | 5.99 / 5.34 · 10.71 / 9.28 |
+| outline primary border vs the page (bg / land-1, measured r1) | `#1a6a79` | `#a3d5df` | 6.21 / 5.50 · 11.78 / 10.42 |
 | hover: text on `--color-surface-selected`; border vs the page | | | 7.85; 6.21 / 5.50 · 10.57 / 9.20; 11.78 / 10.42 |
 | active: text on `--color-primary-200`; border vs `--color-primary-200` | `#c1e3e9` bg | `#144f5b` bg | 6.71 / 6.71; 4.56 / 5.72 |
 | focus ring `--color-primary-500` vs bg / land-1 | `#208497` | `#84c7d4` | 4.37 / 3.87 · 9.95 / 8.81 |
@@ -137,7 +137,7 @@ New tokens: none. A solid `primary-fill` hover was rejected (3.03:1 against the 
 ## 6. Accessibility
 
 - **Empty state:** `role="status"` container unchanged; the circle `span` is `aria-hidden="true"`, the `lc-icon` `decorative`; nothing new is focusable.
-- **Avatar:** the root keeps `role="img"` and `aria-label = alt || name || 'Avatar'`; the `svg` is `aria-hidden="true" focusable="false"`; `decorative` drops role and label. In the header both avatars stay decorative and the trigger name stays `userMenuAriaLabel` ("?" adds no initials, 3.11.4).
+- **Avatar:** the root keeps `role="img"` and `aria-label = alt || name || 'Avatar'`; the `svg` is `aria-hidden="true" focusable="false"`; `decorative` drops role and label. In the header the trigger avatar stays decorative and the trigger name stays `userMenuAriaLabel` ("?" adds no initials, 3.11.4); the menu-header avatar keeps role `img` "Avatar", as in 3.14.
 - **Button:** native semantics and the ring unchanged. **Targets:** lg buttons 48 px, header trigger 48.
 - **Forced colours:** outline border and text become ButtonText (UA, no `forced-color-adjust`); the person glyph (`currentColor`) becomes CanvasText, plus `border: 1px solid CanvasText` on `.lc-avatar--person` (border-box, size unchanged); the circle becomes Canvas with the icon in CanvasText.
 - **Reduced motion:** no new transition (the outline hover uses the existing `.btn` transition). **Prerender:** classes, static SCSS and template SVG only, so the server HTML is final (AC-17).
@@ -150,7 +150,7 @@ No new built-in strings. The avatar's existing default name is used when there i
 |---|---|---|
 | `lc-avatar` name (person, no `alt`) | "Avatar" (unchanged) | "Avatar" (same word); apps may pass `alt`, e.g. "Kein Profilname" |
 | story h1 | "No role yet" | "Noch keine Rolle" |
-| story message | "Your account has no role yet. Please contact your administration." | "Ihrem Konto ist noch keine Rolle zugeordnet. Bitte wenden Sie sich an die Administration." (3 lines at 360) |
+| story message | "Your account has no role yet. Please contact your administration." | "Ihrem Konto ist noch keine Rolle zugeordnet. Bitte wenden Sie sich an die Administration." (2 lines at 360) |
 | story action | "Sign out" | "Abmelden" |
 | story `userMenuAriaLabel` | "User menu" | "Benutzermenü" |
 
@@ -192,7 +192,7 @@ Every new input gets an argType with `description` and `table.defaultValue`. **D
 | AC-12 | §5; CSS spec for the forced-colors rule; measure the disc and glyph colours | 7.00 / 6.10; rgb(209,213,219) / rgb(75,85,99) disc |
 | AC-13 | unit test: outline + primary → `btn-tone-primary`; primary variant + primary tone → no class; §5; measure text/border at rest and on hover; compare 35 button(-link) stories | text rgb(20,79,91) / rgb(193,227,233), border rgb(26,106,121) / rgb(163,213,223); 0 diffs |
 | AC-14 | hooks-on-an-ancestor: computed `background-color` of `.lc-sidenav` in each component; spec: no host rule declares the 10 hooks, and no read lacks a fallback (regex over both stylesheets) | rgb(13,53,61) for the 6 ancestor cases, rgb(26,106,121) for the 2 override cases, in both page themes |
-| AC-15 | read-through (§8 docs); specs changed only at brand spec l. 228 and 293–296, app-shell spec l. 91–92, each with a comment "020: hooks are no longer declared on `:host`, so ancestor values reach the rail"; compare the 26 sidenav/placeholder stories + full-height-nav | 0 diffs (019 element-over-theme kept) |
+| AC-15 | read-through (§8 docs); specs changed only at brand spec l. 228 and 293–296, app-shell spec l. 91–92, placeholder spec l. 190, each with a comment "020: hooks are no longer declared on `:host`, so ancestor values reach the rail"; compare the 26 sidenav/placeholder stories + full-height-nav | 0 diffs (019 element-over-theme kept) |
 | AC-16 | state-page-aligned DE at 360: `scrollWidth`; `[tabindex]` count; tab order | 360; no new tabindex; trigger → "Abmelden"; ring 2 px visible |
 | AC-17 | compat template: one page with every new modifier; `EXPECT_IN_HTML` gets the 7 class names + the `lc-avatar--person` svg | present in the prerendered HTML |
 | AC-18 | tests, lint; the MCP manifest lists the 9 inputs (`tone` on both button classes) with `@default` | green; 9/9 |

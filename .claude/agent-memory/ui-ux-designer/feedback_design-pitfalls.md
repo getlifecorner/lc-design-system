@@ -50,6 +50,9 @@ metadata:
   - Moving the brand into a full-height rail (019 r2): spell out the header's title (page, not product) and its phone state in §8, or the story shows the name twice from 1024 px and none below. `.lc-sidenav__logo` keeps a 1 px border-bottom on the transparent variant, so it stops at the rail edge under a borderless header.
   - In `--measure` CSS, write `~` for `;` and call `.replaceAll("~", String.fromCharCode(59))`, so the Bash checker passes.
 
+- **Ancestor-set hooks (020).** Any kit declaration of a public hook on `:host` masks values set on an ancestor, whatever its specificity. To honour both element and ancestor, declare no public hook on the host, put defaults in private vars, and read `var(--lc-x, var(--_x))` at every site (and guard it with a regex spec). Requester px targets can contradict the kit header (16 / 24 px): measure the element they must align with before accepting the numbers.
+  - 020 r1: a wrap rule given to one text element (the md message) has to go on every text that grows (the md heading, 20 px, overflowed at 320). In wireframes, add the container's own `gap` (lc-app-page 24/40) to vertical distances. `--color-error` is a fill, the same in both themes; text needs `--color-text-error` (lc-menu danger was 2.06:1 in dark).
+
 **Why:** each of these cost a round trip or would have broken the build.
 
 **How to apply:** name the relevant ones in the design's risk list.
