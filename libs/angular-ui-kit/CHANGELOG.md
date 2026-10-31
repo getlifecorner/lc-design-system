@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.19.0] - 2026-10-31
+
+The review findings of 3.15 to 3.18 (requests 020, 021 and 023): table cell classes and pagination, toast tap targets, decorative icons, menu danger contrast. No API breaks.
+
+### Added
+
+- **`lc-table pageSizeLabel`** (021 review F2, sources page): the text after the number in each page-size option, default `'/ page'`; German `pageSizeLabel="/ Seite"` gives "10 / Seite".
+- Stories: Data Display/Table "Pagination Sizes"; Feedback/Toast "With Action"; Feedback/Drawer "Without Heading".
+
+### Fixed
+
+- **`TableColumn.cellClass`** (021 review F1): a class colour or font size now applies to its cells (the kit's cell defaults have zero specificity); `cellStyle` still wins over the class. Cells without a class look as before.
+- **`lc-table` pagination** (021 review F2): the page-size select has no clear (×) control any more (it sat over "5 / page" at 1280); previous and next are 32/40/44 px like the select, with a 44 px tap area and a 2 px focus ring; the row wraps, so the page stays 360 px wide at 360 px and 200 % text (was 546 px).
+- **`lc-toast`** (021 review, Service Call): close 28 × 28 → 44 × 44, action 94 × 29 → 93.7 × 44 px; the toast keeps its size (328 × 78 at 360 px). A long word breaks inside the message.
+- **`lc-drawer`, `lc-notification-center`** (023 follow-up): the close, empty-state and item icons are decorative; axe `svg-img-alt` 11 → 0 stories.
+- **`lc-menu` danger item** (020 review S2): `--color-text-error` text, 2.06 → 7.21:1 dark (at least 6.37 focused), 8.03 → 12.05:1 light; the hover tint is `--color-error-subtle`.
+
+### Compatibility
+
+- No API breaks; `pageSizeLabel` is optional. A `cellClass` colour or font size set before 3.19, and any consumer rule on table body cells by element, now shows. The pagination gains a `lc-table-pagination__pager` wrapper and a `lc-table-pagination--<size>` class; the × (which emptied the select while the page size stayed) is gone. The empty-state cell stays text-primary (its secondary colour never applied).
+
+### Known issues (open, not part of 3.19)
+
+- **`lc-toast` message** breaks a long German compound after a letter without a hyphen (`overflow-wrap` only; `hyphens: auto` as in `lc-alert` would change wrapped lines and needs its own baseline compare).
+- **`lc-toast` host**: `:host { display: block; max-width: 400px }` has no effect under `ViewEncapsulation.None`; a standalone toast in a block parent is `display: inline` and spans the container.
+- **`lc-drawer` close** button is 32 × 32 px (the 44 px target of `lc-modal` and `lc-toast` is still to come).
+- **axe**: `color-contrast` on `.lc-nc__filter` in `lc-notification-center`, `aria-input-field-name` in drawer form stories (both older than 3.19); about 30 `lc-icon` sites in log-viewer, document-viewer, gallery, combobox, file-upload and field-group have neither `decorative` nor `ariaLabel`.
+
 ## [3.18.0] - 2026-10-31
 
 The sources page in Finance Intelligence (gap file quellen-2026-10-31, rows 6 and 8): a "More" entry on request in the bottom bar, and a modal close button that axe accepts. No API breaks.

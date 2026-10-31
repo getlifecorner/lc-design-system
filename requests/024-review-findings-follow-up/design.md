@@ -3,6 +3,7 @@
 - **Status:** ready
 - **Spec:** [spec.md](spec.md) — AC-1 … AC-12
 - **Prototyped on** main 1a12739 (Storybook rebuilt 2026-10-31), CSS injected through `--measure`: `tmp/story-shots/024/proto-*`.
+- **Change note (review r1, 2026-10-31):** §1 and §9 said 13 px for cells without a class; measured 14 px (`--typography-font-size-sm`) before and after, shots identical. §3 toast message lacks `hyphens: auto` (review finding 1, follow-up).
 
 ## 1. Approach
 
@@ -10,7 +11,7 @@ Extend, no new component. Five small fixes, each following an existing kit patte
 
 | # | Fix | Pattern followed |
 |---|---|---|
-| 1 | Body-cell `color` and `font-size` move into zero-specificity `:where(…)` rules, so any consumer class wins and `cellStyle` (inline) still wins over both | `_horizon.scss` `:where([shell-horizon-figure])`. Angular's emulated shim scopes *inside* `:where()` (compiler `_pseudoFunctionAwareScopeSelectorPart`), so the `_ngcontent` attributes add no weight. Prototype: a global `.x { color; font-size }` (0,1,0) on a `td` now applies; cells without a class keep rgb(17,24,39) / rgb(241,246,248), 13 px |
+| 1 | Body-cell `color` and `font-size` move into zero-specificity `:where(…)` rules, so any consumer class wins and `cellStyle` (inline) still wins over both | `_horizon.scss` `:where([shell-horizon-figure])`. Angular's emulated shim scopes *inside* `:where()` (compiler `_pseudoFunctionAwareScopeSelectorPart`), so the `_ngcontent` attributes add no weight. Prototype: a global `.x { color; font-size }` (0,1,0) on a `td` now applies; cells without a class keep rgb(17,24,39) / rgb(241,246,248), 14 px |
 | 2 | Pagination: the page-size select hides its × through its **existing** public hook `--lc-select-clear-display: none`; prev/next get the select's height and look, a 44 px hit area and a ring; the row wraps | lc-select's own field look (`--color-field-border`, `--border-radius-md`, `--color-surface-2`); kit ring `2px solid --color-primary-500`, offset 2 |
 | 3 | Toast close and action become 44 px boxes; negative margins keep every other box where it is | lc-modal close (3.18: 44 × 44, negative margin) |
 | 4 | `[decorative]="true"` on 4 `lc-icon` sites | lc-modal close icon (3.18) |
@@ -133,7 +134,7 @@ Add `pageSizeLabel` to the table meta's argTypes (`description`, `table.defaultV
 
 | AC | How | Expected value |
 |---|---|---|
-| AC-1 | Unit: sass-compile `table.component.scss` (as `horizon.shell.spec.ts`): every rule that sets `color`/`font-size` on `tbody tr td` starts with `:where(`; `.lc-table__empty` has no `color`. Story measure 1280 L/D | margin `td` colour = resolved `--color-text-success/-warning/-error`; account `td` 16 px; cells without a class rgb(17,24,39) / rgb(241,246,248) and 13 px as today; SLA `cellStyle` opacity applies |
+| AC-1 | Unit: sass-compile `table.component.scss` (as `horizon.shell.spec.ts`): every rule that sets `color`/`font-size` on `tbody tr td` starts with `:where(`; `.lc-table__empty` has no `color`. Story measure 1280 L/D | margin `td` colour = resolved `--color-text-success/-warning/-error`; account `td` 16 px; cells without a class rgb(17,24,39) / rgb(241,246,248) and 14 px as today; SLA `cellStyle` opacity applies |
 | AC-2 | Unit: option labels "10 / page" by default, "10 / Seite" with the input; *Number Columns* shows "5 / Seite" | — |
 | AC-3 | Unit: compiled CSS has `--lc-select-clear-display: none` on `.lc-table-pagination__size`; choosing 25 sets the page size. Measure *Number Columns*, *With Pagination* at 360/1024/1280 | `.lc-select__clear` `display: none`; value Range right ≤ chevron left − 8 (md); no box intersects |
 | AC-4 | Measure at 360 and 1280; `--forced-colors` run | buttons 40 × 40 (md; 32 / 44 in *Pagination Sizes*); `elementsFromPoint` at centre ± 21.5 → the button; ring 2 px `--color-primary-500` offset 2 when `:focus-visible` |
