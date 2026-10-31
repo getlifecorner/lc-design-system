@@ -102,7 +102,8 @@
       <lc-radio value="admin" label="Verwalten" />
     </lc-radio-group>
     <lc-copy-field label="Einladungslink" value="https://example.org/join/abc" copyLabel="Kopieren" />
-    <lc-bottom-nav [items]="bottomNav" activeRoute="/" ariaLabel="Hauptnavigation unten" variant="floating" [fixed]="false" />
+    <lc-bottom-nav [items]="bottomNav" activeRoute="/" ariaLabel="Hauptnavigation unten" variant="floating" [fixed]="false"
+      [showMore]="true" moreLabel="Mehr" moreRoute="/mehr" />
     <lc-app-shell [horizon]="true">
       <lc-app-page mainId="shell-main" asideAriaLabel="Mitglieder" [busy]="true">
         <p>Seite im Rahmen</p>

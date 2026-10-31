@@ -436,6 +436,23 @@ describe('ModalComponent', () => {
       const closeBtn = fixture.debugElement.query(By.css('.lc-modal__close'));
       expect(closeBtn.nativeElement.getAttribute('aria-label')).toBeTruthy();
     });
+
+    it('hides the close icon from assistive technology; closeAriaLabel names the button (request 023 AC-9, svg-img-alt)', () => {
+      fixture.componentRef.setInput('open', true);
+      fixture.detectChanges();
+      const button: HTMLButtonElement = fixture.debugElement.query(By.css('.lc-modal__close')).nativeElement;
+      const svg = button.querySelector('svg');
+      expect(svg).toBeTruthy();
+      expect(svg?.getAttribute('aria-hidden')).toBe('true');
+      expect(svg?.hasAttribute('role')).toBe(false);
+      expect(svg?.hasAttribute('aria-label')).toBe(false);
+      expect(button.getAttribute('aria-label')).toBe('Close modal');
+
+      fixture.componentRef.setInput('closeAriaLabel', 'Schließen');
+      fixture.detectChanges();
+      expect(button.getAttribute('aria-label')).toBe('Schließen');
+      expect(button.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+    });
   });
 
   describe('Methods', () => {

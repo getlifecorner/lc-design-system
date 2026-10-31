@@ -1,8 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { provideHttpClient, withXhr } from '@angular/common/http';
+import { By } from '@angular/platform-browser';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+import { IconComponent } from '@lifecorner/angular-ui-kit/icon';
 import { BottomNavComponent, BottomNavItem } from './bottom-nav.component';
 
 const today: BottomNavItem = { id: 'today', label: 'Heute', icon: 'sun', route: '/' };
@@ -139,6 +141,121 @@ describe('BottomNavComponent', () => {
     it('honours a smaller maxItems', () => {
       set({ items: [today, ...areas(2), household], maxItems: 3, moreRoute: '/more' });
       expect(labels()).toEqual(['Heute', 'Area 1', 'More']);
+    });
+  });
+
+  describe('"More" on request (showMore, request 023)', () => {
+    const moreEntries = () =>
+      Array.from(el.querySelectorAll('.lc-bottom-nav__item')).filter((n) => n.textContent?.includes('More'));
+
+    it('is off by default and renders exactly as before without it (AC-1)', () => {
+      expect(fixture.componentInstance.showMore()).toBe(false);
+      set({ items: [today, household], moreRoute: '/more', activeRoute: '/more' });
+      expect(el.querySelectorAll('li')).toHaveLength(2);
+      expect(labels()).toEqual(['Heute', 'Haushalt']);
+      expect(el.querySelector('button')).toBeNull();
+      set({ items: [today, ...areas(3), household], showMore: false });
+      expect(labels()).toEqual(['Heute', 'Area 1', 'Area 2', 'Area 3', 'Haushalt']);
+    });
+
+    it('adds "More" after two destinations at the default maxItems (AC-2)', () => {
+      set({ items: [today, household], showMore: true, moreRoute: '/more', activeRoute: '/' });
+      expect(el.querySelectorAll('li')).toHaveLength(3);
+      expect(labels()).toEqual(['Heute', 'Haushalt', 'More']);
+      expect(links().map((a) => a.getAttribute('href'))).toEqual(['/', '/household', '/more']);
+    });
+
+    it('lets "More" take one of the maxItems entries and never renders two (AC-3, D2)', () => {
+      set({ items: areas(4), showMore: true, moreRoute: '/more' });
+      expect(labels()).toEqual(['Area 1', 'Area 2', 'Area 3', 'Area 4', 'More']);
+      expect(moreEntries()).toHaveLength(1);
+
+      set({ items: areas(5), activeRoute: '/area-5' });
+      expect(labels()).toEqual(['Area 1', 'Area 2', 'Area 3', 'Area 4', 'More']);
+      expect(moreEntries()).toHaveLength(1);
+      expect(el.querySelector('[aria-current="page"]')?.textContent).toContain('More');
+
+      set({ items: areas(6), activeRoute: '/' });
+      expect(labels()).toEqual(['Area 1', 'Area 2', 'Area 3', 'Area 4', 'More']);
+      expect(moreEntries()).toHaveLength(1);
+
+      set({ items: areas(3), maxItems: 3 });
+      expect(labels()).toEqual(['Area 1', 'Area 2', 'More']);
+      expect(moreEntries()).toHaveLength(1);
+    });
+
+    it('renders only "More" without destinations, and nothing without showMore', () => {
+      set({ items: [], showMore: true, moreRoute: '/more' });
+      expect(labels()).toEqual(['More']);
+      set({ showMore: false });
+      expect(el.querySelectorAll('li')).toHaveLength(0);
+    });
+
+    it('takes moreLabel, moreIcon and moreRoute (AC-4)', () => {
+      set({ items: [today, household], showMore: true, moreLabel: 'Mehr', moreIcon: 'bars-3', moreRoute: '/mehr' });
+      const more = el.querySelector<HTMLAnchorElement>('a[href="/mehr"]');
+      expect(more?.textContent?.trim()).toBe('Mehr');
+      const icons = fixture.debugElement.queryAll(By.directive(IconComponent));
+      expect(icons.map((icon) => icon.componentInstance.name())).toEqual(['sun', 'home', 'bars-3']);
+    });
+
+    it('is a button that emits moreClick once without a moreRoute, and never current (AC-4)', () => {
+      set({ items: [today, household], showMore: true, activeRoute: '/settings' });
+      const button = el.querySelector<HTMLButtonElement>('button.lc-bottom-nav__item');
+      expect(button?.getAttribute('type')).toBe('button');
+      expect(button?.textContent?.trim()).toBe('More');
+      expect(button?.classList).not.toContain('lc-bottom-nav__item--current');
+      expect(el.querySelector('[aria-current="page"]')).toBeNull();
+      const spy = jest.fn();
+      fixture.componentInstance.moreClick.subscribe(spy);
+      button?.click();
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    it('is the one current entry on moreRoute and its sub-pages, not elsewhere (AC-5)', () => {
+      set({ items: [today, household], showMore: true, moreLabel: 'Mehr', moreRoute: '/mehr' });
+      for (const activeRoute of ['/mehr', '/mehr/quellen']) {
+        set({ activeRoute });
+        const current = el.querySelectorAll('[aria-current="page"]');
+        expect(current).toHaveLength(1);
+        expect(current[0].textContent?.trim()).toBe('Mehr');
+        expect(current[0].classList).toContain('lc-bottom-nav__item--current');
+        expect(el.querySelectorAll('.lc-bottom-nav__item--current')).toHaveLength(1);
+      }
+      set({ activeRoute: '/' });
+      const current = el.querySelectorAll('[aria-current="page"]');
+      expect(current).toHaveLength(1);
+      expect(current[0].textContent?.trim()).toBe('Heute');
+    });
+
+    it('does not emit reselect when the current "More" is tapped again', () => {
+      set({ items: [today, household], showMore: true, moreRoute: '/more', activeRoute: '/more' });
+      // provideRouter([]) has no '/more' route: keep the link's navigation from rejecting.
+      jest.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      const spy = jest.fn();
+      fixture.componentInstance.reselect.subscribe(spy);
+      links()[2].click();
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('is a native link or button named by its label only, with the icon hidden (AC-7)', () => {
+      set({ items: [today, household], showMore: true, moreRoute: '/more' });
+      const link = links()[2];
+      expect(link.tagName).toBe('A');
+      expect(link.getAttribute('href')).toBe('/more');
+      expect(link.getAttribute('tabindex')).toBeNull();
+      expect(link.textContent?.trim()).toBe('More');
+      expect(link.querySelector('.lc-bottom-nav__pill')?.getAttribute('aria-hidden')).toBe('true');
+      const svg = link.querySelector('svg');
+      expect(svg?.getAttribute('aria-hidden')).toBe('true');
+      expect(svg?.hasAttribute('role')).toBe(false);
+
+      set({ moreRoute: '' });
+      const button = el.querySelector<HTMLButtonElement>('li:last-child > button');
+      expect(button?.tagName).toBe('BUTTON');
+      expect(button?.getAttribute('tabindex')).toBeNull();
+      expect(button?.textContent?.trim()).toBe('More');
+      expect(button?.querySelector('.lc-bottom-nav__pill')?.getAttribute('aria-hidden')).toBe('true');
     });
   });
 

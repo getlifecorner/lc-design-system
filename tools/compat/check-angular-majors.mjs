@@ -325,6 +325,9 @@ const EXPECT_IN_HTML = [
     /<th(?=[^>]*\sclass="[^"]*\blc-table__cell--end\b)[^>]*>(?:<!--[^]*?-->|\s)*<span[^>]*\sclass="lc-table__sort-label"[^>]*>Betrag(?:<!--[^]*?-->)*<\/span>/.test(html)
     && /<td(?=[^>]*\sclass="[^"]*\blc-table__cell--end\b)[^>]*>(?:<!--[^]*?-->|\s)*82(?:<!--[^]*?-->|\s)*<\/td>/.test(html)],
   ['loading button: aria-disabled and aria-busy, no native disabled (021 AC-16)', /<lc-button(?=[^>]*\sid="compat-loading-317")[^>]*>(?:<!--[^]*?-->|\s)*<button(?=[^>]*\saria-disabled="true")(?=[^>]*\saria-busy="true")(?=[^>]*\sclass="[^"]*\bbtn-loading\b)(?![^>]*\sdisabled[\s=/>])[^>]*>/],
+  // 3.18 (request 023, home.html): `showMore` puts the "Mehr" link after the
+  // two destinations of the floating bar, the same markup as on overflow, before JS
+  ['bottom nav "Mehr" on request (023 AC-8)', /<nav(?=[^>]*\saria-label="Hauptnavigation unten")[^>]*>(?:(?!<\/nav>)[^])*?<li[^>]*>(?:<!--[^]*?-->|\s)*<a(?=[^>]*\sclass="[^"]*\blc-bottom-nav__item\b)(?=[^>]*\shref="[^"]*\/mehr")[^>]*>(?:(?!<\/a>)[^])*?<span[^>]*\sclass="lc-bottom-nav__label"[^>]*>(?:<!--[^]*?-->|\s)*Mehr(?:<!--[^]*?-->|\s)*<\/span>/],
 ];
 
 /**

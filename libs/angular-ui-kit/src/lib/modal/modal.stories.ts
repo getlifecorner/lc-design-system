@@ -132,7 +132,7 @@ export const DestructiveConfirmation: Story = {
       <lc-modal [open]="isOpen" (openChange)="isOpen = $event" [size]="size">
         <div slot="header">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <lc-icon name="exclamation-triangle" size="md" color="var(--color-error-default)"></lc-icon>
+            <lc-icon name="exclamation-triangle" size="md" color="var(--color-error-default)" [decorative]="true"></lc-icon>
             <h2 style="color: #991b1b;">Delete Account</h2>
           </div>
         </div>

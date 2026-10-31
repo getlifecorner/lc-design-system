@@ -58,20 +58,35 @@ const meta: Meta<BottomNavComponent> = {
     },
     maxItems: {
       control: 'number',
-      description: 'Most entries shown; with more destinations the first `maxItems − 1` stay and the rest go behind "More"',
+      description:
+        'Most entries the bar shows, "More" included. With more destinations, or with `showMore`, the first `maxItems − 1` stay and the rest go behind the "More" entry',
       table: { defaultValue: { summary: '5' } },
     },
-    moreLabel: { description: 'Label of the overflow entry', table: { defaultValue: { summary: 'More' } } },
-    moreIcon: { description: 'Icon of the overflow entry', table: { defaultValue: { summary: 'dots' } } },
+    showMore: {
+      control: 'boolean',
+      description:
+        'Always end the bar with the "More" entry (`moreLabel`, `moreIcon`, and `moreRoute` or `moreClick`), even when every destination fits: for a bar with fixed slots, such as two destinations plus "More". "More" takes one of the `maxItems` entries, so the first `maxItems − 1` destinations stay and any others move behind it, as on overflow',
+      table: { defaultValue: { summary: 'false' } },
+    },
+    moreLabel: {
+      description: 'Label of the "More" entry (on overflow or with `showMore`)',
+      table: { defaultValue: { summary: 'More' } },
+    },
+    moreIcon: {
+      description: 'Icon of the "More" entry (on overflow or with `showMore`)',
+      table: { defaultValue: { summary: 'dots' } },
+    },
     moreRoute: {
-      description: 'Route of the overflow entry (a page listing the rest). Empty renders a button that emits `moreClick`',
+      description:
+        'Route of the "More" entry (on overflow or with `showMore`): a page listing the rest. Empty renders a button that emits `moreClick`',
+      table: { defaultValue: { summary: "''" } },
     },
     badgeAriaLabel: {
       description: 'Text read after a label when the item has a badge; `{value}` is replaced with the badge value',
       table: { defaultValue: { summary: '{value} new' } },
     },
     reselect: { action: 'reselect', description: 'The current item was tapped again (scroll the page to the top)' },
-    moreClick: { action: 'moreClick', description: 'The overflow entry was tapped while it has no `moreRoute`' },
+    moreClick: { action: 'moreClick', description: 'The "More" entry was tapped while it has no `moreRoute`' },
   },
   parameters: {
     docs: {
@@ -85,6 +100,7 @@ Bottom navigation bar for phones and tablets: the main destinations as links in 
 - The current item: a 56 × 32 px pill in \`--color-surface-selected\`, a heavier icon and a bold label in \`--color-on-surface-selected\`
 - Current by the first path segment (\`/household/members\` keeps Household current); \`/\` only matches itself
 - Overflow: from \`maxItems + 1\` destinations, the first \`maxItems − 1\` and a "More" entry (\`moreRoute\` or the \`moreClick\` output)
+- \`showMore\`: "More" on request, also when every destination fits (fixed slots such as two destinations plus "More"); it takes one of the \`maxItems\` entries
 - \`reselect\` when the current item is tapped again
 - \`variant="floating"\`: an inset pill, 16 px from the sides and above the safe-area inset, radius 28 px, elevated
 - Fixed to the viewport with the safe-area insets, below menus and dialogs; no hover-only information; reduced motion respected
@@ -100,7 +116,7 @@ type Story = StoryObj<BottomNavComponent>;
 
 /** Two destinations, docked to the bottom edge. */
 export const Default: Story = {
-  args: { items: twoDestinations, activeRoute: '/', ariaLabel: 'Main navigation' },
+  args: { items: twoDestinations, activeRoute: '/', ariaLabel: 'Main navigation', variant: 'docked' },
   render: (args) => ({
     props: args,
     template: phoneFrame(
@@ -145,6 +161,7 @@ export const FinanceDestination: Story = {
     ],
     activeRoute: '/finances',
     ariaLabel: 'Hauptnavigation',
+    variant: 'docked',
   },
   render: (args) => ({
     props: args,
@@ -173,6 +190,71 @@ export const OverflowMore: Story = {
          [moreLabel]="moreLabel" [moreRoute]="moreRoute" [fixed]="fixed" />`,
       '16px',
       'de',
+    ),
+  }),
+};
+
+/** `showMore` (3.18): two destinations plus "More" although both fit; "More" is current on a sub-page of `moreRoute`. */
+export const ShowMore: Story = {
+  args: {
+    items: twoDestinations,
+    showMore: true,
+    moreRoute: '/more',
+    activeRoute: '/more/settings',
+    variant: 'docked',
+    ariaLabel: 'Main navigation',
+  },
+  render: (args) => ({
+    props: args,
+    template: phoneFrame(
+      `<lc-bottom-nav [items]="items" [showMore]="showMore" [moreRoute]="moreRoute" [activeRoute]="activeRoute"
+         [variant]="variant" [ariaLabel]="ariaLabel" [fixed]="fixed" (reselect)="reselect($event)" />`,
+    ),
+  }),
+};
+
+/** `showMore` (3.18): a bar with fixed slots, two destinations plus "Mehr", floating; "Mehr" is current on its own page. */
+export const ShowMoreGerman: Story = {
+  name: 'Show More (German, floating)',
+  args: {
+    items: [
+      { id: 'cockpit', label: 'Cockpit', icon: 'presentation-chart-line', route: '/cockpit' },
+      { id: 'costs', label: 'Kosten', icon: 'banknotes', route: '/kosten' },
+    ],
+    showMore: true,
+    moreLabel: 'Mehr',
+    moreRoute: '/mehr',
+    activeRoute: '/mehr',
+    variant: 'floating',
+    ariaLabel: 'Hauptnavigation',
+  },
+  render: (args) => ({
+    props: args,
+    template: phoneFrame(
+      `<lc-bottom-nav [items]="items" [showMore]="showMore" [moreLabel]="moreLabel" [moreRoute]="moreRoute"
+         [activeRoute]="activeRoute" [variant]="variant" [ariaLabel]="ariaLabel" [fixed]="fixed" (reselect)="reselect($event)" />`,
+      '16px',
+      'de',
+    ),
+  }),
+};
+
+/** `showMore` with `maxItems` 3: "More" takes one of the three entries, so Finances moves behind it; without `moreRoute` "More" is a button that emits `moreClick`. */
+export const ShowMoreFixedSlots: Story = {
+  name: 'Show More with Fixed Slots',
+  args: {
+    items: [...twoDestinations, { id: 'finances', label: 'Finances', icon: 'wallet', route: '/finances' }],
+    maxItems: 3,
+    showMore: true,
+    activeRoute: '/',
+    variant: 'docked',
+    ariaLabel: 'Main navigation',
+  },
+  render: (args) => ({
+    props: args,
+    template: phoneFrame(
+      `<lc-bottom-nav [items]="items" [maxItems]="maxItems" [showMore]="showMore" [activeRoute]="activeRoute"
+         [variant]="variant" [ariaLabel]="ariaLabel" [fixed]="fixed" (reselect)="reselect($event)" (moreClick)="moreClick($event)" />`,
     ),
   }),
 };

@@ -56,6 +56,8 @@ interface BottomNavEntry {
  * - More than `maxItems` destinations: the first `maxItems − 1` stay, the
  *   rest move behind a "More" entry (`moreLabel`, `moreIcon`, `moreRoute`);
  *   without `moreRoute` the entry is a button that emits `moreClick`.
+ * - `showMore`: "More" on request, also when every destination fits (fixed
+ *   slots); it takes one of the `maxItems` entries.
  * - Tapping the current item emits `reselect` (scroll the page to the top).
  * - `variant="floating"`: an inset pill 16 px from the sides and 16 px above
  *   the safe-area inset, radius 28 px, elevated. `docked` (default) spans the
@@ -116,20 +118,45 @@ export class BottomNavComponent {
   readonly fixed = input(true);
 
   /**
-   * Most entries the bar shows. With more destinations the first
-   * `maxItems − 1` stay and the rest go behind the "More" entry.
+   * Most entries the bar shows, "More" included. With more destinations, or
+   * with `showMore`, the first `maxItems − 1` stay and the rest go behind the
+   * "More" entry.
+   *
+   * @default 5
    */
   readonly maxItems = input(5);
 
-  /** Label of the overflow entry. */
+  /**
+   * Always end the bar with the "More" entry (`moreLabel`, `moreIcon`, and
+   * `moreRoute` or `moreClick`), even when every destination fits: for a bar
+   * with fixed slots, such as two destinations plus "More". "More" takes one
+   * of the `maxItems` entries, so the first `maxItems − 1` destinations stay
+   * and any others move behind it, as on overflow.
+   *
+   * @default false
+   */
+  readonly showMore = input(false);
+
+  /**
+   * Label of the "More" entry (on overflow or with `showMore`).
+   *
+   * @default 'More'
+   */
   readonly moreLabel = input('More');
 
-  /** Icon of the overflow entry. */
+  /**
+   * Icon of the "More" entry (on overflow or with `showMore`).
+   *
+   * @default 'dots'
+   */
   readonly moreIcon = input('dots');
 
   /**
-   * Route of the overflow entry (a page that lists the remaining
-   * destinations). Empty renders the entry as a button that emits `moreClick`.
+   * Route of the "More" entry (on overflow or with `showMore`): a page that
+   * lists the remaining destinations. Empty renders the entry as a button that
+   * emits `moreClick`.
+   *
+   * @default ''
    */
   readonly moreRoute = input('');
 
@@ -142,7 +169,7 @@ export class BottomNavComponent {
   /** The current item was tapped again (e.g. scroll the page to the top). */
   readonly reselect = output<BottomNavItem>();
 
-  /** The overflow entry was tapped while it has no `moreRoute`. */
+  /** The "More" entry was tapped while it has no `moreRoute`. */
   readonly moreClick = output<void>();
 
   /** Destinations in display order. */
@@ -153,11 +180,14 @@ export class BottomNavComponent {
   /** Path of `activeRoute` without query and fragment. */
   private readonly activePath = computed(() => this.activeRoute().split(/[?#]/)[0] || '/');
 
-  /** Entries as rendered: destinations plus, on overflow, the "More" entry. */
+  /**
+   * Entries as rendered: destinations plus, on overflow or with `showMore`,
+   * the "More" entry, which then takes one of the `maxItems` entries.
+   */
   protected readonly entries = computed<BottomNavEntry[]>(() => {
     const items = this.sortedItems();
     const max = Math.max(1, Math.floor(this.maxItems()));
-    if (items.length <= max) {
+    if (!this.showMore() && items.length <= max) {
       return items.map((item) => ({ item, current: this.matches(item.route), more: false }));
     }
     const visible = items.slice(0, max - 1);
