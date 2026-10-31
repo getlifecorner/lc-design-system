@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.19.2] - 2026-10-31
+
+The open review findings of 3.19.1 (request 025): toast close colour, a notification-center note, the German drawer story. No API breaks.
+
+### Fixed
+
+- **`lc-toast` close button** (025 review finding 1, WCAG 1.4.11): the × and its focus ring now use `--color-text-secondary`, the colour of the toast's action button. Before, they took the browser's black `buttontext`. Contrast on the toast gradient: 7.56 / 7.23:1 in light and 9.26 / 11.16:1 in dark (was 1.47 / 1.22:1 in dark); at least 6.02:1 (light) and 7.82:1 (dark) on the hover tints. This holds for a toast placed directly and in `lc-toast-outlet`. Size (44 × 44), position and layout are unchanged: the shots are hash-identical once the old colour is put back. In forced colours the × and the ring follow the system colours.
+- Stories: Feedback/Drawer "German Heading" now has a German body, so `lang="de"` on `lc-drawer` marks only German text (025 review finding 3).
+- 3.19.1 note corrected: white on the old notification-center level fills went as low as 1.44:1 (Warning, dark), not 1.89:1 (025 review finding 2).
+
+### Compatibility
+
+- No API breaks, no new input. The toast × is now grey (#4b5563) in light and light grey (#c4d2d9) in dark instead of black, in `lc-toast-outlet` too. The kit's toast styles are added after your global stylesheet, so a plain `.lc-toast__close` rule there (0,1,0) now loses; use a stronger selector such as `lc-toast .lc-toast__close`. Before 3.19.2 such a rule beat the browser colour, so an app that patched the black × gets the kit grey without notice.
+
+### Known
+
+- **`lc-toast` variant icons** are below 3:1 on the toast gradient: error 1.71 to 2.06:1 and info 2.32 to 2.80:1 in dark, success 2.60 to 2.72:1 in light (both gradient ends). The icon is decorative and the message text carries the meaning; `lc-alert` uses the same colours. Present since 3.19.0, to be handled kit-wide in a follow-up.
+
 ## [3.19.1] - 2026-10-31
 
 The open review findings of 3.19 (request 024): toast wrapping and width, drawer close targets, notification-center contrast, unlabelled icons. No API breaks.

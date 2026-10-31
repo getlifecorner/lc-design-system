@@ -64,6 +64,8 @@ metadata:
 
 - **Dead rules have dependants; hyphens on EN (025).** lc-toast-outlet relied on the dead `:host` rule staying dead (content-sized toasts, gap 0), so revive such a rule only for the other context (`lc-toast:not(lc-toast-outlet lc-toast)`), and prove it with click-opened `--compare` shots. Plain `hyphens: auto` on the `lang="en"` canvas hyphenates short EN words ("min-utes", "con-nection"); `hyphenate-limit-chars: 12 4 3` keeps every EN line and still breaks DE at syllables (Safari ignores it). Changing a story wrapper from flex to block changed the dark-gradient raster with equal boxes: keep the wrapper's display when the goal is "identical". Injected prototype CSS needs a ×3 repeated class to beat `[_ngcontent]` rules (width stayed 32 while the margin applied).
 
+- **"Lowest" and range claims (026).** Before you quote a minimum, measure every variant in both themes. 025 measured dark only for All and Error and called 1.89 the lowest; Warning in dark was 1.44, and the error went into a comment and the changelog. To prove "only the colour changed", re-shoot with the old value injected (`color: buttontext`) and use `--compare`. A new kit colour on a formerly unstyled element silently beats consumers' equal-specificity global patches (kit sheets load later): the changelog must name a stronger selector, not "or loaded later" (026 r1).
+
 **Why:** each of these cost a round trip or would have broken the build.
 
 **How to apply:** name the relevant ones in the design's risk list.

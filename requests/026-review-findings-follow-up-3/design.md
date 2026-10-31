@@ -70,7 +70,7 @@ No variant rule gets a colour. Specificity is (0,1,0) under `ViewEncapsulation.N
 | active | No own style (as before) |
 | disabled · loading · empty · error | n/a: the close has no such state; the error variant is covered above |
 | overflow | Unchanged: DE With Action at 360 = 3 lines, 99 high; × stays top-right |
-| forced colors | `color` and `outline-color` are forced to ButtonText; the svg stroke is currentColor. The toast SCSS has no `forced-color-adjust`, so no rule is needed |
+| forced colors | `color` is forced to ButtonText and the svg stroke follows (currentColor). The ring stays a solid 2 px outline in the forced focus colour (change note, review r1: not ButtonText as first written; emulated rgba(5,0,73,.8) L / rgba(0,230,255,.8) D, visible). The toast SCSS has no `forced-color-adjust`, so no rule is needed |
 | no close button | Unchanged (`without-close-button` identical by hash) |
 
 ## 5. Theming (computed in the browser with the WCAG formula; ends = `--gradient-surface`)

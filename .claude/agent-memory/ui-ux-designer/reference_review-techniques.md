@@ -41,6 +41,7 @@ metadata:
 - **Hit tests (024).** `elementsFromPoint` at a rounded box's corner (radius 10) returns the parent: test edge midpoints, or centre ± 21.5 for a square `::before` hit area. `node -e` and heredocs (`cat <<EOF`) are refused; keep measure copies with the Write tool.
 - **025.** An async arrow whose body starts with an IIFE needs outer parens, `async () => ((f)(x), await …, {…})`; without them the comma ends the arrow ("Unexpected token )"). Keep click-opened states (outlet stacks) in their own baseline folder (`baseline-open`) with the click in the measure, so the review re-shoots with the same clicks.
 - **025 r1.** `if (x) …` lines and `for…of` blocks work in a newline-separated `--measure` (no `;`). axe `color-contrast` checks text only: measure icon-button colours (× in dark) yourself. Light shots of drawer form stories and NC 360 L flip between runs with equal measures: re-shoot against your own r1 before calling a diff real.
+- **026 revert proof.** An injected `.lc-toast__close { color: buttontext }` (0,1,0) lost to the kit sheet re-inserted later; use `button.lc-toast__close` plus a 300 ms settle. A diff that is byte-identical across two post-change runs but equals an older build's shot (`025/after`) is a two-state raster flake, not a change.
 - **Old-release Storybook**, only if a baseline is missing. Use `git worktree add --detach`, symlink node_modules (except `.cache`), set `NX_WORKSPACE_ROOT_PATH` and pass `--skip-nx-cache`.
 
 Related: [[reference-measured-values]], [[feedback-design-pitfalls]]
