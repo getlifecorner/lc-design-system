@@ -36,6 +36,11 @@ Use it for secondary navigation, detail panels, filters, and forms.
     },
     open: { control: 'boolean', description: 'Controls visibility' },
     heading: { control: 'text', description: 'Drawer heading text' },
+    ariaLabel: {
+      control: 'text',
+      description: 'Accessible name of the panel; needed without a heading (the close button then floats at the top end)',
+      table: { defaultValue: { summary: "''" } },
+    },
     closeAriaLabel: {
       control: 'text',
       description: 'Accessible name of the close button — translate it with the page',
@@ -112,6 +117,31 @@ export const FilterPanel: Story = {
             <lc-button variant="outline" [fullWidth]="true">Reset</lc-button>
             <lc-button variant="primary" [fullWidth]="true">Apply</lc-button>
           </div>
+        </div>
+      </lc-drawer>`,
+  }),
+};
+
+export const WithoutHeading: Story = {
+  name: 'Without Heading',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Without `heading` the close button floats at the top end of the panel and `ariaLabel` names the dialog. ' +
+          'The × icon is decorative (3.19); `closeAriaLabel` names the button.',
+      },
+    },
+  },
+  args: { open: true, position: 'right', size: 'sm', heading: '', ariaLabel: 'Quick actions' },
+  render: (args) => ({
+    props: args,
+    template: `
+      <lc-drawer [open]="open" [position]="position" [size]="size" [heading]="heading" [ariaLabel]="ariaLabel">
+        <div style="padding: 64px 16px 16px; display: flex; flex-direction: column; gap: 8px;">
+          <lc-button variant="outline" [fullWidth]="true">New task</lc-button>
+          <lc-button variant="outline" [fullWidth]="true">Invite member</lc-button>
+          <lc-button variant="outline" [fullWidth]="true">Export report</lc-button>
         </div>
       </lc-drawer>`,
   }),

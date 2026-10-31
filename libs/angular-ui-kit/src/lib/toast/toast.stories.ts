@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { ToastComponent } from './toast.component';
+import type { Toast } from './toast.service';
 
 const meta: Meta<ToastComponent> = {
   title: 'Feedback/Toast',
@@ -58,6 +59,48 @@ export const WithoutCloseButton: Story = {
   args: {
     toast: { id: '5', message: 'Message sent!', variant: 'success', position: 'top-right', duration: 3000, showCloseButton: false },
   },
+};
+
+const archived: Toast = {
+  id: '6',
+  message: 'Source archived.',
+  variant: 'info',
+  position: 'top-right',
+  duration: 5000,
+  showCloseButton: true,
+  action: { label: 'Undo', onClick: () => undefined },
+};
+
+const savedDe: Toast = {
+  id: '7',
+  message: 'Benachrichtigungseinstellungen gespeichert.',
+  variant: 'info',
+  position: 'top-right',
+  duration: 5000,
+  showCloseButton: true,
+  action: { label: 'Rückgängig', onClick: () => undefined },
+};
+
+export const WithAction: Story = {
+  name: 'With Action',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'An action and the close button are 44 × 44 px tap targets (3.19); the toast keeps its size, because negative margins ' +
+          'take the extra height off the row. A long German compound („Benachrichtigungseinstellungen“) breaks inside the message, ' +
+          'never under the action. `closeAriaLabel` translates the close button’s name.',
+      },
+    },
+  },
+  render: () => ({
+    props: { archived, savedDe },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <lc-toast [toast]="archived"></lc-toast>
+        <lc-toast lang="de" [toast]="savedDe" closeAriaLabel="Benachrichtigung schließen"></lc-toast>
+      </div>`,
+  }),
 };
 
 export const AllVariants: Story = {

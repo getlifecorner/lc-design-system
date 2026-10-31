@@ -228,36 +228,38 @@
 
 <!-- Pagination -->
 @if (paginate()) {
-  <div class="lc-table-pagination">
+  <div [class]="'lc-table-pagination lc-table-pagination--' + paginationSize()">
     <div class="lc-table-pagination__info">
       {{ paginationStart }}–{{ paginationEnd }} {{ rangeOfLabel() }} {{ totalRows() }}
     </div>
     <div class="lc-table-pagination__controls">
       <lc-select
         class="lc-table-pagination__size"
-        [size]="size() === 'sm' ? 'sm' : size() === 'lg' ? 'lg' : 'md'"
+        [size]="paginationSize()"
         [options]="pageSizeSelectOptions()"
         [ngModel]="internalPageSize()"
         [ariaLabel]="rowsPerPageAriaLabel()"
         (ngModelChange)="onPageSizeModelChange($event)"
       />
-      <button
-        type="button"
-        class="lc-table-pagination__btn"
-        [disabled]="currentPage() === 0"
-        (click)="goToPage(currentPage() - 1)"
-        [attr.aria-label]="previousPageAriaLabel()"
-      >‹</button>
-      <span class="lc-table-pagination__page">
-        {{ currentPage() + 1 }} / {{ totalPages() }}
-      </span>
-      <button
-        type="button"
-        class="lc-table-pagination__btn"
-        [disabled]="currentPage() >= totalPages() - 1"
-        (click)="goToPage(currentPage() + 1)"
-        [attr.aria-label]="nextPageAriaLabel()"
-      >›</button>
+      <div class="lc-table-pagination__pager">
+        <button
+          type="button"
+          class="lc-table-pagination__btn"
+          [disabled]="currentPage() === 0"
+          (click)="goToPage(currentPage() - 1)"
+          [attr.aria-label]="previousPageAriaLabel()"
+        >‹</button>
+        <span class="lc-table-pagination__page">
+          {{ currentPage() + 1 }} / {{ totalPages() }}
+        </span>
+        <button
+          type="button"
+          class="lc-table-pagination__btn"
+          [disabled]="currentPage() >= totalPages() - 1"
+          (click)="goToPage(currentPage() + 1)"
+          [attr.aria-label]="nextPageAriaLabel()"
+        >›</button>
+      </div>
     </div>
   </div>
 }

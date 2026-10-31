@@ -47,8 +47,8 @@ export interface TableColumn {
   cssClass?: string;
   /**
    * Optional CSS class(es) for td cells only (string or resolver callback).
-   * A class colour or font size loses to the kit's cell rule; set them with
-   * `cellStyle`.
+   * Since 3.19 a class colour or font size wins over the kit's cell defaults;
+   * `cellStyle` still wins over the class.
    */
   cellClass?: TableCellClass;
   /** Optional inline styles for td cells only (object or resolver callback) */
@@ -352,6 +352,13 @@ export class TableComponent {
 
   /** Available page size options */
   pageSizeOptions = input<number[]>([5, 10, 25, 50]);
+
+  /**
+   * Pagination: the text after the number in each page-size option
+   * (`10 / page`). German: `'/ Seite'`. (3.19)
+   * @default '/ page'
+   */
+  pageSizeLabel = input('/ page');
 
   // -- Selection --
   /** Enable row selection checkboxes */
@@ -749,12 +756,22 @@ export class TableComponent {
     return !this.allSelected() && this.displayRows().some((r) => selected.has(r.key));
   });
 
-  protected readonly pageSizeSelectOptions = computed(() =>
-    this.pageSizeOptions().map((opt) => ({
+  protected readonly pageSizeSelectOptions = computed(() => {
+    const label = this.pageSizeLabel();
+    return this.pageSizeOptions().map((opt) => ({
       value: opt,
-      label: `${opt} / page`,
-    }))
-  );
+      label: `${opt} ${label}`.trim(),
+    }));
+  });
+
+  /**
+   * Size of the pagination controls: the page-size select's `size` and the
+   * `lc-table-pagination--<size>` class that sizes prev/next to match it.
+   */
+  protected readonly paginationSize = computed<TableSize>(() => {
+    const size = this.size();
+    return size === 'sm' ? 'sm' : size === 'lg' ? 'lg' : 'md';
+  });
 
   /**
    * Computed CSS classes for the table element

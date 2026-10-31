@@ -32,7 +32,7 @@
             (click)="close()"
             [attr.aria-label]="closeAriaLabel()"
           >
-            <lc-icon name="x-mark" size="sm" />
+            <lc-icon name="x-mark" size="sm" [decorative]="true" />
           </button>
         </header>
       } @else {
@@ -42,7 +42,7 @@
           (click)="close()"
           [attr.aria-label]="closeAriaLabel()"
         >
-          <lc-icon name="x-mark" size="sm" />
+          <lc-icon name="x-mark" size="sm" [decorative]="true" />
         </button>
       }
 

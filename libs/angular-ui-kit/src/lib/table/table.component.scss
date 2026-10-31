@@ -97,19 +97,18 @@
         border-bottom: none;
       }
       
+      // Font size and colour: the zero-specificity rules after this block.
       td {
         padding: var(--lc-density-padding-sm, var(--spacing-3)) var(--lc-density-padding-md, var(--spacing-4));
-        font-size: var(--typography-font-size-sm);
-        color: var(--color-text-primary);
       }
     }
   }
-  
-  // Empty state
+
+  // Empty state. Its colour stays the cells' text-primary: the secondary
+  // colour it declared never applied under the old (0,5,3) cell rule (3.19).
   &__empty {
     text-align: center;
     padding: var(--spacing-8) var(--spacing-4) !important;
-    color: var(--color-text-secondary);
     font-style: italic;
   }
   
@@ -154,26 +153,50 @@
     }
   }
   
-  // Sizes
+  // Sizes (the body-cell font sizes are in the `:where()` rules below)
   &--sm {
     thead tr th,
     tbody tr td {
       padding: var(--lc-density-padding-xs, var(--spacing-2)) var(--lc-density-padding-sm, var(--spacing-3));
+    }
+
+    thead tr th {
       font-size: var(--typography-font-size-xs);
     }
   }
-  
+
   &--md {
     // Default sizing (already styled above)
   }
-  
+
   &--lg {
     thead tr th,
     tbody tr td {
       padding: var(--lc-density-padding-md, var(--spacing-4)) var(--spacing-5);
+    }
+
+    thead tr th {
       font-size: var(--typography-font-size-base);
     }
   }
+}
+
+// Body-cell typography (3.19, request 024, 021 review F1): zero specificity,
+// so a `TableColumn.cellClass` colour or font size wins over these defaults
+// and `cellStyle` (inline) wins over both. Angular's emulation scopes the
+// selector inside `:where()`, so its attributes add no weight. Same weight:
+// the order base → sm → lg decides.
+:where(.lc-table tbody tr td) {
+  font-size: var(--typography-font-size-sm);
+  color: var(--color-text-primary);
+}
+
+:where(.lc-table--sm tbody tr td) {
+  font-size: var(--typography-font-size-xs);
+}
+
+:where(.lc-table--lg tbody tr td) {
+  font-size: var(--typography-font-size-base);
 }
 
 // End-aligned columns (3.17, `TableColumn.align: 'end'`): header and cells at
@@ -422,14 +445,28 @@
   outline: none;
 }
 
-// Pagination
+// Pagination. The row wraps (3.19, 021 review F2): the range on the first
+// line, the select and the pager at the end of the next ones on a phone or at
+// 200 % text. Prev/next take the select's height and field look.
 .lc-table-pagination {
+  --_lc-table-pagination-btn: var(--size-interactive-md-height);
+
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: var(--spacing-2) var(--spacing-4);
   padding: var(--spacing-3) var(--spacing-1);
   font-size: var(--typography-font-size-sm);
   color: var(--color-text-secondary);
+
+  &--sm {
+    --_lc-table-pagination-btn: var(--size-interactive-sm-height);
+  }
+
+  &--lg {
+    --_lc-table-pagination-btn: var(--size-interactive-lg-height);
+  }
 
   &__info {
     white-space: nowrap;
@@ -437,32 +474,61 @@
 
   &__controls {
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--spacing-2);
+    margin-inline-start: auto;
+  }
+
+  // Prev, page and next wrap as one group.
+  &__pager {
+    display: flex;
     align-items: center;
     gap: var(--spacing-2);
   }
 
+  // A page size cannot be empty: no clear (×) control (it sat over the value).
   &__size {
+    --lc-select-clear-display: none;
+
     display: block;
     min-width: 110px;
   }
 
   &__btn {
+    position: relative;
     appearance: none;
-    border: 1px solid var(--color-border);
-    background-color: var(--color-surface);
+    border: 1px solid var(--color-field-border);
+    background-color: var(--color-surface-2);
     color: var(--color-text-primary);
-    width: 28px;
-    height: 28px;
+    width: var(--_lc-table-pagination-btn);
+    height: var(--_lc-table-pagination-btn);
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--border-radius-sm);
-    font-size: var(--typography-font-size-base);
+    padding: 0;
+    border-radius: var(--border-radius-md);
+    font-size: var(--typography-font-size-xl);
+    line-height: 1;
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+
+    // A 44 px square hit area around the 32 / 40 px button (none needed at 44).
+    &::before {
+      content: '';
+      position: absolute;
+      inset: min(0px, calc((100% - var(--size-min-touch-height, 2.75rem)) / 2));
+    }
 
     &:hover:not(:disabled) {
       background-color: var(--color-surface-hover);
+      border-color: var(--color-text-secondary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary-500);
+      outline-offset: 2px;
     }
 
     &:disabled {

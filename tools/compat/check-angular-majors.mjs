@@ -327,6 +327,14 @@ const EXPECT_IN_HTML = [
   ['loading button: aria-disabled and aria-busy, no native disabled (021 AC-16)', /<lc-button(?=[^>]*\sid="compat-loading-317")[^>]*>(?:<!--[^]*?-->|\s)*<button(?=[^>]*\saria-disabled="true")(?=[^>]*\saria-busy="true")(?=[^>]*\sclass="[^"]*\bbtn-loading\b)(?![^>]*\sdisabled[\s=/>])[^>]*>/],
   // 3.18 (request 023, home.html): `showMore` puts the "Mehr" link after the
   // two destinations of the floating bar, the same markup as on overflow, before JS
+  // 3.19 (request 024, home.html): the paginated table keeps the md size class,
+  // the "5 / page" value of its page-size select and the pager group before JS
+  ['table pagination: size class, "5 / page" and the pager group (024 AC-10)', (html) => {
+    const table = html.match(/<lc-table(?=[^>]*\sid="compat-table-319")[^>]*>(?:(?!<\/lc-table>)[^])*<\/lc-table>/)?.[0] ?? '';
+    return /<div(?=[^>]*\sclass="lc-table-pagination lc-table-pagination--md")[^>]*>/.test(table)
+      && /<lc-select(?=[^>]*\sclass="[^"]*\blc-table-pagination__size\b)[^>]*>(?:(?!<\/lc-select>)[^])*?>\s*5 \/ page\s*</.test(table)
+      && /<div[^>]*\sclass="lc-table-pagination__pager"[^>]*>(?:<!--[^]*?-->|\s)*<button(?=[^>]*\sclass="lc-table-pagination__btn")(?=[^>]*\saria-label="Previous page")[^>]*>/.test(table);
+  }],
   ['bottom nav "Mehr" on request (023 AC-8)', /<nav(?=[^>]*\saria-label="Hauptnavigation unten")[^>]*>(?:(?!<\/nav>)[^])*?<li[^>]*>(?:<!--[^]*?-->|\s)*<a(?=[^>]*\sclass="[^"]*\blc-bottom-nav__item\b)(?=[^>]*\shref="[^"]*\/mehr")[^>]*>(?:(?!<\/a>)[^])*?<span[^>]*\sclass="lc-bottom-nav__label"[^>]*>(?:<!--[^]*?-->|\s)*Mehr(?:<!--[^]*?-->|\s)*<\/span>/],
 ];
 

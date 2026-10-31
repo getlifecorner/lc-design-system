@@ -48,6 +48,8 @@
     </lc-tabs>
     <lc-accordion title="Mehr">Akkordeon</lc-accordion>
     <lc-table [columns]="columns" [data]="rows" />
+    <!-- 3.19 (request 024): the pagination's default texts and pager group in the server HTML. -->
+    <lc-table id="compat-table-319" [columns]="columns" [data]="rows" [paginate]="true" [pageSize]="5" />
     <lc-list [items]="listItems" />
     <lc-description-list [items]="dlItems" />
     <lc-tree-view [nodes]="tree" />

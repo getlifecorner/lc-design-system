@@ -80,7 +80,7 @@
   <div class="lc-nc__list" [style.max-height]="maxHeight()">
     @if (!hasNotifications()) {
       <div class="lc-nc__empty">
-        <lc-icon name="bell" size="lg" class="lc-nc__empty-icon"></lc-icon>
+        <lc-icon name="bell" size="lg" class="lc-nc__empty-icon" [decorative]="true"></lc-icon>
         <span class="lc-nc__empty-text">{{ emptyMessage() }}</span>
       </div>
     } @else {
@@ -100,7 +100,7 @@
               [class.lc-nc__item--urgent]="n.priority === 'urgent'"
               (click)="onClick(n)"
             >
-              <lc-icon [name]="getTypeIcon(n.type)" size="sm" class="lc-nc__item-icon" [class]="'lc-nc__item-icon lc-nc__item-icon--' + (n.type || 'info')"></lc-icon>
+              <lc-icon [name]="getTypeIcon(n.type)" size="sm" class="lc-nc__item-icon" [class]="'lc-nc__item-icon lc-nc__item-icon--' + (n.type || 'info')" [decorative]="true"></lc-icon>
               <div class="lc-nc__item-body">
                 <div class="lc-nc__item-header">
                   <button type="button" class="lc-nc__item-title">{{ n.title }}</button>

@@ -40,10 +40,21 @@
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
   padding-top: 2px;
+  overflow-wrap: break-word;
 }
 
+// Close and action are 44 px tap targets (3.19, request 024). Negative
+// margins keep the toast, the message and the icon where they were; the
+// rings sit inside the boxes, so they never touch the toast border.
 .lc-toast__action {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--size-min-touch-width, 2.75rem);
+  min-height: var(--size-min-touch-height, 2.75rem);
+  // Centred on the old box (one line plus its 4 px paddings).
+  margin-block: min(0px, calc((1lh + 2 * var(--spacing-1) - var(--size-min-touch-height, 2.75rem)) / 2));
   background: transparent;
   border: none;
   cursor: pointer;
@@ -59,17 +70,20 @@
 
   &:focus-visible {
     outline: 2px solid currentColor;
-    outline-offset: 2px;
+    outline-offset: -2px;
   }
 }
 
 .lc-toast__close {
   flex-shrink: 0;
+  width: var(--size-min-touch-width, 2.75rem);
+  height: var(--size-min-touch-height, 2.75rem);
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: var(--spacing-1);
-  margin: calc(var(--spacing-1) * -1);
+  padding: 0;
+  // The 20 px icon keeps its slot in the row.
+  margin: calc((20px - var(--size-min-touch-height, 2.75rem)) / 2);
   border-radius: var(--border-radius-sm);
   transition: background-color 0.15s ease-in-out;
   display: flex;
@@ -82,7 +96,7 @@
 
   &:focus-visible {
     outline: 2px solid currentColor;
-    outline-offset: 2px;
+    outline-offset: -2px;
   }
 }
 

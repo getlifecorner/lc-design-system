@@ -78,11 +78,14 @@
     background-color: var(--color-surface-hover);
   }
 
+  // 3.19 (request 024, 020 review S2): the text token reaches 4.5:1 on the
+  // menu in both themes (--color-error was 2.06:1 in dark), the hover tint is
+  // its subtle partner.
   &--danger {
-    color: var(--color-error);
+    color: var(--color-text-error);
 
-    &:hover:not(&--disabled) {
-      background-color: rgba(157, 14, 14, 0.14);
+    &:hover:not(.lc-menu__item--disabled) {
+      background-color: var(--color-error-subtle);
     }
   }
 

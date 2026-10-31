@@ -70,6 +70,11 @@ The Table component displays structured data in rows and columns with advanced d
     hoverable: { control: 'boolean', description: 'Highlight rows on hover' },
     paginate: { control: 'boolean', description: 'Enable pagination' },
     pageSize: { control: 'number', description: 'Rows per page' },
+    pageSizeLabel: {
+      control: 'text',
+      description: "Pagination: the text after the number in each page-size option (`10 / page`); German '/ Seite' (3.19)",
+      table: { defaultValue: { summary: "'/ page'" } },
+    },
     selectable: { control: 'boolean', description: 'Enable row selection checkboxes' },
     filterable: { control: 'boolean', description: 'Enable per-column text filters' },
     editable: { control: 'boolean', description: 'Enable inline cell editing (double-click)' },
@@ -203,6 +208,38 @@ export const WithPagination: Story = {
     variant: 'striped',
     hoverable: true,
   },
+};
+
+// 3.19 (request 024): the pager follows the table size, beside a select of the same height.
+const pagedRows = Array.from({ length: 12 }, (_, i) => ({
+  name: `User ${i + 1}`,
+  email: `user${i + 1}@company.com`,
+  role: ['Admin', 'Editor', 'Viewer'][i % 3],
+  status: i % 4 === 3 ? 'Inactive' : 'Active',
+}));
+
+export const PaginationSizes: Story = {
+  name: 'Pagination Sizes',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The pagination follows `size` (3.19): previous and next are 32, 40 or 44 px squares beside a page-size select of the same height, ' +
+          'each with a 44 px tap area and a focus ring. The page-size select has no clear (×) control, because a page size cannot be empty. ' +
+          'The option text comes from `pageSizeLabel` (default `/ page`).',
+      },
+    },
+  },
+  render: () => ({
+    props: { columns: userColumns, data: pagedRows },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 32px;">
+        <lc-table [columns]="columns" [data]="data" size="sm" caption="size sm" [paginate]="true" [pageSize]="5"></lc-table>
+        <lc-table [columns]="columns" [data]="data" size="md" caption="size md" [paginate]="true" [pageSize]="5"></lc-table>
+        <lc-table [columns]="columns" [data]="data" size="lg" caption="size lg" [paginate]="true" [pageSize]="5"></lc-table>
+      </div>
+    `,
+  }),
 };
 
 export const WithSelection: Story = {
@@ -402,14 +439,19 @@ export const WithCellFormattingAndStyling: Story = {
     docs: {
       description: {
         story:
-          "Combine formatter callbacks with cellClass/cellStyle to highlight KPI states directly in the table. ARR and SLA are `align: 'end'` columns (3.17): header and figures end at the same edge, with tabular figures.",
+          'Combine formatter callbacks with cellClass/cellStyle to highlight KPI states directly in the table. ' +
+          "Since 3.19 a `cellClass` colour or font size wins over the kit's cell defaults: Margin is coloured by its class " +
+          '(`--color-text-success`, `-warning`, `-error`) and Account is 16 px through `lc-table-story__cell--account`. ' +
+          '`cellStyle` (inline) still wins over a class: Margin is bold, SLA under 99 % fades. ' +
+          "The classes are global CSS (here `::ng-deep` in the story's `<style>`), because the cells are inside the table's view. " +
+          "ARR and SLA are `align: 'end'` columns (3.17): header and figures end at the same edge, with tabular figures.",
       },
     },
   },
   render: () => ({
     props: {
       columns: [
-        { key: 'account', label: 'Account', sortable: true },
+        { key: 'account', label: 'Account', sortable: true, cellClass: 'lc-table-story__cell--account' },
         {
           key: 'arr',
           label: 'ARR',
@@ -452,16 +494,20 @@ export const WithCellFormattingAndStyling: Story = {
     },
     template: `
       <style>
-        .lc-table-story__cell--success {
-          color: #047857;
+        ::ng-deep .lc-table-story__cell--success {
+          color: var(--color-text-success);
         }
 
-        .lc-table-story__cell--warning {
-          color: #b45309;
+        ::ng-deep .lc-table-story__cell--warning {
+          color: var(--color-text-warning);
         }
 
-        .lc-table-story__cell--danger {
-          color: #b91c1c;
+        ::ng-deep .lc-table-story__cell--danger {
+          color: var(--color-text-error);
+        }
+
+        ::ng-deep .lc-table-story__cell--account {
+          font-size: var(--typography-font-size-base);
         }
       </style>
 
@@ -969,10 +1015,11 @@ export const NumberColumns: Story = {
           "`align: 'end'` on a column (3.17) aligns its header and cells at the end edge and sets tabular figures, so " +
           '„1.111“ and „8.888“ are equally wide and amounts line up digit by digit. Sorting puts the arrow before the label ' +
           '(sort „Betrag“), so the label stays flush with the figures. It works with `paginate`, `actions`, `cellClass` and ' +
-          '`cellStyle` (here `cellStyle` colours the negative changes in `--color-text-error`; ' +
-          "a class colour loses to the kit's cell rule); " +
+          '`cellStyle` (here `cellStyle` colours the negative changes in `--color-text-error`); ' +
           'the „Aktionen“ header follows `actionsAlign="end"`. ' +
-          'A long header widens its column, and the table scrolls inside its wrapper on a phone.',
+          'A long header widens its column, and the table scrolls inside its wrapper on a phone. ' +
+          'The pagination is German too (`pageSizeLabel="/ Seite"`, 3.19); on a phone or at 200 % text it wraps: ' +
+          'the range first, the page-size select and the pager at the end of the next lines.',
       },
     },
   },
@@ -992,6 +1039,7 @@ export const NumberColumns: Story = {
           [pageSize]="5"
           [hoverable]="true"
           rangeOfLabel="von"
+          pageSizeLabel="/ Seite"
           rowsPerPageAriaLabel="Zeilen pro Seite"
           previousPageAriaLabel="Vorherige Seite"
           nextPageAriaLabel="Nächste Seite"

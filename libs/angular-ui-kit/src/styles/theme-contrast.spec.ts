@@ -1,4 +1,5 @@
 import { compile } from 'sass';
+import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
 /**
@@ -356,6 +357,74 @@ describe('Component pairings of 3.17 (request 021)', () => {
       for (const base of bases.slice(0, 3)) {
         expect(ratio(over([ink[0], ink[1], ink[2], 0.5], base), base)).toBeGreaterThanOrEqual(3);
       }
+    });
+  });
+});
+
+// Request 024 (3.19): the lc-menu danger item (020 review S2: --color-error was
+// 2.06:1 on the dark menu) and the restyled lc-table pager. The token names
+// come from the compiled stylesheets, the values from the themes.
+describe('Component pairings of 3.19 (request 024)', () => {
+  const menuScss = readFileSync(resolve(__dirname, '../lib/menu/menu.component.scss'), 'utf8');
+  const menuCss = compile(resolve(__dirname, '../lib/menu/menu.component.scss')).css;
+  const tableCss = compile(resolve(__dirname, '../lib/table/table.component.scss')).css;
+  const body = (css: string, selector: string) => {
+    const at = css.indexOf(`\n${selector} {`);
+    expect(at).toBeGreaterThan(-1);
+    return css.slice(at, css.indexOf('}', at));
+  };
+
+  it('AC-8: the danger item reads --color-text-error, its hover --color-error-subtle; no raw colour', () => {
+    expect(body(menuCss, '.lc-menu__item--danger')).toMatch(/\scolor: var\(--color-text-error\);/);
+    expect(body(menuCss, '.lc-menu__item--danger:hover:not(.lc-menu__item--disabled)')).toMatch(
+      /background-color: var\(--color-error-subtle\);/,
+    );
+    expect(menuCss).not.toMatch(/--danger--disabled/);
+    expect(menuScss).not.toMatch(/rgba\(|#[0-9a-f]{3,8}\b/i);
+  });
+
+  it('AC-4: the pager reads the field border, the second surface and the kit ring', () => {
+    const btn = body(tableCss, '.lc-table-pagination__btn');
+    expect(btn).toMatch(/border: 1px solid var\(--color-field-border\);/);
+    expect(btn).toMatch(/background-color: var\(--color-surface-2\);/);
+    expect(btn).toMatch(/\scolor: var\(--color-text-primary\);/);
+    expect(body(tableCss, '.lc-table-pagination__btn:focus-visible')).toMatch(/outline: 2px solid var\(--color-primary-500\);/);
+  });
+
+  /** Design 024 §5, per palette [light, dark]: the minimum over both panel ends. */
+  const expected = { dangerRest: [12.05, 7.21], dangerHover: [10.98, 7.21], dangerFocus: [11.44, 6.37] };
+
+  describe.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('%s palette', (_palette, tokens, i) => {
+    const page = color(tokens, '--color-background');
+    /** A token over `base` (translucent ones composited), on the opaque page. */
+    const on = (name: string, base: Rgba = page) => over(color(tokens, name), base);
+    /** The menu panel's ends: --color-surface and --color-surface-2 (its gradient runs between them). */
+    const panels = [on('--color-surface'), on('--color-surface-2', on('--color-surface'))];
+    const ink = (fill: Rgba) => ratio(on('--color-text-error', fill), fill);
+
+    it('AC-8: danger text at rest, on hover and on focus reaches 4.5:1 on the menu', () => {
+      const rest = Math.min(...panels.map(ink));
+      const hover = Math.min(...panels.map((p) => ink(on('--color-error-subtle', p))));
+      const focus = Math.min(...panels.map((p) => ink(on('--color-surface-hover', p))));
+      expect(rest).toBeCloseTo(expected.dangerRest[i], 2);
+      expect(hover).toBeCloseTo(expected.dangerHover[i], 2);
+      expect(focus).toBeCloseTo(expected.dangerFocus[i], 2);
+      expect(Math.min(rest, hover, focus)).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it('AC-8: the focus ring (--color-primary-500) reaches 3:1 on the focused danger item', () => {
+      for (const p of panels) {
+        const fill = on('--color-surface-hover', p);
+        expect(ratio(on('--color-primary-500', fill), fill)).toBeGreaterThanOrEqual(3);
+      }
+    });
+
+    it.each(['--color-background', '--color-surface'])('AC-4: pager border 3:1, ring 3:1 and glyph 4.5:1 on %s', (ground) => {
+      const g = on(ground);
+      expect(ratio(on('--color-field-border', g), g)).toBeGreaterThanOrEqual(3);
+      expect(ratio(on('--color-primary-500', g), g)).toBeGreaterThanOrEqual(3);
+      const fill = on('--color-surface-2', g);
+      expect(ratio(on('--color-text-primary', fill), fill)).toBeGreaterThanOrEqual(4.5);
     });
   });
 });
