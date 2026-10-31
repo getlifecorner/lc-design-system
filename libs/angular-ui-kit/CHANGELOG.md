@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.17.0] - 2026-10-31
+
+The sources page in Finance Intelligence (gap file quellen-2026-10-31, rows 1–5): end-aligned number columns, a loading button that keeps focus, progress bars under reduced motion and forced colours, readable list badges, and the toast call documented. No API breaks.
+
+### Added
+
+- **`TableColumn.align: 'start' | 'end'`** (row 1, sources table from 1280 px): `end` aligns header and cells at the end edge with tabular figures ("1.111" and "8.888" both 38.7 px); a sorted end header puts the arrow 8 px before the label, so the label stays flush with the figures. Works with `paginate`, `actions`, `cellClass` and prerendering.
+- Stories: Data Display/Table "Number Columns"; Components/Button "Loading Keeps Focus"; Feedback/Progress Bar "Indeterminate Sizes"; Data Display/List "Status Badges"; Feedback/Toast Outlet "Service Call" and a page on `ToastService.show()` (all options, the one outlet, the announcement).
+
+### Changed
+
+- **`lc-button loading`** (row 2, the source card's load button): the button stays focusable with `aria-disabled="true"` and `aria-busy="true"` instead of the native `disabled`; click, Enter and Space are ignored and a form isn't submitted. It looks as before (148 of 148 screenshots identical); the focus ring stays visible (≥ 3.39:1). Announcing the result is the page's job.
+
+### Fixed
+
+- `lc-table actionsAlign`: the "Aktionen" header now ends where the buttons end (Known in 3.16); the "Betrag" headers of the Clickable Rows and Hidden Caption stories are flush with the amounts.
+- `lc-progress-bar indeterminate` (row 3): under `prefers-reduced-motion` a static striped full bar and a dashed ring; under `forced-colors` Highlight fill, CanvasText outline, GrayText ring track.
+- `lc-list` badges (row 5): success 3.53 → 4.85:1 light, 1.87 → 5.17:1 dark; warning 3.23 → 5.52 / 2.07 → 4.61; error dark 1.13 → 7.17 (the `lc-badge` pairs).
+- `lc-toast` icons are decorative (`aria-hidden`); the message is the announcement.
+
+### Compatibility
+
+- No API breaks. A test that expects `disabled` on a loading `lc-button` now finds `aria-disabled="true"`; `disabled` itself is still native. Defaults render as in 3.16 (Jest pins the DOM); the screenshot diffs are the 4 table, 1 progress and 4 list stories named above.
+- `TableColumn.cellClass`: a colour or font size set by the class loses to the kit's cell rule (as in earlier versions); set them with `cellStyle`. The JSDoc now says so.
+- Consumer check (AOT, strictTemplates, prerender) passes on Angular 22.
+
+### Known
+
+- `TableColumn.cellClass` colour and font size never apply (pre-existing; use `cellStyle`). Data Display/Table "With Cell Formatting and Styling" renders the success, warning and danger cells in the text colour.
+- `lc-table` pagination (pre-existing): "/ page" is hard-coded English; the select's clear button sits over the page-size value (20 × 20 px over "5 / page" at 1280); previous and next are 28 × 28 px (< 44 px); the controls row is 546 px wide at 360 px with 200 % text.
+- `lc-toast` close (28 × 28 px) and action (94 × 29 px) are smaller than 44 px.
+- Data Display/List "Status Badges": the error badge keeps its 100 fill and reads heavier than the success and warning badges, which moved to the pale subtle fills (intended; no new look for a pair that passed).
+- A follow-up request after 3.17 covers the table `cellClass`, the pagination and the toast targets.
+
 ## [3.16.0] - 2026-10-31
 
 The parts for "Connect bank accounts" in life-os (spec 004, gaps BA-1, BA-3, BA-4, BA-5, TD-3, TD-4): a money display, switch help text, keyboard table rows with a caption, equal answers on the next-step card, real link rows in lists, and the wallet and bank icons in the inline set. One new entry point, `@lifecorner/angular-ui-kit/money`. No API breaks.
