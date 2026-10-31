@@ -1,5 +1,9 @@
 <div [class]="wrapperClasses()">
   <table [class]="tableClasses()" [attr.role]="treeMode() ? 'treegrid' : 'table'">
+    @if (caption()) {
+      <!-- First child of the table, so it names the table (and the treegrid). -->
+      <caption class="lc-table__caption" [class.lc-table__caption--hidden]="!showCaption()">{{ caption() }}</caption>
+    }
     <thead>
       <!-- Filter row -->
       @if (filterable()) {
@@ -98,7 +102,7 @@
             [attr.aria-posinset]="treeMode() ? dr.posInSet : null"
             [attr.aria-setsize]="treeMode() ? dr.setSize : null"
             [attr.aria-selected]="treeMode() && selectable() ? isRowSelected(dr.row) : null"
-            (click)="onRowClick(dr.row)"
+            (click)="onRowClick(dr.row, $event)"
             (focus)="onRowFocus(dr)"
             (keydown)="onRowKeydown($event, dr)"
           >

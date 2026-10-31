@@ -50,6 +50,13 @@ const meta: Meta<NextStepCardComponent> = {
         '3.3: where `linkHref` opens — `_blank` (new tab, `rel="noopener noreferrer"`, the 3.2 behaviour) or `_self`.',
       table: { defaultValue: { summary: '_blank' } },
     },
+    actionsStyle: {
+      control: 'select',
+      options: ['default', 'equal'],
+      description:
+        '3.16 (BA-5): `default` — filled primary, ghost secondary with a chevron, primary last. `equal` — two answers of the same weight, both `outline` in the primary tone at `actionSize`, primary first, no chevron. Use `actionSize="lg"` (dev warning otherwise). No effect on `[slot=\'actions\']`.',
+      table: { defaultValue: { summary: 'default' } },
+    },
     primaryLoading: { control: 'boolean' },
     primaryDisabled: { control: 'boolean' },
     announce: { control: 'boolean' },
@@ -81,6 +88,10 @@ eine nächste Schritt?"
 - **\`variant="soft"\` (3.3, LK-4):** die getönte Karte des „Weite“-Looks; \`actionsLayout="stacked"\`
   für mehrere gleich breite Aktionen; \`titleTag\` für eine Überschrift; \`actionSize\` und
   \`linkTarget\` für die eingebauten Aktionen.
+- **\`actionsStyle="equal"\` (3.16, BA-5):** a question with two answers of the same weight:
+  both built-in buttons \`outline\` in the primary tone at \`actionSize\` (use \`lg\`), the primary
+  first, no chevron. \`primaryClick\`, \`secondaryClick\`, \`primaryLoading\`, \`primaryDisabled\`
+  and \`announce\` work as before.
 - Der Host ist ein Size-Container (\`container-type: inline-size\`) und nimmt die volle Breite
   seines Elternelements ein.
 
@@ -364,6 +375,87 @@ export const LargeText: LargeTextStory = {
       <div [attr.data-lc-story-text]="textSize" style="background: var(--color-background); padding: 16px 24px; display: flex; flex-direction: column; gap: 32px;">
         ${largeTextCards('de', 'Nichts zu tun', 'Für heute ist alles erledigt.', 'Wartet auf Freigabe', 'Der Entwurf ist fertig und kann geprüft werden.', 'Freigeben', 'Änderungen anfordern')}
         ${largeTextCards('en', 'Nothing to do', 'Everything is done for today.', 'Waiting for approval', 'The draft is ready for review.', 'Approve', 'Request changes')}
+      </div>
+      <style>::ng-deep html:has(#storybook-root [data-lc-story-text="200%"]) { font-size: 200%; }</style>`,
+  }),
+};
+
+/**
+ * 3.16 (BA-5): a question with two answers of the same weight — the one-time
+ * health question on life-os's Finances page (board 7). Both answers are
+ * outline buttons in the primary tone at `actionSize="lg"` (48.5 px), the
+ * primary first. Below 480 px card width they take their own row and stretch;
+ * wider, they sit side by side at the end of the card.
+ */
+export const EqualAnswers: Story = {
+  name: 'Equal Answers',
+  args: {
+    tone: 'primary',
+    icon: 'shield-lock',
+    cardTitle: 'Gesundheitsbuchungen teilen?',
+    message: 'Andere Erwachsene im Haushalt sehen sie dann in der Übersicht.',
+    primaryLabel: 'Ja, teilen',
+    secondaryLabel: 'Nein, nicht teilen',
+    actionsStyle: 'equal',
+    actionSize: 'lg',
+    actionsLayout: 'inline',
+    primaryLoading: false,
+    primaryDisabled: false,
+    announce: false,
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div lang="de">
+        <lc-next-step-card
+          [tone]="tone" [icon]="icon" [cardTitle]="cardTitle" [message]="message"
+          [primaryLabel]="primaryLabel" [secondaryLabel]="secondaryLabel"
+          [actionsStyle]="actionsStyle" [actionSize]="actionSize" [actionsLayout]="actionsLayout"
+          [primaryLoading]="primaryLoading" [primaryDisabled]="primaryDisabled"
+          [primaryDisabledReason]="primaryDisabledReason || ''" [announce]="announce"
+        />
+      </div>
+    `,
+  }),
+};
+
+/** The soft card with `actionsLayout="stacked"`: one answer per line at equal width, in German and English. */
+export const EqualAnswersStacked: Story = {
+  name: 'Equal Answers Stacked',
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <lc-next-step-card lang="de" variant="soft" tone="primary" icon="shield-lock" titleTag="h2"
+          cardTitle="Gesundheitsbuchungen teilen?" message="Andere Erwachsene im Haushalt sehen sie dann in der Übersicht."
+          actionsStyle="equal" actionsLayout="stacked" actionSize="lg"
+          primaryLabel="Ja, teilen" secondaryLabel="Nein, nicht teilen" />
+        <lc-next-step-card lang="en" variant="soft" tone="primary" icon="shield-lock" titleTag="h2"
+          cardTitle="Share health bookings?" message="Other adults in your household then see them in the overview."
+          actionsStyle="equal" actionsLayout="stacked" actionSize="lg"
+          primaryLabel="Yes, share" secondaryLabel="No, don't share" />
+      </div>
+    `,
+  }),
+};
+
+/**
+ * 3.16 (BA-5, AC-16): the equal answers at 200 % text. The German labels break
+ * at spaces only, with no horizontal overflow. The root text size is raised in
+ * the canvas only (`#storybook-root`), so the docs page keeps 100 %.
+ */
+export const EqualAnswersAt200Text: LargeTextStory = {
+  name: 'Equal Answers at 200 % Text',
+  args: { textSize: '200%' },
+  argTypes: { textSize: textSizeArgType },
+  parameters: { layout: 'fullscreen' },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div [attr.data-lc-story-text]="textSize" style="background: var(--color-background); padding: 16px 24px; display: flex; flex-direction: column; gap: 32px;">
+        <lc-next-step-card lang="de" tone="primary" icon="shield-lock" cardTitle="Gesundheitsbuchungen teilen?"
+          actionsStyle="equal" actionSize="lg" primaryLabel="Ja, teilen" secondaryLabel="Nein, nicht teilen" />
+        <lc-next-step-card lang="en" tone="primary" icon="shield-lock" cardTitle="Share health bookings?"
+          actionsStyle="equal" actionSize="lg" primaryLabel="Yes, share" secondaryLabel="No, don't share" />
       </div>
       <style>::ng-deep html:has(#storybook-root [data-lc-story-text="200%"]) { font-size: 200%; }</style>`,
   }),

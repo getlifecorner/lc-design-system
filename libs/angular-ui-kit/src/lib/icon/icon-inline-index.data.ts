@@ -15,8 +15,8 @@ export const INLINE_HAND_KEYS =
 
 /** The inlined Tabler keys (`INLINE_TABLER_SVGS`) with an outline glyph. */
 export const INLINE_TABLER_OUTLINE_KEYS =
-  'mail file-text file arrow-right arrow-left external-link world menu-2 x users user-plus settings logout dots wifi-off chevron-right chevron-left login key password shield-check robot plug-connected device-mobile device-desktop device-laptop copy share link trash info-circle circle-check alert-triangle alert-circle circle-x';
+  'mail file-text file arrow-right arrow-left external-link world menu-2 x users user-plus settings logout dots wifi-off chevron-right chevron-left login key password shield-check robot plug-connected device-mobile device-desktop device-laptop copy share link trash info-circle circle-check alert-triangle alert-circle circle-x wallet building-bank shield-lock';
 
 /** The inlined Tabler keys with a solid (filled) glyph. */
 export const INLINE_TABLER_SOLID_KEYS =
-  'mail file-text file external-link world menu-2 x settings dots chevron-right key shield-check device-mobile device-desktop copy link trash info-circle circle-check alert-triangle alert-circle circle-x';
+  'mail file-text file external-link world menu-2 x settings dots chevron-right key shield-check device-mobile device-desktop copy link trash info-circle circle-check alert-triangle alert-circle circle-x shield-lock';

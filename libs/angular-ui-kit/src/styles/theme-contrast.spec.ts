@@ -280,3 +280,25 @@ describe('Component pairings of 3.15 (request 020)', () => {
     });
   });
 });
+
+// Request 022 (3.16): the focus ring of clickable table rows and list link rows
+// (--color-primary-500, 2 px) on every row fill (1.4.11 and 2.4.13 need 3:1).
+describe('Component pairings of 3.16 (request 022)', () => {
+  /** Design 022 §5, per palette [light, dark]: table row fills on the card (--color-surface). */
+  const rows: [string, [number, number]][] = [
+    ['--color-surface', [4.37, 9.13]],
+    ['--color-surface-2', [4.18, 7.58]],
+    ['--color-surface-hover', [3.97, 8.18]],
+    ['--color-surface-selected', [3.76, 6.87]],
+  ];
+
+  describe.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('%s palette', (_palette, tokens, i) => {
+    const solid = (name: string, base = '--color-surface') => over(color(tokens, name), color(tokens, base));
+
+    it.each(rows)('AC-5: the --color-primary-500 row ring reaches 3:1 on %s', (fill, values) => {
+      const r = ratio(solid('--color-primary-500'), solid(fill));
+      expect(r).toBeCloseTo(values[i], 1);
+      expect(r).toBeGreaterThanOrEqual(3);
+    });
+  });
+});

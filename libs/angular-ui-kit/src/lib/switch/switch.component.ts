@@ -20,6 +20,10 @@ let nextUniqueId = 0;
  * - Size options (sm, md, lg)
  * - Loading state with spinner
  * - Configurable label positioning (left/right)
+ * - Help text below the label, linked by `aria-describedby` (`helpText`, 3.16)
+ * - Rows with a label or help text are at least 44 px high
+ *   (`--lc-switch-min-height`, default `var(--size-min-touch-height)`; `0`
+ *   restores the 3.15 rows of 21/24/28 px)
  * - Keyboard toggle support
  * - Disabled and required states
  * - ControlValueAccessor integration for reactive forms
@@ -91,12 +95,24 @@ export class SwitchComponent implements ControlValueAccessor {
   readonly ariaLabel = input<string | undefined>(undefined);
 
   /**
+   * Description below the label, linked to the switch by `aria-describedby`
+   * (read after the name and state). Wraps; 14 px secondary text. A tap on it
+   * toggles the switch like the label. Empty renders no element and no
+   * `aria-describedby` (3.15).
+   * @default ''
+   */
+  readonly helpText = input<string>('');
+
+  /**
    * Emitted when checked state changes
    */
   readonly checkedChange = output<boolean>();
 
   /** Per-instance id so the visible `<label for>` points at this switch. */
   readonly switchId = `lc-switch-${nextUniqueId++}`;
+
+  /** id of the rendered help text (only while `helpText` is set). */
+  readonly helpTextId = computed(() => (this.helpText() ? `${this.switchId}-help` : null));
 
   /**
    * Effective checked state: follows the `checked` input, overridden by

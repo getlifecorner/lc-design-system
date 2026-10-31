@@ -33,6 +33,16 @@ export type NextStepCardVariant = 'default' | 'soft';
  */
 export type NextStepCardActionsLayout = 'inline' | 'stacked';
 
+/**
+ * Weight of the two built-in actions.
+ * - `default`: a filled primary and a ghost secondary with a chevron, the
+ *   primary last
+ * - `equal`: two answers of the same weight (a question such as „Teilen?“):
+ *   both `outline` in the primary tone at `actionSize`, the primary first,
+ *   no chevron
+ */
+export type NextStepCardActionsStyle = 'default' | 'equal';
+
 /** Element that renders the title (semantics only, the look stays the same). */
 export type NextStepCardTitleTag = 'div' | 'h2' | 'h3';
 
@@ -64,6 +74,8 @@ export type NextStepCardActionSize = 'sm' | 'md' | 'lg';
  *   `fullWidth` button gets its own row at every width.
  * - `variant="soft"`: the tinted card of the "Weite" look; `actionsLayout`
  *   `stacked` for several equal-width actions; `titleTag` for a heading
+ * - `actionsStyle="equal"` (3.16, BA-5): a question with two answers of the
+ *   same weight, both outline buttons in the primary tone, primary first
  *
  * The host is a size container (`container-type: inline-size`) and takes the
  * full inline size of its parent.
@@ -142,6 +154,17 @@ export class NextStepCardComponent implements AfterViewChecked {
    * @default 'sm'
    */
   actionSize = input<NextStepCardActionSize>('sm');
+
+  /**
+   * Weight of the built-in actions. `default`: filled primary, ghost secondary
+   * with a chevron, primary last. `equal`: two answers of the same weight, both
+   * `outline` in the primary tone at `actionSize`, primary first, no chevron
+   * (`primaryClick`, `secondaryClick`, `primaryLoading`, `primaryDisabled` and
+   * `announce` work as before). Use `actionSize="lg"` (48.5 px, the 44 px
+   * target; a dev warning otherwise). No effect on `[slot='actions']`.
+   * @default 'default'
+   */
+  actionsStyle = input<NextStepCardActionsStyle>('default');
 
   /** Message below the title. For markup, use the default slot instead. */
   message = input<string>();
@@ -239,6 +262,11 @@ export class NextStepCardComponent implements AfterViewChecked {
           '[lc-next-step-card] `primaryDisabled` is set without a `primaryDisabledReason`. ' +
             'A disabled primary action must explain why (shown as tooltip).',
         );
+      }
+    });
+    effect(() => {
+      if (isDevMode() && this.actionsStyle() === 'equal' && this.actionSize() !== 'lg') {
+        console.warn('[lc-next-step-card] actionsStyle="equal" needs actionSize="lg" (44 px)');
       }
     });
   }

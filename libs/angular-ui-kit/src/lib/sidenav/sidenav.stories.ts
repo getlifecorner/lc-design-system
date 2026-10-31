@@ -979,3 +979,35 @@ export const TextBrandDrawerGerman: Story = {
       </div>`,
   }),
 };
+
+/** 3.16 (TD-3): the finance destinations in a section; `wallet` and `building-bank` are in the inline set. */
+export const FinanceDestination: Story = {
+  name: 'Finance Destination',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The section „Bereiche“ with Finanzen (`wallet`, current) and Banken (`building-bank`). Both glyphs are in the inline set since 3.16, so they render without a request, in prerendered HTML too.',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      items: [
+        {
+          id: 'areas', icon: '', label: 'Bereiche', route: '', displayOrder: 1,
+          isSection: true,
+          children: [
+            { id: 'finances', icon: 'wallet', label: 'Finanzen', route: '/finanzen', displayOrder: 1 },
+            { id: 'banks', icon: 'building-bank', label: 'Banken', route: '/banken', displayOrder: 2 },
+          ],
+        },
+      ],
+      activeRoute: '/finanzen',
+    },
+    template: `
+      <div lang="de">
+        ${brandRail('theme="light" ariaLabel="Hauptnavigation"')}
+      </div>`,
+  }),
+};

@@ -22,7 +22,8 @@ export type IconName = string;
  * `provideLcIcons()` or loaded with the kit's set (3.6, AS-17). Covers the
  * hand-picked inline set, the Tabler icons inlined at build time (mail,
  * users, settings, logout, key, chevron-right, …) and aliases that resolve
- * to either — the same names as in 3.5.1. Use it to lint an app or a static
+ * to either — the names of 3.5.1, plus `wallet`, `building-bank` and
+ * `shield-lock` since 3.16 (TD-3). Use it to lint an app or a static
  * site against icons that would be fetched.
  *
  * @example

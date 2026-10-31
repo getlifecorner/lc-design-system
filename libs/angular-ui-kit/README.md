@@ -1,6 +1,6 @@
 # @lifecorner/angular-ui-kit
 
-Angular UI component library for the **LifeCorner Design System** — 110 accessible, themeable Angular standalone components (for apps on Angular 21 and 22) with signal-based inputs, OnPush change detection, light/dark themes, and a full density token system (`compact` / `cosy` / `comfortable`).
+Angular UI component library for the **LifeCorner Design System** — 111 accessible, themeable Angular standalone components (for apps on Angular 21 and 22) with signal-based inputs, OnPush change detection, light/dark themes, and a full density token system (`compact` / `cosy` / `comfortable`).
 
 ## Resources
 
@@ -145,6 +145,7 @@ and the CSP notes.
 | List | `lc-list` | List display |
 | Log Viewer | `lc-log-viewer` | Streaming log/terminal viewer with virtualization |
 | Metric Card | `lc-metric-card` | KPI/metric display |
+| Money | `lc-money` | An amount in minor units: locale, ISO 4217 minor units, U+2212 minus, tabular figures, spoken text; `formatMoney()` for formatters (3.16) |
 | Pipeline | `lc-pipeline` | Status timeline of connected process nodes; per-node status (complete/current/pending/warning/error) with captions, horizontal/vertical |
 | Skeleton | `lc-skeleton` | Loading placeholder |
 | Spinner | `lc-spinner` | Loading indicator |

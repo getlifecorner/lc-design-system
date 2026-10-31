@@ -38,7 +38,7 @@
       @if (item.metadata) {
         <span class="lc-list__metadata">{{ item.metadata }}</span>
       }
-      @if (item.action) {
+      @if (item.action && !isLinkRow(item)) {
         <!-- The action is its own control: its click must not also activate the row. -->
         <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- only stops the action click from also activating the row; the action is a real button -->
         <span class="lc-list__action-area" (click)="$event.stopPropagation()">
@@ -59,7 +59,14 @@
 
 <div [class]="listClasses()" role="list">
   @for (item of items(); track item.id || $index) {
-    @if (clickable()) {
+    @if (isLinkRow(item)) {
+      <!-- A real link over the whole row (3.16, TD-4); the row element carries the item styles. -->
+      <div class="lc-list__item-wrapper" role="listitem">
+        <a [class]="getItemClasses(item) + ' lc-list__item--link'" [href]="item.href" (click)="onLinkClick($event, item)">
+          <ng-container *ngTemplateOutlet="rowContent; context: { $implicit: item }"></ng-container>
+        </a>
+      </div>
+    } @else if (clickable()) {
       <div class="lc-list__item-wrapper" role="listitem">
         <div
           [class]="getItemClasses(item)"

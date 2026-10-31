@@ -1,5 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/angular';
-import { ListComponent } from './list.component';
+import { moduleMetadata, type Meta, type StoryObj } from '@storybook/angular';
+import { fn } from 'storybook/test';
+import { ListComponent, type ListLinkClickEvent } from './list.component';
+import { ListItemTemplateDirective } from './list-item-template.directive';
+import { AvatarComponent } from '../avatar/avatar.component';
+import { MoneyComponent } from '../money/money.component';
 
 /**
  * Lists display structured item collections with rich content support.
@@ -49,6 +53,11 @@ const meta: Meta<ListComponent> = {
       description: '3.3: size of the built-in row action — `xs` (3.2, about 25 px) … `lg` (48.5 px, the 44 px touch target).',
       table: { defaultValue: { summary: 'xs' } },
     },
+    linkClick: {
+      description:
+        '3.16: a plain left click on an `href` row ({ item, event }). Call `event.preventDefault()` and navigate with the router for in-app links; modified and middle clicks do not emit.',
+      table: { defaultValue: { summary: '—' } },
+    },
   },
 
   parameters: {
@@ -71,6 +80,9 @@ List component for displaying structured item collections.
 - Long unbroken texts wrap (3.3); pointer and hover only on \`clickable\` rows (3.3)
 - Selected/highlighted state
 - Accessible with ARIA list role; \`clickable\` rows are keyboard-operable
+- Link rows (3.16): \`ListItem.href\` renders the row as a real \`<a href>\` (middle click, context menu, at least 44 px);
+  \`linkClick\` reports plain clicks for router navigation. A disabled item stays a plain row, and an \`href\` row
+  renders no \`action\` (nothing interactive inside a link, also not in an \`lcListItem\` template)
 `,
       },
     },
@@ -377,5 +389,141 @@ export const RowActionsWithNames: Story = {
     actionSize: 'lg',
     showDividers: true,
   },
+};
+
+// 3.16 (TD-4, request 022): link rows.
+const accountItems = [
+  { id: 'giro', label: 'Girokonto', subtitle: 'Sparkasse München · DE12 •••• 4711', bank: 'Sparkasse München', balance: 245017, href: '/finanzen/konten/giro' },
+  { id: 'joint', label: 'Gemeinschaftskonto Haushalt', subtitle: 'ING · DE89 •••• 0815', bank: 'ING Bank', balance: -4217, href: '/finanzen/konten/haushalt' },
+  {
+    id: 'savings',
+    label: 'Tagesgeld',
+    subtitle: 'DKB · Verbindung abgelaufen',
+    bank: 'Deutsche Kreditbank',
+    balance: 1000000,
+    href: '/finanzen/konten/tagesgeld',
+    disabled: true,
+  },
+];
+
+export const LinkRows: Story = {
+  name: 'Link Rows',
+  decorators: [moduleMetadata({ imports: [ListItemTemplateDirective, AvatarComponent, MoneyComponent] })],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Accounts as link rows: each row is an `<a href>` with an `lcListItem` template (avatar, name, `lc-money`). ' +
+          'The disabled account (expired connection) stays a plain row without a link.',
+      },
+    },
+  },
+  args: { items: accountItems, showDividers: true, linkClick: fn() },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div lang="de" style="max-width: 480px;">
+        <lc-list [items]="items" [showDividers]="showDividers" (linkClick)="linkClick($event)">
+          <ng-template lcListItem let-item>
+            <lc-avatar [name]="item.bank" size="sm" [decorative]="true" />
+            <span style="display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere;">
+              <span style="font-weight: var(--font-weight-medium); color: var(--color-text-primary);">{{ item.label }}</span>
+              <span style="font-size: var(--font-size-sm); color: var(--color-text-tertiary);">{{ item.subtitle }}</span>
+            </span>
+            <span style="font-weight: var(--font-weight-semibold); color: var(--color-text-primary);">
+              <lc-money [amountMinor]="item.balance" currency="EUR" locale="de-DE" />
+            </span>
+          </ng-template>
+        </lc-list>
+      </div>`,
+  }),
+};
+
+export const LinkRowsSmall: Story = {
+  name: 'Link Rows Small',
+  parameters: {
+    docs: {
+      description: {
+        story: 'The sources line of the Today page: `sm` link rows with subtitles and a badge, each at least 44 px high.',
+      },
+    },
+  },
+  args: {
+    items: [
+      { id: 'bank', label: 'Banken', subtitle: '2 Verbindungen · vor 5 Min. aktualisiert', icon: 'building-bank', href: '/quellen/banken' },
+      {
+        id: 'health',
+        label: 'Gesundheitsbuchungen',
+        subtitle: 'Nicht mit dem Haushalt geteilt',
+        icon: 'shield-lock',
+        badge: 'nur für dich',
+        href: '/quellen/gesundheit',
+      },
+      { id: 'wallet', label: 'Haushaltskasse', subtitle: 'Manuell gepflegt', icon: 'wallet', href: '/quellen/haushaltskasse' },
+    ],
+    size: 'sm',
+    showDividers: true,
+    linkClick: fn(),
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div lang="de" style="max-width: 480px;">
+        <lc-list [items]="items" [size]="size" [showDividers]="showDividers" (linkClick)="linkClick($event)" />
+      </div>`,
+  }),
+};
+
+export const LinkRowsWithRouter: Story = {
+  name: 'Link Rows with the Router',
+  parameters: {
+    docs: {
+      description: {
+        story: `
+\`linkClick\` reports a plain left click on a link row; modified and middle clicks open the \`href\` as usual.
+For in-app links prevent the browser navigation and use the router:
+
+\`\`\`html
+<lc-list [items]="accounts" (linkClick)="openAccount($event)" />
+\`\`\`
+
+\`\`\`ts
+openAccount({ item, event }: ListLinkClickEvent) {
+  event.preventDefault();
+  this.router.navigateByUrl(item.href!);
+}
+\`\`\`
+
+Here the handler logs the link and prevents the navigation.
+        `,
+      },
+    },
+  },
+  args: {
+    items: [
+      { id: 'giro', label: 'Girokonto', subtitle: 'Sparkasse München', icon: 'building-bank', href: '/finanzen/konten/giro' },
+      { id: 'joint', label: 'Gemeinschaftskonto Haushalt', subtitle: 'ING', icon: 'building-bank', href: '/finanzen/konten/haushalt' },
+    ],
+    showDividers: true,
+    linkClick: fn(),
+  },
+  render: (args) => ({
+    props: {
+      ...args,
+      lastLink: '–',
+      openAccount(this: { lastLink: string; linkClick: (e: ListLinkClickEvent) => void }, e: ListLinkClickEvent) {
+        e.event.preventDefault();
+        this.lastLink = e.item.href ?? '–';
+        this.linkClick(e);
+      },
+    },
+    template: `
+      <div lang="de" style="max-width: 480px;">
+        <lc-list [items]="items" [showDividers]="showDividers" (linkClick)="openAccount($event)" />
+        <p style="margin-top: 1rem; font-family: monospace; color: var(--color-text-secondary);">
+          Router-Ziel: <strong>{{ lastLink }}</strong>
+        </p>
+      </div>`,
+  }),
 };
 

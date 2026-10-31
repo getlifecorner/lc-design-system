@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/angular';
+import { componentWrapperDecorator, type Meta, type StoryObj } from '@storybook/angular';
 import { fn, expect, userEvent, within } from 'storybook/test';
 import { SwitchComponent } from './switch.component';
 
@@ -35,6 +35,12 @@ const meta: Meta<SwitchComponent> = {
     disabled: { description: 'Prevents interaction' },
     loading: { description: 'Shows a loading indicator (e.g. while saving)' },
     required: { description: 'Marks the field as required in forms' },
+    helpText: {
+      control: 'text',
+      description:
+        'Description below the label, linked to the switch by `aria-describedby` (read after name and state). Wraps; 14 px secondary text; a tap on it toggles too. Empty renders no element.',
+      table: { defaultValue: { summary: "''" } },
+    },
   },
   parameters: {
     docs: {
@@ -47,6 +53,10 @@ Switch component for boolean toggle functionality.
 - Size options (sm, md, lg)
 - Loading state with spinner
 - Configurable label positioning (left/right)
+- Help text below the label (\`helpText\`), linked by \`aria-describedby\`
+- Rows with a label or help text are at least 44 px high. The CSS hook
+  \`--lc-switch-min-height\` (default \`var(--size-min-touch-height)\`, 44 px) is read
+  where it is used, so an ancestor can set it; \`0\` restores the 3.15 rows (21/24/28 px).
 - Keyboard toggle support
 - Disabled and required states
 - ControlValueAccessor integration for reactive forms
@@ -179,5 +189,76 @@ export const FeatureFlags: Story = {
           </div>
         </div>
       </div>`,
+  }),
+};
+
+const MANAGE_LABEL = 'Andere Erwachsene dürfen verwalten';
+const MANAGE_HELP = 'Andere Erwachsene dürfen Verbindungen und Konten verwalten';
+
+/**
+ * 3.16 (BA-1): a description under the label, linked to the switch by
+ * `aria-describedby`, so a screen reader reads name, state, then the help.
+ * The connection page's managing switch in life-os (boards 16, 22).
+ */
+export const WithHelpText: Story = {
+  name: 'With Help Text',
+  args: { label: MANAGE_LABEL, helpText: MANAGE_HELP, variant: 'primary', size: 'md', checked: false },
+  decorators: [componentWrapperDecorator((story) => `<div lang="de">${story}</div>`)],
+};
+
+/** One switch per size and label position, with and without help text. */
+const sizeRow = (size: string, position: string, label: string, help: string) => `
+  <lc-switch size="${size}" labelPosition="${position}" label="${label}"${help ? ` helpText="${help}"` : ''} />`;
+
+/**
+ * 3.16 (BA-2): every row with a label is at least 44 px high, with or without
+ * help text, in `sm`, `md` and `lg` and both label positions. The track sits
+ * on the label's first line.
+ */
+export const HelpTextSizesAndPositions: Story = {
+  name: 'Help Text Sizes and Positions',
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        <div lang="de" style="display: flex; flex-direction: column; gap: 8px;">
+          ${['sm', 'md', 'lg'].map((s) => sizeRow(s, 'left', `${MANAGE_LABEL} (${s}, links)`, MANAGE_HELP)).join('')}
+          ${['sm', 'md', 'lg'].map((s) => sizeRow(s, 'right', `${MANAGE_LABEL} (${s}, rechts)`, MANAGE_HELP)).join('')}
+        </div>
+        <div lang="en" style="display: flex; flex-direction: column; gap: 8px;">
+          ${['sm', 'md', 'lg'].map((s) => sizeRow(s, 'right', `Share health bookings (${s})`, 'Your household sees health bookings in the shared overview')).join('')}
+          ${sizeRow('sm', 'right', 'Without help text (sm)', '')}
+        </div>
+      </div>`,
+  }),
+};
+
+type LargeTextStory = StoryObj<SwitchComponent & { textSize: '200%' | '100%' }>;
+
+/**
+ * 3.16 (BA-1): at 200 % text (a phone's large-text setting) the label and the
+ * help text wrap beside the switch, with no truncation and no horizontal
+ * scroll. The root text size is raised in the canvas only.
+ */
+export const HelpTextAt200Text: LargeTextStory = {
+  name: 'Help Text at 200 % Text',
+  args: { textSize: '200%' },
+  argTypes: {
+    textSize: {
+      control: 'inline-radio',
+      options: ['200%', '100%'],
+      description:
+        "Root font size of the canvas (`html { font-size }`), the way a phone's large-text setting raises it; every rem value doubles at `200%`. Story only, not a component input; the docs page stays at 100 %",
+      table: { defaultValue: { summary: "'200%'" } },
+    },
+  },
+  parameters: { layout: 'fullscreen' },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div [attr.data-lc-story-text]="textSize" style="background: var(--color-background); padding: 16px; display: flex; flex-direction: column; gap: 16px;">
+        <div lang="de"><lc-switch label="${MANAGE_LABEL}" helpText="${MANAGE_HELP}" /></div>
+        <div lang="en"><lc-switch size="lg" label="Share health bookings" helpText="Your household sees health bookings in the shared overview" [checked]="true" /></div>
+      </div>
+      <style>::ng-deep html:has(#storybook-root [data-lc-story-text="200%"]) { font-size: 200%; }</style>`,
   }),
 };

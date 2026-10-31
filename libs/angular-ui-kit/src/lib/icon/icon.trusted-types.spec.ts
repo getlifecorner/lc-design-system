@@ -234,9 +234,10 @@ describe('IconComponent under Trusted Types (AS-14)', () => {
       rules = factory.calls[0].rules;
     });
 
-    it('returns each of the 133 bundled constants and the placeholder unchanged', () => {
-      expect(ALL_BUNDLED).toHaveLength(133);
-      expect(bundledIconSvgs().size).toBe(134);
+    // 3.16 (TD-3) added wallet, building-bank and shield-lock (+ its filled glyph): 133 → 137.
+    it('returns each of the 137 bundled constants and the placeholder unchanged', () => {
+      expect(ALL_BUNDLED).toHaveLength(137);
+      expect(bundledIconSvgs().size).toBe(138);
       for (const svg of [...ALL_BUNDLED, ICON_FALLBACK_SVG]) expect(rules.createHTML(svg)).toBe(svg);
     });
 

@@ -214,6 +214,9 @@ export * from '@lifecorner/angular-ui-kit/chip';
 // Table Component
 export * from '@lifecorner/angular-ui-kit/table';
 
+// Money Component and formatMoney (3.16, BA-4)
+export * from '@lifecorner/angular-ui-kit/money';
+
 // Field Group Component
 export * from '@lifecorner/angular-ui-kit/field-group';
 

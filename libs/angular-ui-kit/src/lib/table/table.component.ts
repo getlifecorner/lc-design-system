@@ -173,6 +173,25 @@ interface DisplayRow {
 }
 
 /**
+ * Controls inside a clickable row whose clicks are their own (3.16, BA-3).
+ * The role values are unquoted identifiers, so the kit's icon-name scan
+ * (`kit-icons.spec.ts`) does not read `link` as a glyph.
+ */
+const NESTED_CONTROL =
+  'a[href], button, input, select, textarea, summary, label, [contenteditable], ' +
+  '[tabindex]:not([tabindex="-1"]), [role=button], [role=link], [role=switch], ' +
+  '[role=checkbox], [role=menuitem], [role=tab], [role=option]';
+
+/** Whether a row event started on a control inside the row (not on the row itself). */
+function isFromNestedControl(event: Event): boolean {
+  const row = event.currentTarget as Element | null;
+  const target = event.target as Element | null;
+  if (!row || !target || typeof target.closest !== 'function') return false;
+  const hit = target.closest(NESTED_CONTROL);
+  return !!hit && hit !== row && row.contains(hit);
+}
+
+/**
  * Table component for displaying structured data in rows and columns.
  *
  * Features:
@@ -186,6 +205,9 @@ interface DisplayRow {
  * - Composed cells (e.g. avatar + badge + actions)
  * - Hierarchical "tree" rows (grouped / expandable) via `idKey` + `parentKey`
  * - Responsive horizontal scrolling
+ * - `clickable` rows: tab stops, Enter/Space emit `rowClick` (3.16)
+ * - `caption` as the table's `<caption>`, visible or for screen readers only
+ *   (`showCaption`, 3.16)
  * - Empty state text for no data
  * - Accessible with proper table semantics
  *
@@ -236,6 +258,32 @@ export class TableComponent {
 
   /** Whether rows should highlight on hover */
   hoverable = input<boolean>(false);
+
+  /**
+   * Rows are interactive (3.16, BA-3): each data row is a tab stop, Enter and
+   * Space emit `rowClick` (Space does not scroll the page), pointer and hover
+   * as `hoverable`. Clicks and keys on controls inside a row (buttons, links,
+   * inputs, switches) stay theirs and emit no `rowClick`. Set it whenever you
+   * handle `rowClick`. Tree mode keeps its roving tab stop. A focused row is
+   * read by its cells, not as "clickable": let the row open something that
+   * announces itself (a dialog, a page).
+   * @default false
+   */
+  clickable = input<boolean>(false);
+
+  /**
+   * Title of the table, rendered as its `<caption>` (3.16, BA-3), so it also
+   * names the table for screen readers. Empty renders no caption.
+   * @default ''
+   */
+  caption = input<string>('');
+
+  /**
+   * Show the caption above the table (16 px semibold, 12 px above the table);
+   * `false` keeps it for screen readers only.
+   * @default true
+   */
+  showCaption = input<boolean>(true);
 
   /** Whether table should be responsive (horizontal scroll on mobile) */
   responsive = input<boolean>(true);
@@ -697,6 +745,7 @@ export class TableComponent {
     classes.push(`lc-table--${this.variant()}`);
     classes.push(`lc-table--${this.size()}`);
     if (this.hoverable()) classes.push('lc-table--hoverable');
+    if (this.clickable()) classes.push('lc-table--clickable');
     return classes.join(' ');
   });
 
@@ -826,7 +875,10 @@ export class TableComponent {
     return !!this.getCellTemplate(columnKey);
   }
 
-  onRowClick(row: Record<string, unknown>): void {
+  onRowClick(row: Record<string, unknown>, event?: Event): void {
+    // Clickable rows (3.16): a click on a control inside the row is the
+    // control's own. Without `clickable` every click reaches `rowClick` (3.15).
+    if (this.clickable() && event && isFromNestedControl(event)) return;
     this.rowClick.emit(row);
   }
 
@@ -883,7 +935,8 @@ export class TableComponent {
   });
 
   protected rowTabindex(dr: DisplayRow): number | null {
-    if (!this.treeMode()) return null;
+    // Flat mode: a tab stop per data row only with `clickable` (3.16).
+    if (!this.treeMode()) return this.clickable() ? 0 : null;
     return dr.key === this.effectiveFocusedKey() ? 0 : -1;
   }
 
@@ -892,7 +945,15 @@ export class TableComponent {
   }
 
   protected onRowKeydown(event: KeyboardEvent, dr: DisplayRow): void {
-    if (!this.treeMode()) return;
+    if (!this.treeMode()) {
+      // Clickable flat rows (3.16): Enter and Space on the row itself. Keys of
+      // a nested control (a button, a link, a switch) stay the control's.
+      if (!this.clickable() || event.target !== event.currentTarget) return;
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault(); // Space would scroll the page
+      this.rowClick.emit(dr.row);
+      return;
+    }
     // Keys typed into an inline editor or the row's own controls are theirs.
     if ((event.target as HTMLElement).tagName === 'INPUT') return;
     const rows = this.displayRows();

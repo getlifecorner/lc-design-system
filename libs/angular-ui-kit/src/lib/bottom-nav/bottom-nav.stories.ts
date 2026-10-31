@@ -134,6 +134,28 @@ export const FiveDestinations: Story = {
   }),
 };
 
+/** 3.16 (TD-3): Finanzen as the current destination; `wallet` is in the inline set, so it renders without a request. */
+export const FinanceDestination: Story = {
+  name: 'Finance Destination',
+  args: {
+    items: [
+      { id: 'today', label: 'Heute', icon: 'sun', route: '/' },
+      { id: 'finances', label: 'Finanzen', icon: 'wallet', route: '/finances' },
+      { id: 'household', label: 'Haushalt', icon: 'home', route: '/household' },
+    ],
+    activeRoute: '/finances',
+    ariaLabel: 'Hauptnavigation',
+  },
+  render: (args) => ({
+    props: args,
+    template: phoneFrame(
+      `<lc-bottom-nav [items]="items" [activeRoute]="activeRoute" [ariaLabel]="ariaLabel" [variant]="variant" [fixed]="fixed" (reselect)="reselect($event)" />`,
+      '0',
+      'de',
+    ),
+  }),
+};
+
 /** Six destinations: the first four stay and "Mehr" links to a page that lists the rest; a hidden destination makes "Mehr" current. */
 export const OverflowMore: Story = {
   args: {

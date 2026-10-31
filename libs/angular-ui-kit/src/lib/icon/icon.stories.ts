@@ -147,6 +147,13 @@ name logs \`Unknown icon\` as in development, a well-formed unknown name is requ
 \`[strict]="true"\` to additionally throw in dev — useful as a CI guard (no effect in
 production builds).
 
+**Solid needs a filled glyph**
+
+\`variant="solid"\` requests \`filled/<name>.svg\`. Many Tabler names have no filled
+glyph (for example \`wallet\` and \`building-bank\`, in the inline set since 3.16); for
+them the request fails and the placeholder shows, as for an unknown name. The
+*Finance Icons* story shows which of the finance names have one (\`shield-lock\`).
+
 **SPA-safe loading**
 
 Icons loaded over HTTP are validated before they are rendered: a \`text/html\` or
@@ -340,6 +347,46 @@ export const InlineSet: Story = {
           </li>
         }
       </ul>`,
+  }),
+};
+
+/**
+ * 3.16 (TD-3): `wallet`, `building-bank` and `shield-lock` are in the inline
+ * set, so a finance destination in the navigation renders without a request.
+ */
+export const FinanceIcons: Story = {
+  name: 'Finance Icons',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`wallet` (Finanzen), `building-bank` (Banken, Verbindungen) and `shield-lock` (Einwilligung) in the five sizes, from the inline set since 3.16. ' +
+          'Only `shield-lock` has a filled glyph; `variant="solid"` on `wallet` or `building-bank` requests `filled/<name>.svg`, which Tabler does not have, and shows the placeholder, as for every name without a filled glyph.',
+      },
+    },
+  },
+  render: () => ({
+    props: { names: ['wallet', 'building-bank', 'shield-lock'], sizes: ['xs', 'sm', 'md', 'lg', 'xl'] },
+    template: `
+      <div style="display: grid; grid-template-columns: auto repeat(5, auto); gap: 16px 24px; align-items: center; justify-content: start; color: var(--color-text-primary);">
+        <span></span>
+        @for (size of sizes; track size) {
+          <span style="font: 11px monospace; color: var(--color-text-tertiary);">{{ size }}</span>
+        }
+        @for (name of names; track name) {
+          <span style="font: 12px monospace; color: var(--color-text-secondary);">{{ name }}</span>
+          @for (size of sizes; track size) {
+            <lc-icon [name]="name" [size]="size" [decorative]="true" />
+          }
+        }
+        <span style="font: 12px monospace; color: var(--color-text-secondary);">shield-lock solid</span>
+        @for (size of sizes; track size) {
+          <lc-icon name="shield-lock" variant="solid" [size]="size" [decorative]="true" />
+        }
+      </div>
+      <p style="margin: 16px 0 0; max-width: 560px; font-size: 13px; color: var(--color-text-secondary);">
+        <code>wallet</code> and <code>building-bank</code> have no filled glyph: <code>variant="solid"</code> shows the placeholder.
+      </p>`,
   }),
 };
 

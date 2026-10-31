@@ -1,0 +1,25 @@
+// lc-money (3.16, BA-4): font and colour from the context, tabular figures,
+// never wrapped inside the amount. `position: relative` makes the host the
+// containing block of the hidden words, so inside a scrolling table they stay
+// in its scroll box instead of widening the page (575 px at 360 without it).
+:host {
+  position: relative;
+  display: inline;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+// The words a screen reader speaks („minus 42,17 Euro“): visually hidden,
+// and not copied with the visible amount.
+.lc-money__spoken {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  user-select: none;
+}

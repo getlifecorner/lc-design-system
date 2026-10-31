@@ -43,7 +43,40 @@
     <div #actionsSlot class="lc-next-step-card__actions-slot">
       <ng-content select="[slot='actions']" />
     </div>
-    @if (!hasProjectedActions()) {
+    @if (!hasProjectedActions() && actionsStyle() === 'equal') {
+      <!-- Two answers of the same weight (3.16, BA-5): the primary first, both outline in the primary tone. -->
+      @if (showLink()) {
+        <a
+          class="btn btn-secondary btn-{{ actionSize() }} lc-next-step-card__link"
+          [href]="linkHref()"
+          [attr.target]="linkTarget()"
+          [attr.rel]="linkRel()"
+        >
+          <lc-icon name="external-link" size="sm" [decorative]="true" />
+          {{ linkLabel() }}
+        </a>
+      } @else if (primaryLabel()) {
+        <lc-button
+          variant="outline"
+          tone="primary"
+          [size]="actionSize()"
+          [loading]="primaryLoading()"
+          [disabled]="primaryDisabled()"
+          [disabledReason]="primaryDisabledReason()"
+          (clicked)="primaryClick.emit()"
+        >
+          @if (primaryIcon()) {
+            <lc-icon slot="icon-before" [name]="primaryIcon()!" size="sm" [decorative]="true" />
+          }
+          {{ primaryLabel() }}
+        </lc-button>
+      }
+      @if (secondaryLabel()) {
+        <lc-button variant="outline" tone="primary" [size]="actionSize()" (clicked)="secondaryClick.emit()">
+          {{ secondaryLabel() }}
+        </lc-button>
+      }
+    } @else if (!hasProjectedActions()) {
       @if (secondaryLabel()) {
         <lc-button variant="ghost" [size]="actionSize()" (clicked)="secondaryClick.emit()">
           {{ secondaryLabel() }}

@@ -2,9 +2,20 @@
   class="lc-switch-wrapper"
   [class.lc-switch-wrapper--label-left]="labelPosition() === 'left'"
   [class.lc-switch-wrapper--label-right]="labelPosition() === 'right'"
+  [class.lc-switch-wrapper--help]="!!helpTextId()"
 >
-  @if (label() && labelPosition() === 'left') {
-    <label [for]="switchId" class="lc-switch-label">{{ label() }}</label>
+  @if (labelPosition() === 'left') {
+    @if (helpTextId(); as helpId) {
+      <!-- Label and help text in one column; the label's ::after covers it, so a tap on the help toggles too. -->
+      <div class="lc-switch-text lc-switch-text--{{ size() }}">
+        @if (label()) {
+          <label [for]="switchId" class="lc-switch-label">{{ label() }}</label>
+        }
+        <div [id]="helpId" class="lc-switch-help">{{ helpText() }}</div>
+      </div>
+    } @else if (label()) {
+      <label [for]="switchId" class="lc-switch-label">{{ label() }}</label>
+    }
   }
 
   <!-- Native button: labelable (label for/id works), focusable and Space/Enter toggle it without custom key handling -->
@@ -15,6 +26,7 @@
     role="switch"
     [attr.aria-checked]="checkedState()"
     [attr.aria-label]="ariaLabel() || null"
+    [attr.aria-describedby]="helpTextId()"
     [attr.aria-required]="required() || null"
     [attr.aria-busy]="loading() || null"
     [attr.aria-disabled]="loading() && !isDisabled() ? true : null"
@@ -30,7 +42,16 @@
     </span>
   </button>
 
-  @if (label() && labelPosition() === 'right') {
-    <label [for]="switchId" class="lc-switch-label">{{ label() }}</label>
+  @if (labelPosition() === 'right') {
+    @if (helpTextId(); as helpId) {
+      <div class="lc-switch-text lc-switch-text--{{ size() }}">
+        @if (label()) {
+          <label [for]="switchId" class="lc-switch-label">{{ label() }}</label>
+        }
+        <div [id]="helpId" class="lc-switch-help">{{ helpText() }}</div>
+      </div>
+    } @else if (label()) {
+      <label [for]="switchId" class="lc-switch-label">{{ label() }}</label>
+    }
   }
 </div>

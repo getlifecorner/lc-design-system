@@ -1,11 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { moduleMetadata } from '@storybook/angular';
+import { fn } from 'storybook/test';
 import { TableComponent } from './table.component';
 import { TableCellDirective } from './table-cell.directive';
 import { BadgeComponent } from '../badge/badge.component';
 import { AvatarComponent } from '../avatar/avatar.component';
 import { ChipComponent } from '../chip/chip.component';
 import { ButtonComponent } from '../button/button.component';
+import { MoneyComponent } from '../money/money.component';
+import { SwitchComponent } from '../switch/switch.component';
 
 const meta: Meta<TableComponent> = {
   title: 'Data Display/Table',
@@ -19,6 +22,8 @@ const meta: Meta<TableComponent> = {
         AvatarComponent,
         ChipComponent,
         ButtonComponent,
+        MoneyComponent,
+        SwitchComponent,
       ],
     }),
   ],
@@ -42,6 +47,8 @@ The Table component displays structured data in rows and columns with advanced d
 - Row selection with select-all checkbox
 - Per-column text filtering
 - Inline cell editing via double-click
+- Clickable rows (\`clickable\`, 3.16): every flat row is a tab stop, Enter and Space emit \`rowClick\`; clicks and keys from a link, button or switch inside a row emit nothing. A focused row is announced by its cells, so let the row action open something that announces itself (a dialog, a page)
+- A caption (\`caption\`, 3.16) names the table; \`showCaption=false\` keeps it for screen readers only
         `,
       },
     },
@@ -65,6 +72,22 @@ The Table component displays structured data in rows and columns with advanced d
     selectable: { control: 'boolean', description: 'Enable row selection checkboxes' },
     filterable: { control: 'boolean', description: 'Enable per-column text filters' },
     editable: { control: 'boolean', description: 'Enable inline cell editing (double-click)' },
+    clickable: {
+      control: 'boolean',
+      description:
+        'Rows are keyboard-operable (3.16): tabindex 0, Enter and Space emit rowClick; events from controls inside a row emit nothing',
+      table: { defaultValue: { summary: 'false' } },
+    },
+    caption: {
+      control: 'text',
+      description: 'Caption that names the table, rendered as its first child (3.16); empty renders none',
+      table: { defaultValue: { summary: "''" } },
+    },
+    showCaption: {
+      control: 'boolean',
+      description: 'false keeps the caption for screen readers only (3.16)',
+      table: { defaultValue: { summary: 'true' } },
+    },
   },
 };
 
@@ -816,4 +839,89 @@ export const FullFeatured: Story = {
     variant: 'striped',
     size: 'md',
   },
+};
+
+// 3.16 (BA-3, request 022): clickable rows and the caption.
+const transactionColumns = [
+  { key: 'date', label: 'Datum' },
+  { key: 'payee', label: 'Empfänger' },
+  { key: 'category', label: 'Kategorie' },
+  { key: 'status', label: 'Status' },
+  // 021's `align` is not in the kit yet: `cssClass` aligns the header and the cells at the end.
+  { key: 'amount', label: 'Betrag', cssClass: 'lc-table-story__cell--end' },
+  { key: 'shared', label: 'Geteilt' },
+];
+
+const transactionData = [
+  { id: 't1', date: '02.10.2026', payee: 'Stadtwerke München', category: 'Strom', status: 'Gebucht', amount: -8450, shared: false },
+  { id: 't2', date: '05.10.2026', payee: 'Muster GmbH (Gehalt)', category: 'Einkommen', status: 'Gebucht', amount: 342500, shared: true },
+  { id: 't3', date: '12.10.2026', payee: 'Apotheke am Markt', category: 'Gesundheit', status: 'Vorgemerkt', amount: -2389, shared: false },
+  { id: 't4', date: '18.10.2026', payee: 'REWE Markt', category: 'Lebensmittel', status: 'Gebucht', amount: -6712, shared: true },
+];
+
+const transactionActions = [{ key: 'more', icon: 'dots', variant: 'ghost' as const, tooltip: 'Mehr zu dieser Buchung' }];
+
+const transactionTemplate = (extra: string) => `
+  <style>
+    ::ng-deep .lc-table-story__cell--end { text-align: end; }
+  </style>
+  <div lang="de">
+    <lc-table
+      [columns]="columns"
+      [data]="data"
+      [actions]="actions"
+      actionsLabel="Aktionen"
+      actionsAlign="end"
+      caption="Umsätze Oktober 2026"
+      ${extra}
+      (rowClick)="rowClick($event)"
+      (actionClick)="actionClick($event)"
+    >
+      <ng-template lcTableCell="status" let-row>
+        <lc-badge [variant]="row.status === 'Gebucht' ? 'success' : 'warning'" size="sm">{{ row.status }}</lc-badge>
+      </ng-template>
+      <ng-template lcTableCell="amount" let-row>
+        <lc-money [amountMinor]="row.amount" currency="EUR" locale="de-DE" />
+      </ng-template>
+      <ng-template lcTableCell="shared" let-row>
+        <lc-switch size="sm" [checked]="row.shared" [ariaLabel]="'Mit dem Haushalt teilen: ' + row.payee" />
+      </ng-template>
+    </lc-table>
+  </div>
+`;
+
+export const ClickableRows: Story = {
+  name: 'Clickable Rows',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`clickable` makes each row a tab stop: Enter and Space on the row emit `rowClick` (Space does not scroll). ' +
+          'Clicks and keys from the switch and the action button inside a row emit nothing. ' +
+          'The caption „Umsätze Oktober 2026“ names the table. The amounts are `lc-money` in an end-aligned column.',
+      },
+    },
+  },
+  args: { rowClick: fn(), actionClick: fn() },
+  render: (args) => ({
+    props: { ...args, columns: transactionColumns, data: transactionData, actions: transactionActions },
+    template: transactionTemplate('[clickable]="true"'),
+  }),
+};
+
+export const HiddenCaption: Story = {
+  name: 'Hidden Caption',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`showCaption=false` keeps the caption as the table's name for screen readers and hides it visually (here with `hoverable` rows).",
+      },
+    },
+  },
+  args: { rowClick: fn(), actionClick: fn() },
+  render: (args) => ({
+    props: { ...args, columns: transactionColumns, data: transactionData, actions: transactionActions },
+    template: transactionTemplate('[showCaption]="false" [hoverable]="true"'),
+  }),
 };

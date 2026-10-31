@@ -41,6 +41,7 @@ import { TableComponent } from './table/table.component';
 import { VerificationCodeInputComponent } from './verification-code-input/verification-code-input.component';
 import { ColorPickerComponent } from './color-picker/color-picker.component';
 import { FilterBarComponent } from './filter-bar/filter-bar.component';
+import { MoneyComponent } from './money/money.component';
 
 /**
  * Every built-in text of the kit is an input whose default is the text it
@@ -675,5 +676,16 @@ describe('Translatable labels (i18n)', () => {
     expect(cmp.selectPlaceholder()).toBe('Select an option');
     set(f, { searchPlaceholder: 'Suchen …', selectPlaceholder: 'Bitte wählen' });
     expect(f.nativeElement.innerHTML).toContain('Suchen …');
+  });
+
+  it('lc-money: minusLabel, plusLabel (3.16)', () => {
+    const f = create(MoneyComponent, { amountMinor: -4217, currency: 'EUR', locale: 'de-DE' });
+    expect(text(f.nativeElement, '.lc-money__spoken')).toBe('minus 42,17 Euro');
+    set(f, { minusLabel: 'weniger' });
+    expect(text(f.nativeElement, '.lc-money__spoken')).toBe('weniger 42,17 Euro');
+    set(f, { amountMinor: 4217, signDisplay: 'always' });
+    expect(text(f.nativeElement, '.lc-money__spoken')).toBe('plus 42,17 Euro');
+    set(f, { plusLabel: 'mehr' });
+    expect(text(f.nativeElement, '.lc-money__spoken')).toBe('mehr 42,17 Euro');
   });
 });

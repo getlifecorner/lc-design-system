@@ -85,7 +85,14 @@
   tbody {
     tr {
       border-bottom: 1px solid var(--color-divider);
-      
+
+      // Rows that are keyboard stops (tree mode's roving tabindex, `clickable`
+      // rows, 3.16) in every variant: the ring paints over the cells.
+      &:focus-visible {
+        outline: 2px solid var(--color-primary-500);
+        outline-offset: -2px;
+      }
+
       &:last-child {
         border-bottom: none;
       }
@@ -112,12 +119,6 @@
   }
   
   &--striped {
-    // Tree-mode rows are keyboard stops (roving tabindex).
-    tbody tr:focus-visible {
-      outline: 2px solid var(--color-primary-500);
-      outline-offset: -2px;
-    }
-
     tbody tr:nth-child(even) {
       background-color: var(--color-surface-2);
     }
@@ -140,7 +141,9 @@
     }
   }
   
-  &--hoverable {
+  // `clickable` rows (3.16) look like `hoverable` ones: pointer and hover fill.
+  &--hoverable,
+  &--clickable {
     tbody tr {
       transition: background-color 0.15s ease;
       cursor: pointer;
@@ -170,6 +173,39 @@
       padding: var(--lc-density-padding-md, var(--spacing-4)) var(--spacing-5);
       font-size: var(--typography-font-size-base);
     }
+  }
+}
+
+// Caption (3.16, BA-3): the table's title and accessible name, aligned with
+// the table's start edge, 12 px above it.
+.lc-table__caption {
+  caption-side: top;
+  padding: 0 0 var(--spacing-3);
+  text-align: start;
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-font-size-base);
+  font-weight: var(--typography-font-weight-semibold);
+  line-height: var(--typography-line-height-normal);
+  color: var(--color-text-primary);
+}
+
+// `showCaption=false`: for screen readers only (the clip pattern).
+.lc-table__caption--hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Forced colours: the row ring in the system highlight colour.
+@media (forced-colors: active) {
+  .lc-table tbody tr:focus-visible {
+    outline: 2px solid Highlight;
   }
 }
 

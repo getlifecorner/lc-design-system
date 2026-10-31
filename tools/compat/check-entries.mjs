@@ -152,8 +152,9 @@ const publicEntries = entries.filter((e) => !e.startsWith('internal/'));
 numbers.entries = { total: entries.length, public: publicEntries.length, internal: entries.length - publicEntries.length };
 // 116 since 3.6 (request 002): + icons, sidenav-placeholder, internal/icon-set, internal/navigation;
 // 118 since 3.8 (request 005): + character, character-svg;
-// 119 since 3.11.5 (request 015): + internal/a11y.
-check('AC-15', `${entries.length} subpaths (${publicEntries.length} public, ${entries.length - publicEntries.length} internal), each with types and default`, entries.length === 119 &&subpaths.every((k) => existsSync(join(next.root, next.pkg.exports[k].types)) && existsSync(join(next.root, next.pkg.exports[k].default))));
+// 119 since 3.11.5 (request 015): + internal/a11y;
+// 120 since 3.16 (request 022): + money.
+check('AC-15', `${entries.length} subpaths (${publicEntries.length} public, ${entries.length - publicEntries.length} internal), each with types and default`, entries.length === 120 &&subpaths.every((k) => existsSync(join(next.root, next.pkg.exports[k].types)) && existsSync(join(next.root, next.pkg.exports[k].default))));
 const declaredIn = [];
 const entryExports = exportsOf(subpaths.map((k) => join(next.root, next.pkg.exports[k].types)), declaredIn);
 const unresolved = subpaths.filter((_, i) => !entryExports[i]);

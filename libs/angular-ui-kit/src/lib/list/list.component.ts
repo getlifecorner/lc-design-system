@@ -4,6 +4,8 @@ import {
   input,
   computed,
   contentChild,
+  effect,
+  isDevMode,
   output,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
@@ -57,6 +59,15 @@ export interface ListItem {
    * label must be part of it (WCAG 2.5.3).
    */
   actionAriaLabel?: string;
+  /**
+   * URL of the row link (3.16, TD-4). The row renders as an `<a>` over its
+   * full area (at least 44 px high) with real link semantics (middle click,
+   * "open in new tab"). Not rendered with `href`: `action` (no control inside
+   * a link; a dev warning). Not emitted: `itemClick` (see `linkClick`). With
+   * `disabled` the row is the plain disabled row, no link. A custom
+   * `lcListItem` template must not hold controls in `href` rows.
+   */
+  href?: string;
   /** Item identifier */
   id?: string;
   /** Whether the item is disabled */
@@ -74,6 +85,16 @@ export interface ListItem {
 export type ListSize = 'sm' | 'md' | 'lg';
 
 /**
+ * A plain click (or Enter) on an `href` row (3.16, TD-4): `item` is the row,
+ * `event` the click. Call `event.preventDefault()` to navigate with your
+ * router instead of a full page load.
+ */
+export interface ListLinkClickEvent {
+  item: ListItem;
+  event: MouseEvent;
+}
+
+/**
  * List component for displaying structured item collections.
  *
  * Features:
@@ -83,6 +104,8 @@ export type ListSize = 'sm' | 'md' | 'lg';
  * - Icon and avatar support per item
  * - Action buttons with click events
  * - Accessible with ARIA list role; `clickable` rows are keyboard-operable
+ * - `ListItem.href` rows are real links over the full row (3.16, TD-4);
+ *   `linkClick` hands plain clicks to your router
  *
  * @example
  * ```html
@@ -153,6 +176,33 @@ export class ListComponent {
 
   /** Event emitted when an action button is clicked */
   readonly actionClick = output<ListItem>();
+
+  /**
+   * A plain click (or Enter) on an `href` row: primary button, no
+   * Ctrl/Cmd/Shift/Alt (3.16, TD-4). Emitted before the browser follows the
+   * link; call `event.preventDefault()` and navigate with your router for an
+   * in-app route (`router.navigateByUrl(item.href)`). The kit never prevents
+   * the default; modifier and middle clicks are never emitted, so "open in new
+   * tab" keeps working.
+   */
+  readonly linkClick = output<ListLinkClickEvent>();
+
+  constructor() {
+    effect(() => {
+      if (!isDevMode()) return;
+      // `items` may be bound to undefined (tolerated since 3.2).
+      for (const item of this.items() ?? []) {
+        if (this.isLinkRow(item) && item.action) {
+          console.warn(`[lc-list] item "${item.label}" has href and action: the action is not rendered inside a link`);
+        }
+      }
+    });
+  }
+
+  /** Whether a row renders as a link: `href` set and not disabled. */
+  protected isLinkRow(item: ListItem): boolean {
+    return !!item.href && !item.disabled;
+  }
 
   /**
    * Computed CSS classes for the list
@@ -230,5 +280,14 @@ export class ListComponent {
    */
   onActionClick(item: ListItem): void {
     this.actionClick.emit(item);
+  }
+
+  /**
+   * A click on a link row: only a plain primary click reaches `linkClick`.
+   * The default (following the link) is left to the browser and the consumer.
+   */
+  protected onLinkClick(event: MouseEvent, item: ListItem): void {
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    this.linkClick.emit({ item, event });
   }
 }

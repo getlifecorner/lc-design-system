@@ -17,6 +17,27 @@
     // start of the line like the label-left variant.
     justify-content: flex-end;
   }
+
+  // A row with a label: at least 44 px high (3.16, BA-1). The label carries
+  // the minimum and centres its text, so it is the 44 px target and the text
+  // keeps its place. `--lc-switch-min-height` is read here, never declared on
+  // :host, so an ancestor can set it (`0` restores the 3.15 rows).
+  > .lc-switch-label {
+    display: flex;
+    align-items: center;
+    min-height: var(--lc-switch-min-height, var(--size-min-touch-height, 2.75rem));
+  }
+
+  // A row with help text: the text column beside the switch, both at the top.
+  &.lc-switch-wrapper--help {
+    align-items: flex-start;
+    min-height: var(--lc-switch-min-height, var(--size-min-touch-height, 2.75rem));
+  }
+
+  // sm: the 20 px track is shorter than the label's 21 px line; centre it on it.
+  &.lc-switch-wrapper--help > .lc-switch--sm {
+    margin-top: 0.03125rem;
+  }
 }
 
 .lc-switch-label {
@@ -25,6 +46,43 @@
   color: var(--color-text-primary);
   cursor: pointer;
   user-select: none;
+}
+
+// Label + help text. It may shrink below its longest word (`min-width: 0`
+// beside the fixed switch), so long German words break instead of overflowing.
+// The top padding centres the track on the label's first 21 px line.
+.lc-switch-text {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+  overflow-wrap: anywhere;
+
+  &.lc-switch-text--md {
+    padding-top: 0.09375rem;
+  }
+
+  &.lc-switch-text--lg {
+    padding-top: 0.21875rem;
+  }
+
+  // The label's hit area covers the whole column: a tap on the help text
+  // toggles too (no text, so the accessible name stays the label).
+  > .lc-switch-label::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+}
+
+// Help text: 14/20 secondary. It keeps its colour when the switch is disabled
+// (no opacity: 0.5 would drop it below 4.5:1).
+.lc-switch-help {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.25rem;
+  color: var(--color-text-secondary);
 }
 
 // Computed classes applied via TypeScript. The element is a native <button>

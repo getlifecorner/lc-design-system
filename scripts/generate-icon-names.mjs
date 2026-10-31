@@ -83,6 +83,8 @@ const INLINE_TABLER_NAMES = [
   'device-mobile', 'device-desktop', 'device-laptop', 'copy', 'share', 'link', 'trash',
   // the kit's status icons (alert, callout, toast) after alias resolution
   'info-circle', 'circle-check', 'alert-triangle', 'alert-circle', 'circle-x',
+  // finances: bottom-nav/sidenav destination, banks and connections, consent (3.16, TD-3)
+  'wallet', 'building-bank', 'shield-lock',
 ];
 
 /** One Tabler SVG as a compact, class-free string (CSS sizes it, like the other inline icons). */
