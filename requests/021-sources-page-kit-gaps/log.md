@@ -1,0 +1,12 @@
+# Log 021: Sources page kit gaps
+
+## Owner decisions
+
+## Handoffs
+
+| Time | From → to | Status | Reason | Task |
+|---|---|---|---|---|
+| 2026-10-31 01:18 | spec-writer → ui-ux-designer | done | The spec is ready and the work is a minor change that needs design decisions before the build. | Design the API and visuals for AC-1…16 in requests/021-sources-page-kit-gaps/spec.md. That covers the `TableColumn.align` classes and sort-icon behaviour, the button loading state with `aria-disabled`, the progress-bar static and forced-colors looks, and the list badge tokens. Also give the toast doc page structure and the baselines for the story screenshots. |
+| 2026-10-31 10:45 | ui-ux-designer → web-developer | done | The design covers AC-1…16 with measured contrast and layout values, and the baselines are captured, so the build can start. | Implement design.md for request 021, including the 022 N1 actions-header fix, the changed button spec and Loading story assertions (reason AC-5), and a `--forced-colors` flag in story-shots.mjs; compare against tmp/story-shots/021/baseline. |
+| 2026-10-31 11:20 | web-developer → ui-ux-designer | done | All gates are green and the screenshot diffs match design §10; the design review and one story deviation (D1) need the designer. | Review request 021 (new stories: data-display-table--number-columns, components-button--loading-keeps-focus, feedback-progress-bar--indeterminate-sizes, data-display-list--status-badges, feedback-toast-outlet--service-call; changed: data-display-table--with-cell-formatting-and-styling, --with-icon-only-actions, --clickable-rows, --hidden-caption, components-button--loading, feedback-progress-bar--indeterminate, data-display-list--with-badges, --rich-items, --notification-list, --large-size). Also decide D1 in build.md (keep `!important` in the Number Columns story, or switch it to `cellStyle`) and whether F1/F2 become a follow-up. |
+| 2026-10-31 11:32 | ui-ux-designer → web-developer | changes-requested | One must-fix in a story: the design asked for a cellClass colour, which can't apply. Everything else passes, and F1/F2 are a separate follow-up request after 3.17. | Fix review.md round 1 finding 1: in the Number Columns story, colour the negative changes with `cellStyle`, remove the `<style>` block and update the description; the 4 shots at rest must stay hash-identical to tmp/story-shots/021/new/data-display-table--number-columns--*. In the same round add the `cellClass` JSDoc sentence and the Compatibility line in the changelog draft (finding 2). |

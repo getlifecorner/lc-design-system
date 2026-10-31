@@ -213,6 +213,37 @@ export const WithBadges: Story = {
   },
 };
 
+const sourceStatusItems = [
+  { id: 'usm', label: 'USM', subtitle: 'Heute, 08:12', icon: 'server', badge: 'Geladen', badgeVariant: 'success' as const },
+  { id: 'crm', label: 'CRM-Export', subtitle: 'Vor 9 Tagen', icon: 'document', badge: 'Veraltet', badgeVariant: 'warning' as const },
+  { id: 'erp', label: 'ERP-Schnittstelle', subtitle: 'Gestern, 23:40', icon: 'server', badge: 'Fehlgeschlagen', badgeVariant: 'error' as const },
+  { id: 'bank', label: 'Bankkonten', subtitle: 'Noch nie geladen', icon: 'building-bank', badge: 'Neu', badgeVariant: 'primary' as const },
+  { id: 'manual', label: 'Manuelle Liste', subtitle: 'Nicht veröffentlicht', icon: 'document-text', badge: 'Entwurf', badgeVariant: 'default' as const },
+];
+
+export const StatusBadges: Story = {
+  name: 'Status Badges',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Source states as badges, in the default and the `card` variant (3.17): every badge text reaches at least 4.5:1 ' +
+          'on the list, card and hover backgrounds in both themes (success 4.85:1 light and 5.17:1 dark, warning 5.52:1 and 4.61:1, ' +
+          'error 6.33:1 and 7.17:1). The badges use the `lc-badge` subtle token pairs.',
+      },
+    },
+  },
+  args: { items: sourceStatusItems, showDividers: true },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div lang="de" style="display: grid; gap: 24px; max-width: 480px;">
+        <lc-list [items]="items" [showDividers]="showDividers" />
+        <lc-list [items]="items" variant="card" [showDividers]="showDividers" />
+      </div>`,
+  }),
+};
+
 export const WithMetadata: Story = {
   name: 'With Metadata',
   args: {

@@ -63,6 +63,71 @@ class ToastOutletDemoComponent {
   }
 }
 
+/** 3.17 (request 021): the calls a page makes, German labels, one outlet with a German close label. */
+@Component({
+  selector: 'lc-toast-service-call-demo',
+  standalone: true,
+  imports: [ToastOutletComponent, ButtonComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  template: `
+    <div lang="de" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+      <lc-button variant="primary" (clicked)="saved()">Speichern</lc-button>
+      <lc-button variant="danger" (clicked)="failed()">Laden fehlgeschlagen</lc-button>
+      <lc-button variant="outline" (clicked)="archived()">Mit Rückgängig</lc-button>
+    </div>
+    <lc-toast-outlet closeAriaLabel="Benachrichtigung schließen" />
+  `,
+})
+class ToastServiceCallDemoComponent {
+  private readonly toasts = inject(ToastService);
+
+  saved(): void {
+    this.toasts.show({ message: 'Änderungen gespeichert.', variant: 'success', duration: 3000 });
+  }
+
+  failed(): void {
+    this.toasts.show({ message: 'USM konnte nicht geladen werden.', variant: 'error', duration: 0 });
+  }
+
+  archived(): void {
+    this.toasts.show({
+      message: 'Quelle archiviert.',
+      variant: 'info',
+      duration: 0,
+      action: { label: 'Rückgängig', onClick: () => undefined },
+    });
+  }
+}
+
+const SERVICE_CALL_SNIPPET = `// app.component.html (the shell): once
+<lc-toast-outlet closeAriaLabel="Benachrichtigung schließen" />
+
+// a page
+import { Component, inject } from '@angular/core';
+import { ToastService } from '@lifecorner/angular-ui-kit/toast';
+
+export class SourcesPage {
+  private readonly toasts = inject(ToastService);
+
+  saved(): void {
+    this.toasts.show({ message: 'Änderungen gespeichert.', variant: 'success' });
+  }
+
+  failed(): void {
+    // Errors stay until closed (WCAG 2.2.1).
+    this.toasts.show({ message: 'USM konnte nicht geladen werden.', variant: 'error', duration: 0 });
+  }
+
+  archived(): void {
+    const id = this.toasts.show({
+      message: 'Quelle archiviert.',
+      duration: 0,
+      action: { label: 'Rückgängig', onClick: () => this.restore() },
+    });
+    // this.toasts.close(id) closes it from code; closeAll() closes every toast.
+  }
+}`;
+
 interface DemoArgs {
   position: ToastPosition;
   duration: number;
@@ -78,7 +143,37 @@ interface DemoArgs {
 const meta: Meta<DemoArgs> = {
   title: 'Feedback/Toast Outlet',
   component: ToastOutletComponent,
-  decorators: [moduleMetadata({ imports: [ToastOutletDemoComponent] })],
+  decorators: [moduleMetadata({ imports: [ToastOutletDemoComponent, ToastServiceCallDemoComponent] })],
+  parameters: {
+    docs: {
+      description: {
+        component: `
+How a page shows a toast (3.17). Checked against \`toast.service.ts\`, \`toast-outlet.component.*\` and \`toast.component.*\`.
+
+**1. Setup.** Place \`<lc-toast-outlet />\` once in the application shell (import \`ToastOutletComponent\` from \`@lifecorner/angular-ui-kit/toast\`). Without it \`show()\` shows nothing. Its \`closeAriaLabel\` (default \`'Close notification'\`) names every close button; set it in German for a German app.
+
+**2. Call.** \`inject(ToastService).show({ … })\` shows a toast and returns its id. \`close(id)\` closes one toast, \`closeAll()\` all of them. See the *Service Call* story for a page's code.
+
+**3. Options (\`ToastConfig\`).**
+
+| Option | Type | Default | Meaning |
+|---|---|---|---|
+| \`message\` | \`string\` | required | Plain text, the whole announcement |
+| \`variant\` | \`'success' \\| 'error' \\| 'warning' \\| 'info'\` | \`'info'\` | Colour, icon and the live region's politeness |
+| \`position\` | \`'top-left' \\| 'top-center' \\| 'top-right' \\| 'bottom-left' \\| 'bottom-center' \\| 'bottom-right'\` | \`'top-right'\` | Which stack it joins |
+| \`duration\` | \`number\` (ms) | \`3000\` | Closes itself after this time; \`0\` stays until closed |
+| \`showCloseButton\` | \`boolean\` | \`true\` | A close button named by the outlet's \`closeAriaLabel\` |
+| \`action\` | \`{ label: string; onClick: () => void }\` | none | One text button; \`onClick\` runs, then the toast closes |
+
+**4. Behaviour.** At most 5 toasts are shown in total; a sixth removes the oldest. The timers run only in the browser (none on the server). A toast never takes focus.
+
+**5. Announcement.** Each position has two live regions that exist from the start, before any toast: \`aria-live="polite"\` for success and info, \`aria-live="assertive"\` for warning and error, both \`aria-atomic="false"\`. A new toast is read **once**, when it is inserted: its message, then the action label and the close button's name (the icons are hidden). Closing a toast is not announced, and a new toast doesn't repeat the older ones. A standalone \`<lc-toast>\` (\`announce\` true, outside the outlet) is its own \`role="status"\` (success, info) or \`role="alert"\` (warning, error).
+
+**6. Guidance.** Use \`duration: 0\` for errors and for toasts with an action (WCAG 2.2.1: 3 s is too short to read and act). Keyboard users reach an action only by tabbing to the outlet, so offer the same action elsewhere on the page too. A lasting state (a failed load the user must fix) belongs in an \`lc-alert\` on the page, not in a toast.
+        `,
+      },
+    },
+  },
   args: { position: 'top-right', duration: 4000 },
   argTypes: {
     position: {
@@ -111,4 +206,22 @@ export const Sticky: Story = {
   parameters: {
     docs: { description: { story: 'With `duration: 0` toasts stay until dismissed via the close button or action.' } },
   },
+};
+
+export const ServiceCall: Story = {
+  name: 'Service Call',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'What a page calls (3.17): „Speichern“ shows a success toast for the default 3000 ms (read politely), ' +
+          '„Laden fehlgeschlagen“ an error that stays (`duration: 0`, read assertively), and „Mit Rückgängig“ an info toast with an action that stays. ' +
+          'The outlet names every close button „Benachrichtigung schließen“. The code shows the shell and a page.',
+      },
+      source: { code: SERVICE_CALL_SNIPPET, language: 'typescript' },
+    },
+  },
+  render: () => ({
+    template: `<lc-toast-service-call-demo />`,
+  }),
 };

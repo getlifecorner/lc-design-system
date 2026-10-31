@@ -33,7 +33,9 @@ export interface Toast extends Required<Omit<ToastConfig, 'action'>> {
  * Toast service for showing ephemeral notifications.
  *
  * The toasts are rendered by `<lc-toast-outlet />`, which the application
- * places once (e.g. in its shell); without it nothing is shown.
+ * places once (e.g. in its shell); without it nothing is shown. The options,
+ * their defaults, the timing and how a toast is announced to screen readers
+ * are documented under *Feedback/Toast Outlet* (3.17).
  *
  * @example
  * ```typescript

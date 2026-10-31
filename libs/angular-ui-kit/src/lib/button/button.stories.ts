@@ -3,6 +3,7 @@ import { fn, expect, userEvent, within } from 'storybook/test';
 import { ButtonComponent } from './button.component';
 import { IconComponent } from '../icon/icon.component';
 import { HeroComponent } from '../hero/hero.component';
+import { ProgressBarComponent } from '../progress-bar/progress-bar.component';
 
 const meta: Meta<ButtonComponent> = {
   title: 'Components/Button',
@@ -17,7 +18,7 @@ It supports multiple variants, sizes, states, and slots for icons.
 **Key Features:**
 - 9 visual variants for different contexts, including \`inverse\` for the dark \`lc-hero\` bands (since 3.13)
 - 4 sizes (xs, sm, md, lg)
-- Loading state with spinner
+- Loading state with spinner; since 3.17 a loading button keeps focus (\`aria-disabled\`, clicks ignored)
 - Icon slots (before/after)
 - Full-width option
 - Accessible with ARIA attributes
@@ -56,8 +57,17 @@ same variants and sizes and works without JavaScript (see **Components / Button 
       description: 'Button size',
       table: { defaultValue: { summary: 'md' } },
     },
-    disabled: { control: 'boolean', description: 'Disables the button' },
-    loading: { control: 'boolean', description: 'Shows a loading spinner and disables the button' },
+    disabled: {
+      control: 'boolean',
+      description: 'Natively disabled: the button leaves the focus order and ignores clicks. For a busy state that keeps focus, use `loading`',
+      table: { defaultValue: { summary: 'false' } },
+    },
+    loading: {
+      control: 'boolean',
+      description:
+        '3.17: shows a spinner and ignores clicks, Enter and Space (no `clicked`, no form submit) while keeping focus: `aria-disabled="true"` and `aria-busy="true"` instead of the native `disabled`. Same look (50 % opacity, no hover). The page announces the outcome (a live region); with `disabled` too, the native `disabled` wins',
+      table: { defaultValue: { summary: 'false' } },
+    },
     fullWidth: { control: 'boolean', description: 'Stretches the button to full container width' },
     iconOnly: { control: 'boolean', description: 'Renders as a square icon-only button' },
     flush: {
@@ -308,20 +318,66 @@ export const Inverse: Story = {
 
 export const Loading: Story = {
   parameters: {
-    docs: { description: { story: 'The loading state replaces icon slots with a spinner and disables interaction.' } },
+    docs: {
+      description: {
+        story:
+          'The loading state replaces the icon slots with a spinner and ignores clicks, Enter and Space: `clicked` is not emitted and a submit button does not submit. ' +
+          'Since 3.17 the button keeps focus: it is `aria-disabled="true"` and `aria-busy="true"`, not natively `disabled`. ' +
+          'It looks the same (50 % opacity, no hover); the focus ring takes the text colour. ' +
+          'Announcing the result is the page\'s job, for example with a polite live region (see *Loading Keeps Focus*).',
+      },
+    },
   },
   args: { variant: 'primary', loading: true },
   render: (args) => ({
     props: args,
     template: `<lc-button [variant]="variant" [loading]="loading" (clicked)="clicked($event)">Saving...</lc-button>`,
   }),
+  // 3.17 (request 021, AC-5): aria-disabled instead of disabled; the click is ignored and focus stays.
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     const button = canvas.getByRole('button');
-    await expect(button).toBeDisabled();
+    await expect(button).not.toBeDisabled();
+    await expect(button).toHaveAttribute('aria-disabled', 'true');
+    await expect(button).toHaveAttribute('aria-busy', 'true');
     await userEvent.click(button);
     await expect(args['clicked']).not.toHaveBeenCalled();
+    await expect(button).toHaveFocus();
+    button.blur();
   },
+};
+
+/** 3.17 (request 021): a source card whose load button keeps focus while the page announces the status. */
+export const LoadingKeepsFocus: Story = {
+  name: 'Loading Keeps Focus',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A source card while its data loads. The button stays focused under `loading` (`aria-disabled`, not `disabled`), so a keyboard or screen reader user stays where they were; ' +
+          'clicks and keys are ignored and `disabledReason` („Wird gerade geladen“) is the tooltip. ' +
+          'The button does not announce the outcome: the page does, in the card\'s `role="status"` line („USM wird geladen …“, then the result). ' +
+          'The progress bar is decoration next to that text; its `ariaLabel` uses the same words.',
+      },
+    },
+  },
+  args: { loading: true },
+  render: (args) => ({
+    props: args,
+    moduleMetadata: { imports: [ProgressBarComponent] },
+    template: `
+      <section lang="de" aria-labelledby="usm-heading" style="max-width: 420px; display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--color-border); border-radius: var(--border-radius-lg); background: var(--color-surface);">
+        <h3 id="usm-heading" style="margin: 0; font-size: var(--typography-font-size-lg); color: var(--color-text-primary);">USM</h3>
+        <p role="status" style="margin: 0; color: var(--color-text-secondary);">{{ loading ? 'USM wird geladen …' : 'Zuletzt geladen: heute, 09:12' }}</p>
+        @if (loading) {
+          <lc-progress-bar [indeterminate]="true" size="sm" ariaLabel="USM wird geladen" />
+        }
+        <div>
+          <lc-button variant="outline" [loading]="loading" disabledReason="Wird gerade geladen" (clicked)="clicked($event)">Daten von USM laden</lc-button>
+        </div>
+      </section>
+    `,
+  }),
 };
 
 export const Disabled: Story = {

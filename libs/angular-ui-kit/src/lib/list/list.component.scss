@@ -267,19 +267,24 @@ $lc-list-member-colors: (
     color: var(--color-primary-700, #1d4ed8);
   }
 
+  // Status badges (3.17, request 021): the `lc-badge` pairs where the 100/700
+  // palette failed 4.5:1 at 12 px (success 3.53 light / 1.87 dark, warning
+  // 3.23 / 2.07, error 1.13 dark). Minimum over the page, the surfaces and the
+  // hover fill: success 4.85 / 5.17, warning 5.52 / 4.61, error 6.33 / 7.17.
+  // Error keeps its fill and takes the subtle ink (the same in light).
   &--success {
-    background-color: var(--color-success-100, #dcfce7);
-    color: var(--color-success-700, #15803d);
+    background-color: var(--color-success-subtle);
+    color: var(--color-on-success-subtle);
   }
 
   &--warning {
-    background-color: var(--color-warning-100, #fef3c7);
-    color: var(--color-warning-700, #a16207);
+    background-color: var(--color-warning-subtle);
+    color: var(--color-on-warning-subtle);
   }
 
   &--error {
     background-color: var(--color-error-100, #fee2e2);
-    color: var(--color-error-700, #b91c1c);
+    color: var(--color-on-error-subtle);
   }
 }
 

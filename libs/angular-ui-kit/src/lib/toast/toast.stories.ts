@@ -16,6 +16,8 @@ Toasts auto-dismiss after a duration and can be manually closed.
 - Configurable position and duration
 - Optional close button
 - Stacks multiple toasts
+
+**Showing a toast from a page:** call \`ToastService.show()\` and place one \`<lc-toast-outlet />\` in the shell; the options, the timing and the announcement are documented under *Feedback/Toast Outlet*.
         `,
       },
     },

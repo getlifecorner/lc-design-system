@@ -71,15 +71,16 @@ describe('lc-button / a[lcButton] — outline tone (020)', () => {
     };
 
     it('takes text and border from the primary tokens at rest and on hover', () => {
-      for (const selector of ['.btn-outline.btn-tone-primary', '.btn-outline.btn-tone-primary:hover:not(:disabled)']) {
+      // 3.17: hover and active also exclude a loading button (`.btn-loading`).
+      for (const selector of ['.btn-outline.btn-tone-primary', '.btn-outline.btn-tone-primary:hover:not(:disabled, .btn-loading)']) {
         expect(rule(selector)).toContain('border-color: var(--color-primary-600)');
         expect(rule(selector)).toContain('color: var(--color-primary-700)');
       }
-      expect(rule('.btn-outline.btn-tone-primary:hover:not(:disabled)')).toContain('background-color: var(--color-surface-selected)');
+      expect(rule('.btn-outline.btn-tone-primary:hover:not(:disabled, .btn-loading)')).toContain('background-color: var(--color-surface-selected)');
     });
 
     it('presses to --color-primary-200 without the outline brightness filter', () => {
-      const active = rule('.btn-outline.btn-tone-primary:active:not(:disabled)');
+      const active = rule('.btn-outline.btn-tone-primary:active:not(:disabled, .btn-loading)');
       expect(active).toContain('background-color: var(--color-primary-200)');
       expect(active).toContain('filter: none');
     });

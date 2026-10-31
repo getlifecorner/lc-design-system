@@ -86,7 +86,30 @@ export class ButtonComponent {
    */
   readonly tone = input<ButtonTone>('neutral');
   readonly size = input<ButtonSize>('md');
+
+  /**
+   * Natively disabled: the button leaves the focus order and ignores clicks.
+   * For a temporary busy state that keeps focus, use `loading`.
+   * @default false
+   */
   readonly disabled = input(false);
+
+  /**
+   * Shows a spinner in place of the icon slots and makes the button
+   * unavailable without removing it from the focus order (3.17). The inner
+   * `<button>` gets `aria-disabled="true"` and `aria-busy="true"` instead of
+   * the native `disabled`, so a focused button keeps focus. While it is
+   * loading, click, Enter and Space are ignored: `clicked` is not emitted, the
+   * click event stops at the button (a `(click)` on the host doesn't fire),
+   * and a `type="submit"`/`"reset"` button doesn't submit or reset its form.
+   * The look is unchanged: spinner, 50 % opacity, no hover. Screen readers may
+   * announce the state change ("unavailable"/"dimmed"), but the button doesn't
+   * announce the outcome: the page does that, for example with a polite live
+   * region ("USM wird geladen.", then the result). `disabledReason` also
+   * applies while loading. If `disabled` is set too, the native `disabled`
+   * wins.
+   * @default false
+   */
   readonly loading = input(false);
   readonly iconOnly = input(false);
   readonly fullWidth = input(false);
@@ -144,7 +167,18 @@ export class ButtonComponent {
     return this.title() || null;
   });
 
-  handleClick(): void {
+  /**
+   * Emits `clicked` unless the button is disabled or loading. While loading
+   * (and not natively disabled) the event is cancelled and stopped, so a form
+   * isn't submitted and a host `(click)` doesn't fire. The parameter is
+   * optional, so callers without an argument still work.
+   */
+  handleClick(event?: Event): void {
+    if (this.loading() && !this.disabled()) {
+      event?.preventDefault();
+      event?.stopImmediatePropagation();
+      return;
+    }
     if (!this.isDisabled()) {
       this.clicked.emit();
     }

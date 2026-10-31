@@ -40,7 +40,12 @@
 
   @include mix.focus-ring;
 
-  &:disabled {
+  // `loading` (3.17) looks like `disabled` but isn't natively disabled: the
+  // button keeps focus (`aria-disabled`), so the look comes from the class.
+  // Hover and active rules exclude both with `:not(:disabled, .btn-loading)`,
+  // which keeps their (0,1,0) weight inside `:not`.
+  &:disabled,
+  &.btn-loading {
     opacity: 0.5;
     cursor: not-allowed;
     // Contract: the disabled button keeps receiving pointer events so the
@@ -48,6 +53,13 @@
     // Never set pointer-events: none here.
     pointer-events: auto;
   }
+}
+
+// A focused loading button (3.17): the 0.5 opacity also fades the ring, so it
+// takes the text colour (light 3.36:1 at least, dark 4.45:1; the teal ring
+// was 1.96:1 in light). Same geometry as the .btn ring.
+.btn.btn-loading:focus-visible {
+  outline-color: var(--color-text-primary);
 }
 
 // a[lcButton] — the host is the link itself.
@@ -64,11 +76,11 @@ a.btn {
   background-color: var(--color-primary-fill);
   color: var(--color-on-primary);
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled, .btn-loading) {
     background-color: var(--color-primary-fill-hover);
   }
 
-  &:active:not(:disabled) {
+  &:active:not(:disabled, .btn-loading) {
     background-color: var(--color-primary-fill-active);
   }
 }
@@ -77,11 +89,11 @@ a.btn {
   background-color: var(--color-secondary-fill);
   color: var(--color-on-secondary);
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled, .btn-loading) {
     background-color: var(--color-secondary-fill-hover);
   }
 
-  &:active:not(:disabled) {
+  &:active:not(:disabled, .btn-loading) {
     background-color: var(--color-secondary-fill-active);
   }
 }
@@ -92,13 +104,13 @@ a.btn {
   border-color: var(--color-border-strong);
   color: var(--color-text-primary);
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled, .btn-loading) {
     background-color: var(--color-primary-600);
     border-color: var(--color-primary-500);
     color: var(--color-neutral-white);
   }
 
-  &:active:not(:disabled) {
+  &:active:not(:disabled, .btn-loading) {
     filter: brightness(0.92);
   }
 }
@@ -111,13 +123,13 @@ a.btn {
   border-color: var(--color-primary-600);
   color: var(--color-primary-700);
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled, .btn-loading) {
     background-color: var(--color-surface-selected);
     border-color: var(--color-primary-600);
     color: var(--color-primary-700);
   }
 
-  &:active:not(:disabled) {
+  &:active:not(:disabled, .btn-loading) {
     background-color: var(--color-primary-200);
     filter: none;
   }
@@ -127,12 +139,12 @@ a.btn {
   background-color: var(--lc-button-ghost-bg, transparent);
   color: var(--lc-button-ghost-fg, var(--color-text-secondary));
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled, .btn-loading) {
     background-color: var(--lc-button-ghost-hover-bg, var(--color-surface-hover));
     color: var(--lc-button-ghost-hover-fg, var(--lc-button-ghost-fg, var(--color-text-primary)));
   }
 
-  &:active:not(:disabled) {
+  &:active:not(:disabled, .btn-loading) {
     background-color: var(--lc-button-ghost-active-bg, var(--color-surface-selected));
   }
 }
@@ -143,12 +155,12 @@ a.btn {
   padding: 0;
   border: none;
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled, .btn-loading) {
     color: var(--lc-button-link-hover-fg, var(--color-primary-700));
     text-decoration: underline;
   }
 
-  &:active:not(:disabled) {
+  &:active:not(:disabled, .btn-loading) {
     color: var(--lc-button-link-active-fg, var(--color-primary-800));
   }
 }
@@ -157,11 +169,11 @@ a.btn {
   background-color: var(--color-error-fill);
   color: var(--color-on-error);
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled, .btn-loading) {
     background-color: var(--color-error-fill-hover);
   }
 
-  &:active:not(:disabled) {
+  &:active:not(:disabled, .btn-loading) {
     background-color: var(--color-error-fill-active);
   }
 }
@@ -174,11 +186,11 @@ a.btn {
   background-color: $color-warning-default;
   color: var(--color-on-warning);
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled, .btn-loading) {
     filter: brightness(1.05);
   }
 
-  &:active:not(:disabled) {
+  &:active:not(:disabled, .btn-loading) {
     filter: brightness(0.94);
   }
 }
@@ -187,11 +199,11 @@ a.btn {
   background-color: $color-info-default;
   color: var(--color-neutral-white);
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled, .btn-loading) {
     background-color: $color-info-dark;
   }
 
-  &:active:not(:disabled) {
+  &:active:not(:disabled, .btn-loading) {
     background-color: $color-info-dark;
     filter: brightness(0.85);
   }
@@ -210,11 +222,11 @@ a.btn {
   background-color: var(--color-neutral-white);
   color: var(--lc-button-inverse-fg, #{$color-primary-800});
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled, .btn-loading) {
     background-color: $color-primary-50;
   }
 
-  &:active:not(:disabled) {
+  &:active:not(:disabled, .btn-loading) {
     background-color: $color-primary-100;
   }
 
@@ -235,6 +247,31 @@ a.btn {
   }
 
   .btn-inverse:focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+// A focused loading inverse button (3.17): at 50 % no ring colour reaches 3:1
+// on the hero bands, so it is opaque while focused and keeps the white ring.
+.btn.btn-inverse.btn-loading:focus-visible {
+  opacity: 1;
+  outline-color: var(--color-neutral-white);
+}
+
+// Forced colours (3.17): a loading button looks like a natively disabled one
+// (GrayText); while focused it is opaque with the Highlight ring.
+@media (forced-colors: active) {
+  .btn.btn-loading {
+    color: GrayText;
+    border-color: GrayText;
+  }
+
+  .btn.btn-loading:focus-visible {
+    opacity: 1;
+    outline-color: Highlight;
+  }
+
+  .btn.btn-inverse.btn-loading:focus-visible {
     outline-color: Highlight;
   }
 }
@@ -324,7 +361,7 @@ a.btn {
   text-underline-offset: 0.15em;
   transition-property: color, background-color, border-color, box-shadow;
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled, .btn-loading) {
     text-decoration-thickness: max(2px, 0.125em);
   }
 }

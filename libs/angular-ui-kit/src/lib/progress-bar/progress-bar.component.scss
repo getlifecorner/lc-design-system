@@ -154,3 +154,62 @@ $progress-colors: (
 @keyframes circular-indeterminate {
   100% { transform: rotate(360deg); }
 }
+
+// ---------------------------------------------------------------------------
+// Reduced motion (3.17): an indeterminate bar that doesn't move still reads as
+// busy, not as a value. The linear fill spans the whole track in 45° stripes
+// (6 px on, 6 px off; the mask reads only alpha), the circle is a ring of 12
+// dashes (2π · 40 / 24 = 10.472 units each). The global reduced-motion rule
+// only shortened the animation, which left a 40 % segment or a 25 % arc that
+// looked like a value. Same selectors as the base rules and after them,
+// because the linear width is `!important` there too.
+// ---------------------------------------------------------------------------
+@media (prefers-reduced-motion: reduce) {
+  .progress-bar--indeterminate .progress-bar__fill {
+    width: 100% !important;
+    animation: none;
+    transform: none;
+    -webkit-mask-image: repeating-linear-gradient(45deg, #000 0 0.375rem, transparent 0.375rem 0.75rem);
+    mask-image: repeating-linear-gradient(45deg, #000 0 0.375rem, transparent 0.375rem 0.75rem);
+  }
+
+  // CSS beats the circle's stroke-dash presentation attributes.
+  .progress-bar-circular__fill--indeterminate {
+    animation: none;
+    stroke-dasharray: 10.472 10.472;
+    stroke-dashoffset: 0;
+    stroke-linecap: butt;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Forced colours (3.17): the fills were background-color / stroke, which the
+// system palette overrides, so a bar could vanish. The fill is Highlight
+// (kept as authored), the linear track gets a 1 px CanvasText outline (no
+// layout change), the circle's track is GrayText. Stripes and dashes stay:
+// masks and dash patterns are not forced.
+// ---------------------------------------------------------------------------
+@media (forced-colors: active) {
+  .progress-bar .progress-bar__fill {
+    forced-color-adjust: none;
+    background-color: Highlight;
+  }
+
+  .progress-bar__track {
+    outline: 1px solid CanvasText;
+  }
+
+  .progress-bar-circular .progress-bar-circular__fill {
+    forced-color-adjust: none;
+    stroke: Highlight;
+  }
+
+  .progress-bar-circular__track {
+    stroke: GrayText;
+  }
+
+  .progress-bar__label,
+  .progress-bar-circular__label {
+    color: CanvasText;
+  }
+}

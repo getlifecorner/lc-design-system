@@ -1,6 +1,6 @@
 <div [class]="containerClasses()">
   <div class="lc-toast__icon">
-    <lc-icon [name]="defaultIcon()" size="md" />
+    <lc-icon [name]="defaultIcon()" size="md" [decorative]="true" />
   </div>
   
   <div class="lc-toast__message">
@@ -24,7 +24,7 @@
       [attr.aria-label]="closeAriaLabel()"
       (click)="onCloseClick($event)"
     >
-      <lc-icon name="x-mark" size="sm" />
+      <lc-icon name="x-mark" size="sm" [decorative]="true" />
     </button>
   }
 </div>

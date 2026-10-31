@@ -176,6 +176,52 @@
   }
 }
 
+// End-aligned columns (3.17, `TableColumn.align: 'end'`): header and cells at
+// the end edge with tabular figures ("1111" and "8888" are equally wide). The
+// selectors carry `.lc-table` and the cell element, so they outweigh the base
+// `.lc-table thead tr th { text-align: left }` and a `cellClass` that sets
+// `text-align`; `cellStyle` (inline) still wins.
+.lc-table {
+  thead tr th.lc-table__cell--end,
+  tbody tr td.lc-table__cell--end {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+  }
+
+  // A sortable end header keeps its 32 px arrow reserve on the start side and
+  // the cell's own end padding, so the label ends where the figures end.
+  thead tr th.sortable.lc-table__cell--end {
+    padding-inline-start: var(--spacing-8);
+    padding-inline-end: var(--lc-density-padding-md, var(--spacing-4));
+
+    // The arrow sits 8 px before the label, centred on the label line.
+    .sort-indicator {
+      right: auto;
+      inset-inline-end: calc(100% + var(--spacing-2));
+    }
+  }
+
+  &--sm thead tr th.sortable.lc-table__cell--end {
+    padding-inline-end: var(--lc-density-padding-sm, var(--spacing-3));
+  }
+
+  &--lg thead tr th.sortable.lc-table__cell--end {
+    padding-inline-end: var(--spacing-5);
+  }
+}
+
+// The label and the arrow of an end header: the box the arrow is placed against.
+.lc-table__sort-label {
+  position: relative;
+  display: inline-block;
+}
+
+// `font` resets the alignment and the figures on inputs.
+.lc-table__cell--end .lc-table__edit-input {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
 // Caption (3.16, BA-3): the table's title and accessible name, aligned with
 // the table's start edge, 12 px above it.
 .lc-table__caption {
@@ -251,26 +297,27 @@
 
 // Row actions
 // Header label and the body button group share the same alignment so the
-// "Aktionen" header always lines up with its buttons. The selectors are scoped
-// under `.lc-table` + the cell element so they outweigh the base
-// `.lc-table thead tr th { text-align: left }` rule without needing !important.
+// "Aktionen" header always lines up with its buttons. The selectors repeat the
+// base rule's path (`.lc-table thead tr th`) plus the modifier, so they
+// outweigh its `text-align: left` without !important (3.17, 022 N1: the
+// shorter `.lc-table th.…--end` lost to it and the header stayed left).
 .lc-table__actions-cell {
   white-space: nowrap;
 }
 
 .lc-table {
-  th.lc-table__actions-cell--start,
-  td.lc-table__actions-cell--start {
+  thead tr th.lc-table__actions-cell--start,
+  tbody tr td.lc-table__actions-cell--start {
     text-align: left;
   }
 
-  th.lc-table__actions-cell--center,
-  td.lc-table__actions-cell--center {
+  thead tr th.lc-table__actions-cell--center,
+  tbody tr td.lc-table__actions-cell--center {
     text-align: center;
   }
 
-  th.lc-table__actions-cell--end,
-  td.lc-table__actions-cell--end {
+  thead tr th.lc-table__actions-cell--end,
+  tbody tr td.lc-table__actions-cell--end {
     text-align: right;
   }
 }

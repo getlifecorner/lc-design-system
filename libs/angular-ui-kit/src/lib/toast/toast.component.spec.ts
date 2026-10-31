@@ -86,4 +86,21 @@ describe('ToastComponent', () => {
     expect(onClick).toHaveBeenCalled();
     expect(closed).toEqual(['abc']);
   });
+
+  // 3.17 (request 021, AC-13): an unnamed role="img" inside the live region made
+  // the announcement differ between screen readers. The message, the action
+  // label and the close button's name are what is read.
+  it('hides the variant icon and the close icon from assistive tech', async () => {
+    fixture.componentRef.setInput('toast', toast({ variant: 'success', action: { label: 'Rückgängig', onClick: () => undefined } }));
+    fixture.componentRef.setInput('closeAriaLabel', 'Benachrichtigung schließen');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const svgs = [...host.querySelectorAll('svg')];
+    expect(svgs).toHaveLength(2);
+    for (const svg of svgs) {
+      expect(svg.getAttribute('aria-hidden')).toBe('true');
+      expect(svg.hasAttribute('role')).toBe(false);
+    }
+    expect(host.querySelector('.lc-toast__close')?.getAttribute('aria-label')).toBe('Benachrichtigung schließen');
+  });
 });

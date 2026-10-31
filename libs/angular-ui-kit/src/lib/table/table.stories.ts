@@ -49,6 +49,7 @@ The Table component displays structured data in rows and columns with advanced d
 - Inline cell editing via double-click
 - Clickable rows (\`clickable\`, 3.16): every flat row is a tab stop, Enter and Space emit \`rowClick\`; clicks and keys from a link, button or switch inside a row emit nothing. A focused row is announced by its cells, so let the row action open something that announces itself (a dialog, a page)
 - A caption (\`caption\`, 3.16) names the table; \`showCaption=false\` keeps it for screen readers only
+- Number columns (\`TableColumn.align: 'end'\`, 3.17): header and cells at the end edge with tabular figures; a sort arrow sits before the label
         `,
       },
     },
@@ -401,7 +402,7 @@ export const WithCellFormattingAndStyling: Story = {
     docs: {
       description: {
         story:
-          'Combine formatter callbacks with cellClass/cellStyle to highlight KPI states directly in the table.',
+          "Combine formatter callbacks with cellClass/cellStyle to highlight KPI states directly in the table. ARR and SLA are `align: 'end'` columns (3.17): header and figures end at the same edge, with tabular figures.",
       },
     },
   },
@@ -413,7 +414,7 @@ export const WithCellFormattingAndStyling: Story = {
           key: 'arr',
           label: 'ARR',
           sortable: true,
-          cellClass: 'lc-table-story__cell--numeric',
+          align: 'end' as const,
           formatter: (value: unknown) =>
             new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(
               Number(value ?? 0)
@@ -437,7 +438,7 @@ export const WithCellFormattingAndStyling: Story = {
           label: 'SLA',
           sortable: true,
           formatter: (value: unknown) => `${Number(value ?? 0).toFixed(2)}%`,
-          cellClass: 'lc-table-story__cell--numeric',
+          align: 'end' as const,
           cellStyle: (value: unknown) => ({
             opacity: Number(value ?? 0) < 99.0 ? '0.85' : '1',
           }),
@@ -451,11 +452,6 @@ export const WithCellFormattingAndStyling: Story = {
     },
     template: `
       <style>
-        .lc-table-story__cell--numeric {
-          text-align: right;
-          font-variant-numeric: tabular-nums;
-        }
-
         .lc-table-story__cell--success {
           color: #047857;
         }
@@ -847,8 +843,7 @@ const transactionColumns = [
   { key: 'payee', label: 'Empfänger' },
   { key: 'category', label: 'Kategorie' },
   { key: 'status', label: 'Status' },
-  // 021's `align` is not in the kit yet: `cssClass` aligns the header and the cells at the end.
-  { key: 'amount', label: 'Betrag', cssClass: 'lc-table-story__cell--end' },
+  { key: 'amount', label: 'Betrag', align: 'end' as const },
   { key: 'shared', label: 'Geteilt' },
 ];
 
@@ -862,9 +857,6 @@ const transactionData = [
 const transactionActions = [{ key: 'more', icon: 'dots', variant: 'ghost' as const, tooltip: 'Mehr zu dieser Buchung' }];
 
 const transactionTemplate = (extra: string) => `
-  <style>
-    ::ng-deep .lc-table-story__cell--end { text-align: end; }
-  </style>
   <div lang="de">
     <lc-table
       [columns]="columns"
@@ -923,5 +915,91 @@ export const HiddenCaption: Story = {
   render: (args) => ({
     props: { ...args, columns: transactionColumns, data: transactionData, actions: transactionActions },
     template: transactionTemplate('[showCaption]="false" [hoverable]="true"'),
+  }),
+};
+
+// 3.17 (request 021, finance-intelligence sources page): end-aligned number columns.
+const deCount = new Intl.NumberFormat('de-DE');
+const deEuro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+const dePercent = new Intl.NumberFormat('de-DE', {
+  style: 'percent',
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+  signDisplay: 'exceptZero',
+});
+
+const sourceColumns = [
+  { key: 'source', label: 'Quelle', sortable: true },
+  { key: 'bookings', label: 'Buchungen', align: 'end' as const, formatter: (value: unknown) => deCount.format(Number(value ?? 0)) },
+  {
+    key: 'amount',
+    label: 'Betrag',
+    sortable: true,
+    align: 'end' as const,
+    formatter: (value: unknown) => deEuro.format(Number(value ?? 0)),
+  },
+  {
+    key: 'change',
+    label: 'Abweichung zum Vorjahreszeitraum',
+    align: 'end' as const,
+    formatter: (value: unknown) => dePercent.format(Number(value ?? 0)),
+    cellStyle: (value: unknown): Record<string, string> =>
+      Number(value ?? 0) < 0 ? { color: 'var(--color-text-error)' } : {},
+  },
+];
+
+const sourceData = [
+  { source: 'Bankkonto', bookings: 1111, amount: 1111.11, change: -0.125 },
+  { source: 'Kreditkarte', bookings: 8888, amount: 8888.88, change: 0.042 },
+  { source: 'USM', bookings: 342, amount: 87000, change: 0.318 },
+  { source: 'Lohnabrechnung', bookings: 24, amount: 45210.5, change: -0.031 },
+  { source: 'Depot', bookings: 57, amount: 12.4, change: 0 },
+  { source: 'PayPal', bookings: 1203, amount: 734.9, change: -0.27 },
+  { source: 'Barkasse', bookings: 9, amount: 120, change: 1.5 },
+];
+
+const sourceActions = [{ key: 'more', icon: 'dots', variant: 'ghost' as const, tooltip: 'Mehr zu dieser Quelle' }];
+
+export const NumberColumns: Story = {
+  name: 'Number Columns',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`align: 'end'` on a column (3.17) aligns its header and cells at the end edge and sets tabular figures, so " +
+          '„1.111“ and „8.888“ are equally wide and amounts line up digit by digit. Sorting puts the arrow before the label ' +
+          '(sort „Betrag“), so the label stays flush with the figures. It works with `paginate`, `actions`, `cellClass` and ' +
+          '`cellStyle` (here `cellStyle` colours the negative changes in `--color-text-error`; ' +
+          "a class colour loses to the kit's cell rule); " +
+          'the „Aktionen“ header follows `actionsAlign="end"`. ' +
+          'A long header widens its column, and the table scrolls inside its wrapper on a phone.',
+      },
+    },
+  },
+  args: { actionClick: fn() },
+  render: (args) => ({
+    props: { ...args, columns: sourceColumns, data: sourceData, actions: sourceActions },
+    template: `
+      <div lang="de">
+        <lc-table
+          [columns]="columns"
+          [data]="data"
+          [actions]="actions"
+          actionsLabel="Aktionen"
+          actionsAlign="end"
+          caption="Quellen, Oktober 2026"
+          [paginate]="true"
+          [pageSize]="5"
+          [hoverable]="true"
+          rangeOfLabel="von"
+          rowsPerPageAriaLabel="Zeilen pro Seite"
+          previousPageAriaLabel="Vorherige Seite"
+          nextPageAriaLabel="Nächste Seite"
+          sortedAscendingLabel="aufsteigend sortiert"
+          sortedDescendingLabel="absteigend sortiert"
+          (actionClick)="actionClick($event)"
+        ></lc-table>
+      </div>
+    `,
   }),
 };

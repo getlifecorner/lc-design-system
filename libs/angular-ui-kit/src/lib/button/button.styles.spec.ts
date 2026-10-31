@@ -88,7 +88,7 @@ describe('lc-button styles', () => {
     });
 
     it('keeps the line on hover, thicker, without animating it', () => {
-      expect(rule('.btn.btn-inline:hover:not(:disabled)')).toMatch(/text-decoration-thickness:\s*max\(2px,\s*0\.125em\)/);
+      expect(rule('.btn.btn-inline:hover:not(:disabled, .btn-loading)')).toMatch(/text-decoration-thickness:\s*max\(2px,\s*0\.125em\)/);
       const transition = rule('.btn.btn-inline').match(/transition-property:\s*([^;]+);/)?.[1] ?? '';
       expect(transition.split(',').map((p) => p.trim())).toEqual(['color', 'background-color', 'border-color', 'box-shadow']);
     });
@@ -138,8 +138,9 @@ describe('lc-button styles', () => {
     // The real values: the compiled button rules, the theme files and the hero's
     // band gradients and body opacity.
     const ink = rule('.btn-inverse').match(/\scolor:\s*var\(--lc-button-inverse-fg,\s*(#[0-9a-f]{6})\)/i)?.[1] ?? '';
-    const hoverFill = rule('.btn-inverse:hover:not(:disabled)').match(/background-color:\s*(#[0-9a-f]{6})/i)?.[1] ?? '';
-    const activeFill = rule('.btn-inverse:active:not(:disabled)').match(/background-color:\s*(#[0-9a-f]{6})/i)?.[1] ?? '';
+    // 3.17: hover and active also exclude a loading button.
+    const hoverFill = rule('.btn-inverse:hover:not(:disabled, .btn-loading)').match(/background-color:\s*(#[0-9a-f]{6})/i)?.[1] ?? '';
+    const activeFill = rule('.btn-inverse:active:not(:disabled, .btn-loading)').match(/background-color:\s*(#[0-9a-f]{6})/i)?.[1] ?? '';
     const hero = compile(resolve(__dirname, '../hero/hero.component.scss')).css;
     // The default body (the light variant's own `.hero--light .hero__body` is .75).
     const bodyOpacity = Number(hero.match(/\n\.hero__body \{[^}]*?opacity:\s*([\d.]+)/)?.[1]);
@@ -231,7 +232,8 @@ describe('lc-button styles', () => {
       expect(inverse.length).toBeGreaterThanOrEqual(7);
       for (const [, selector, body] of inverse) {
         expect(body).not.toMatch(/transition|animation|filter/);
-        expect(selector.split(',').every((s) => s.includes('btn-inverse'))).toBe(true);
+        // Split the list at top-level commas only: `:not(:disabled, .btn-loading)` (3.17) is one selector.
+        expect(selector.split(/,(?![^(]*\))/).every((s) => s.includes('btn-inverse'))).toBe(true);
       }
     });
   });

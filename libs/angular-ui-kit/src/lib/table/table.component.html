@@ -55,6 +55,18 @@
             [title]="column.tooltip || ''"
             (click)="handleSort(column.key)"
             (keydown)="column.sortable ? onHeaderKeydown($event, column.key) : null">
+            @if (column.align === 'end') {
+              <!-- 3.17: the arrow is placed before the label (CSS), so the label stays
+                   flush with the figures; in the DOM it still follows the label. No
+                   whitespace between the label and the arrow. -->
+              <span class="lc-table__sort-label">{{ column.label }}@if (column.sortable && getSortState(column.key)) {<span class="sort-indicator" [attr.aria-label]="getSortState(column.key) === 'asc' ? sortedAscendingLabel() : sortedDescendingLabel()">
+                  @if (getSortState(column.key) === 'asc') {
+                    ↑
+                  } @else {
+                    ↓
+                  }
+                </span>}</span>
+            } @else {
             {{ column.label }}
             @if (column.sortable && getSortState(column.key)) {
               <span class="sort-indicator" [attr.aria-label]="getSortState(column.key) === 'asc' ? sortedAscendingLabel() : sortedDescendingLabel()">
@@ -64,6 +76,7 @@
                   ↓
                 }
               </span>
+            }
             }
           </th>
         }

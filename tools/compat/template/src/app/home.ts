@@ -111,7 +111,8 @@ export class HomePage {
   ];
   protected readonly columns: TableColumn[] = [
     { key: 'name', label: 'Name', sortable: true },
-    { key: 'amount', label: 'Betrag' },
+    // 3.17 (request 021): an end-aligned number column, classes in the server HTML.
+    { key: 'amount', label: 'Betrag', align: 'end' },
   ];
   protected readonly rows = [
     { name: 'Strom', amount: 82 },

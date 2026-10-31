@@ -302,3 +302,60 @@ describe('Component pairings of 3.16 (request 022)', () => {
     });
   });
 });
+
+// Request 021 (3.17): the lc-list status badges (12 px / 500, so 4.5:1) and the
+// focus ring of a loading lc-button, which its 0.5 opacity fades. The token
+// names come from the compiled component stylesheets, the values from the themes.
+describe('Component pairings of 3.17 (request 021)', () => {
+  const listCss = compile(resolve(__dirname, '../lib/list/list.component.scss')).css;
+  const buttonCss = compile(resolve(__dirname, '../lib/button/button.component.scss')).css;
+
+  /** The background and ink token of a list badge variant (a fallback after the name is ignored). */
+  function badgeTokens(variant: string): [string, string] {
+    const body = listCss.match(new RegExp(`\\n\\.lc-list__badge--${variant} \\{([^}]*)\\}`))?.[1] ?? '';
+    const bg = body.match(/background-color: var\((--[\w-]+)/)?.[1] ?? '';
+    const ink = body.match(/\scolor: var\((--[\w-]+)/)?.[1] ?? '';
+    expect([bg, ink]).toEqual([expect.stringMatching(/^--color-/), expect.stringMatching(/^--color-/)]);
+    return [bg, ink];
+  }
+
+  /** Design 021 §5: the minimum over the bases, per palette [light, dark]. */
+  const badges: [string, [string, string], [number, number]][] = [
+    ['success', ['--color-success-subtle', '--color-on-success-subtle'], [4.85, 5.17]],
+    ['warning', ['--color-warning-subtle', '--color-on-warning-subtle'], [5.52, 4.61]],
+    ['error', ['--color-error-100', '--color-on-error-subtle'], [6.33, 7.17]],
+    ['primary', ['--color-primary-100', '--color-primary-700'], [7.85, 9.68]],
+    ['default', ['--color-surface-hover', '--color-text-secondary'], [6.87, 8.18]],
+  ];
+
+  describe.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('%s palette', (_palette, tokens, i) => {
+    /** The grounds a list sits on: the page, the card surfaces and a hovered row (over the surface). */
+    const bases: Rgba[] = [
+      color(tokens, '--color-background'),
+      color(tokens, '--color-surface'),
+      over(color(tokens, '--color-surface-2'), color(tokens, '--color-surface')),
+      over(color(tokens, '--color-surface-hover'), color(tokens, '--color-surface')),
+    ].map((c) => over(c, color(tokens, '--color-background')));
+
+    it.each(badges)('AC-12: the %s list badge reaches 4.5:1 on every ground', (variant, pair, values) => {
+      expect(badgeTokens(variant)).toEqual(pair);
+      const [bg, ink] = pair;
+      const min = Math.min(
+        ...bases.map((base) => {
+          const fill = over(color(tokens, bg), base);
+          return ratio(over(color(tokens, ink), fill), fill);
+        }),
+      );
+      expect(min).toBeCloseTo(values[i], 2);
+      expect(min).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it('AC-7: the ring of a focused loading button (--color-text-primary at 50 %) reaches 3:1 on the page and the surfaces', () => {
+      expect(buttonCss).toMatch(/\n\.btn\.btn-loading:focus-visible \{\s*outline-color: var\(--color-text-primary\);/);
+      const ink = color(tokens, '--color-text-primary');
+      for (const base of bases.slice(0, 3)) {
+        expect(ratio(over([ink[0], ink[1], ink[2], 0.5], base), base)).toBeGreaterThanOrEqual(3);
+      }
+    });
+  });
+});

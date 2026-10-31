@@ -13,9 +13,14 @@
  *   node tools/agents/story-shots.mjs --list=hero
  *   node tools/agents/story-shots.mjs --stories=layout-hero--page-band[,…]
  *        [--widths=360,1024,1280] [--themes=light,dark] [--height=900] [--full]
+ *        [--forced-colors]
  *        [--measure='<JS expression, may use await; result must be JSON>']
  *        [--axe[=<tags>]]
  *        [--out=tmp/story-shots] [--compare=<baseline dir>]
+ *
+ * --forced-colors also emulates `forced-colors: active` (Windows high
+ * contrast), for the forced-colors rules of a component (request 021). The
+ * file names stay the same, so give such a run its own --out directory.
  *
  * Prints one JSON line per shot: { story, width, theme, file, measure, axe }. With
  * --compare, each shot is compared by hash with the file of the same name in the
@@ -252,6 +257,7 @@ try {
           features: [
             { name: 'prefers-color-scheme', value: theme },
             { name: 'prefers-reduced-motion', value: 'reduce' },
+            ...(args['forced-colors'] ? [{ name: 'forced-colors', value: 'active' }] : []),
           ],
         });
         const url = `${base}/iframe.html?id=${encodeURIComponent(story)}&viewMode=story&globals=theme:${theme}`;

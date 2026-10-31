@@ -318,6 +318,13 @@ const EXPECT_IN_HTML = [
     return money('compat-money-de', `${minus}42,17${nbsp}€`, 'minus 42,17 Euro')
       && money('compat-money-app', `${minus}\\$42\\.17`, 'minus 42\\.17 US dollars');
   }],
+  // 3.17 (request 021, home.html/home.ts): an `align: 'end'` column carries its
+  // class on the th and the td, and a loading button is aria-disabled, not
+  // natively disabled, before JS
+  ['table end column: lc-table__cell--end on the th and the td (021 AC-16)', (html) =>
+    /<th(?=[^>]*\sclass="[^"]*\blc-table__cell--end\b)[^>]*>(?:<!--[^]*?-->|\s)*<span[^>]*\sclass="lc-table__sort-label"[^>]*>Betrag(?:<!--[^]*?-->)*<\/span>/.test(html)
+    && /<td(?=[^>]*\sclass="[^"]*\blc-table__cell--end\b)[^>]*>(?:<!--[^]*?-->|\s)*82(?:<!--[^]*?-->|\s)*<\/td>/.test(html)],
+  ['loading button: aria-disabled and aria-busy, no native disabled (021 AC-16)', /<lc-button(?=[^>]*\sid="compat-loading-317")[^>]*>(?:<!--[^]*?-->|\s)*<button(?=[^>]*\saria-disabled="true")(?=[^>]*\saria-busy="true")(?=[^>]*\sclass="[^"]*\bbtn-loading\b)(?![^>]*\sdisabled[\s=/>])[^>]*>/],
 ];
 
 /**

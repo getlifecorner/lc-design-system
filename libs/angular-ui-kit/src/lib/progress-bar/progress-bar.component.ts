@@ -19,6 +19,13 @@ export type ProgressBarVariant = 'linear' | 'circular';
  * - Animated value transitions
  * - Accessible with ARIA progressbar role
  *
+ * The bar is a visual aid; the text next to it carries the meaning. Write the
+ * status as text ('USM wird geladen …') and announce changes from a live
+ * region (`role="status"`). Screen readers don't announce a progress bar's
+ * changes by themselves. Give `ariaLabel` the same words as the status. Under
+ * `forced-colors: active` the fill is `Highlight`, the linear track gets a
+ * 1 px `CanvasText` outline and the circle's track is `GrayText` (3.17).
+ *
  * @example
  * ```html
  * <lc-progress-bar [value]="75" color="primary" size="md"></lc-progress-bar>
@@ -80,7 +87,11 @@ export class ProgressBarComponent {
   inline = input<boolean>(false);
 
   /**
-   * Whether the progress is indeterminate (animated, no fixed value).
+   * Progress of unknown length: no value (`aria-valuenow` is absent) and no
+   * label. The linear bar moves a 40 % segment across the track, and the
+   * circle spins. Under `prefers-reduced-motion: reduce` nothing moves: the
+   * linear bar shows a full-width striped fill and the circle a dashed ring,
+   * so it still reads as busy, not as a value (3.17).
    * @default false
    */
   indeterminate = input<boolean>(false);

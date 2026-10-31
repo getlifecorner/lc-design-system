@@ -130,10 +130,15 @@ describe('ButtonComponent', () => {
       expect(spinner).toBeTruthy();
     });
 
-    it('should be disabled when loading', () => {
+    // 3.17 (request 021, AC-5): `loading` no longer sets the native `disabled`,
+    // so a focused button keeps focus; it is aria-disabled and ignores clicks
+    // (see button.loading.spec.ts). Was: "should be disabled when loading".
+    it('is aria-disabled, not disabled, when loading', () => {
       fixture.componentRef.setInput('loading', true);
       fixture.detectChanges();
-      expect(buttonElement.disabled).toBe(true);
+      expect(buttonElement.disabled).toBe(false);
+      expect(buttonElement.hasAttribute('disabled')).toBe(false);
+      expect(buttonElement.getAttribute('aria-disabled')).toBe('true');
     });
 
     it('should not emit click event when loading', () => {

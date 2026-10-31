@@ -1,7 +1,7 @@
 <button
   #buttonElement
   [type]="type()"
-  [disabled]="isDisabled()"
+  [disabled]="disabled()"
   [attr.title]="effectiveTitle()"
   [attr.aria-label]="ariaLabel() || null"
   [attr.aria-disabled]="isDisabled() ? 'true' : 'false'"
@@ -25,9 +25,10 @@
     'btn-full-width': fullWidth(),
     'btn-inline': inline(),
     'btn-flush': flush(),
-    'btn-tone-primary': variant() === 'outline' && tone() === 'primary'
+    'btn-tone-primary': variant() === 'outline' && tone() === 'primary',
+    'btn-loading': loading()
   }"
-  (click)="handleClick()"
+  (click)="handleClick($event)"
   (focus)="handleFocus()"
   (blur)="handleBlur()"
 >

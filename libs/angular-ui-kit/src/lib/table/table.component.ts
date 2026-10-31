@@ -45,7 +45,11 @@ export interface TableColumn {
   width?: string;
   /** Optional CSS class(es) applied to both th and td cells */
   cssClass?: string;
-  /** Optional CSS class(es) for td cells only (string or resolver callback) */
+  /**
+   * Optional CSS class(es) for td cells only (string or resolver callback).
+   * A class colour or font size loses to the kit's cell rule; set them with
+   * `cellStyle`.
+   */
   cellClass?: TableCellClass;
   /** Optional inline styles for td cells only (object or resolver callback) */
   cellStyle?: TableCellStyle;
@@ -62,7 +66,22 @@ export interface TableColumn {
   editType?: 'text' | 'number' | 'select';
   /** Options for select edit type */
   editOptions?: string[];
+  /**
+   * Horizontal alignment of the column's header and cells. `end` aligns both
+   * at the end edge (right in LTR) and sets `font-variant-numeric:
+   * tabular-nums`, for amounts, counts and percentages. A sort arrow then sits
+   * before the label, so the label stays flush with the figures. Adds
+   * `lc-table__cell--end` to the `th` and every `td`. It wins over a
+   * `cellClass` that sets `text-align`; use `cellStyle` to override it. A
+   * custom `lcTableCell` template inherits the alignment, but a flex or block
+   * child needs its own `justify-content: flex-end`. (3.17)
+   * @default 'start'
+   */
+  align?: TableColumnAlign;
 }
+
+/** Horizontal alignment of a table column (3.17). */
+export type TableColumnAlign = 'start' | 'end';
 
 /**
  * A row-level action rendered in the table's actions column (e.g. Freigeben, Ablehnen).
@@ -791,6 +810,7 @@ export class TableComponent {
     if (column.sortable) classes.push('sortable');
     const sortState = this.getSortState(column.key);
     if (sortState) classes.push(`sorted-${sortState}`);
+    if (column.align === 'end') classes.push('lc-table__cell--end');
     return classes.join(' ');
   }
 
@@ -816,6 +836,7 @@ export class TableComponent {
   ): string {
     const classes: string[] = [];
     if (column.cssClass) classes.push(column.cssClass);
+    if (column.align === 'end') classes.push('lc-table__cell--end');
 
     if (typeof column.cellClass === 'string') {
       classes.push(column.cellClass);
