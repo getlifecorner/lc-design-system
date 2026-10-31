@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.16.0] - 2026-10-31
+
+The parts for "Connect bank accounts" in life-os (spec 004, gaps BA-1, BA-3, BA-4, BA-5, TD-3, TD-4): a money display, switch help text, keyboard table rows with a caption, equal answers on the next-step card, real link rows in lists, and the wallet and bank icons in the inline set. One new entry point, `@lifecorner/angular-ui-kit/money`. No API breaks.
+
+### Added
+
+- **`lc-money`** (`@lifecorner/angular-ui-kit/money`, BA-4, every Finances board and the Today sources line): `amountMinor` (integer minor units, exact up to ±9,007,199,254,740,991), `currency` (ISO 4217 minor units: EUR 2, JPY 0, KWD 3), `locale` (default `''` = the app's `LOCALE_ID`), `signDisplay`, `minusLabel` / `plusLabel`. Shows `−42,17 €` (U+2212, no-break space) with tabular figures (1.111,11 € and 8.888,88 € both 81.42 px), never wraps, is a `dir` isolate and inherits the colour. Screen readers hear „minus 42,17 Euro“ once. `formatMoney()` gives the same text and words for table formatters. Prerendered before JavaScript.
+- **`lc-switch helpText`** (BA-1, connection page, health sharing): a description below the label, linked by `aria-describedby`; 7.56 / 11.16:1 (light / dark).
+- **`lc-table clickable`**, **`caption`**, **`showCaption`** (BA-3, account transactions from 1024 px): rows become tab stops, Enter and Space emit `rowClick`, and controls inside a row never do. The caption names the table (36 px, or visually hidden). Ring 2 px `--color-primary-500`, ≥ 3.76:1 on every row fill, `Highlight` in forced colours.
+- **`lc-next-step-card actionsStyle="equal"`** (BA-5, health question card): both answers are outline primary at `actionSize="lg"` (48.5 px), primary first; `announce` and disabled reasons are kept.
+- **`ListItem.href`** and **`linkClick`** (TD-4, Today sources line, account rows): the row is a real `<a href>` (≥ 44 px, middle click, new tab). `linkClick` reports plain clicks for `router.navigateByUrl`. An `href` row renders no `action`; a disabled one stays a plain row.
+- **Inline icons `wallet`, `building-bank`, `shield-lock`** (TD-3, bottom nav, sidenav, connect cards) and the constants `ICON_WALLET`, `ICON_BUILDING_BANK`, `ICON_SHIELD_LOCK`, `ICON_SHIELD_LOCK_SOLID`: no request, prerendered. The lazy inline set grows by 1,771 B raw (4,417 → 4,613 B gzip); constants cost only when registered. `wallet` and `building-bank` have no filled glyph (`variant="solid"` shows the placeholder).
+- Stories: Form/Switch "With Help Text", "Help Text Sizes And Positions", "Help Text At 200 Text"; Data Display/Table "Clickable Rows", "Hidden Caption"; Data Display/Money (5 stories); Feedback/Next Step Card "Equal Answers" (3); Data Display/List "Link Rows", "Link Rows Small", "Link Rows With Router"; Components/Icon "Finance Icons"; Navigation/Bottom Nav and Sidenav "Finance Destination".
+
+### Changed
+
+- Labelled `lc-switch` rows are at least 44 px high (`--lc-switch-min-height`, default `var(--size-min-touch-height)`; `0` restores the 3.15 rows of 21 / 24 / 28 px). This is the only intended visual change: 7 switch stories are taller.
+- The table row focus ring applies to every variant: tree rows in default and bordered tables had none.
+
+### Compatibility
+
+- No API breaks: every input is optional and defaults render as in 3.15 (Jest pins the DOM). 294 of 328 screenshots of 82 switch, card, icon, table, nav, list, density and app-shell stories are identical; the rest are the 28 taller switch shots and 6 random-data table shots.
+- Consumer check (AOT, strictTemplates, prerender) passes on Angular 22.
+
+### Known
+
+- Stories only: in Data Display/Table "Clickable Rows" and "Hidden Caption" the "Betrag" header is left-aligned while the amounts end at the right (the kit's header rule wins over the story class); in Data Display/Money "Sign Display" the page is 364 px wide at 360 px and the „€“ of the third column is cut at the edge. The components are not affected.
+- `lc-table actionsAlign="end"` (pre-existing): the "Aktionen" header text does not end where the buttons end (about 134 px apart at 1280), because the kit's scoped header rule beats the alignment class. A fix is planned with the table `align` input.
+- The bottom-nav "Finance Destination" story is 376 px wide at 360 px (the phone frame plus padding, as in every phone-frame story).
+- Not verified with a real screen reader: the spoken text of `lc-money` is checked with axe's text model only.
+
 ## [3.15.0] - 2026-10-30
 
 State pages ("no role yet", "sign-in failed") line up with the header without local CSS: `lc-app-page` takes the header's padding and a set top spacing, `lc-empty-state` gets a primary icon and a larger message, `lc-avatar` a person fallback, outline buttons a primary tone, and `--lc-sidenav-*` hooks work when set on a layout wrapper (finance-intelligence app-shell prove, rows 1–7, docs/ux/gaps/app-shell-prove-2026-10-30.md). No API breaks.

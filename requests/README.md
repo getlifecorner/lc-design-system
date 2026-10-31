@@ -55,3 +55,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [018](018-alert-narrow-container-words/) lc-alert in a narrow container: long words and a narrow layout | life-os | G-WL4 | 3.13.1 | 3.13.1 |
 | [019](019-app-shell-full-height-nav/) App shell full-height nav, sidenav text brand, shell background, stat-trend sentiment | finance-intelligence | gap file rows 1–4 (app-shell-2026-10-30) | 3.14.0 | 3.14.0 |
 | [020](020-app-shell-prove-gaps/) App shell prove gaps: page spacing, empty state, avatar fallback, outline tone, sidenav theme | finance-intelligence | gap file rows 1–7 (app-shell-prove-2026-10-30) | 3.15.0 | 3.15.0 |
+| [022](022-bank-accounts-kit-gaps/) Bank accounts kit gaps: switch help text, keyboard table rows and caption, lc-money, equal next-step actions, wallet and bank icons, link list rows | life-os | BA-1, BA-3, BA-4, BA-5, TD-3, TD-4 | 3.16.0 | 3.16.0 |
