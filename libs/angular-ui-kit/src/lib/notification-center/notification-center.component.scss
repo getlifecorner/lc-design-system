@@ -109,8 +109,10 @@
 
   // The pressed chip (3.19.1, request 025), as in lc-toggle-group: white on
   // --color-primary-fill is 6.21:1 in both themes, and the rim keeps 3:1
-  // against the panel. Every level (error, warning, …) uses it: white on the
-  // level colours was 1.89 to 4.37:1.
+  // against the panel. Every level (error, warning, …) uses it. White on the
+  // old fills passed only for Error (8.39:1) and Info (6.17:1) in light; it
+  // was 4.37 (All), 2.72 (Success) and 2.26 (Warning) in light and 1.44 to
+  // 1.99:1 in dark.
   &--active {
     background: var(--color-primary-fill);
     color: var(--color-on-primary);

@@ -77,6 +77,28 @@ const taskBody = `
           </div>
         </div>`;
 
+/** `taskBody` in German, for the story that sets `lang="de"` on `lc-drawer` (3.19.2). */
+const taskBodyDe = `
+        <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <div>
+            <p style="margin: 0; font-size: 12px; color: var(--color-text-secondary); text-transform: uppercase;">Status</p>
+            <lc-badge variant="info">In Bearbeitung</lc-badge>
+          </div>
+          <div>
+            <p style="margin: 0; font-size: 12px; color: var(--color-text-secondary); text-transform: uppercase;">Zuständig</p>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+              <lc-avatar name="Alice Johnson" size="xs"></lc-avatar>
+              <span style="font-size: 14px;">Alice Johnson</span>
+            </div>
+          </div>
+          <div>
+            <p style="margin: 0; font-size: 12px; color: var(--color-text-secondary); text-transform: uppercase;">Beschreibung</p>
+            <p style="margin: 4px 0 0; font-size: 14px; color: var(--color-text-primary); line-height: 1.5;">
+              Neuen Anmeldeablauf umsetzen: OAuth2-Unterstützung, Umgang mit Refresh-Tokens und Sitzungsverwaltung.
+            </p>
+          </div>
+        </div>`;
+
 export const Default: Story = {
   args: { open: true, position: 'right', size: 'md', heading: 'Task Details' },
   render: (args) => ({
@@ -205,7 +227,8 @@ export const GermanHeading: Story = {
         story:
           'A long German heading wraps and is hyphenated at a syllable (`hyphens: auto` needs the `lang`) instead of running under the ' +
           'close button; the header grows from 65 to 73 px for the second line. The close button is a 44 × 44 px tap target (3.19.1) ' +
-          'in the old 32 px slot, 6 px from the heading. `closeAriaLabel` translates its name.',
+          'in the old 32 px slot, 6 px from the heading. `closeAriaLabel` translates its name. The body is German too, so ' +
+          '`lang="de"` on `lc-drawer` marks only German text (3.19.2).',
       },
     },
   },
@@ -219,7 +242,7 @@ export const GermanHeading: Story = {
   render: (args) => ({
     props: args,
     template: `
-      <lc-drawer lang="de" [open]="open" [position]="position" [size]="size" [heading]="heading" [closeAriaLabel]="closeAriaLabel">${taskBody}
+      <lc-drawer lang="de" [open]="open" [position]="position" [size]="size" [heading]="heading" [closeAriaLabel]="closeAriaLabel">${taskBodyDe}
       </lc-drawer>`,
   }),
 };

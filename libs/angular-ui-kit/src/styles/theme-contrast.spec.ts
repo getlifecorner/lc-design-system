@@ -506,3 +506,73 @@ describe('Component pairings of 3.19.1 (request 025)', () => {
     });
   });
 });
+
+// Request 026 (3.19.2): the lc-toast close button (025 review finding 1). It
+// had no colour, so the × and its currentColor ring took the UA's black
+// buttontext: 1.47 / 1.22:1 on the dark toast. WCAG 1.4.11 asks 3:1.
+describe('Component pairings of 3.19.2 (request 026)', () => {
+  const toastCss = compile(resolve(__dirname, '../lib/toast/toast.component.scss')).css;
+  const rules = [...toastCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selector: m[1].trim(), body: m[2] }));
+  const rule = (selector: string) => {
+    const found = rules.filter((r) => r.selector === selector);
+    expect(found).toHaveLength(1);
+    return found[0].body;
+  };
+  const variants = ['success', 'error', 'warning', 'info'];
+  /** The close hover tints of 3.19.1, unchanged (a non-goal of 026). */
+  const tints = ['rgba(142, 164, 117, 0.1)', 'rgba(157, 14, 14, 0.1)', 'rgba(225, 160, 64, 0.1)', 'rgba(59, 101, 136, 0.1)'];
+
+  it('AC-1: the close button reads --color-text-secondary; no raw colour, no variant override', () => {
+    const close = rule('.lc-toast__close');
+    expect(close).toMatch(/\scolor: var\(--color-text-secondary\);/);
+    expect(close).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(/i);
+    // The variants tint the hover only; none sets the × colour.
+    const others = rules.filter((r) => r.selector.includes('.lc-toast__close') && r.selector !== '.lc-toast__close');
+    expect(others.length).toBeGreaterThanOrEqual(5);
+    for (const r of others) expect(r.body).not.toMatch(/(^|[\s;])color:/);
+  });
+
+  it('AC-3: the ring is the × colour, inside the box; the toast styles never opt out of forced colours', () => {
+    const ring = rule('.lc-toast__close:focus-visible');
+    expect(ring).toMatch(/outline: 2px solid currentColor;/);
+    expect(ring).toMatch(/outline-offset: -2px;/);
+    expect(toastCss).not.toMatch(/forced-color-adjust/);
+  });
+
+  it('AC-4: the hover tints are the four of 3.19.1, on a gradient-surface toast', () => {
+    variants.forEach((v, n) => {
+      expect(rule(`.lc-toast--${v} .lc-toast__close:hover`)).toMatch(new RegExp(`background-color: ${tints[n].replace(/[().]/g, '\\$&')};`));
+      const toast = rule(`.lc-toast--${v}`);
+      expect(toast).toMatch(/background-color: var\(--color-surface\);/);
+      expect(toast).toMatch(/background-image: var\(--gradient-surface\);/);
+    });
+  });
+
+  /** Design 026 §5, per palette [light, dark]: the minimum over both gradient ends (and every hover tint). */
+  const expected = { rest: [7.23, 9.26], hover: [6.02, 7.82] };
+
+  describe.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('%s palette', (_palette, tokens, i) => {
+    const page = color(tokens, '--color-background');
+    const on = (name: string, base: Rgba = page) => over(color(tokens, name), base);
+    /** The toast's ends: the stops of --gradient-surface, over its --color-surface fill. */
+    const gradient = tokens['--gradient-surface'].match(/^linear-gradient\(180deg,\s*(.+)\)$/);
+    const stops = (gradient ? gradient[1] : '').split(/,\s*(?![^(]*\))/).map((stop) => {
+      const ref = stop.match(/^var\((--[\w-]+)\)$/);
+      return over(ref ? color(tokens, ref[1]) : parse(stop), on('--color-surface'));
+    });
+    const ink = (fill: Rgba) => ratio(on('--color-text-secondary', fill), fill);
+
+    it('AC-2/AC-3: the × and its ring reach 3:1 at both ends of the toast', () => {
+      expect(stops).toHaveLength(2);
+      const rest = Math.min(...stops.map(ink));
+      expect(rest).toBeCloseTo(expected.rest[i], 2);
+      expect(rest).toBeGreaterThanOrEqual(3);
+    });
+
+    it('AC-4: the × and its ring reach 3:1 on every variant hover tint', () => {
+      const hover = Math.min(...tints.flatMap((tint) => stops.map((end) => ink(over(parse(tint), end)))));
+      expect(hover).toBeCloseTo(expected.hover[i], 2);
+      expect(hover).toBeGreaterThanOrEqual(3);
+    });
+  });
+});

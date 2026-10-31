@@ -86,6 +86,9 @@ lc-toast:not(lc-toast-outlet lc-toast) {
   width: var(--size-min-touch-width, 2.75rem);
   height: var(--size-min-touch-height, 2.75rem);
   background: transparent;
+  // The × and its currentColor focus ring (3.19.2, request 026). Without a
+  // colour the button took the UA's black buttontext: 1.47 / 1.22:1 in dark.
+  color: var(--color-text-secondary);
   border: none;
   cursor: pointer;
   padding: 0;
