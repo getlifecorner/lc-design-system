@@ -335,6 +335,11 @@ const EXPECT_IN_HTML = [
       && /<lc-select(?=[^>]*\sclass="[^"]*\blc-table-pagination__size\b)[^>]*>(?:(?!<\/lc-select>)[^])*?>\s*5 \/ page\s*</.test(table)
       && /<div[^>]*\sclass="lc-table-pagination__pager"[^>]*>(?:<!--[^]*?-->|\s)*<button(?=[^>]*\sclass="lc-table-pagination__btn")(?=[^>]*\saria-label="Previous page")[^>]*>/.test(table);
   }],
+  // 3.19.1 (request 025, home.html): a standalone toast keeps its classes, and
+  // its element rule (block, at most 400 px; `:host` never applied) is in the page's styles before JS
+  ['standalone toast: its classes and the block rule before JS (025 AC-12)', (html) =>
+    /<lc-toast(?=[^>]*\sid="compat-toast-3191")(?=[^>]*\sclass="lc-toast lc-toast--success")[^>]*>/.test(html)
+    && /lc-toast:not\(lc-toast-outlet lc-toast\)\s*\{\s*display:\s*block;\s*width:\s*100%;\s*max-width:\s*400px/.test(html)],
   ['bottom nav "Mehr" on request (023 AC-8)', /<nav(?=[^>]*\saria-label="Hauptnavigation unten")[^>]*>(?:(?!<\/nav>)[^])*?<li[^>]*>(?:<!--[^]*?-->|\s)*<a(?=[^>]*\sclass="[^"]*\blc-bottom-nav__item\b)(?=[^>]*\shref="[^"]*\/mehr")[^>]*>(?:(?!<\/a>)[^])*?<span[^>]*\sclass="lc-bottom-nav__label"[^>]*>(?:<!--[^]*?-->|\s)*Mehr(?:<!--[^]*?-->|\s)*<\/span>/],
 ];
 

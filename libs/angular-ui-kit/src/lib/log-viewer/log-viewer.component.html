@@ -17,7 +17,7 @@
           [attr.aria-label]="paused() ? resumeAriaLabel() : pauseAriaLabel()"
           [attr.aria-pressed]="paused()"
         >
-          <lc-icon [name]="paused() ? 'player-play' : 'player-pause'" size="xs" />
+          <lc-icon [name]="paused() ? 'player-play' : 'player-pause'" size="xs" [decorative]="true" />
         </button>
       }
       <button
@@ -27,7 +27,7 @@
         [attr.title]="clearLabel()"
         [attr.aria-label]="clearAriaLabel()"
       >
-        <lc-icon name="trash" size="xs" />
+        <lc-icon name="trash" size="xs" [decorative]="true" />
       </button>
       <button
         type="button"
@@ -36,7 +36,7 @@
         [attr.title]="copyLabel()"
         [attr.aria-label]="copyAriaLabel()"
       >
-        <lc-icon name="clipboard-document" size="xs" />
+        <lc-icon name="clipboard-document" size="xs" [decorative]="true" />
       </button>
       <button
         type="button"
@@ -47,7 +47,7 @@
         [attr.aria-label]="searchAriaLabel()"
         [attr.aria-expanded]="showSearch()"
       >
-        <lc-icon name="magnifying-glass" size="xs" />
+        <lc-icon name="magnifying-glass" size="xs" [decorative]="true" />
       </button>
     </div>
 
@@ -82,7 +82,7 @@
   <!-- Search bar -->
   @if (showSearch()) {
     <div class="lc-log-viewer__search">
-      <lc-icon name="magnifying-glass" size="xs" />
+      <lc-icon name="magnifying-glass" size="xs" [decorative]="true" />
       <label class="lc-log-viewer__sr-only" [for]="searchInputId">{{ searchInputLabel() }}</label>
       <input
         #searchInput
@@ -159,7 +159,7 @@
       class="lc-log-viewer__jump-bottom"
       (click)="scrollToBottom()"
     >
-      <lc-icon name="arrow-down" size="xs" />
+      <lc-icon name="arrow-down" size="xs" [decorative]="true" />
       {{ jumpToBottomLabel() }}
     </button>
   }

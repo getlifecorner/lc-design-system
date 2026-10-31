@@ -149,6 +149,24 @@ describe('kit-internal glyphs (AS-17, AC-3)', () => {
       expect(unused).toEqual([]);
     });
 
+    // 3.19.1 (request 025, 024 review): an lc-icon without `decorative` or
+    // `ariaLabel` renders an unnamed `role="img"` (axe svg-img-alt). Every tag
+    // in a kit template, inline ones included, says which it is.
+    it('marks every lc-icon tag decorative or names it', () => {
+      const tags: string[] = [];
+      const unmarked: string[] = [];
+      for (const folder of kitFolders) {
+        for (const { file, code } of sourcesOf(folder)) {
+          for (const [tag] of code.matchAll(/<lc-icon\b(?:[^>"']|"[^"]*"|'[^']*')*>/g)) {
+            tags.push(tag);
+            if (!/\s\[?(?:decorative|ariaLabel)\]?(?=[\s=/>])/.test(tag)) unmarked.push(`${folder}/${file}: ${tag.replace(/\s+/g, ' ')}`);
+          }
+        }
+      }
+      expect(tags.length).toBeGreaterThan(100);
+      expect(unmarked).toEqual([]);
+    });
+
     it('lists only exceptions that still occur', () => {
       const stale = Object.keys(NOT_ICONS).filter((key) => {
         const [path, literal] = key.split(': ');

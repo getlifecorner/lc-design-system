@@ -92,6 +92,8 @@
     <lc-logo id="compat-logo" />
     <lc-modal title="Dialog">Modal</lc-modal>
     <lc-drawer title="Drawer">Drawer</lc-drawer>
+    <!-- 3.19.1 (request 025): a standalone toast is a block card (an element rule, not :host) before JS. -->
+    <lc-toast id="compat-toast-3191" [toast]="toast" closeAriaLabel="Benachrichtigung schließen" />
     <lc-menu [items]="[{ id: 'a', label: 'A' }]" />
     <a lcButton variant="primary" size="lg" href="/de/neuigkeiten">Schau uns beim Bauen zu</a>
     <!-- 3.3 features, rendered on the server -->

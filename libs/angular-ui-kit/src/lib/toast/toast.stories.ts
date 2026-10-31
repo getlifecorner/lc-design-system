@@ -18,6 +18,10 @@ Toasts auto-dismiss after a duration and can be manually closed.
 - Optional close button
 - Stacks multiple toasts
 
+**Placed directly** (\`<lc-toast [toast]="…" />\`), a toast is a block card of at most 400 px with an 8 px bottom margin
+(3.19.1); a class on the element overrides that (\`.my-toast { max-width: none }\`). Toasts in \`<lc-toast-outlet />\` keep the
+outlet's sizes.
+
 **Showing a toast from a page:** call \`ToastService.show()\` and place one \`<lc-toast-outlet />\` in the shell; the options, the timing and the announcement are documented under *Feedback/Toast Outlet*.
         `,
       },
@@ -89,14 +93,16 @@ export const WithAction: Story = {
         story:
           'An action and the close button are 44 × 44 px tap targets (3.19); the toast keeps its size, because negative margins ' +
           'take the extra height off the row. A long German compound („Benachrichtigungseinstellungen“) breaks inside the message, ' +
-          'never under the action. `closeAriaLabel` translates the close button’s name.',
+          'never under the action, and with `lang="de"` it is hyphenated at a syllable („Benachrichti-/gungseinstellun-/gen“ at 360 px, 3.19.1). ' +
+          'Short English words are not hyphenated. A toast placed directly is at most 400 px wide and keeps 8 px below it. ' +
+          '`closeAriaLabel` translates the close button’s name.',
       },
     },
   },
   render: () => ({
     props: { archived, savedDe },
     template: `
-      <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; flex-direction: column;">
         <lc-toast [toast]="archived"></lc-toast>
         <lc-toast lang="de" [toast]="savedDe" closeAriaLabel="Benachrichtigung schließen"></lc-toast>
       </div>`,
@@ -109,7 +115,7 @@ export const AllVariants: Story = {
   },
   render: () => ({
     template: `
-      <div style="display: flex; flex-direction: column; gap: 8px; max-width: 380px;">
+      <div style="display: flex; flex-direction: column; max-width: 380px;">
         <lc-toast [toast]="{ id: '1', message: 'Profile updated successfully.', variant: 'success', position: 'top-right', duration: 5000, showCloseButton: true }"></lc-toast>
         <lc-toast [toast]="{ id: '2', message: 'Unable to connect to server.', variant: 'error', position: 'top-right', duration: 5000, showCloseButton: true }"></lc-toast>
         <lc-toast [toast]="{ id: '3', message: 'Storage quota at 90%.', variant: 'warning', position: 'top-right', duration: 5000, showCloseButton: true }"></lc-toast>

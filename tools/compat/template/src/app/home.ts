@@ -16,8 +16,8 @@ import {
   StepperComponent, SwitchComponent, TabComponent, TabsComponent, TableComponent,
   TagInputComponent, TextareaComponent, TimelineComponent, ToggleGroupComponent,
   ToolbarComponent, TooltipDirective, TreeViewComponent, TypographyComponent,
-  WaterfallChartComponent,
-  type BreadcrumbItem, type ChoicePromptOption, type DescriptionListItem, type FooterSection,
+  WaterfallChartComponent, ToastComponent,
+  type BreadcrumbItem, type Toast, type ChoicePromptOption, type DescriptionListItem, type FooterSection,
   type GanttTask, type KanbanColumn, type ListItem, type Notification, type PipelineStep,
   type SelectOption, type StageItem, type StepperStep, type TableColumn, type TimelineItem,
   type ToggleOption, type TreeNode,
@@ -64,6 +64,8 @@ import { Probe316 } from './probe-316';
     ToolbarComponent, TooltipDirective, TreeViewComponent, TypographyComponent,
     WaterfallChartComponent,
     ButtonLinkComponent,
+    // 3.19.1 (request 025)
+    ToastComponent,
     // 3.3
     AppPageComponent, AppShellComponent, BottomNavComponent, CopyFieldComponent, ProviderButtonComponent,
     RadioComponent, RadioGroupComponent,
@@ -152,4 +154,13 @@ export class HomePage {
     { label: 'Roadmap', href: '/de/roadmap' },
   ];
   protected readonly markdown = 'Ein [Link](https://example.org) in **Fließtext** mit Vermittlungsprämien.';
+  // 3.19.1 (request 025): a toast placed directly, not through the outlet.
+  protected readonly toast: Toast = {
+    id: 'compat-toast',
+    message: 'Benachrichtigungseinstellungen gespeichert.',
+    variant: 'success',
+    position: 'top-right',
+    duration: 0,
+    showCloseButton: true,
+  };
 }

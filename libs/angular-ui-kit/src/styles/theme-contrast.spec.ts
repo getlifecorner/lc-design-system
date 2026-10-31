@@ -428,3 +428,81 @@ describe('Component pairings of 3.19 (request 024)', () => {
     });
   });
 });
+
+// Request 025 (3.19.1): the lc-notification-center filter chips and unread
+// badge (024 review finding 4, axe color-contrast: white on the level colours
+// was 1.89 to 4.37:1, the badge 1.99:1 in dark).
+describe('Component pairings of 3.19.1 (request 025)', () => {
+  const ncCss = compile(resolve(__dirname, '../lib/notification-center/notification-center.component.scss')).css;
+  const body = (selector: string) => {
+    const at = ncCss.indexOf(`\n${selector} {`);
+    expect(at).toBeGreaterThan(-1);
+    return ncCss.slice(at, ncCss.indexOf('}', at));
+  };
+
+  it('AC-7: the chips and the badge read tokens only; one pressed style for every level', () => {
+    expect(body('.lc-nc__filter')).toMatch(/\scolor: var\(--color-text-secondary\);/);
+    expect(body('.lc-nc__filter:hover:not(.lc-nc__filter--active)')).toMatch(/background: var\(--color-surface-2\);/);
+    const active = body('.lc-nc__filter--active');
+    expect(active).toMatch(/background: var\(--color-primary-fill\);/);
+    expect(active).toMatch(/\scolor: var\(--color-on-primary\);/);
+    expect(active).toMatch(/border-color: var\(--color-primary-500\);/);
+    const badge = body('.lc-nc__badge');
+    expect(badge).toMatch(/background: var\(--color-error-fill\);/);
+    expect(badge).toMatch(/\scolor: var\(--color-on-error\);/);
+    // No per-level pressed colours, and no raw colour in the chip or badge rules.
+    expect(ncCss).not.toMatch(/\.lc-nc__filter--(error|warning|success|info)\.lc-nc__filter--active/);
+    const chipRules = [...ncCss.matchAll(/(^|\n)([^{}\n]*\.lc-nc__(filter|badge)[^{}]*)\{([^{}]*)\}/g)];
+    expect(chipRules.length).toBeGreaterThanOrEqual(4);
+    for (const rule of chipRules) expect(rule[4]).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(|:\s*white\b/i);
+  });
+
+  it('AC-13: in forced colours the pressed chip keeps a Highlight outline unless it is focused', () => {
+    const at = ncCss.indexOf('@media (forced-colors: active)');
+    expect(at).toBeGreaterThan(-1);
+    const media = ncCss.slice(at, ncCss.indexOf('}\n}', at));
+    expect(media).toMatch(/\.lc-nc__filter--active:not\(:focus-visible\) \{/);
+    expect(media).toMatch(/outline: 2px solid Highlight;/);
+    expect(media).toMatch(/outline-offset: 1px;/);
+  });
+
+  /** Design 025 §5, per palette [light, dark]: the minimum over both panel ends. */
+  const expected = { rest: [7.23, 9.26], active: [6.21, 6.21], rim: [4.18, 7.58], badge: [8.39, 8.39] };
+
+  describe.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('%s palette', (_palette, tokens, i) => {
+    const page = color(tokens, '--color-background');
+    const on = (name: string, base: Rgba = page) => over(color(tokens, name), base);
+    /** The panel's ends: --color-surface and --color-surface-2 (its gradient runs between them). */
+    const panels = [on('--color-surface'), on('--color-surface-2', on('--color-surface'))];
+
+    it('AC-7: chip text at rest and on hover reaches 4.5:1 on the panel', () => {
+      const rest = Math.min(...panels.map((p) => ratio(on('--color-text-secondary', p), p)));
+      const hover = Math.min(
+        ...panels.map((p) => {
+          const fill = on('--color-surface-2', p);
+          return ratio(on('--color-text-secondary', fill), fill);
+        }),
+      );
+      expect(rest).toBeCloseTo(expected.rest[i], 2);
+      expect(hover).toBeCloseTo(expected.rest[i], 2);
+      expect(Math.min(rest, hover)).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it('AC-7: the pressed chip: text 4.5:1 on its fill, rim 3:1 on the panel', () => {
+      const fill = on('--color-primary-fill');
+      const text = ratio(on('--color-on-primary', fill), fill);
+      const rim = Math.min(...panels.map((p) => ratio(on('--color-primary-500', p), p)));
+      expect(text).toBeCloseTo(expected.active[i], 2);
+      expect(rim).toBeCloseTo(expected.rim[i], 2);
+      expect(text).toBeGreaterThanOrEqual(4.5);
+      expect(rim).toBeGreaterThanOrEqual(3);
+    });
+
+    it('AC-7: the unread badge reaches 4.5:1', () => {
+      const fill = on('--color-error-fill');
+      const badge = ratio(on('--color-on-error', fill), fill);
+      expect(badge).toBeCloseTo(expected.badge[i], 2);
+      expect(badge).toBeGreaterThanOrEqual(4.5);
+    });
+  });
+});

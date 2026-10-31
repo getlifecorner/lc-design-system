@@ -4,7 +4,10 @@
 @use '../../styles/tokens/border-radius' as *;
 @use '../../styles/tokens/elevation' as *;
 
-:host {
+// A standalone toast is a block card of at most 400 px (3.19.1, request 025).
+// `:host` never applied here: the component uses `ViewEncapsulation.None`.
+// Toasts inside `lc-toast-outlet` are excluded: the outlet sizes its stack.
+lc-toast:not(lc-toast-outlet lc-toast) {
   display: block;
   width: 100%;
   max-width: 400px;
@@ -41,6 +44,10 @@
   line-height: var(--line-height-normal);
   padding-top: 2px;
   overflow-wrap: break-word;
+  // Long compounds break at a syllable with a hyphen (needs `lang`), as in
+  // lc-alert. The limit keeps short English words on one line.
+  hyphens: auto;
+  hyphenate-limit-chars: 12 4 3;
 }
 
 // Close and action are 44 px tap targets (3.19, request 024). Negative

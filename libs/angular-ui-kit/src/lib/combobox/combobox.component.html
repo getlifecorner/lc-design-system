@@ -50,7 +50,7 @@
         tabindex="-1"
         [attr.aria-label]="clearAriaLabel()"
       >
-        <lc-icon name="x-mark" size="xs" />
+        <lc-icon name="x-mark" size="xs" [decorative]="true" />
       </button>
     }
   </div>
@@ -92,7 +92,7 @@
             (mouseenter)="highlightedIndex.set(idx)"
           >
             @if (option.icon) {
-              <lc-icon [name]="option.icon" size="sm" class="lc-combobox__option-icon" />
+              <lc-icon [name]="option.icon" size="sm" class="lc-combobox__option-icon" [decorative]="true" />
             }
             <div class="lc-combobox__option-content">
               <span class="lc-combobox__option-label">{{ option.label }}</span>
@@ -115,7 +115,7 @@
           (click)="onCreateNew()"
           (mouseenter)="highlightedIndex.set(flatOptions().length)"
         >
-          <lc-icon name="plus" size="sm" />
+          <lc-icon name="plus" size="sm" [decorative]="true" />
           <span>{{ createOptionLabel() }} "{{ query() }}"</span>
         </div>
       }

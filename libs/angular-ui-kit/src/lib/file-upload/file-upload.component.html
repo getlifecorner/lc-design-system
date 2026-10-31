@@ -23,7 +23,7 @@
     aria-hidden="true"
   />
   <div class="file-upload__content">
-    <lc-icon name="cloud-arrow-up" class="file-upload__icon"></lc-icon>
+    <lc-icon name="cloud-arrow-up" class="file-upload__icon" [decorative]="true"></lc-icon>
     <!-- Real spaces between the lines, so the visible text reads as words
          that the drop zone's name contains (WCAG 2.5.3). -->
     <p class="file-upload__hint">{{ hint() }}</p>
@@ -40,7 +40,7 @@
   <ul class="file-upload__list">
     @for (f of selectedFiles(); track f.name; let i = $index) {
       <li class="file-upload__file">
-        <lc-icon name="document" class="file-upload__file-icon"></lc-icon>
+        <lc-icon name="document" class="file-upload__file-icon" [decorative]="true"></lc-icon>
         <span class="file-upload__file-name">{{ f.name }}</span>
         <span class="file-upload__file-size">{{ formatSize(f.size) }}</span>
         <button
@@ -49,7 +49,7 @@
           (click)="removeFile(i); $event.stopPropagation()"
           [attr.aria-label]="removeFileAriaLabel()"
         >
-          <lc-icon name="x-mark"></lc-icon>
+          <lc-icon name="x-mark" [decorative]="true"></lc-icon>
         </button>
       </li>
     }

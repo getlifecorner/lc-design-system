@@ -75,20 +75,20 @@
       <div class="gallery__lightbox-counter">{{ lightboxCounter() }}</div>
       <div class="gallery__lightbox-actions">
         <button type="button" class="gallery__lightbox-btn" [attr.aria-label]="zoomOutAriaLabel()" (click)="zoomOut()">
-          <lc-icon name="minus" size="sm" />
+          <lc-icon name="minus" size="sm" [decorative]="true" />
         </button>
         <span class="gallery__lightbox-zoom">{{ lightboxZoom() }}%</span>
         <button type="button" class="gallery__lightbox-btn" [attr.aria-label]="zoomInAriaLabel()" (click)="zoomIn()">
-          <lc-icon name="plus" size="sm" />
+          <lc-icon name="plus" size="sm" [decorative]="true" />
         </button>
         <button type="button" class="gallery__lightbox-btn" [attr.aria-label]="resetZoomAriaLabel()" (click)="resetZoom()">
-          <lc-icon name="arrows-pointing-out" size="xs" />
+          <lc-icon name="arrows-pointing-out" size="xs" [decorative]="true" />
         </button>
         <button type="button" class="gallery__lightbox-btn" [attr.aria-label]="downloadAriaLabel()" (click)="downloadCurrent()">
-          <lc-icon name="arrow-down-tray" size="sm" />
+          <lc-icon name="arrow-down-tray" size="sm" [decorative]="true" />
         </button>
         <button #closeBtn type="button" class="gallery__lightbox-btn" [attr.aria-label]="closeAriaLabel()" (click)="closeLightbox()">
-          <lc-icon name="x-mark" size="sm" />
+          <lc-icon name="x-mark" size="sm" [decorative]="true" />
         </button>
       </div>
     </div>
@@ -101,7 +101,7 @@
         [attr.aria-label]="previousAriaLabel()"
         (click)="goToPrev()"
       >
-        <lc-icon name="chevron-left" size="lg" />
+        <lc-icon name="chevron-left" size="lg" [decorative]="true" />
       </button>
     }
     @if (canGoNext()) {
@@ -111,7 +111,7 @@
         [attr.aria-label]="nextAriaLabel()"
         (click)="goToNext()"
       >
-        <lc-icon name="chevron-right" size="lg" />
+        <lc-icon name="chevron-right" size="lg" [decorative]="true" />
       </button>
     }
 

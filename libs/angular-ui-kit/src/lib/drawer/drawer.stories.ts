@@ -52,12 +52,11 @@ Use it for secondary navigation, detail panels, filters, and forms.
 export default meta;
 type Story = StoryObj<DrawerComponent>;
 
-export const Default: Story = {
-  args: { open: true, position: 'right', size: 'md', heading: 'Task Details' },
-  render: (args) => ({
-    props: args,
-    template: `
-      <lc-drawer [open]="open" [position]="position" [size]="size" [heading]="heading">
+/** lc-select has no visible label: the stories put one above it (styled like lc-input's) and name the field with `ariaLabel`. */
+const selectLabel =
+  'display: block; font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--color-text-primary); margin-bottom: var(--spacing-1);';
+
+const taskBody = `
         <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
           <div>
             <p style="margin: 0; font-size: 12px; color: var(--color-text-secondary); text-transform: uppercase;">Status</p>
@@ -76,7 +75,14 @@ export const Default: Story = {
               Implement the new authentication flow including OAuth2 support, refresh token handling, and session management.
             </p>
           </div>
-        </div>
+        </div>`;
+
+export const Default: Story = {
+  args: { open: true, position: 'right', size: 'md', heading: 'Task Details' },
+  render: (args) => ({
+    props: args,
+    template: `
+      <lc-drawer [open]="open" [position]="position" [size]="size" [heading]="heading">${taskBody}
       </lc-drawer>`,
   }),
 };
@@ -102,7 +108,13 @@ export const LeftPosition: Story = {
 
 export const FilterPanel: Story = {
   parameters: {
-    docs: { description: { story: 'Common pattern: a filter drawer for table/list views.' } },
+    docs: {
+      description: {
+        story:
+          'Common pattern: a filter drawer for table/list views. `lc-select` has no visible label of its own: put one above it ' +
+          'and give the select the same word as `ariaLabel` (3.19.1).',
+      },
+    },
   },
   args: { open: true, position: 'right', size: 'sm', heading: 'Filters' },
   render: (args) => ({
@@ -110,8 +122,14 @@ export const FilterPanel: Story = {
     template: `
       <lc-drawer [open]="open" [position]="position" [size]="size" [heading]="heading">
         <div style="padding: 16px; display: flex; flex-direction: column; gap: 16px;">
-          <lc-select label="Status" placeholder="All statuses" [options]="[{value:'active', label:'Active'}, {value:'inactive', label:'Inactive'}, {value:'pending', label:'Pending'}]"></lc-select>
-          <lc-select label="Role" placeholder="All roles" [options]="[{value:'admin', label:'Admin'}, {value:'editor', label:'Editor'}, {value:'viewer', label:'Viewer'}]"></lc-select>
+          <div>
+            <span style="${selectLabel}">Status</span>
+            <lc-select ariaLabel="Status" placeholder="All statuses" [options]="[{value:'active', label:'Active'}, {value:'inactive', label:'Inactive'}, {value:'pending', label:'Pending'}]"></lc-select>
+          </div>
+          <div>
+            <span style="${selectLabel}">Role</span>
+            <lc-select ariaLabel="Role" placeholder="All roles" [options]="[{value:'admin', label:'Admin'}, {value:'editor', label:'Editor'}, {value:'viewer', label:'Viewer'}]"></lc-select>
+          </div>
           <lc-input label="Search" placeholder="Filter by name..." iconBefore="magnifying-glass"></lc-input>
           <div style="display: flex; gap: 8px; margin-top: 8px;">
             <lc-button variant="outline" [fullWidth]="true">Reset</lc-button>
@@ -160,8 +178,14 @@ export const LargeForm: Story = {
           <lc-input label="Project Name" placeholder="My New Project" [required]="true"></lc-input>
           <lc-input label="Description" placeholder="A brief description of the project..."></lc-input>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-            <lc-select label="Priority" placeholder="Select..." [options]="[{value:'low', label:'Low'}, {value:'medium', label:'Medium'}, {value:'high', label:'High'}]"></lc-select>
-            <lc-select label="Category" placeholder="Select..." [options]="[{value:'dev', label:'Development'}, {value:'design', label:'Design'}, {value:'marketing', label:'Marketing'}]"></lc-select>
+            <div>
+              <span style="${selectLabel}">Priority</span>
+              <lc-select ariaLabel="Priority" placeholder="Select..." [options]="[{value:'low', label:'Low'}, {value:'medium', label:'Medium'}, {value:'high', label:'High'}]"></lc-select>
+            </div>
+            <div>
+              <span style="${selectLabel}">Category</span>
+              <lc-select ariaLabel="Category" placeholder="Select..." [options]="[{value:'dev', label:'Development'}, {value:'design', label:'Design'}, {value:'marketing', label:'Marketing'}]"></lc-select>
+            </div>
           </div>
           <lc-checkbox label="Make this project public"></lc-checkbox>
           <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
@@ -169,6 +193,33 @@ export const LargeForm: Story = {
             <lc-button variant="primary">Create Project</lc-button>
           </div>
         </div>
+      </lc-drawer>`,
+  }),
+};
+
+export const GermanHeading: Story = {
+  name: 'German Heading',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A long German heading wraps and is hyphenated at a syllable (`hyphens: auto` needs the `lang`) instead of running under the ' +
+          'close button; the header grows from 65 to 73 px for the second line. The close button is a 44 × 44 px tap target (3.19.1) ' +
+          'in the old 32 px slot, 6 px from the heading. `closeAriaLabel` translates its name.',
+      },
+    },
+  },
+  args: {
+    open: true,
+    position: 'right',
+    size: 'sm',
+    heading: 'Haushaltsmitgliederverwaltungseinstellungen bearbeiten',
+    closeAriaLabel: 'Schließen',
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <lc-drawer lang="de" [open]="open" [position]="position" [size]="size" [heading]="heading" [closeAriaLabel]="closeAriaLabel">${taskBody}
       </lc-drawer>`,
   }),
 };

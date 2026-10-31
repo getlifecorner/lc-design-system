@@ -55,25 +55,37 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: var(--spacing-3);
     padding: 1rem 1.25rem;
     border-bottom: 1px solid var(--color-divider);
     flex-shrink: 0;
   }
 
+  // A long (German) heading wraps and hyphenates instead of running under
+  // the close button (3.19.1, request 025).
   &__heading {
     margin: 0;
+    min-width: 0;
     font-size: 1rem;
     font-weight: 600;
     color: var(--color-text-primary);
     letter-spacing: -0.01em;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    hyphenate-limit-chars: 12 4 3;
   }
 
+  // The close button is a 44 × 44 tap target (3.19.1, request 025, as in
+  // lc-modal and lc-toast). The negative margin keeps its old 32 px slot, so
+  // the header height and the icon position stay as they were.
   &__close {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    flex-shrink: 0;
+    width: var(--size-min-touch-width, 2.75rem);
+    height: var(--size-min-touch-height, 2.75rem);
+    margin: calc((2rem - var(--size-min-touch-height, 2.75rem)) / 2);
     padding: 0;
     background: none;
     border: none;
