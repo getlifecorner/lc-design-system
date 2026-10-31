@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.19.1] - 2026-10-31
+
+The open review findings of 3.19 (request 024): toast wrapping and width, drawer close targets, notification-center contrast, unlabelled icons. No API breaks.
+
+### Changed
+
+- **`lc-toast` placed directly** (024 review F2): it is now the block card its stylesheet always meant, at most 400 px wide with an 8 px bottom margin (the `:host` rule never applied under `ViewEncapsulation.None`; a toast was `display: inline` and 1248 px wide at 1280). Toasts in `lc-toast-outlet` keep their sizes (hash-identical).
+- **`lc-notification-center` filter chips and badge** (024 review F4): the pressed chip, for every level, is `--color-primary-fill` with `--color-on-primary`, 6.21:1 in both themes (white on the old level fills was as low as 1.89:1; Error and Info already passed in light), with a `--color-primary-500` rim (4.18 / 7.58:1) and a Highlight outline in forced colours; the unread badge is `--color-error-fill` / `--color-on-error`, 8.39:1 (was 1.99:1 dark). axe `color-contrast` 24 → 0 shots.
+- **`lc-drawer` close button** (024 review F3): 32 × 32 → 44 × 44 px in its old slot; the header stays 65 px and the icon where it was. A long heading wraps and hyphenates instead of running under the button.
+
+### Fixed
+
+- **`lc-toast` message** (024 review F1): a long German compound breaks at a syllable with a hyphen ("Benachrichti-/gungseinstellun-/gen gespeichert." at 360 px, needs `lang`); short English words stay whole.
+- **Decorative icons** in `lc-log-viewer` (6), `lc-document-viewer` (9), `lc-gallery` (7), `lc-combobox` (3), `lc-file-upload` (3) and `lc-field-group` (1): each sits in a named button or beside its text; axe `svg-img-alt` 84 → 0 shots.
+- Stories: Feedback/Drawer "Filter Panel" and "Large Form" show a label above each `lc-select` and name it with `ariaLabel` (axe `aria-input-field-name` 0); new story Feedback/Drawer "German Heading".
+
+### Compatibility
+
+- No API breaks, no new input. A toast placed directly is now at most 400 px wide and has 8 px below it; to fill the parent, give it a class: `.my-toast { max-width: none }` (the kit rule's specificity is 0,0,3). A pressed notification-center chip no longer takes its level's colour.
+
+### Known
+
+- **`lc-toast` close button** in dark: the × has no `color` rule and takes the browser default (black), 1.47:1 and 1.22:1 on the toast gradient, and its focus ring too (WCAG 1.4.11). Present since 3.19.0; the fix changes the outlet stories and comes in its own release.
+- Story Feedback/Drawer "German Heading" sets `lang="de"` on `lc-drawer`, so its English body text is also marked German (story only).
+
 ## [3.19.0] - 2026-10-31
 
 The review findings of 3.15 to 3.18 (requests 020, 021 and 023): table cell classes and pagination, toast tap targets, decorative icons, menu danger contrast. No API breaks.
