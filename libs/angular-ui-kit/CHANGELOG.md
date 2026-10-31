@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.18.0] - 2026-10-31
+
+The sources page in Finance Intelligence (gap file quellen-2026-10-31, rows 6 and 8): a "More" entry on request in the bottom bar, and a modal close button that axe accepts. No API breaks.
+
+### Added
+
+- **`lc-bottom-nav showMore`** (row 6, a bar with fixed slots: two destinations plus "Mehr"): ends the bar with the "More" entry (`moreLabel`, `moreIcon`, and `moreRoute` or `moreClick`) even when every destination fits. "More" takes one of the `maxItems` entries, so with `showMore` the first `maxItems − 1` destinations stay and any others move behind it, as on overflow. "More" is current on `moreRoute` and its sub-pages (`/mehr/quellen`). Three entries at 360 px: 114 × 64 px docked, 102.67 × 64 px floating; labels 7.56:1 light, 11.16:1 dark. Finance Intelligence: drop the own "Mehr" item, bind `[showMore]` where the role has targets beyond the bar, with `moreLabel="Mehr" moreRoute="/mehr"`, and keep `[maxItems]="5"`. "Mehr" is current on `/mehr` and its sub-pages; keep mapping other pages reached through "Mehr" (such as `/datenbasis/quellen`) to `/mehr` in `activeRoute`.
+- Stories: Navigation/Bottom Nav "Show More", "Show More (German, floating)", "Show More with Fixed Slots". *Default* and *Finance Destination* now show the docked bar they describe.
+
+### Fixed
+
+- **`lc-modal` close button** (row 8): the `x-mark` icon is decorative (`aria-hidden="true"`, no `role="img"`), so axe no longer reports `svg-img-alt` (WCAG 1.1.1) with a modal open; the button keeps its name from `closeAriaLabel`. `lc-confirm-dialog` gets the same fix. Looks as before (40 of 40 screenshots identical, 0 axe violations in 10 modal and confirm-dialog stories). Finance Intelligence can remove the `.lc-modal__close svg` entry from `KIT_DEFECTS`.
+
+### Compatibility
+
+- No API breaks. `showMore` defaults to `false`, and the bar renders as in 3.17 (Jest pins it). A test that finds the modal close icon by `role="img"` now finds it by `aria-hidden="true"`.
+
 ## [3.17.0] - 2026-10-31
 
 The sources page in Finance Intelligence (gap file quellen-2026-10-31, rows 1–5): end-aligned number columns, a loading button that keeps focus, progress bars under reduced motion and forced colours, readable list badges, and the toast call documented. No API breaks.
