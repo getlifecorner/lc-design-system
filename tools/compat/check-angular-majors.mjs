@@ -310,13 +310,15 @@ const EXPECT_IN_HTML = [
       && new RegExp(`<button(?=[^>]*lc-header__profile-trigger--avatar)(?=[^>]*\\saria-label="Benutzermenü")[^>]*>(?:<!--[^]*?-->|\\s)*<lc-avatar[^>]*>(?:<!--[^]*?-->|\\s)*${person}`).test(html);
   }],
   // 3.16 (request 022, probe-316.ts): lc-money's visible amount and spoken text
-  // in the server HTML, de-DE and on LOCALE_ID (en-US); the NBSP may be &nbsp; (008)
-  ['money: de-DE and LOCALE_ID amounts with their spoken text before JS (BA-4)', (html) => {
+  // in the server HTML, de-DE and on LOCALE_ID (en-US); the NBSP may be &nbsp; (008).
+  // 3.20 (request 027): showCurrency=false ends at the digits (`42,17</span>`, no NBSP)
+  ['money: de-DE, LOCALE_ID and symbol-free amounts with their spoken text before JS (BA-4, 027 AC-10)', (html) => {
     const nbsp = '(?:\\u00a0|&nbsp;|&#160;)';
     const minus = '(?:\\u2212|&minus;|&#8722;)';
     const money = (id, text, spoken) => new RegExp(`<lc-money(?=[^>]*\\sid="${id}")(?=[^>]*\\sclass="lc-money")[^>]*>(?:<!--[^]*?-->|\\s)*<span(?=[^>]*\\sclass="lc-money__amount")(?=[^>]*\\saria-hidden="true")(?=[^>]*\\sdir="ltr")[^>]*>${text}</span>(?:<!--[^]*?-->)*<span[^>]*\\sclass="lc-money__spoken"[^>]*>${spoken}</span>`).test(html);
     return money('compat-money-de', `${minus}42,17${nbsp}€`, 'minus 42,17 Euro')
-      && money('compat-money-app', `${minus}\\$42\\.17`, 'minus 42\\.17 US dollars');
+      && money('compat-money-app', `${minus}\\$42\\.17`, 'minus 42\\.17 US dollars')
+      && money('compat-money-bare', `${minus}42,17`, 'minus 42,17 Euro');
   }],
   // 3.17 (request 021, home.html/home.ts): an `align: 'end'` column carries its
   // class on the th and the td, and a loading button is aria-disabled, not

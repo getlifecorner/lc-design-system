@@ -118,7 +118,7 @@ lc-toast:not(lc-toast-outlet lc-toast) {
   color: var(--color-text-primary);
 
   .lc-toast__icon {
-    color: var(--color-success);
+    color: var(--color-on-success-subtle);
   }
 
   .lc-toast__action {
@@ -142,7 +142,7 @@ lc-toast:not(lc-toast-outlet lc-toast) {
   color: var(--color-text-primary);
 
   .lc-toast__icon {
-    color: var(--color-error);
+    color: var(--color-on-error-subtle);
   }
 
   .lc-toast__action {
@@ -166,7 +166,7 @@ lc-toast:not(lc-toast-outlet lc-toast) {
   color: var(--color-text-primary);
 
   .lc-toast__icon {
-    color: var(--color-warning);
+    color: var(--color-on-warning-subtle);
   }
 
   .lc-toast__action {
@@ -190,7 +190,7 @@ lc-toast:not(lc-toast-outlet lc-toast) {
   color: var(--color-text-primary);
 
   .lc-toast__icon {
-    color: var(--color-info);
+    color: var(--color-on-info-subtle);
   }
 
   .lc-toast__action {

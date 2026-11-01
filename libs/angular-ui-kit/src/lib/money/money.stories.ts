@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/angular';
+import { moduleMetadata } from '@storybook/angular';
 import { MoneyComponent } from './money.component';
+import { TableComponent } from '../table/table.component';
+import { TableCellDirective } from '../table/table-cell.directive';
 
 const meta: Meta<MoneyComponent> = {
   title: 'Data Display/Money',
@@ -19,6 +22,7 @@ no currency conversion.
 - \`signDisplay\` as \`Intl.NumberFormat\`; the spoken text says „minus“/„plus“ whenever the sign shows (\`minusLabel\`, \`plusLabel\`)
 - Tabular figures, no wrapping; the amount is a \`dir\` isolate, safe inside RTL text
 - Font and colour come from the context; colour never carries the sign
+- \`showCurrency=false\` leaves the symbol and its space out of the visible amount („−42,17“) for a column or title that already names the unit („Kosten in €“); the spoken text keeps the currency
 - Put a space between \`lc-money\` and the text around it, so the spoken words don't run together
 
 **Strings for a table \`formatter\` or a text:**
@@ -28,6 +32,8 @@ import { formatMoney } from '@lifecorner/angular-ui-kit/money';
 
 formatMoney(-4217, 'EUR', { locale: 'de-DE' });
 // { text: '−42,17 €', spoken: 'minus 42,17 Euro' }
+formatMoney(-4217, 'EUR', { locale: 'de-DE', showCurrency: false });
+// { text: '−42,17', spoken: 'minus 42,17 Euro' }
 \`\`\`
         `,
       },
@@ -65,6 +71,11 @@ formatMoney(-4217, 'EUR', { locale: 'de-DE' });
       description: 'Spoken word for the plus sign',
       table: { defaultValue: { summary: 'plus' } },
     },
+    showCurrency: {
+      control: 'boolean',
+      description: 'Show the currency symbol; false leaves it out (the spoken text keeps the currency)',
+      table: { defaultValue: { summary: 'true' } },
+    },
   },
 };
 
@@ -79,6 +90,7 @@ export const Default: Story = {
     signDisplay: 'auto',
     minusLabel: 'minus',
     plusLabel: 'plus',
+    showCurrency: true,
   },
 };
 
@@ -197,6 +209,68 @@ export const InTextAndRtl: Story = {
         <p dir="rtl" lang="he" style="margin: 0;">
           היתרה היום היא <lc-money [amountMinor]="-4217" currency="EUR" locale="de-DE" /> לאחר חשבון החשמל.
         </p>
+      </div>`,
+  }),
+};
+
+// 3.20 (request 027, finance-intelligence services page): a number column whose
+// header names the unit, so the amounts leave the symbol out.
+const COSTS = [111111, 888888, 12345678, 0, -4217];
+
+const costTable = (lang: string, locale: string, caption: string, serviceLabel: string, costLabel: string, services: string[]) => ({
+  lang,
+  locale,
+  caption,
+  columns: [
+    { key: 'service', label: serviceLabel },
+    { key: 'cost', label: costLabel, align: 'end' as const },
+  ],
+  data: services.map((service, i) => ({ id: `${lang}-${i}`, service, cost: COSTS[i] })),
+});
+
+const COST_TABLES = [
+  costTable('de', 'de-DE', 'Kosten je Service, Oktober 2026', 'Service', 'Kosten in €', [
+    'Arbeitsplatz und Endgeräte',
+    'Rechenzentrum und Hosting',
+    'Netzwerk und Telefonie',
+    'Kollaboration und E-Mail',
+    'Gutschrift Lizenzrückgabe',
+  ]),
+  costTable('en', 'en-US', 'Cost per service, October 2026', 'Service', 'Cost in €', [
+    'Workplace and devices',
+    'Data centre and hosting',
+    'Network and telephony',
+    'Collaboration and email',
+    'Licence return credit',
+  ]),
+];
+
+export const NumberColumn: Story = {
+  name: 'Number Column',
+  decorators: [moduleMetadata({ imports: [TableComponent, TableCellDirective] })],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The column header names the unit („Kosten in €“), so each amount leaves the symbol out (`showCurrency=false`): end-aligned, tabular figures, with a zero and a negative row. ' +
+          'Screen readers still hear the currency in every cell („minus 42,17 Euro“, „minus 42.17 euros“). ' +
+          "For a table `formatter` use `formatMoney(amountMinor, 'EUR', { locale: 'de-DE', showCurrency: false }).text`.",
+      },
+    },
+  },
+  render: () => ({
+    props: { tables: COST_TABLES },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        @for (table of tables; track table.lang) {
+          <div [attr.lang]="table.lang">
+            <lc-table [columns]="table.columns" [data]="table.data" [caption]="table.caption">
+              <ng-template lcTableCell="cost" let-row>
+                <lc-money [amountMinor]="row.cost" currency="EUR" [locale]="table.locale" [showCurrency]="false" />
+              </ng-template>
+            </lc-table>
+          </div>
+        }
       </div>`,
   }),
 };

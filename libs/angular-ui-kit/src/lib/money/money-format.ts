@@ -17,11 +17,23 @@ export interface MoneyFormatOptions {
   minusLabel?: string;
   /** Spoken word for the plus sign. @default 'plus' */
   plusLabel?: string;
+  /**
+   * Whether the visible `text` shows the currency symbol (or code). `false`
+   * leaves out the symbol and the space that belongs to it („−42,17“), for a
+   * column or title that already names the unit („Kosten in €“). Digits,
+   * grouping, sign and minor units stay. The `spoken` text still names the
+   * currency.
+   * @default true
+   */
+  showCurrency?: boolean;
 }
 
 /** A formatted amount: the visible text and the words a screen reader speaks. */
 export interface MoneyText {
-  /** Visible text, e.g. „−42,17 €“ (U+2212 minus, U+00A0 from `Intl`). */
+  /**
+   * Visible text, e.g. „−42,17 €“ (U+2212 minus, U+00A0 from `Intl`), or
+   * „−42,17“ with `showCurrency: false`.
+   */
   text: string;
   /** Spoken text, e.g. „minus 42,17 Euro“. */
   spoken: string;
@@ -68,21 +80,37 @@ function numberFormat(locale: string, options: Intl.NumberFormatOptions): Intl.N
 }
 
 /**
+ * The parts without the currency: drops the `currency` part and the whitespace
+ * of the literals right next to it (U+0020, U+00A0, U+202F, U+2009), keeping
+ * bidi marks. Never trims the whole string: fr-FR groups with U+202F.
+ */
+function withoutCurrency(parts: Intl.NumberFormatPart[]): Intl.NumberFormatPart[] {
+  const at = parts.findIndex((p) => p.type === 'currency');
+  if (at < 0) return parts;
+  return parts
+    .map((p, i) => (p.type === 'literal' && Math.abs(i - at) === 1 ? { ...p, value: p.value.replace(/\s/g, '') } : p))
+    .filter((p, i) => i !== at && p.value !== '');
+}
+
+/**
  * Formats an amount of money given in integer minor units (cents, yen, fils)
  * exactly, never through a float: the decimal string goes into `Intl`.
  * Returns `null` for an amount that is not a safe integer or a currency that
  * is not a three-letter code. This is the formatter of `lc-money`, for table
- * `formatter`s and texts.
+ * `formatter`s and texts. `showCurrency: false` leaves the symbol and its
+ * space out of `text` (a column headed „Kosten in €“); `spoken` keeps it.
  *
  * @example
  * ```ts
  * formatMoney(-4217, 'EUR', { locale: 'de-DE' });
  * // { text: '−42,17 €', spoken: 'minus 42,17 Euro' }
+ * formatMoney(-4217, 'EUR', { locale: 'de-DE', showCurrency: false });
+ * // { text: '−42,17', spoken: 'minus 42,17 Euro' }
  * ```
  */
 export function formatMoney(amountMinor: number, currency: string, options: MoneyFormatOptions = {}): MoneyText | null {
   if (!Number.isSafeInteger(amountMinor) || !/^[A-Za-z]{3}$/.test(currency ?? '')) return null;
-  const { locale = 'en-US', signDisplay = 'auto', minusLabel = 'minus', plusLabel = 'plus' } = options;
+  const { locale = 'en-US', signDisplay = 'auto', minusLabel = 'minus', plusLabel = 'plus', showCurrency = true } = options;
   const digits = moneyMinorUnits(currency);
   const value = decimalString(amountMinor, digits) as unknown as number; // exact decimal string (Intl.NumberFormat v3)
   const base: Intl.NumberFormatOptions = {
@@ -100,6 +128,7 @@ export function formatMoney(amountMinor: number, currency: string, options: Mone
   } catch {
     return null;
   }
+  if (showCurrency === false) visible = withoutCurrency(visible);
   const text = visible.map((p) => (p.type === 'minusSign' ? p.value.replace(/-/g, '−') : p.value)).join('');
   const spoken = named
     .map((p) => (p.type === 'minusSign' ? `${minusLabel} ` : p.type === 'plusSign' ? `${plusLabel} ` : p.value))

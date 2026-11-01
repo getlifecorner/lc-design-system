@@ -292,7 +292,7 @@ $text-link: 'a:where(:not(.btn))';
   color: var(--color-text-primary);
 
   .lc-alert__icon {
-    color: var(--color-success);
+    color: var(--color-on-success-subtle);
   }
 
   .lc-alert__close:hover {
@@ -307,7 +307,7 @@ $text-link: 'a:where(:not(.btn))';
   color: var(--color-text-primary);
 
   .lc-alert__icon {
-    color: var(--color-error);
+    color: var(--color-on-error-subtle);
   }
 
   .lc-alert__close:hover {
@@ -322,7 +322,7 @@ $text-link: 'a:where(:not(.btn))';
   color: var(--color-text-primary);
 
   .lc-alert__icon {
-    color: var(--color-warning);
+    color: var(--color-on-warning-subtle);
   }
 
   .lc-alert__close:hover {
@@ -337,7 +337,7 @@ $text-link: 'a:where(:not(.btn))';
   color: var(--color-text-primary);
 
   .lc-alert__icon {
-    color: var(--color-info);
+    color: var(--color-on-info-subtle);
   }
 
   .lc-alert__close:hover {

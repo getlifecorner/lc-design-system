@@ -576,3 +576,84 @@ describe('Component pairings of 3.19.2 (request 026)', () => {
     });
   });
 });
+
+// Request 027 (3.20): the lc-toast and lc-alert variant icons (026 review
+// finding 2). They read the plain fills --color-<variant>: success and warning
+// in light, error and info in dark stayed below 3:1 (toast warning light 2.16,
+// error dark 1.71). WCAG 1.4.11 asks 3:1. They now read the inks
+// --color-on-<variant>-subtle; the fills keep the toast rail and the alert tint.
+describe('Component pairings of 3.20 (request 027)', () => {
+  const sheets = {
+    toast: compile(resolve(__dirname, '../lib/toast/toast.component.scss')).css,
+    alert: compile(resolve(__dirname, '../lib/alert/alert.component.scss')).css,
+  };
+  const rulesOf = (css: string) => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selector: m[1].trim(), body: m[2] }));
+  const rule = (component: keyof typeof sheets, selector: string) => {
+    const found = rulesOf(sheets[component]).filter((r) => r.selector === selector);
+    expect(found).toHaveLength(1);
+    return found[0].body;
+  };
+  const variants = ['success', 'error', 'warning', 'info'];
+
+  it('AC-14/AC-16: each variant icon reads its ink token, no raw colour; the fills stay on the rail and the tint', () => {
+    for (const c of ['toast', 'alert'] as const) {
+      for (const v of variants) {
+        expect(rule(c, `.lc-${c}--${v} .lc-${c}__icon`).trim()).toBe(`color: var(--color-on-${v}-subtle);`);
+      }
+      // The base icon rule sets no colour; nothing else colours the icon.
+      expect(rule(c, `.lc-${c}__icon`)).not.toMatch(/(^|[\s;])color:/);
+      const others = rulesOf(sheets[c]).filter((r) => r.selector.includes(`.lc-${c}__icon`) && /(^|[\s;])color:/.test(r.body));
+      expect(others).toHaveLength(4);
+      // AC-17: the UA forces the icon's currentColor in forced colours.
+      expect(sheets[c]).not.toMatch(/forced-color-adjust/);
+    }
+    for (const v of variants) {
+      expect(rule('toast', `.lc-toast--${v}`)).toMatch(new RegExp(`border-left: 4px solid var\\(--color-${v}\\);`));
+    }
+  });
+
+  /** Design 027 §5, per palette [light, dark]: the minimum over the variants and the lowest backgrounds. */
+  const expected = { toast: [5.07, 6.35], alert: [4.38, 4.97], before: [2.16, 1.71] };
+
+  describe.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('%s palette', (_palette, tokens, i) => {
+    const page = color(tokens, '--color-background');
+    const on = (name: string, base: Rgba = page) => over(color(tokens, name), base);
+    /** The toast's ends: the stops of --gradient-surface, over its --color-surface fill. */
+    const gradient = tokens['--gradient-surface'].match(/^linear-gradient\(180deg,\s*(.+)\)$/);
+    const stops = (gradient ? gradient[1] : '').split(/,\s*(?![^(]*\))/).map((stop) => {
+      const ref = stop.match(/^var\((--[\w-]+)\)$/);
+      return over(ref ? color(tokens, ref[1]) : parse(stop), on('--color-surface'));
+    });
+    const toastMin = (icon: (v: string) => string) =>
+      Math.min(...variants.flatMap((v) => stops.map((end) => ratio(over(color(tokens, icon(v)), end), end))));
+
+    it('AC-12: the toast icon reaches 3:1 at both ends of the toast in every variant', () => {
+      expect(stops).toHaveLength(2);
+      const min = toastMin((v) => `--color-on-${v}-subtle`);
+      expect(min).toBeCloseTo(expected.toast[i], 2);
+      expect(min).toBeGreaterThanOrEqual(3);
+    });
+
+    it('AC-13: the alert icon reaches 3:1 on its tint over every surface it may sit on', () => {
+      const bases = [...surfaces, '--color-background-low'].map((name) => on(name));
+      const min = Math.min(
+        ...variants.flatMap((v) => {
+          const tint = rule('alert', `.lc-alert--${v}`).match(/background-color: (rgba\([^)]+\));/);
+          expect(tint).not.toBeNull();
+          return bases.map((base) => {
+            const fill = over(parse((tint as RegExpMatchArray)[1]), base);
+            return ratio(over(color(tokens, `--color-on-${v}-subtle`), fill), fill);
+          });
+        }),
+      );
+      expect(min).toBeCloseTo(expected.alert[i], 2);
+      expect(min).toBeGreaterThanOrEqual(3);
+    });
+
+    it('why: the plain fills of 3.19.2 stayed below 3:1 on the toast', () => {
+      const before = toastMin((v) => `--color-${v}`);
+      expect(before).toBeCloseTo(expected.before[i], 2);
+      expect(before).toBeLessThan(3);
+    });
+  });
+});

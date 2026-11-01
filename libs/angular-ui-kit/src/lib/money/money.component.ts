@@ -16,6 +16,8 @@ import { formatMoney, moneyDirection, type MoneySignDisplay } from './money-form
  * - Tabular figures, no wrapping inside the amount; the amount is a `dir`
  *   isolate (`ltr`, or `rtl` for an RTL locale), safe inside RTL text.
  * - Font and colour come from the context; colour never carries the sign.
+ * - `showCurrency=false`: no symbol in the visible amount (a column headed
+ *   „Kosten in €“); the spoken text keeps the currency.
  * - `locale` empty: the app's `LOCALE_ID` (Angular's default `en-US`), the
  *   same on the server and in the browser.
  * - For table `formatter`s and texts use {@link formatMoney}.
@@ -83,6 +85,16 @@ export class MoneyComponent {
    */
   readonly plusLabel = input<string>('plus');
 
+  /**
+   * Shows the currency symbol in the visible amount. `false` leaves out the
+   * symbol and its space („−42,17“) for a table column or a title that
+   * already names the unit („Kosten in €“). Screen readers still hear the
+   * currency („minus 42,17 Euro“), and `currency` still sets the minor units.
+   * Use it only where the unit is visible next to the amount.
+   * @default true
+   */
+  readonly showCurrency = input<boolean>(true);
+
   /** The locale in use: the `locale` input or the app's `LOCALE_ID`. */
   protected readonly effectiveLocale = computed(() => this.locale() || this.appLocale || 'en-US');
 
@@ -92,6 +104,7 @@ export class MoneyComponent {
       signDisplay: this.signDisplay(),
       minusLabel: this.minusLabel(),
       plusLabel: this.plusLabel(),
+      showCurrency: this.showCurrency(),
     }),
   );
 
