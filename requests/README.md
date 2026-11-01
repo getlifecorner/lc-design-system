@@ -61,3 +61,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [024](024-review-findings-follow-up/) Review findings follow-up: table cellClass and pagination, toast targets, decorative icons, menu danger contrast | owner | review findings (020 S2, 021 F1/F2, 023 svg-img-alt) | 3.19.0 | 3.19.0 |
 | [025](025-review-findings-follow-up-2/) Review findings follow-up 2: toast wrapping and host layout, drawer close targets, axe findings, unlabelled icons | owner | review findings 1–4 of 024, 024 build.md line 59 | 3.19.1 | 3.19.1 |
 | [026](026-review-findings-follow-up-3/) Review findings follow-up 3: toast close colour, notification-center comment, drawer story lang | owner | review findings 1–3 of 025 | 3.19.2 | 3.19.2 |
+| [027](027-money-without-currency-symbol/) lc-money and formatMoney without the currency symbol; toast and alert variant icon contrast | finance-intelligence | gap file row 1 (services-2026-11-01) | 3.20.0 | – |

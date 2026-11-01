@@ -152,6 +152,8 @@ At 360 px the longest DE word, „Lizenzrückgabe“ (about 100 px), fits in the
 
 Also for B: add one sentence under "Ink on the status tints" in `src/docs/colors.mdx`: "Since 3.20 the lc-toast and lc-alert variant icons use these inks, at least 4.38:1 (light) and 4.97:1 (dark); the plain `--color-{success,…}` are fills for rails and borders."
 
+**Change note (review r1, 2026-11-01).** The Number Column description and the changelog must say that a `formatMoney(…).text` string in a table `formatter` has no spoken text, so the unit is then only in the header: "That string has no spoken text, so the unit is then only in the column header; prefer `lc-money` in a cell template, as here." This design missed it (review findings 1 and 2).
+
 ## 9. Verification
 
 | AC | How | Expected value |

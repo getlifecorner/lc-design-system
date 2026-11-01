@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.20.0] - 2026-11-01
+
+`lc-money` and `formatMoney` without the currency symbol (finance-intelligence services page), and variant icons that reach 3:1 in `lc-toast` and `lc-alert`. No API breaks.
+
+### Added
+
+- **`lc-money showCurrency` and `formatMoney(…, { showCurrency })`** (finance-intelligence services page, gap row 1 of services-2026-11-01, concept `services.md` §5.1 and §7): `false` leaves the currency symbol and the space that belongs to it out of the visible amount, for a list or table column whose header already names the unit („Kosten in €“). `formatMoney(-4217, 'EUR', { locale: 'de-DE', showCurrency: false })` returns `{ text: '−42,17', spoken: 'minus 42,17 Euro' }`. Digits, grouping, sign, minor units (JPY 0, KWD 3) and tabular figures stay, and the spoken text keeps the currency, so a screen reader still hears „minus 42,17 Euro“. The symbol is taken out of `Intl`'s parts, never by trimming the string: symbol-after (de-DE; fr-FR keeps its U+202F grouping), symbol-before (en-US, en-GB) and symbol-before-with-space locales (nl-NL `€ −42,17` → `−42,17`, de-CH) leave no stray space, checked over 1,596 locales × 6 currencies × 4 `signDisplay` values × 4 amounts (153,216 cases). Also in the prerendered HTML. Default `true`: the output is unchanged. In a cell template, `<lc-money … [showCurrency]="false" />` replaces the page's own `Intl.NumberFormat` and its hidden „Euro“. A `formatMoney(…).text` string in a table `formatter` has no spoken text, so keep the hidden word there.
+- Story: Data Display/Money "Number Column" (a German and an English `lc-table`, "Kosten in €" / "Cost in €"): at 360 px `1.111,11` and `8.888,88` are both 60.03 px wide, no amount wraps or is cut, 0 axe violations.
+
+### Fixed
+
+- **`lc-toast` and `lc-alert` variant icons** (026 review finding 2, the 3.19.2 Known entry; WCAG 1.4.11): the icon uses its variant's ink `--color-on-<variant>-subtle` (the text and icon colour of the status tints) instead of the fill `--color-<variant>`. Lowest contrast on the toast gradient, light: success 2.60 → 5.07, warning 2.16 → 5.77, error 8.03 → 12.05, info 5.91 → 9.72; dark: success 5.27 → 6.97, error 1.71 → 7.21, info 2.32 → 8.83, warning 6.35 (unchanged, the dark ink is the fill). `lc-alert` on its tint over the lowest surface, light: success 2.25 → 4.38, warning 1.86 → 4.98, error 5.90 → 8.85, info 4.50 → 7.41; dark: success 4.34 → 5.74, error 1.72 → 7.24, info 2.05 → 7.80, warning 4.97 (unchanged). The 3.19.2 note missed toast warning in light (2.16:1). `lc-error-display` renders `lc-alert` and gets the same icons. The toast's 4 px rail, the alert tint and border, the text, the × and the layout are unchanged: the shots are hash-identical once the old icon colour is put back. `--color-success/error/warning/info` are unchanged. In forced colours the icons take the system colour.
+
+### Compatibility
+
+- No API breaks: one new optional input and option, default `true`, output unchanged. The variant icons of `lc-toast` and `lc-alert` are darker in light and lighter in dark (dark warning unchanged). The selectors are unchanged (`.lc-toast--<variant> .lc-toast__icon`, `.lc-alert--<variant> .lc-alert__icon`, 0-2-0, global). To keep the old fill, set `color: var(--color-<variant>)` with a selector of at least 0-3-0, for example `.lc-toast.lc-toast--warning .lc-toast__icon`.
+
+### Known
+
+- The Number Column story description (served by the MCP) says screen readers hear the currency in every cell, then tips `formatMoney(…).text` in a `formatter`. That string has no spoken text, so the unit is then only in the column header; prefer `lc-money` in a cell template. The story text follows in the next release (027 review finding 2).
+
 ## [3.19.2] - 2026-10-31
 
 The open review findings of 3.19.1 (request 025): toast close colour, a notification-center note, the German drawer story. No API breaks.
