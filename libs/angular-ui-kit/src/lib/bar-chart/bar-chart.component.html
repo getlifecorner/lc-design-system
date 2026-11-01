@@ -1,103 +1,170 @@
-<svg
-  width="100%"
-  [attr.height]="height()"
-  [attr.viewBox]="viewBox()"
-  role="img"
-  [attr.aria-label]="effectiveAriaLabel()"
-  class="lc-bar-chart"
->
-  <title>{{ effectiveAriaLabel() }}</title>
+@if (wrapRows()) {
+  <!--
+    Horizontal 'wrap' (3.21, request 028): HTML rows, so labels wrap and follow
+    the text size. Bar x/width are percentages: final in the server HTML.
+    No inline style (CSP). The children of role="img" are presentational.
+  -->
+  <div
+    class="lc-bar-chart lc-bar-chart--rows"
+    role="img"
+    [attr.aria-label]="effectiveAriaLabel()"
+  >
+    @for (row of rows(); track $index) {
+      <div class="lc-bar-chart__row">
+        @if ((showLabels() && row.label) || (showValues() && row.valueText)) {
+          <div class="lc-bar-chart__row-head">
+            @if (showLabels() && row.label) {
+              <span class="lc-bar-chart__row-label">{{ row.label }}</span>
+            }
+            @if (showValues() && row.valueText) {
+              <span class="lc-bar-chart__row-value">{{ row.valueText }}</span>
+            }
+          </div>
+        }
+        <svg
+          width="100%"
+          aria-hidden="true"
+          focusable="false"
+          class="lc-bar-chart__row-track"
+        >
+          @if (rowZero(); as zero) {
+            <line
+              [attr.x1]="zero"
+              y1="-25%"
+              [attr.x2]="zero"
+              y2="125%"
+              class="lc-bar-chart__zero-line"
+            />
+          }
+          <rect
+            [attr.x]="row.x"
+            y="0"
+            [attr.width]="row.width"
+            height="100%"
+            [attr.fill]="row.color"
+            rx="2"
+            class="lc-bar-chart__row-bar"
+          />
+        </svg>
+      </div>
+    }
+  </div>
+} @else {
+  <svg
+    width="100%"
+    [attr.height]="height()"
+    [attr.viewBox]="viewBox()"
+    role="img"
+    [attr.aria-label]="effectiveAriaLabel()"
+    class="lc-bar-chart"
+  >
+    <title>{{ effectiveAriaLabel() }}</title>
 
-  <!-- Grid lines -->
-  @if (showGrid()) {
-    @for (line of gridLines(); track line.pos) {
-      @if (isVertical()) {
-        <line
-          [attr.x1]="axisLine().bx1"
-          [attr.y1]="line.pos"
-          [attr.x2]="axisLine().bx2"
-          [attr.y2]="line.pos"
-          class="lc-bar-chart__grid-line"
-        />
+    <!-- Grid lines -->
+    @if (showGrid()) {
+      @for (line of gridLines(); track line.pos) {
+        @if (isVertical()) {
+          <line
+            [attr.x1]="axisLine().bx1"
+            [attr.y1]="line.pos"
+            [attr.x2]="axisLine().bx2"
+            [attr.y2]="line.pos"
+            class="lc-bar-chart__grid-line"
+          />
+          <text
+            [attr.x]="axisLine().x1 - 6"
+            [attr.y]="line.pos"
+            text-anchor="end"
+            dominant-baseline="central"
+            class="lc-bar-chart__grid-label"
+          >
+            {{ line.label }}
+          </text>
+        } @else {
+          <line
+            [attr.x1]="line.pos"
+            [attr.y1]="axisLine().y1"
+            [attr.x2]="line.pos"
+            [attr.y2]="axisLine().y2"
+            class="lc-bar-chart__grid-line"
+          />
+          <text
+            [attr.x]="line.pos"
+            [attr.y]="plotBottom() + 12"
+            text-anchor="middle"
+            class="lc-bar-chart__grid-label"
+          >
+            {{ line.label }}
+          </text>
+        }
+      }
+    }
+
+    <!-- Axes -->
+    <line
+      [attr.x1]="axisLine().x1"
+      [attr.y1]="axisLine().y1"
+      [attr.x2]="axisLine().x2"
+      [attr.y2]="axisLine().y2"
+      class="lc-bar-chart__axis"
+    />
+    <line
+      [attr.x1]="axisLine().bx1"
+      [attr.y1]="axisLine().by1"
+      [attr.x2]="axisLine().bx2"
+      [attr.y2]="axisLine().by2"
+      class="lc-bar-chart__axis"
+    />
+
+    <!-- Bars -->
+    @for (bar of bars(); track $index) {
+      <rect
+        [attr.x]="bar.x"
+        [attr.y]="bar.y"
+        [attr.width]="bar.width"
+        [attr.height]="bar.height"
+        [attr.fill]="bar.color"
+        rx="2"
+        class="lc-bar-chart__bar"
+      />
+
+      @if (showValues()) {
         <text
-          [attr.x]="axisLine().x1 - 6"
-          [attr.y]="line.pos"
-          text-anchor="end"
-          dominant-baseline="central"
-          class="lc-bar-chart__grid-label"
+          [attr.x]="bar.valueX"
+          [attr.y]="bar.valueY"
+          [attr.text-anchor]="bar.valueAnchor"
+          [attr.dominant-baseline]="isVertical() ? 'auto' : 'central'"
+          class="lc-bar-chart__value"
         >
-          {{ line.label }}
+          {{ bar.valueText }}
         </text>
-      } @else {
-        <line
-          [attr.x1]="line.pos"
-          [attr.y1]="axisLine().y1"
-          [attr.x2]="line.pos"
-          [attr.y2]="axisLine().y2"
-          class="lc-bar-chart__grid-line"
-        />
+      }
+
+      <!-- One block (not nested), so the SVG's comment anchors stay as before 3.21. -->
+      @if (showLabels() && !wrapColumns()) {
         <text
-          [attr.x]="line.pos"
-          [attr.y]="plotBottom() + 12"
-          text-anchor="middle"
-          class="lc-bar-chart__grid-label"
+          [attr.x]="bar.labelX"
+          [attr.y]="bar.labelY"
+          [attr.text-anchor]="isVertical() ? 'middle' : 'end'"
+          [attr.dominant-baseline]="isVertical() ? 'auto' : 'central'"
+          class="lc-bar-chart__label"
         >
-          {{ line.label }}
+          {{ bar.label }}
         </text>
       }
     }
+  </svg>
+
+  <!--
+    Vertical 'wrap' (3.21, request 028): the category labels as HTML under the
+    plot, one cell per column, wrapping within it. Hidden from assistive
+    technology: the names are in the SVG's accessible name.
+  -->
+  @if (wrapColumns() && showLabels()) {
+    <div class="lc-bar-chart__category-labels" aria-hidden="true">
+      @for (bar of bars(); track $index) {
+        <span class="lc-bar-chart__category-label">{{ bar.label }}</span>
+      }
+    </div>
   }
-
-  <!-- Axes -->
-  <line
-    [attr.x1]="axisLine().x1"
-    [attr.y1]="axisLine().y1"
-    [attr.x2]="axisLine().x2"
-    [attr.y2]="axisLine().y2"
-    class="lc-bar-chart__axis"
-  />
-  <line
-    [attr.x1]="axisLine().bx1"
-    [attr.y1]="axisLine().by1"
-    [attr.x2]="axisLine().bx2"
-    [attr.y2]="axisLine().by2"
-    class="lc-bar-chart__axis"
-  />
-
-  <!-- Bars -->
-  @for (bar of bars(); track $index) {
-    <rect
-      [attr.x]="bar.x"
-      [attr.y]="bar.y"
-      [attr.width]="bar.width"
-      [attr.height]="bar.height"
-      [attr.fill]="bar.color"
-      rx="2"
-      class="lc-bar-chart__bar"
-    />
-
-    @if (showValues()) {
-      <text
-        [attr.x]="bar.valueX"
-        [attr.y]="bar.valueY"
-        [attr.text-anchor]="bar.valueAnchor"
-        [attr.dominant-baseline]="isVertical() ? 'auto' : 'central'"
-        class="lc-bar-chart__value"
-      >
-        {{ bar.valueText }}
-      </text>
-    }
-
-    @if (showLabels()) {
-      <text
-        [attr.x]="bar.labelX"
-        [attr.y]="bar.labelY"
-        [attr.text-anchor]="isVertical() ? 'middle' : 'end'"
-        [attr.dominant-baseline]="isVertical() ? 'auto' : 'central'"
-        class="lc-bar-chart__label"
-      >
-        {{ bar.label }}
-      </text>
-    }
-  }
-</svg>
+}

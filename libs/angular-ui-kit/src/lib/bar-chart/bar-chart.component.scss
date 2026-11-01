@@ -45,3 +45,110 @@
   fill: var(--color-text-secondary);
 
 }
+
+// ---------------------------------------------------------------------------
+// labelLayout="wrap" (3.21, request 028). Plain CSS, so the layout holds in
+// the prerendered HTML. The hooks --lc-bar-chart-bar-size and
+// --lc-bar-chart-row-gap are read only here, never declared on :host, so an
+// ancestor can set them.
+// ---------------------------------------------------------------------------
+
+// Horizontal: one row per bar, the label line above a full-width bar.
+.lc-bar-chart--rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lc-bar-chart-row-gap, var(--spacing-4));
+}
+
+.lc-bar-chart__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+// Label and value on one line; the value wraps under the label when both
+// don't fit, and stays at the end.
+.lc-bar-chart__row-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--spacing-2);
+  font-size: var(--typography-font-size-sm);
+  line-height: var(--typography-line-height-normal);
+}
+
+// Long compounds break at a syllable with a hyphen (needs `lang`), as in
+// lc-toast; the limit keeps short words whole.
+.lc-bar-chart__row-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--color-text-primary);
+  font-weight: var(--typography-font-weight-normal);
+  overflow-wrap: break-word;
+  hyphens: auto;
+  hyphenate-limit-chars: 12 4 3;
+}
+
+.lc-bar-chart__row-value {
+  margin-inline-start: auto;
+  min-width: 0;
+  text-align: end;
+  color: var(--color-text-primary);
+  font-weight: var(--typography-font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: break-word;
+}
+
+.lc-bar-chart__row-track {
+  display: block;
+  width: 100%;
+  height: var(--lc-bar-chart-bar-size, 0.75rem);
+  overflow: visible;
+}
+
+// The bar starts or ends at zero and covers the line inside the track, so the
+// line reaches 25 % of the bar size past both ends (the track is
+// `overflow: visible`): a tick above and below every bar.
+.lc-bar-chart__zero-line {
+  stroke: var(--color-text-tertiary);
+  stroke-width: 1;
+}
+
+// Vertical: the labels under the plot, one cell per column. The inline
+// padding is the SVG's PADDING_LEFT / PADDING_RIGHT (40 / 10 viewBox units,
+// 1 unit = 1 px once the container is measured), so each cell is centred
+// under its column.
+.lc-bar-chart__category-labels {
+  display: flex;
+  padding: var(--spacing-1) 10px 0 40px;
+}
+
+.lc-bar-chart__category-label {
+  flex: 1 1 0%;
+  min-width: 0;
+  padding-inline: 2px;
+  text-align: center;
+  font-size: 0.6875rem;
+  line-height: var(--typography-line-height-tight);
+  color: var(--color-text-secondary);
+  overflow-wrap: break-word;
+  hyphens: auto;
+  hyphenate-limit-chars: 12 4 3;
+}
+
+// Forced colours: the bars are author fills the system palette doesn't
+// force, so they take Highlight (as lc-progress-bar); the text is HTML and
+// becomes CanvasText by itself.
+@media (forced-colors: active) {
+  .lc-bar-chart__row-track {
+    forced-color-adjust: none;
+  }
+
+  .lc-bar-chart__row-bar {
+    fill: Highlight;
+  }
+
+  .lc-bar-chart__zero-line {
+    stroke: CanvasText;
+  }
+}

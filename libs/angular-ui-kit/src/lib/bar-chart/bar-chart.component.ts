@@ -11,7 +11,6 @@ import {
 } from '@angular/core';
 import { chartColor } from '@lifecorner/angular-ui-kit/internal/chart';
 import {
-  ChartValueFormatter,
   formatChartValue,
   niceScale,
   toFinite,
@@ -22,9 +21,29 @@ export interface BarChartItem {
   value: number;
   label?: string;
   color?: string;
+  /**
+   * The text shown as this bar's value and read in the generated aria label,
+   * instead of `formatValue(value, item)`, for example "313.000,00 · 54,8 %".
+   * The kit shows it as given and never formats or computes it. An empty
+   * string shows no value for this bar.
+   */
+  valueText?: string;
 }
 
 export type BarChartOrientation = 'vertical' | 'horizontal';
+
+/**
+ * How the category labels are set: `'axis'` (one line of SVG text on the
+ * category axis) or `'wrap'` (HTML text that wraps and follows the text size).
+ */
+export type BarChartLabelLayout = 'axis' | 'wrap';
+
+/**
+ * Signature of `lc-bar-chart`'s `formatValue`. A bar's value label passes the
+ * bar's item; an axis tick passes the tick only (`item` is `undefined`).
+ * One-argument formatters keep working.
+ */
+export type BarChartValueFormatter = (value: number, item?: BarChartItem) => string;
 
 /** viewBox width used until the container has been measured. */
 const DEFAULT_WIDTH = 400;
@@ -80,37 +99,81 @@ export class BarChartComponent {
    * `width` is the viewBox width until the container has been measured and,
    * when set, the host's `max-width`, so the chart never grows past it. Leave
    * unset for a fully fluid chart.
+   * @default undefined
    */
   width = input<number | undefined>(undefined);
 
-  /** Chart height in pixels. */
+  /**
+   * Chart height in pixels. A horizontal `'wrap'` chart takes the height of
+   * its rows; a vertical `'wrap'` chart adds its label row below this height.
+   * @default 200
+   */
   height = input<number>(200);
 
-  /** Bar orientation. */
+  /**
+   * Bar orientation.
+   * @default 'vertical'
+   */
   orientation = input<BarChartOrientation>('vertical');
 
-  /** Show value labels on bars. */
+  /**
+   * Show value labels on bars. In horizontal `'wrap'` rows the value sits at
+   * the end of the label line.
+   * @default true
+   */
   showValues = input<boolean>(true);
 
-  /** Show axis labels. */
+  /**
+   * Show axis labels.
+   * @default true
+   */
   showLabels = input<boolean>(true);
 
-  /** Show grid lines. */
+  /**
+   * How the category labels are set. `'axis'`: one line of SVG text on the
+   * category axis, in a fixed 40 px band left of a horizontal bar or centred
+   * under a vertical column. Long labels can run out of the chart. `'wrap'`:
+   * HTML text that wraps to the room it needs and follows the text size. A
+   * horizontal chart becomes a list of rows: the label and the value on one
+   * line (the value moves under the label when both don't fit), and below
+   * them the bar across the full width. The longest bar fills the width, and
+   * `height`, `barGap` and `showGrid` don't apply. A vertical chart keeps its
+   * plot and wraps each label within its column, under the chart.
+   * @default 'axis'
+   */
+  labelLayout = input<BarChartLabelLayout>('axis');
+
+  /**
+   * Show grid lines. Not used by horizontal `'wrap'` rows.
+   * @default true
+   */
   showGrid = input<boolean>(true);
 
-  /** Gap between bars as ratio (0-1). */
+  /**
+   * Gap between bars as ratio (0-1). Not used by horizontal `'wrap'` rows.
+   * @default 0.3
+   */
   barGap = input<number>(0.3);
 
-  /** Use a single color for all bars. */
+  /**
+   * Use a single color for all bars.
+   * @default ''
+   */
   color = input<string>('');
 
-  /** Formats value labels and axis ticks. Defaults to a float-safe `String(value)`. */
-  formatValue = input<ChartValueFormatter>(formatChartValue);
+  /**
+   * Formats the value labels and the axis ticks. For a bar it gets the bar's
+   * item as the second argument; for an axis tick it gets the tick only
+   * (`item` is `undefined`). An item's `valueText` takes precedence.
+   * @default float-safe `String(value)`
+   */
+  formatValue = input<BarChartValueFormatter>(formatChartValue);
 
   /**
    * Accessible name of the chart. Defaults to a generated summary that lists
    * every bar's label and value, so assistive technology hears the data and
    * not just "Bar chart".
+   * @default ''
    */
   ariaLabel = input<string>('');
 
@@ -130,6 +193,27 @@ export class BarChartComponent {
 
   protected readonly isVertical = computed(() => this.orientation() === 'vertical');
 
+  /** Horizontal `'wrap'`: HTML rows instead of the SVG plot. */
+  protected readonly wrapRows = computed(
+    () => this.labelLayout() === 'wrap' && !this.isVertical()
+  );
+
+  /** Vertical `'wrap'`: the SVG plot, with the category labels as an HTML row under it. */
+  protected readonly wrapColumns = computed(
+    () => this.labelLayout() === 'wrap' && this.isVertical()
+  );
+
+  /**
+   * Room under the plot. `'axis'` keeps 30 for the SVG labels; vertical
+   * `'wrap'` labels sit under the SVG, so only 2 are left, or 18 when a
+   * negative bar's value label hangs below it.
+   */
+  private readonly paddingBottom = computed(() => {
+    if (!this.wrapColumns()) return this.PADDING_BOTTOM;
+    const negative = (this.data() ?? []).some((i) => toFinite(i.value) < 0);
+    return this.showValues() && negative ? 18 : 2;
+  });
+
   private readonly plot = computed(() => {
     const w = this.effectiveWidth();
     const h = this.height();
@@ -137,9 +221,14 @@ export class BarChartComponent {
       x: this.PADDING_LEFT,
       y: this.PADDING_TOP,
       w: w - this.PADDING_LEFT - this.PADDING_RIGHT,
-      h: h - this.PADDING_TOP - this.PADDING_BOTTOM,
+      h: h - this.PADDING_TOP - this.paddingBottom(),
     };
   });
+
+  /** A bar's text: `valueText`, else `formatValue(value, item)`. */
+  private textOf(item: BarChartItem, value: number, fmt: BarChartValueFormatter): string {
+    return item.valueText ?? fmt(value, item);
+  }
 
   /**
    * One scale for grid *and* bars: bounds are nice multiples of the tick step,
@@ -198,7 +287,7 @@ export class BarChartComponent {
           color: singleColor || item.color || chartColor(i),
           label: item.label || '',
           value,
-          valueText: fmt(value),
+          valueText: this.textOf(item, value, fmt),
           labelX: p.x + i * totalBarWidth + totalBarWidth / 2,
           labelY: h - this.PADDING_BOTTOM + 16,
           valueX: p.x + i * totalBarWidth + totalBarWidth / 2,
@@ -225,7 +314,7 @@ export class BarChartComponent {
           color: singleColor || item.color || chartColor(i),
           label: item.label || '',
           value,
-          valueText: fmt(value),
+          valueText: this.textOf(item, value, fmt),
           labelX: p.x - 6,
           labelY: p.y + i * totalBarHeight + totalBarHeight / 2,
           // Right of a positive bar, left of a negative one.
@@ -260,6 +349,44 @@ export class BarChartComponent {
   /** Bottom edge of the plot — where horizontal-orientation tick labels sit. */
   protected readonly plotBottom = computed(() => this.plot().y + this.plot().h);
 
+  /**
+   * Bounds of the horizontal `'wrap'` rows: zero is always inside, and the
+   * longest bar fills the track.
+   */
+  private readonly rowBounds = computed(() => {
+    const values = (this.data() ?? []).map((i) => toFinite(i.value));
+    const lo = Math.min(0, ...values);
+    const hi = Math.max(0, ...values);
+    return { values, lo, range: hi - lo || 1 };
+  });
+
+  /**
+   * Horizontal `'wrap'` rows. Bar `x` and `width` are percentages of the
+   * track, so the server HTML is final before the container is measured.
+   */
+  protected readonly rows = computed(() => {
+    const d = this.data() ?? [];
+    const { values, lo, range } = this.rowBounds();
+    const singleColor = this.color();
+    const fmt = this.formatValue();
+    return d.map((item, i) => {
+      const value = values[i];
+      return {
+        label: item.label || '',
+        valueText: this.textOf(item, value, fmt),
+        color: singleColor || item.color || chartColor(i),
+        x: `${((Math.min(value, 0) - lo) / range) * 100}%`,
+        width: `${(Math.abs(value) / range) * 100}%`,
+      };
+    });
+  });
+
+  /** Position of the zero line in the `'wrap'` rows; `null` without negative values. */
+  protected readonly rowZero = computed(() => {
+    const { lo, range } = this.rowBounds();
+    return lo < 0 ? `${(-lo / range) * 100}%` : null;
+  });
+
   protected readonly effectiveAriaLabel = computed(() => {
     const explicit = this.ariaLabel();
     if (explicit) return explicit;
@@ -267,7 +394,11 @@ export class BarChartComponent {
     if (!d.length) return 'Bar chart: no data';
     const fmt = this.formatValue();
     return `Bar chart: ${d
-      .map((item, i) => `${item.label || `Bar ${i + 1}`} ${fmt(toFinite(item.value))}`)
+      .map((item, i) => {
+        const label = item.label || `Bar ${i + 1}`;
+        const text = this.textOf(item, toFinite(item.value), fmt);
+        return text === '' ? label : `${label} ${text}`;
+      })
       .join(', ')}`;
   });
 }

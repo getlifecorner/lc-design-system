@@ -343,6 +343,32 @@ const EXPECT_IN_HTML = [
     /<lc-toast(?=[^>]*\sid="compat-toast-3191")(?=[^>]*\sclass="lc-toast lc-toast--success")[^>]*>/.test(html)
     && /lc-toast:not\(lc-toast-outlet lc-toast\)\s*\{\s*display:\s*block;\s*width:\s*100%;\s*max-width:\s*400px/.test(html)],
   ['bottom nav "Mehr" on request (023 AC-8)', /<nav(?=[^>]*\saria-label="Hauptnavigation unten")[^>]*>(?:(?!<\/nav>)[^])*?<li[^>]*>(?:<!--[^]*?-->|\s)*<a(?=[^>]*\sclass="[^"]*\blc-bottom-nav__item\b)(?=[^>]*\shref="[^"]*\/mehr")[^>]*>(?:(?!<\/a>)[^])*?<span[^>]*\sclass="lc-bottom-nav__label"[^>]*>(?:<!--[^]*?-->|\s)*Mehr(?:<!--[^]*?-->|\s)*<\/span>/],
+  // 3.21 (request 028, probe-321.ts): lc-bar-chart labelLayout="wrap" before JS.
+  // Horizontal: the named img, each row's label and valueText as text, the
+  // longest bar 0% → 100% of its track, no inline style below the host (CSP).
+  // Vertical: the labels as an aria-hidden HTML row, none in the SVG. A one-
+  // and a two-argument formatValue ran on the server (ticks "100k"; "313000 · 54.8%").
+  // `·` and the NBSP may be entities.
+  ['bar chart wrap: rows, values and column labels as text before JS (028 AC-2, AC-7, AC-13)', (html) => {
+    const nbsp = '(?:\\u00a0|&nbsp;|&#160;)';
+    const dot = '(?:\\u00b7|&middot;|&#183;|&#xb7;)';
+    const c = '(?:<!--[^]*?-->)*';
+    const chart = (id) => html.match(new RegExp(`<lc-bar-chart(?=[^>]*\\sid="${id}")[^>]*>(?:(?!</lc-bar-chart>)[^])*</lc-bar-chart>`))?.[0] ?? '';
+    const rows = chart('compat-bar-321');
+    const columns = chart('compat-bar-321-columns');
+    const share = chart('compat-bar-321-share');
+    return new RegExp(`<div(?=[^>]*\\sclass="lc-bar-chart lc-bar-chart--rows")(?=[^>]*\\srole="img")(?=[^>]*\\saria-label="Bar chart: Demo Applikation 313\\.000,00 ${dot} 54,8${nbsp}%, Demo Arbeitsplatz 180\\.000,00)[^>]*>`).test(rows)
+      && new RegExp(`<span[^>]*\\sclass="lc-bar-chart__row-label"[^>]*>${c}Demo Arbeitsplatz${c}</span>`).test(rows)
+      && new RegExp(`<span[^>]*\\sclass="lc-bar-chart__row-value"[^>]*>${c}313\\.000,00 ${dot} 54,8${nbsp}%${c}</span>`).test(rows)
+      && /<rect(?=[^>]*\sx="0%")(?=[^>]*\swidth="100%")(?=[^>]*\sclass="lc-bar-chart__row-bar")[^>]*>/.test(rows)
+      && (rows.match(/\sclass="lc-bar-chart__row"/g) ?? []).length === 3
+      && !/\sstyle=/.test(rows.replace(/^<lc-bar-chart[^>]*>/, ''))
+      && /<svg(?=[^>]*\srole="img")[^>]*>/.test(columns)
+      && !/lc-bar-chart__label\b/.test(columns)
+      && /class="lc-bar-chart__grid-label"[^>]*>\s*100k\s*</.test(columns)
+      && new RegExp(`<div(?=[^>]*\\sclass="lc-bar-chart__category-labels")(?=[^>]*\\saria-hidden="true")[^>]*>(?:(?:<!--[^]*?-->|\\s)*<span[^>]*\\sclass="lc-bar-chart__category-label"[^>]*>${c}(?:Demo Applikation|Demo Arbeitsplatz|Demo Netz)${c}</span>){3}`).test(columns)
+      && new RegExp(`<span[^>]*\\sclass="lc-bar-chart__row-value"[^>]*>${c}313000 ${dot} 54\\.8%${c}</span>`).test(share);
+  }],
 ];
 
 /**
