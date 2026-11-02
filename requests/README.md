@@ -65,3 +65,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [028](028-bar-chart-labels-item-formatter/) lc-bar-chart label band and item-aware value formatter | finance-intelligence | gap file row 1 (cockpit-2026-11-01) | 3.21.0 | 3.21.0 |
 | [029](029-status-ink-contrast-follow-up/) Status ink contrast follow-up of 027 (notification-center, card, markdown, status-dot, pipeline, file-upload, rating, viewers, kanban, progress) and the money Number Column caveat | owner | 027 review finding 2, 027 design §5 | 3.21.1 | 3.21.1 |
 | [030](030-inline-search-lock-tablet-icons/) Inline magnifying-glass, lock and device-tablet icons; lc-search-input and lc-log-viewer register their glyph | life-os | BA-6, BA-7 | 3.22.0 | 3.22.0 |
+| [031](031-stat-trend-label-value-separator/) lc-stat-trend label and value without a separator | finance-intelligence | gap file row 2 (cockpit-2026-11-01) | 3.22.1 | 3.22.1 |

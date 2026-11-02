@@ -70,9 +70,9 @@ Normalised host text (`textContent.replace(/\s+/g, ' ').trim()`): "Gesamtkosten 
 
 ```
 |16|┌───────────── lc-card 328 (border 1, padding 16) ─────────────┐|16|
-    │ TOTAL COST PLAN 2026                               [wallet16]│  label 12/18 px, 500, uppercase
+    │ TOTAL COST PLAN 2026 [wallet16]                               │  label 12/18 px, 500, uppercase; tile inline-flex, 184.14 wide
     │ 4 px                                                          │
-    │ €571,000.00                                                   │  value 24 px, 700, row 31.38 px
+    │ €571,000.00                                                   │  value 24 px, 700, row 28.8 px (no pill)
     └───────────────────────────────────────────────────────────────┘
     gap 16
     ┌ lang=de ─ GESAMTKOSTEN PLAN 2026 [wallet] / 571.000,00 € ─────┐
@@ -96,9 +96,11 @@ Normalised host text (`textContent.replace(/\s+/g, ' ').trim()`): "Gesamtkosten 
 | Card | padding 16, border 1, radius md | — | `--lc-density-padding-md` / `--spacing-4` (lc-card) |
 | Label | — | 0.75rem / 18 px line, 500, +0.05em | `--typography-font-size-xs`, `--color-text-tertiary` |
 | Header → row | 4 px | — | `.lc-stat-trend` gap (unchanged) |
-| Value | row 31.38 px | 1.5rem, 700, lh 1.2 | `--typography-font-size-2xl`, `--color-text-primary` |
+| Value | row 28.8 px; 31.38 px with the pill (baseline alignment) | 1.5rem, 700, lh 1.2 | `--typography-font-size-2xl`, `--color-text-primary` |
 | Separators S1–S3 | 0 × 0 (no box) | — | — |
 | Grid | gap 16 px | — | story layout, as `CardDashboard` |
+
+**Change note (review r1, 2026-11-02):** the first sketch drew the wallet at the card's right content edge and every value row at 31.38 px. That was wrong about 3.22.0 behaviour, which this request does not change: `.lc-stat-trend` is `inline-flex` and shrinks to its content, so the icon follows a short label (gap to the content edge at 360: tile 1 109.86 px, tile 2 84.38 px) and reaches the edge only when the label wraps (tile 3). A row without a pill is 28.8 px high. Lining the icons up is a possible follow-up request, not part of this patch (AC-4).
 
 Measured 3.22.0 reference (`tmp/story-shots/031/baseline-long`, costs story with label "Gesamtkosten Plan 2026 einschließlich Rückstellungen" and value "1.234.567,89 €"): 360 → label 294 × 36 (2 lines), header 36, row 31.38, root 294 × 103.38, card 328 × 142.38; 1024/1280 → label 426.34 × 18, root 85.38, card 460.34 × 124.38; card and page overflow 0 at all widths.
 

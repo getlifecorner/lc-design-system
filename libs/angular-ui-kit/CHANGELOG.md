@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.22.1] - 2026-11-02
+
+`lc-stat-trend` keeps a space between its label, value and change in the text, so a KPI tile built as a clickable `lc-card` passes the accessible-name check (finance-intelligence cockpit, gap file `cockpit-2026-11-01` row 2). No API breaks.
+
+### Fixed
+
+- **`lc-stat-trend` keeps a space between label, value and change in its text**: label and value sat in two blocks with no text between them, so tools reading the DOM text got „Gesamtkosten Plan 2026571.000,00 €“. axe-core 4.14 `label-content-name-mismatch` (WCAG 2.5.3 Label in Name) failed every KPI tile built as `lc-card [clickable]="true"` named „Gesamtkosten Plan 2026: 571.000,00 €. Herkunft anzeigen“, because no name could contain the glued text. Now the text reads „Gesamtkosten Plan 2026 571.000,00 € ↑ +3,1 %“ and the tile passes. The spaces get no box: nothing moves and nothing extra is announced (68 story shots hash-identical at 360, 1024 and 1280 px, light, dark and forced colours).
+- Naming a clickable tile: its `ariaLabel` holds the visible text in order (label, value, change, then the sparkline's name if there is one); other words („Herkunft anzeigen“, the sentiment words) go before or after that run. A sparkline's generated name („Sparkline: 10 points, …“) counts as content of the card, so a tile with a sparkline repeats it in the name.
+- Story: Charts/Stat Trend "Inside a clickable card" (EN, DE, long German label with sentiment).
+
+### Compatibility
+
+- No API breaks: no input, class or style changed, and the pill's own text (`"↑ +3.1% "`, `"↑ +3,1 %, gestiegen, ungünstig"`) is as before. The tile's raw `textContent` gains up to three spaces; a test that compares it unnormalised sees them.
+
+### Migration
+
+- finance-intelligence: drop the e2e exclusion of `label-content-name-mismatch` on `fi-kpi-tile`.
+
+### Known
+
+- In a row of KPI tiles the icon's x position depends on the label length, because `.lc-stat-trend` is `inline-flex` and shrinks to its content. Unchanged since 3.22.0; fixing it would change every existing stat-trend rendering, so it needs its own request.
+
 ## [3.22.0] - 2026-11-02
 
 The magnifier, `lock` and `device-tablet` are in the inline set, and `lc-search-input` and `lc-log-viewer` register every glyph they draw, so an app with `unregistered: 'placeholder'` no longer sees "?" in them (life-os BA-6, BA-7). No API breaks.
