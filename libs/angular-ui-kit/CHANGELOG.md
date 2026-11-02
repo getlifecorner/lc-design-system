@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.21.0] - 2026-11-02
+
+`lc-bar-chart` for a ranking in a card: category labels as wrapping HTML text (`labelLayout="wrap"`), and a bar that shows text from its data item (`valueText`, `formatValue(value, item)`) (finance-intelligence cockpit, gap row 1 of cockpit-2026-11-01). No API breaks.
+
+### Added
+
+- **`lc-bar-chart labelLayout="wrap"`** (finance-intelligence cockpit, gap row 1 of cockpit-2026-11-01, concept `cockpit.md` §5.1 and §7): category labels as HTML text that wraps and follows the text size, instead of one line of SVG text in a fixed 40 px band. A horizontal chart becomes a ranking: per bar the label and its value on one line (the value moves under the label when both don't fit), and below them the bar across the full width. The longest bar fills the width; `height`, `barGap` and `showGrid` don't apply. At 360 px in `lc-card padding="md"` (294 px content), „Demo Applikation“, „Demo Arbeitsplatz“ and „Demo Netz“ show in full on one line each, the values end at the card's content edge, and the bars are 294 / 169.1 / 73.3 px; at 200 % text the value takes 2 lines and nothing scrolls. „Betriebsmittelverwaltung Standort Nord“ puts its value on its own line at 360 px and hyphenates to 3 lines at 200 % (needs `lang`). With negative values every bar grows from a zero line that shows as a 1 px tick 3 px above and below the bar (6 px at 200 % text), in `--color-text-tertiary` (5.84:1 light / 6.71:1 dark on the card); the sign is in the value text. A vertical chart keeps its plot and wraps each label within its column under the chart: no overlap at 360 px (gaps 20.5 px; 9.3 / 11 px at 200 %). Known limit: at 200 % text in a 360 px card each of three columns has 56 px for its label, so words break inside („Dem/o/Appli/katio/n“, 5 lines; the full names stay in the accessible name); for long names on narrow cards use a horizontal `'wrap'` chart. The bars are percentages of their track, so the rows are final in the prerendered HTML. Text contrast on the card: 17.74 / 15.85:1 (rows), 7.56 / 11.16:1 (column labels); in forced colours the bars are Highlight and the zero line CanvasText. CSS hooks `--lc-bar-chart-bar-size` (default `0.75rem`) and `--lc-bar-chart-row-gap` (default `var(--spacing-4)`).
+- **`BarChartItem.valueText` and `formatValue(value, item)`** (same gap): a bar can show „313.000,00 · 54,8 %“ with the share from the data, as the item's `valueText` (shown as given, never formatted) or through a formatter that reads the item (`BarChartValueFormatter`, exported; axis ticks pass no item). The generated aria label reads the same text per bar; an explicit `ariaLabel` still wins; an empty `valueText` shows no value.
+- Stories: Charts/Bar Chart "Ranking In A Card" (German, 360 px card), "Ranking In A Card English", "Ranking Long Labels", "Ranking Negative Values", "Wrapped Column Labels".
+
+### Fixed
+
+- Story Charts/Bar Chart "Custom Format" now receives its formatter and shows "42%" instead of "0.42".
+
+### Compatibility
+
+- No API breaks: one optional input (default `'axis'`), one optional item field and an optional second formatter argument. With `'axis'` the SVG is byte-identical to 3.20 (every bar-chart story at 360/1024/1280 px in both themes). `formatValue` is typed `BarChartValueFormatter` = `(value: number, item?: BarChartItem) => string`: one-argument formatters, `Intl.NumberFormat#format` and `String` work unchanged. A formatter whose second parameter means something else, such as `(v: number, digits?: number) => …`, now receives the item there, and TypeScript flags it under `strict`. A formatter that returns `''` now leaves the label alone in the generated aria label (before: the label and a trailing space).
+
+### Known
+
+- At 200 % text in a 360 px card, a vertical `labelLayout="wrap"` chart with three columns breaks long words inside the word (see Added); use the horizontal ranking for long names (request 028 review nit 3).
+- In the horizontal ranking with negative values, a large `--lc-bar-chart-bar-size` (from about `2rem`) makes the zero tick, which is 25 % of the bar size, touch the label ink above or below it (at `1.5rem` it reaches 2 px into the value line box, 0.4 px clear of the ink; with `--lc-bar-chart-row-gap: 0px` as well it can touch an ascender at the zero position). The tick is decorative and every value is in the text. A cap on the tick follows if a consumer reports it (request 028 review nit 4).
+
 ## [3.20.0] - 2026-11-01
 
 `lc-money` and `formatMoney` without the currency symbol (finance-intelligence services page), and variant icons that reach 3:1 in `lc-toast` and `lc-alert`. No API breaks.
