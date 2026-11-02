@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.22.3] - 2026-11-02
+
+`lc-description-list` drops the browser's `<dd>` margin, so a short value stays on one line beside its term at 360 px (life-os bank accounts, gap BA-8). No API breaks.
+
+### Fixed
+
+- **`lc-description-list` term and value have no browser margin**: the value (`<dd class="lc-dl__value">`) kept the browser's `margin-inline-start: 40px` on top of the row gap, so term and value were at least 72 px apart instead of 32 px. On the life-os connection page (the managing row) and the assistant-access page, „Alle Erwachsenen“, „nicht eingerichtet“ and „seit 02.11.2026“ wrapped to two lines at 360 px. Now `.lc-dl__term` and `.lc-dl__value` have `margin: 0` and the row gap is the only space: in a 262 px list (an outlined `lc-card padding="lg"` in `lc-app-page` at 360 px) all six rows of the BA-8 story sit on one line, and the list is 227 px tall instead of 290. With `leaders` the dotted line runs to 8 px from the value (was 48). In the `stacked` layout the value is flush left with the term (it was indented 40 px). Long unbroken values still wrap: an e-mail address at 360 px keeps 2 lines and gets 238 px instead of 198.
+- Story: Components/Description List "Short values at a phone width (BA-8)".
+
+### Compatibility
+
+- No API breaks: no input, output, class, hook or markup changed. Lists whose values already fitted beside the 40 px render pixel-identical (`rows`, dashed separator and wide value-suffix rows: 16 of 36 description-list story shots at 360, 1024 and 1280 px, light and dark). The other 20 change as described above.
+- A consumer rule `::ng-deep dd.lc-dl__value { margin: 0 }` sets the same value and stays harmless.
+
+### Migration
+
+- life-os: remove the `::ng-deep dd.lc-dl__value { margin: 0 }` workaround from `connection.page.css` and `assistant-access.page.ts`.
+
 ## [3.22.2] - 2026-11-02
 
 `lc-skeleton` applies a percentage `width` once, so `width="30%"` is 30 % of the line (finance-intelligence cockpit, gap file `cockpit-2026-11-01` row 3). No API breaks.

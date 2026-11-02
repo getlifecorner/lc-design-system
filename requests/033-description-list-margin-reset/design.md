@@ -28,7 +28,10 @@ Default rendering: changes on purpose, only where the 40 px showed (this is the 
 | `…--stacked` (6) | different | value flush left with the term (was +40 px), width 280 (was 240) |
 | `…--long-values-and-times` (6) | different | e-mail and device values 40 px wider, same 2 lines |
 | `…--with-value-suffix` 360 L/D (2) | different | "example.host/group/resource" 2 → 1 line |
-| `…--rows`, `…--divider-separator`, `components-card--footer-slot` (18), `…--with-value-suffix` 1024/1280 (4) | identical | the invisible leader absorbed the 40 px |
+| `…--rows`, `…--divider-separator` (12), `…--with-value-suffix` 1024/1280 (4) | identical | the invisible leader absorbed the 40 px |
+| `components-card--footer-slot` (6) | identical | its list doesn't render: `card.stories.ts` doesn't import `DescriptionListComponent` (measure: 0 rows, box 294×0). Pre-existing story bug, not evidence for this fix; follow-up |
+
+Change note (review r1, 2026-11-02): the card footer-slot row was split out; earlier this table claimed it stayed identical because the leader absorbed the 40 px. The description-list evidence is 16 identical / 20 different of 36 shots.
 
 ## 3. Anatomy and layout
 

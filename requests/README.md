@@ -67,3 +67,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [030](030-inline-search-lock-tablet-icons/) Inline magnifying-glass, lock and device-tablet icons; lc-search-input and lc-log-viewer register their glyph | life-os | BA-6, BA-7 | 3.22.0 | 3.22.0 |
 | [031](031-stat-trend-label-value-separator/) lc-stat-trend label and value without a separator | finance-intelligence | gap file row 2 (cockpit-2026-11-01) | 3.22.1 | 3.22.1 |
 | [032](032-skeleton-percentage-width-once/) lc-skeleton applies a percentage width twice | finance-intelligence | gap file row 3 (cockpit-2026-11-01) | 3.22.2 | 3.22.2 |
+| [033](033-description-list-margin-reset/) lc-description-list keeps the browser's dd margin | life-os | BA-8 | 3.22.3 | 3.22.3 |
