@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.23.1] - 2026-11-02
+
+`lc-description-list` link and primary values reach 4.5:1, clickable rows are 44 px tall with a visible focus outline (life-os BA-10, bank accounts page), and the follow-ups F-8 to F-13 of 3.22.4 reach WCAG 2.2 AA. No API breaks.
+
+### Fixed
+
+- **`lc-description-list` link and `primary` values** (BA-10 = 033 finding 4) use `--color-link` (hover `--color-link-hover`) and `--color-on-primary-subtle`: light 4.17 → 5.94 (link) and 8.74 (primary) on the page, 3.96 → 5.64 / 8.29 on a hovered row; dark link 7.57 → 8.96.
+- **Clickable `lc-description-list` rows** (BA-10) are at least 44 px tall in the `rows` layout (`md` 38 → 45, `sm` 27 → 45; the last row 44), at every width; `stacked` (62 / 48) and non-clickable rows are unchanged. Focus is a 2 px `--color-primary-500` outline 2 px outside the row (4.36:1 light, 9.12:1 dark on a card; the 20 % halo was 1.28 / 1.50) and `Highlight` in forced colours.
+- **`lc-notification-center`** (F-8): message and time on unread rows use `--color-text-secondary`: dark 4.23 → 7.05, light 5.01 → 6.49.
+- **`lc-notification-center` header**: long (German) actions wrap to a second line, end-aligned, instead of being clipped (360: 13 px, 320: 54 px); the German header is 75 px tall at 360 and 93 at 320. Headers that fit on one line are unchanged (51 px).
+- **`lc-dependency-viewer`** (F-9): `depends` (label, line, arrow, legend) and the layered structural edges use `--color-text-secondary`: light 2.53 → 7.55, dark 3.57 → 11.15; tree lines `--color-field-border`: light 1.47 → 4.83, dark 2.28 → 6.70.
+- **`lc-log-viewer` search matches** (F-10) are an opaque amber marker with dark ink: 7.85:1 on every line in both themes (dark was 3.82, debug lines 3.25), terminal 12.90:1 (was 3.29); `Mark` / `MarkText` in forced colours.
+- **`lc-progress-bar` secondary fill** (F-11) and the **`lc-progress-ring` secondary arc** use the new `--color-secondary-graphic`: bar light 2.83 → 4.19 against the track; ring dark secondary vs info 1.07 → 1.92.
+- **`lc-log-viewer` `.ansi-gray`** (F-13): light (Latte) `#5c5f77`, 2.60 → 6.25; terminal (Mocha) `#9399b2`, 3.35 → 5.81. Other ANSI colours are unchanged.
+- `lc-description-list` source: the comment on the term no longer speaks of a `dd` margin (033 finding 3); no rendering change.
+- Stories: Card "Footer slot" renders its description list again (033 finding 2); Notification Center "Priority On Unread Rows" is fully German; new: Description List "Link and primary values (BA-10)", "Clickable rows (BA-10)", "Clickable rows, English", LogViewer "ANSI gray on every line".
+
+### Added
+
+- Token `--color-secondary-graphic` (light `#5a798c`, dark `#7097af`): secondary data marks, ≥ 3:1 against the track and the page in both themes. Not a text colour.
+
+### Compatibility
+
+- No API breaks: no input, output, slot or class changed; `--color-success/-error/-warning/-info` keep their values. Clickable rows grow (38 → 45 px): a layout with a fixed height around a clickable list gets 7 px per row more. `lh` needs Chrome 109, Safari 16.4, Firefox 120; older browsers keep the 38 px row. Light ring and dark bar secondary keep their colour.
+- F-12: the 28 px log tool buttons and the 40 px pill hit areas meet WCAG 2.5.8 by size; 44 px would overflow the 360 px toolbar with German labels by 22 px.
+
+### Known
+
+- F-14 bar primary in dark 2.89 on a surface-2 track; F-15 20 % focus halos as the only indicator (NC title and dismiss, log jump-to-bottom); F-16 dependency toggle and node borders `neutral-300`; F-17 `role="button"` on description-list rows.
+
 ## [3.23.0] - 2026-11-02
 
 `lc-accordion` gets a flush form, `variant="plain"`: title, chevron and body line up with the content edge of the sheet or card around them (life-os BA-9, booking sheet „Quelle ansehen“). No API breaks.

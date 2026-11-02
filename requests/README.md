@@ -70,3 +70,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [033](033-description-list-margin-reset/) lc-description-list keeps the browser's dd margin | life-os | BA-8 | 3.22.3 | 3.22.3 |
 | [034](034-status-ink-contrast-follow-up-2/) Status ink contrast follow-up 2: notification-center high chip, progress-ring, diff-viewer, card primary chip, log-viewer pills and dimmed text, dependency-viewer edge labels | owner | F-1 to F-7 of 029 | 3.22.4 | 3.22.4 |
 | [035](035-accordion-flush-inset/) lc-accordion flush form without inline padding | life-os | BA-9 | 3.23.0 | 3.23.0 |
+| [036](036-description-list-and-status-ink-follow-ups/) Description-list contrast and targets, 033 story and comment fixes, 034 status-ink follow-ups (notification-center, dependency-viewer, log-viewer, progress-bar, progress-ring) | owner | BA-10; 033 review findings 2–4; 034 F-8 to F-13 | 3.23.1 | 3.23.1 |
