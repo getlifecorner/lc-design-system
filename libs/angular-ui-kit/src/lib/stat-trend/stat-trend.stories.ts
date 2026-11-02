@@ -280,6 +280,86 @@ export const Costs: Story = {
 };
 
 /**
+ * Inside a clickable card (request 031, WCAG 2.5.3 Label in Name): a KPI tile
+ * as `lc-card [clickable]="true"` (`role="button"`) named by `ariaLabel`. Since
+ * 3.22.1 the stat trend keeps a space between label, value and change in its
+ * text, so the name can contain the visible text: "Gesamtkosten Plan 2026:
+ * 571.000,00 €. Herkunft anzeigen" passes axe `label-content-name-mismatch`.
+ * Rule: the name holds the tile's visible text in order (label, value, change,
+ * then the sparkline's name if there is one); other words ("Herkunft
+ * anzeigen", the sentiment words) go before or after that run. A sparkline's
+ * name ("Sparkline: 10 points, …") counts as content of the card and has to
+ * be repeated in the name. Bind `[clickable]="true"`: a bare `clickable`
+ * attribute is an empty string and leaves the card static.
+ */
+export const InsideAClickableCard: Story = {
+  name: 'Inside a clickable card',
+  parameters: {
+    docs: {
+      description: {
+        story: `
+A KPI tile as a clickable card (\`role="button"\`, named by \`ariaLabel\`). The stat trend keeps a space between label, value and change in its text (3.22.1), so a name such as "Gesamtkosten Plan 2026: 571.000,00 €. Herkunft anzeigen" contains the visible text and passes WCAG 2.5.3 (axe \`label-content-name-mismatch\`).
+
+**Naming rule:** the \`ariaLabel\` holds the tile's visible text in order: label, value, change, then the sparkline's name if there is one. Other words, such as "Herkunft anzeigen" or the sentiment words ("gestiegen, ungünstig"), go before or after that run, not inside it.
+
+**Sparkline:** its generated name ("Sparkline: 10 points, min 20, max 42, last 42") counts as content of the card, so a tile with a sparkline repeats it in the card's name.
+
+Bind \`[clickable]="true"\`: a bare \`clickable\` attribute is an empty string and leaves the card static.
+`,
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <lc-card
+          variant="outlined"
+          padding="md"
+          borderRadius="md"
+          [clickable]="true"
+          ariaLabel="Total cost plan 2026: €571,000.00. Show source"
+        >
+          <lc-stat-trend label="Total cost plan 2026" value="€571,000.00" icon="wallet"></lc-stat-trend>
+        </lc-card>
+
+        <lc-card
+          lang="de"
+          variant="outlined"
+          padding="md"
+          borderRadius="md"
+          [clickable]="true"
+          ariaLabel="Gesamtkosten Plan 2026: 571.000,00 €. Herkunft anzeigen"
+        >
+          <lc-stat-trend label="Gesamtkosten Plan 2026" value="571.000,00 €" icon="wallet"></lc-stat-trend>
+        </lc-card>
+
+        <lc-card
+          lang="de"
+          variant="outlined"
+          padding="md"
+          borderRadius="md"
+          [clickable]="true"
+          ariaLabel="Gesamtkosten Plan 2026 einschließlich Rückstellungen: 1.234.567,89 €, +3,1 %, gestiegen, ungünstig. Herkunft anzeigen"
+        >
+          <lc-stat-trend
+            label="Gesamtkosten Plan 2026 einschließlich Rückstellungen"
+            value="1.234.567,89 €"
+            change="+3,1 %"
+            sentiment="negative"
+            [labels]="de"
+            icon="wallet"
+          ></lc-stat-trend>
+        </lc-card>
+      </div>
+    `,
+    props: { de: DE_LABELS },
+    moduleMetadata: {
+      imports: [StatTrendComponent, CardComponent],
+    },
+  }),
+};
+
+/**
  * Sentiment (request 019, G4): the same arrows, coloured by what the change
  * means. Costs +3.1% is negative, churn -0.8% positive, a budget variance of
  * +0.4% neutral. Each pill carries a hidden ", up, unfavourable" text.

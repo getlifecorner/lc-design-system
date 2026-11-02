@@ -7,12 +7,14 @@
       <lc-icon [name]="icon()" size="sm" class="lc-stat-trend__header-icon" [decorative]="true" />
     }
   </div>
-
+  <!-- Request 031 (WCAG 2.5.3): a space before the row, the pill and the sparkline keeps the
+       text "Label Value +3,1 %"; in a flex container it gets no box and renders nothing. -->
+  &ngsp;
   <div class="lc-stat-trend__row">
     <span class="lc-stat-trend__value">{{ value() }}</span>
 
     @if (change()) {
-      <span class="lc-stat-trend__change" [class]="trendColorClass()">
+      &ngsp;<span class="lc-stat-trend__change" [class]="trendColorClass()">
         <span class="lc-stat-trend__icon" [attr.aria-hidden]="sentiment() ? 'true' : null">{{ trendIcon() }}</span>
         <!-- The hidden text follows the change without a space ("+3,1 %, gestiegen", review r1 N2);
              without a sentiment the text node stays " +3.1% " as before 3.14. -->
@@ -26,7 +28,7 @@
   </div>
 
   @if (hasSparkline()) {
-    <lc-sparkline
+    &ngsp;<lc-sparkline
       [data]="sparklineData()"
       [color]="resolvedSparklineColor()"
       [width]="120"

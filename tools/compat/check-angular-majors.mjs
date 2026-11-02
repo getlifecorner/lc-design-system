@@ -297,6 +297,9 @@ const EXPECT_IN_HTML = [
   ['sidenav text brand: one plain link home, tile hidden, name as text (G2)', /<a(?=[^>]*\sclass="lc-sidenav__brand")(?=[^>]*\shref="\/")(?=[^>]*\saria-label="Finance Intelligence – Startseite")[^>]*>(?:(?!<\/a>)[^])*?<span(?=[^>]*\sclass="lc-sidenav__brand-tile")(?=[^>]*\saria-hidden="true")[^>]*>(?:(?!<\/a>)[^])*?<span[^>]*\sclass="lc-sidenav__brand-name"[^>]*>Finance Intelligence<\/span>/],
   // The hidden text follows the change without a space (review r1 N2: "+3,1 % , gestiegen").
   ['stat-trend sentiment: negative class and the hidden text (G4)', /<span(?=[^>]*\sclass="lc-stat-trend__change lc-stat-trend__change--negative")[^>]*>(?:<!--[^]*?-->|\s)*<span(?=[^>]*\sclass="lc-stat-trend__icon")(?=[^>]*\saria-hidden="true")[^>]*>↑<\/span>(?:<!--[^]*?-->|[^<])*\+3,1 %(?:<!--[^]*?-->)*<span[^>]*\sclass="lc-stat-trend__sr-only"[^>]*>, gestiegen, ungünstig<\/span>/],
+  // 3.22.1 (request 031, gap file cockpit-2026-11-01 row 2): a space between label and value
+  // and between value and change in the server HTML, so the text reads "Kosten (Monat) 48,2 Mio. €"
+  ['stat-trend: label, value and change separated by a space (WCAG 2.5.3)', /Kosten \(Monat\)<\/span>(?:<!--[^]*?-->)*<\/div> <div[^>]*\sclass="lc-stat-trend__row"[^>]*><span[^>]*>48,2 Mio\. €<\/span>(?:<!--[^]*?-->)* <span[^>]*\sclass="lc-stat-trend__change/],
   // 3.15 (request 020, probe-315.ts): the state page's modifiers are classes in
   // the server HTML and the person glyph is the template's SVG, final before JS
   ['app page lined up with the header: pad-x-header, pad-top-md (app-shell-prove 1–2)', /<lc-app-page(?=[^>]*\sid="compat-page-315")[^>]*>(?:<!--[^]*?-->|\s)*<div(?=[^>]*\sclass="[^"]*\blc-app-page--pad-x-header\b)(?=[^>]*\sclass="[^"]*\blc-app-page--pad-top-md\b)[^>]*>/],
