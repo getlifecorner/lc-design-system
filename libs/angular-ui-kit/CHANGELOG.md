@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.23.0] - 2026-11-02
+
+`lc-accordion` gets a flush form, `variant="plain"`: title, chevron and body line up with the content edge of the sheet or card around them (life-os BA-9, booking sheet „Quelle ansehen“). No API breaks.
+
+### Added
+
+- **`lc-accordion` `variant="plain"`** (BA-9): no border, background or inline inset at `sm`, `md` and `lg`, collapsed and expanded. In a 328 px container at 360 px the title and the body start at the container edge (0 px, was 18 px with `flat`), the chevron ends at the other edge. The header keeps its block padding and is at least 44 px high (`sm` 44, was 40; `md` 50.5, `lg` 61.5). The body does not move sideways while it expands. A long German title wraps and hyphenates inside the header.
+- **`--lc-accordion-header-bleed`** (default `var(--spacing-2)`, 8 px; plain only): the hover background and the 2 px focus ring sit on a box that reaches this far past the text on both sides, so neither touches the glyphs. Set a length: `0px`, not `0`, which removes the ring and the hover fill (a unitless `0` makes the box 0 px wide). Ring contrast ≥ 3.97:1 (light, over the hover fill) and ≥ 6.69:1 (dark); `Highlight` in forced colours. Keep 8 px of room before a clipping or scrolling edge. `--lc-accordion-header-bg`, `-hover-bg` and `-border` paint that box in plain.
+- Type `AccordionVariant` (`'outlined' | 'flat' | 'plain'`).
+- Stories: Components/Accordion "Plain Variant", "Plain Sizes and Chevron", "Plain in a Card (Sheet Alignment)".
+
+### Compatibility
+
+- No API breaks: `variant` stays `'outlined'` by default, the template is unchanged, and every new rule is scoped to `.lc-accordion--plain`. The compiled stylesheet before the plain block is byte-identical to 3.22.4; the 90 story shots of `lc-accordion` and `lc-accordion-group` are hash-identical. `--lc-accordion-header-padding` and `--lc-accordion-body-padding` still win in plain; set only block values there.
+- With `prefers-reduced-motion`, the plain form runs no transition at all (the other variants keep today's shortened ones).
+
+### Migration
+
+- life-os: replace `variant="flat"` and the interim `style="--lc-accordion-header-padding: 0.875rem 0; --lc-accordion-body-padding: 0.875rem 0 1rem"` with `variant="plain"`. The interim values equal the plain `md` defaults, so leftovers render the same.
+
+### Known
+
+- `--lc-accordion-header-bleed: 0` (unitless) removes the focus ring and the hover fill; the SCSS comment says so, the JSDoc of `variant` and the docs bullet do not yet (review 035, finding 1).
+- In an `overflow-x: auto` box with 0 inline padding, a plain accordion scrolls 8 px sideways (the bleed box); with 8 px of inline padding it does not (review 035, finding 2).
+
 ## [3.22.4] - 2026-11-02
 
 Seven contrast and target gaps that 3.21.1 left open (follow-ups F-1 to F-7 of request 029) now reach WCAG 2.2 AA in both themes, in six components. No API breaks.

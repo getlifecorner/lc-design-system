@@ -20,7 +20,7 @@ Extend `lc-accordion` with a third **`variant` value `'plain'`**: no border, no 
 |---|---|---|---|---|
 | input (type widened) | `variant` | `AccordionVariant` | `'outlined'` | Visual variant. `'outlined'`: border and surface. `'flat'`: no border or background; header and body keep their inset. `'plain'`: no border, background or inline inset, so the title, chevron and body line up with the content edge of the sheet or card around it; the hover background and focus ring reach 8 px past that edge (`--lc-accordion-header-bleed`), so keep that much room before a clipping edge. @default 'outlined' |
 | type (new export) | `AccordionVariant` | `'outlined' \| 'flat' \| 'plain'` | — | Visual variant of `lc-accordion`. |
-| CSS hook (new) | `--lc-accordion-header-bleed` | `<length>` | `var(--spacing-2)` (8 px) | `plain` only: how far the header's hover background and focus ring reach past the text into the gutter. From 4 px the ring keeps ≥ 2 px from the glyphs; 0 puts it on the text. Read at the use site, never declared on the host (020 pitfall). |
+| CSS hook (new) | `--lc-accordion-header-bleed` | `<length>` | `var(--spacing-2)` (8 px) | `plain` only: how far the header's hover background and focus ring reach past the text into the gutter. From 4 px the ring keeps ≥ 2 px from the glyphs; `0px` puts it on the text. Must be a length: a unitless `0` makes the `calc()` invalid and removes the box, ring and hover included (review r1, finding 1). Read at the use site, never declared on the host (020 pitfall). |
 | CSS hooks (existing) | `--lc-accordion-header-padding`, `--lc-accordion-body-padding` | shorthand | plain fallbacks in §3 | Still win when set. In `plain`, set only block values (inline ≠ 0 moves the text off the edge, and the body would shift while expanding). |
 | CSS hooks (existing) | `--lc-accordion-header-bg`, `-hover-bg`, `-border` | — | as today | In `plain` they paint the bleed box instead of the button, so a tint or border never touches or moves the text. |
 
@@ -157,5 +157,7 @@ Baseline: `tmp/story-shots/035/baseline` (90 shots: the 9 accordion + 6 accordio
 | AC-11 | compat: add `<lc-accordion variant="plain" title="Quelle ansehen">Quelle</lc-accordion>` to `tools/compat/template/src/app/home.html` and `['plain accordion', /class="[^"]*lc-accordion--plain/]` to `EXPECT_IN_HTML` | match on 21 and 22 |
 | AC-12 | shots of the 3 new stories at 360/1024/1280 L/D; focused shot from AC-5 | rings visible in both themes; group: n/a (no `variant` forwarding) |
 | AC-13 | JSDoc `@default 'outlined'`, argType §8, `PlainInCard`: dt x = title x = body x = link text x | 41 at 360 |
+
+**Change note (review r1, 2026-11-02):** §2 said a bleed of "0" puts the ring on the text. Measured: only `0px` does; unitless `0` gives a 0 px wide `::before` (no ring, no hover). Corrected in §2; the CHANGELOG states it. Code unchanged.
 
 Changelog hint for life-os (BA-9): replace `variant="flat"` and the interim `style` with `variant="plain"`; the interim hook values equal the plain md defaults, so leftovers render the same.
