@@ -73,6 +73,7 @@ metadata:
 
 - **Sketch existing layout from measurements (031).** My §3 wireframe put the stat-trend icon at the card's right edge. It actually follows the label (the tile is `inline-flex`), and the review had to correct the design. Before drawing an unchanged component inside a new story, measure the icon x and the row heights with and without optional parts.
 - **Story text and fixed dates (030).** Don't ask for `${CONST.length}` in a story description: the MCP manifest reads descriptions statically, so a literal count ("All 150 constants") is right and must be bumped by the next request that appends glyphs. For "stable" timestamps, specify local-time `new Date(y, m, d, h, …)`: `Date.UTC` renders in the machine's zone (08:00 UTC showed 09:00 in CET shots). Making a glyph inline changes `unregistered: 'placeholder'` apps that drew it themselves (fetched before → placeholder now): put that in Compatibility.
+- **"Spec file passes unchanged" (032).** Before writing that in §9, grep every spec in the folder for the property the fix moves (`style.width`): `skeleton.height.spec.ts` asserted the fill width too, contradicting AC-2, and became a build deviation.
 
 **Why:** each of these cost a round trip or would have broken the build.
 

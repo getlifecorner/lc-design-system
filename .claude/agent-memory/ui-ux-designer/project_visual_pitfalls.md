@@ -1,0 +1,13 @@
+---
+name: project-visual-pitfalls
+description: Stories that are not hash-stable for --compare, and story-grid width pitfalls at 360 px
+metadata:
+  type: project
+---
+
+- Not hash-stable (checked 2026-11-02 with two runs on the same build): `data-display-logviewer--{default,terminal,with-ansi-colors,errors-only,flex-parent,large-buffer}`, because their stories use `new Date()` timestamps. `--streaming` was stable. Review them by `--measure`, and ask for fixed timestamps in new log-viewer stories.
+- Stable: search-input, the icon stories (except inline-set and icon-constants when the set changes), code-block, copy-field, kanban, treeview, filter-bar, input with-icon, empty-state no-results, list with-disabled.
+- Icon size grids (label + 16/20/24/32/40 px) overflow 328 px at 360 with a 24 px column gap; use an 8 px gap and labels of at most 18 monospace characters.
+
+**Why:** a hash diff on an unstable story wastes a shot opening in review.
+**How to apply:** do a quick stability re-run when capturing baselines (`--compare` against the fresh baseline).

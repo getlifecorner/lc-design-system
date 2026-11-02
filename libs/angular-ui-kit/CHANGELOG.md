@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.22.2] - 2026-11-02
+
+`lc-skeleton` applies a percentage `width` once, so `width="30%"` is 30 % of the line (finance-intelligence cockpit, gap file `cockpit-2026-11-01` row 3). No API breaks.
+
+### Fixed
+
+- **`lc-skeleton` applies a percentage `width` once, to the host**: the host and the inner fill both took the width, so a percentage resolved against the already-shrunk host: `width="30%"` drew 9 % of the line and `60%` drew 36 %. Now the host takes the width and the fill always spans it: `30%` is 30 %, `60%` is 60 %, and `calc(100% - 2rem)` is exact too. In a 294 px card row (360 px) `60%` / `30%` with `justify-content: space-between` measure 176.4 / 88.2 px and the second ends at the row's right edge (3.22.1: 105.8 / 26.5 px). The inline width is in the prerendered HTML, so the proportions hold before JavaScript.
+- Stories: Feedback/Skeleton "Percentage widths" (the cockpit's loading card); "Table Rows Loading" spaces its columns with `space-between` instead of a 16 px gap, which no longer fits beside 100 % of percentages.
+
+### Compatibility
+
+- No API breaks: no input, default, class or hook changed. The fill's inline `width` is now always `100%`; a test that reads `.lc-skeleton`'s `style.width` sees `100%` instead of the input.
+- `px`, `rem` and the defaults (`100%`, a circle's `40px`) render byte-identical (36 story shots at 360, 1024 and 1280 px, light and dark).
+- Percentage widths now draw what they say. Placeholders tuned around the bug (`50%` to get 25 %, a wrapper `div` holding the percentage) can be simplified. A row whose percentages plus its `gap` exceed 100 % now overflows visibly; the hosts already did before: use `justify-content: space-between` instead of a gap.
+
 ## [3.22.1] - 2026-11-02
 
 `lc-stat-trend` keeps a space between its label, value and change in the text, so a KPI tile built as a clickable `lc-card` passes the accessible-name check (finance-intelligence cockpit, gap file `cockpit-2026-11-01` row 2). No API breaks.

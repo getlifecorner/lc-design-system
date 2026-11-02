@@ -32,9 +32,11 @@ DOM contract after the fix (prerendered HTML is the same, AC-8):
 
 ```html
 <lc-skeleton style="width: 30%; flex-shrink: 0;">
-  <div class="lc-skeleton lc-skeleton--line" style="width: 100%; height: 0.875rem; border-radius: 0.25rem;"></div>
+  <div class="lc-skeleton lc-skeleton--line" style="border-radius: 0.25rem; height: 0.875rem; width: 100%;"></div>
 </lc-skeleton>
 ```
+
+*Change note (review r1):* the fill's declaration order is Angular's `[style]` map order (`border-radius; height; width`, as in 3.22.1); the earlier sketch showed `width` first. Order has no effect on rendering; `skeleton.width.spec.ts` pins the real string (build.md deviation 2).
 
 Default rendering unchanged: for `px`/`rem`/`em`/`vw` and the defaults `100%`/`40px`, the fill's old width equalled the host's content width, which is exactly `100%` of the host (no padding or border on the host). Proved by hash in §1. The host comment in `skeleton.component.ts` ("mirrors the box width") becomes "takes the width once; the fill spans it". The "3.22.2" in texts is the expected patch number; the release-manager confirms it.
 
@@ -136,7 +138,7 @@ Unchanged (AC-4 baseline, `--full`): `feedback-skeleton--{line,circle,rectangle,
 | AC-3 | `skeleton.component.spec.ts` | lines 22, 31, 47 expect `'100%'`; host lines 24, 34, 50 unchanged |
 | AC-4 | `--stories=<6 ids> --widths=360,1024,1280 --themes=light,dark --full --compare=tmp/story-shots/032/baseline` | 36/36 identical (see §8 note on `today-loading` 360 dark) |
 | AC-5 | measure on `.story-pw__row` (`[...r.children].map(h => [host width, fill width, host right])`) at 360, 1024, 1280 | 360: row 294 (x 33–327), A 176.4 / 88.2, second right = 327, space 29.4; B 235.2 / 44.1, space 14.7. 1024/1280: row 446 (x 33–479), A 267.6 / 133.8, right = 479; B 356.8 / 66.9. Card height 236 |
-| AC-6 | `skeleton.height.spec.ts`, `skeleton.styles.spec.ts` unchanged and green; `height-from-container` in the AC-4 hash set | pass, identical |
+| AC-6 | `skeleton.height.spec.ts` (height, radius, class, host width unchanged), `skeleton.styles.spec.ts` unchanged and green; `height-from-container` in the AC-4 hash set | pass, identical. *Change note (review r1):* the AC-17 table's circle row in `skeleton.height.spec.ts` asserts the fill `width` too; it moves `40px` → `100%` per AC-2 (a fourth "inner width = input" line AC-3 missed). The circle box is pixel-identical (AC-4 hashes) |
 | AC-7 | unit test: circle `width="40px"` → host `40px`, fill `100%`, `el.style.flexShrink` = `0`; measure: user-card circle 48 × 48 at 360, `percentage-widths` hosts keep 60/30 % | as stated |
 | AC-8 | unit test on the serialised attributes | `el.getAttribute('style')` contains `width: 30%` and `flex-shrink: 0`; `box().getAttribute('style')` contains `width: 100%` |
 | AC-9 | n/a | no text, no semantics change |
