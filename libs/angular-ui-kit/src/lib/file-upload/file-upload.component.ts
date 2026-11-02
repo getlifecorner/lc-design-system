@@ -18,6 +18,40 @@ export interface FileUploadFile {
   type: string;
 }
 
+/** Why `lc-file-upload` rejected a file. */
+export type FileUploadRejectionCode = 'size' | 'type';
+
+/** Payload of `lc-file-upload`'s `fileRejected`. */
+export interface FileUploadRejection {
+  file: File;
+  /** Fixed English text ("File type not accepted", "File too large"); translate from `code`. */
+  reason: string;
+  /** `'type'`: matches no `accept` token (checked first); `'size'`: over `maxSizeBytes`. */
+  code: FileUploadRejectionCode;
+}
+
+/** RFC 9110 `token` (lower-cased): one MIME type or subtype, without parameters. */
+const MIME_PART = "[!#$%&'*+.^_`|~0-9a-z-]+";
+const MIME_TOKEN = new RegExp(`^${MIME_PART}/${MIME_PART}$`);
+
+/**
+ * Whether `token` is an `accept` token the check knows: `.ext`, `type/subtype`
+ * or `type/*`. A MIME type with parameters (`text/csv;charset=utf-8`) is not
+ * one, as for Chromium's picker.
+ */
+function isAcceptToken(token: string): boolean {
+  return (token.length > 1 && token.startsWith('.')) || MIME_TOKEN.test(token);
+}
+
+/** Whether `file` matches one `accept` token (lower-cased). The any-type wildcard matches every file. */
+function matchesToken(file: File, token: string): boolean {
+  if (token.startsWith('.')) return (file.name || '').toLowerCase().endsWith(token);
+  const type = (file.type || '').toLowerCase();
+  if (token === '*/*') return true;
+  if (token.endsWith('/*')) return type.startsWith(token.slice(0, -1));
+  return type === token;
+}
+
 /**
  * File upload / dropzone component with drag & drop support.
  *
@@ -46,9 +80,16 @@ export interface FileUploadFile {
  * Features:
  * - Drag-and-drop file dropzone with visual feedback
  * - Click-to-browse file selection
- * - File type and size validation
- * - Multi-file upload support
+ * - File type and size validation, the same for picked and dropped files
+ *   (3.24): type first (`accept`), then size (`maxSizeBytes`); a file that
+ *   fails emits one `fileRejected` (`{ file, reason, code }`, `code` `'type'`
+ *   or `'size'`), before `filesSelected`. The kit shows no rejection message:
+ *   show your own, translated from `code`.
+ * - Multi-file upload support. With `multiple=false` a new pick or drop
+ *   replaces the selection with its first accepted file; if all its files
+ *   are rejected, the selection is cleared and `filesSelected` emits `[]`.
  * - File list display with removal
+ * - Sizes in the page's notation with `locale` (3.24, `'de-DE'`: "20,0 MB")
  * - Disabled state support
  *
  * @example
@@ -58,12 +99,22 @@ export interface FileUploadFile {
  */
 export class FileUploadComponent {
   /**
-   * Accepted file types (e.g. ".pdf,.jpg,image/*").
+   * Accepted types, comma-separated, case-insensitive: extensions (`.csv`),
+   * MIME types (`text/csv`), wildcards (`image/*`); `*\/*` accepts every type.
+   * Since 3.24 checked for picked and dropped files alike; a file matching no
+   * token is rejected with `code: 'type'`. Tokens that are neither, such as a
+   * MIME type with parameters (`text/csv;charset=utf-8`), are ignored, as by
+   * the browser's picker; none left = every type. Prefer extensions: systems report MIME
+   * types differently (a CSV can arrive as `application/vnd.ms-excel`).
+   * @default ''
    */
   accept = input<string>('');
 
   /**
-   * Allow multiple files.
+   * Allow multiple files. `false`: one file. A new pick or drop replaces the
+   * selection with its first accepted file; if all its files are rejected
+   * (size or type), the selection is cleared and `filesSelected` emits `[]`.
+   * `true`: accepted files are added to the selection.
    * @default false
    */
   multiple = input<boolean>(false);
@@ -106,14 +157,25 @@ export class FileUploadComponent {
   removeFileAriaLabel = input('Remove file');
 
   /**
+   * BCP 47 locale of the shown sizes (max line, drop zone name, file list):
+   * `'de-DE'` gives "20,0 MB". Units stay B/KB/MB (1024 base). Empty keeps
+   * the built-in notation ("20.0 MB"); an invalid locale falls back to it.
+   * @default ''
+   */
+  locale = input<string>('');
+
+  /**
    * Emitted with selected files after validation.
    */
   readonly filesSelected = output<FileUploadFile[]>();
 
   /**
-   * Emitted when a file is rejected (too large or wrong type).
+   * Emitted once per rejected file, before `filesSelected`. `code`: `'type'`
+   * (matches no `accept` token; checked first) or `'size'` (over
+   * `maxSizeBytes`). `reason` is a fixed English text ("File type not
+   * accepted", "File too large"); translate from `code`.
    */
-  readonly fileRejected = output<{ file: File; reason: string }>();
+  readonly fileRejected = output<FileUploadRejection>();
 
   protected isDragOver = signal(false);
   protected selectedFiles = signal<FileUploadFile[]>([]);
@@ -141,6 +203,32 @@ export class FileUploadComponent {
     ]
       .filter(Boolean)
       .join(', '),
+  );
+
+  /**
+   * The size notation of `locale` (3.24): whole bytes, KB/MB to one decimal.
+   * Null keeps the built-in `toFixed` notation (no or an invalid locale).
+   */
+  private readonly sizeFormats = computed(() => {
+    const locale = this.locale();
+    if (!locale) return null;
+    try {
+      return {
+        whole: new Intl.NumberFormat(locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 }),
+        tenths: new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+      };
+    } catch {
+      return null;
+    }
+  });
+
+  /** The `accept` tokens the check knows, lower-cased; empty = every type. */
+  private readonly acceptTokens = computed(() =>
+    // `|| ''`: an untyped template may bind null, as it could before 3.24.
+    (this.accept() || '')
+      .split(',')
+      .map((token) => token.trim().toLowerCase())
+      .filter(isAcceptToken),
   );
 
   protected onDragOver(event: DragEvent): void {
@@ -186,9 +274,27 @@ export class FileUploadComponent {
   }
 
   protected formatSize(bytes: number): string {
+    const formats = this.sizeFormats();
+    if (formats) {
+      if (bytes < 1024) return `${formats.whole.format(bytes)} B`;
+      if (bytes < 1024 * 1024) return `${formats.tenths.format(bytes / 1024)} KB`;
+      return `${formats.tenths.format(bytes / (1024 * 1024))} MB`;
+    }
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  /** Why `file` is rejected: type first, then size; null when it is accepted. */
+  private rejectionOf(file: File): FileUploadRejection | null {
+    const tokens = this.acceptTokens();
+    if (tokens.length && !tokens.some((token) => matchesToken(file, token))) {
+      return { file, reason: 'File type not accepted', code: 'type' };
+    }
+    if (this.maxSizeBytes() > 0 && file.size > this.maxSizeBytes()) {
+      return { file, reason: 'File too large', code: 'size' };
+    }
+    return null;
   }
 
   private processFiles(fileList: FileList): void {
@@ -196,8 +302,9 @@ export class FileUploadComponent {
     const accepted: FileUploadFile[] = [];
 
     for (const file of files) {
-      if (this.maxSizeBytes() > 0 && file.size > this.maxSizeBytes()) {
-        this.fileRejected.emit({ file, reason: 'File too large' });
+      const rejection = this.rejectionOf(file);
+      if (rejection) {
+        this.fileRejected.emit(rejection);
         continue;
       }
       accepted.push({

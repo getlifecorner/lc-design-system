@@ -384,6 +384,11 @@ const EXPECT_IN_HTML = [
   // 3.23 (request 035, home.html): the flush form's class is in the server
   // HTML, so the plain layout holds before JS (BA-9, 035 AC-11)
   ['plain accordion', /class="[^"]*lc-accordion--plain/],
+  // 3.24 (request 037, home.html): a link card is a real link before JS, its
+  // anchor inside the heading (quellen row 1, 037 AC-15). The static `href`
+  // also stays on the lc-card host, so the checks name the anchor's class.
+  ['link card route', /<h2\b[^>]*class="card__title"[^>]*>(?:<!--[^]*?-->|\s)*<a(?=[^>]*\sclass="card__link")(?=[^>]*\shref="\/quellen\/usm\?ansicht=laeufe")[^>]*>Quelle<\/a>/],
+  ['link card href', /<h3\b[^>]*class="card__title"[^>]*>(?:<!--[^]*?-->|\s)*<a(?=[^>]*\sclass="card__link")(?=[^>]*\shref="\/de\/hilfe")[^>]*>Hilfe<\/a>/],
 ];
 
 /**

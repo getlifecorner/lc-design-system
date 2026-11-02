@@ -2,10 +2,14 @@
 <div
   [class]="cardClasses()"
   [attr.role]="role()"
-  [attr.aria-label]="ariaLabel()"
+  [attr.aria-label]="cardAriaLabel()"
   [attr.tabindex]="isClickable() ? 0 : null"
   (click)="handleClick($event)"
 >
+  @if (linkMode() && !title()) {
+    <!-- Link card without a title (3.24): an empty anchor, named by ariaLabel, covers the card. -->
+    <ng-container [ngTemplateOutlet]="cardLink" [ngTemplateOutletContext]="{ bare: true }" />
+  }
   @if (title()) {
     <div class="card__header">
       @if (icon()) {
@@ -18,21 +22,42 @@
       }
       <div class="card__header-left">
         <div class="card__title-row">
-          @switch (headingLevel()) {
-            @case (2) {
-              <h2 class="card__title">{{ title() }}</h2>
+          @if (linkMode()) {
+            <!-- Link card (3.24): the heading stays a heading and holds the link. -->
+            @switch (headingLevel()) {
+              @case (2) {
+                <h2 class="card__title"><ng-container [ngTemplateOutlet]="cardLink" /></h2>
+              }
+              @case (4) {
+                <h4 class="card__title"><ng-container [ngTemplateOutlet]="cardLink" /></h4>
+              }
+              @case (5) {
+                <h5 class="card__title"><ng-container [ngTemplateOutlet]="cardLink" /></h5>
+              }
+              @case (6) {
+                <h6 class="card__title"><ng-container [ngTemplateOutlet]="cardLink" /></h6>
+              }
+              @default {
+                <h3 class="card__title"><ng-container [ngTemplateOutlet]="cardLink" /></h3>
+              }
             }
-            @case (4) {
-              <h4 class="card__title">{{ title() }}</h4>
-            }
-            @case (5) {
-              <h5 class="card__title">{{ title() }}</h5>
-            }
-            @case (6) {
-              <h6 class="card__title">{{ title() }}</h6>
-            }
-            @default {
-              <h3 class="card__title">{{ title() }}</h3>
+          } @else {
+            @switch (headingLevel()) {
+              @case (2) {
+                <h2 class="card__title">{{ title() }}</h2>
+              }
+              @case (4) {
+                <h4 class="card__title">{{ title() }}</h4>
+              }
+              @case (5) {
+                <h5 class="card__title">{{ title() }}</h5>
+              }
+              @case (6) {
+                <h6 class="card__title">{{ title() }}</h6>
+              }
+              @default {
+                <h3 class="card__title">{{ title() }}</h3>
+              }
             }
           }
           <!-- Rich status badge: project an lc-badge here (takes visual
@@ -57,3 +82,21 @@
   </div>
   <ng-content select="[card-footer]"></ng-content>
 </div>
+
+<!-- The link of a link card (3.24): `href` (plain, no router) or `route`
+     (RouterLink, created only here, so other cards never need a router).
+     Its ::after covers the card. -->
+<ng-template #cardLink let-bare="bare">
+  @if (linkMode() === 'href') {
+    <a class="card__link" [class.card__link--bare]="bare" [href]="href()" [attr.aria-label]="ariaLabel()">{{ bare ? '' : title() }}</a>
+  } @else {
+    <a
+      class="card__link"
+      [class.card__link--bare]="bare"
+      [routerLink]="route()"
+      [queryParams]="queryParams()"
+      [attr.aria-label]="ariaLabel()"
+      >{{ bare ? '' : title() }}</a
+    >
+  }
+</ng-template>

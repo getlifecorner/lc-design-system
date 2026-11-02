@@ -113,12 +113,12 @@
     }
   }
 
-  // Clickable state
-  &-clickable {
+  // Clickable state; a link card (3.24, `href`/`route`) looks and reacts the
+  // same. Its ring is drawn below, on the card, when the anchor has focus.
+  &-clickable,
+  &-linked {
     cursor: pointer;
     user-select: none;
-
-    @include mix.focus-ring;
 
     &:hover {
       background-color: var(--color-surface-hover);
@@ -127,6 +127,43 @@
 
     &:active {
       transform: scale(0.98);
+    }
+  }
+
+  &-clickable {
+    @include mix.focus-ring;
+  }
+
+  // Link card (3.24): the anchor's ::after covers the card, so the whole card
+  // is the link; `isolation` keeps its z-index inside the card.
+  &-linked {
+    isolation: isolate;
+
+    // The focus-ring mixin's values, on the card instead of the anchor.
+    &:has(.card__link:focus-visible) {
+      outline: 2px solid var(--color-primary-500);
+      outline-offset: 2px;
+
+      // Forced colours turn an outline on a non-focused element into
+      // CanvasText (the border's colour); a focused clickable card gets Highlight.
+      @media (forced-colors: active) {
+        outline-color: Highlight;
+      }
+    }
+  }
+
+  // No UA underline, colour or ring: the title keeps its look, the card
+  // draws the ring. (0,2,0) once scoped, above an app's `a:hover` (0,1,1).
+  &__link {
+    color: inherit;
+    text-decoration: none;
+    outline: none;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
     }
   }
 
@@ -209,12 +246,16 @@
   // Title size goes through a hook (and now names its scale step instead of a
   // loose 1.125rem) so an app can put card titles on its own scale with a
   // plain rule instead of out-specifying `.card__title`.
+  // A long (German) compound hyphenates in the page's `lang` instead of
+  // running past the card (3.24); words under 12 characters never break.
   &__title {
     margin: 0;
     font-weight: 600;
     font-size: var(--lc-card-title-size, var(--font-size-lg, 1.125rem));
     line-height: 1.3;
     color: var(--color-text-primary);
+    hyphens: auto;
+    hyphenate-limit-chars: 12 4 3;
   }
 
   &__badge {
@@ -308,6 +349,14 @@
   padding-top: var(--lc-density-padding-sm, var(--spacing-3));
   border-top: 1px solid var(--color-divider, #e5e7eb);
   color: var(--color-text-secondary);
+}
+
+// Links and controls projected into a link card (3.24) stay clickable above
+// the card's link overlay (z-index 1). `:where()` keeps it at (0,1,0), so a
+// control's own `position: absolute` (password toggle, hidden native input) wins.
+:host ::ng-deep :where(.card-linked :is(a[href], button, input, select, textarea, summary, [tabindex]):not(.card__link)) {
+  position: relative;
+  z-index: 2;
 }
 
 // Icons in the dashed tile are decorative and quieter than its text.

@@ -1,0 +1,12 @@
+# Log 037: lc-card link mode; lc-file-upload rejection code, type check on drop, locale sizes and docs
+
+## Owner decisions
+
+## Handoffs
+
+| Time | From → to | Status | Reason | Task |
+|---|---|---|---|---|
+| 2026-11-02 | spec-writer → ui-ux-designer | done | The spec is ready and the next step in the pipeline is API and visual design. | Design the API and visuals for AC-1…16 of request 037. Cover the lc-card link input names and router variant, how the heading and link are exposed in the accessibility tree, the focus and hover parity with `clickable`, the lc-file-upload `code` type and `locale` input, and the stories (link-card grid, rejection and locale cases, MCP-readable docs). |
+| 2026-11-02 | ui-ux-designer → web-developer | done | The design covers AC-1 to AC-16 with tested and measured values and a captured baseline, and it needs no owner decision or breaking change. | Implement design.md for request 037: the lc-card link mode (href, route, queryParams), the lc-file-upload rejection code, type check and locale, the new and documented stories, and the compat EXPECT_IN_HTML entries. Then compare against the 174 baseline shots in tmp/story-shots/037/baseline, which should all stay identical. |
+| 2026-11-02 | web-developer → ui-ux-designer | done | The build is complete and all gates pass, so the stories and the one deviation go to design review before release. | Review request 037 (stories components-card--link-cards, components-card--link-cards-german, components-card--link-and-clickable, form-file-upload--type-rejected-on-drop, form-file-upload--size-rejected, form-file-upload--german-locale, and the four documented File Upload stories); shots are in tmp/story-shots/037/build, and deviation D-1 in build.md needs your agreement. |
+| 2026-11-02 | ui-ux-designer → web-developer | changes-requested | Review r1 has one must-fix (the forced-colours ring of link cards is CanvasText instead of Highlight), so the build goes back before release. | Fix review.md r1 finding 1 (forced-colours `Highlight` ring on `.card-linked:has(.card__link:focus-visible)`) and, in the same round, findings 2–4 (`:where()` lift rule, changelog lines, `accept` JSDoc `*/*` and tchar-only MIME tokens), as in design.md C-1 to C-3; then rebuild Storybook and hand back for round 2. |

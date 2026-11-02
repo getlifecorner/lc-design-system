@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/angular';
-import { moduleMetadata } from '@storybook/angular';
+import { applicationConfig, moduleMetadata } from '@storybook/angular';
+import { provideRouter, withHashLocation } from '@angular/router';
 import { CardComponent } from './card.component';
 import { IconComponent } from '../icon/icon.component';
 import { BadgeComponent } from '../badge/badge.component';
@@ -27,6 +28,13 @@ Use it for content sections, dashboard widgets, and list items.
 - Subtitle/description below title
 - Clickable mode with hover effects
 - Content projection for headers, body, and footers
+- Link mode (3.24): \`href\` (plain URL) or \`route\` (+ \`queryParams\`, through the
+  Angular router) make the whole card a real link — click, Enter, middle click,
+  "open in new tab", "copy link". The built-in title becomes \`<a>\` inside its
+  heading (\`headingLevel\`), so screen readers list the heading and the link.
+  Look, hover, press, focus ring and \`selected\` are those of \`clickable\`;
+  \`cardClick\` is not emitted (the link navigates once, by itself). Controls
+  projected into a link card stay clickable above the link. \`dashed\` never links.
 
 **Header Structure:**
 - \`title\` — Main heading
@@ -63,7 +71,11 @@ Use it for content sections, dashboard widgets, and list items.
       description: '3.3: heading level of the built-in `title` (`h2`–`h6`). Semantics only, the look stays the same.',
       table: { defaultValue: { summary: '3' } },
     },
-    clickable: { control: 'boolean', description: 'Adds hover effects and pointer cursor (ignored by `dashed`)' },
+    clickable: {
+      control: 'boolean',
+      description: 'Adds hover effects and pointer cursor (ignored by `dashed`; no effect on a link card, `href`/`route`)',
+      table: { defaultValue: { summary: 'false' } },
+    },
     selected: { control: 'boolean', description: 'Highlight as selected (when clickable)' },
     badge: { description: 'Badge text/count shown next to the title' },
     badgeVariant: {
@@ -83,6 +95,23 @@ Use it for content sections, dashboard widgets, and list items.
       options: ['sm', 'md'],
       description: 'Size of the leading icon tile',
       table: { defaultValue: { summary: 'md' } },
+    },
+    href: {
+      control: 'text',
+      description:
+        '3.24: URL the card links to. The card becomes a real link: the built-in `title` is an `<a href>` inside its heading, and the link covers the whole card. No router needed; works in prerendered HTML. Wins over `route`; ignored by `dashed`. `clickable` has no effect and `cardClick` is not emitted.',
+      table: { defaultValue: { summary: 'undefined' } },
+    },
+    route: {
+      control: 'text',
+      description:
+        "3.24: in-app route through the Angular router (`RouterLink` commands: `'/quellen/usm'` or `['/quellen', id]`), relative to the consumer's route, rendered as a real `<a href>`. Needs the app's router (`provideRouter`); without one, use `href`. `''` and `null` mean no link.",
+      table: { defaultValue: { summary: 'undefined' } },
+    },
+    queryParams: {
+      control: 'object',
+      description: "3.24: query parameters of `route`, as `RouterLink`'s `queryParams` (`{ ansicht: 'laeufe' }`). Ignored with `href`.",
+      table: { defaultValue: { summary: 'undefined' } },
     },
   },
 };
@@ -473,6 +502,104 @@ export const DashedComingSoon: Story = {
         </li>
       </ul>
     `,
+  }),
+};
+
+// ── 3.24: link mode (request 037) ──────────────────────────────────────────
+
+/** Three overview cards as links in a grid: 1 column at 360 px, 3 from 1024 px. */
+export const LinkCards: Story = {
+  name: 'Link Cards',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.24: `href` makes each card a real link. The title is an `<a>` inside an `h2` (`headingLevel`), so a screen reader lists "Actuals" as a heading and as a link; the link covers the whole card (click, Enter, middle click, "open in new tab", "copy link"). Hover, press and focus ring are those of `clickable`; `cardClick` is not emitted. The grid gives one column on a phone and three from 1024 px; the cards of a row stretch to equal height.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--spacing-4);">
+        <lc-card variant="outlined" [headingLevel]="2" icon="chart-bar" title="Service management" subtitle="USU Service Management" href="#/sources/usm">
+          <lc-badge variant="success" size="sm" [dot]="true">Loaded</lc-badge>
+          <lc-description-list [items]="[{ term: 'Last loaded', value: '02/11/2026, 09:14' }]" style="margin-top: var(--spacing-3);" />
+        </lc-card>
+        <lc-card variant="outlined" [headingLevel]="2" icon="banknotes" title="Actuals" subtitle="Ledger actuals from SAP" href="#/sources/sap-actuals">
+          <lc-badge variant="success" size="sm" [dot]="true">Loaded</lc-badge>
+          <lc-description-list [items]="[{ term: 'Last loaded', value: '02/11/2026, 08:52' }]" style="margin-top: var(--spacing-3);" />
+        </lc-card>
+        <lc-card variant="outlined" [headingLevel]="2" icon="building-library" title="Cost centres" subtitle="Allocation keys from SAP CO" href="#/sources/allocation-keys">
+          <lc-badge variant="primary" size="sm" [dot]="true">Running</lc-badge>
+          <lc-description-list [items]="[{ term: 'Last loaded', value: '01/11/2026, 18:30' }]" style="margin-top: var(--spacing-3);" />
+        </lc-card>
+      </div>`,
+  }),
+};
+
+/** The same grid in German, linked through the router (`route` + `queryParams`). */
+export const LinkCardsGerman: Story = {
+  name: 'Link Cards (German, router)',
+  decorators: [applicationConfig({ providers: [provideRouter([{ path: '**', children: [] }], withHashLocation())] })],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.24: `route` links through the Angular router (`RouterLink`), with `queryParams`: *SAP-Ist* has `[route]="[\'/datenbasis/quellen\', \'sap-ist\']" [queryParams]="{ ansicht: \'laeufe\' }"` and renders `href="#/datenbasis/quellen/sap-ist?ansicht=laeufe"` (this story uses hash routing). A plain click or Enter navigates in the app; Ctrl/Cmd, Shift and middle clicks stay with the browser. With `lang="de"` the long title "Leistungsverrechnungsschlüssel" hyphenates inside the card instead of running past it.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div lang="de" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--spacing-4);">
+        <lc-card variant="outlined" [headingLevel]="2" icon="chart-bar" title="USM" subtitle="USU Service Management" route="/datenbasis/quellen/usm">
+          <lc-badge variant="success" size="sm" [dot]="true">Geladen</lc-badge>
+          <lc-description-list [items]="[{ term: 'Zuletzt geladen', value: '31.10.2026, 14:35' }]" style="margin-top: var(--spacing-3);" />
+        </lc-card>
+        <lc-card variant="outlined" [headingLevel]="2" icon="banknotes" title="SAP-Ist" subtitle="Ist aus dem SAP-Hauptbuch"
+                 [route]="['/datenbasis/quellen', 'sap-ist']" [queryParams]="{ ansicht: 'laeufe' }">
+          <lc-badge variant="success" size="sm" [dot]="true">Geladen</lc-badge>
+          <lc-description-list
+            [items]="[{ term: 'Zuletzt geladen', value: '31.10.2026, 14:35' }, { term: 'Abdeckung bis Oktober 2026', value: '99,4 %' }]"
+            style="margin-top: var(--spacing-3);"
+          />
+        </lc-card>
+        <lc-card variant="outlined" [headingLevel]="2" icon="building-library" title="Leistungsverrechnungsschlüssel" subtitle="Schlüssel aus SAP CO"
+                 route="/datenbasis/quellen/leistungsverrechnung">
+          <lc-badge variant="primary" size="sm" [dot]="true">Läuft</lc-badge>
+          <lc-description-list [items]="[{ term: 'Zuletzt geladen', value: '31.10.2026, 14:35' }]" style="margin-top: var(--spacing-3);" />
+        </lc-card>
+      </div>`,
+  }),
+};
+
+/** A clickable card next to a link card: the same look, hover, press, ring and selected state. */
+export const LinkAndClickable: Story = {
+  name: 'Link and Clickable',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.24: left `[clickable]="true"` (a button card), right `href` (a link card). Rest, hover, press, focus ring (2 px `--color-primary-500`, offset 2, drawn on the card when its link has focus) and `selected` are the same; only the semantics differ. Row 1 outlined, row 2 elevated and selected.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;">
+        <lc-card variant="outlined" [clickable]="true" title="Clickable">
+          <p style="margin: 0; font-size: 14px; color: var(--color-text-secondary);">Opens the details.</p>
+        </lc-card>
+        <lc-card variant="outlined" href="#/parity" title="Link">
+          <p style="margin: 0; font-size: 14px; color: var(--color-text-secondary);">Opens the details.</p>
+        </lc-card>
+        <lc-card variant="elevated" [clickable]="true" [selected]="true" title="Clickable">
+          <p style="margin: 0; font-size: 14px; color: var(--color-text-secondary);">Opens the details.</p>
+        </lc-card>
+        <lc-card variant="elevated" [selected]="true" href="#/parity" title="Link">
+          <p style="margin: 0; font-size: 14px; color: var(--color-text-secondary);">Opens the details.</p>
+        </lc-card>
+      </div>`,
   }),
 };
 
