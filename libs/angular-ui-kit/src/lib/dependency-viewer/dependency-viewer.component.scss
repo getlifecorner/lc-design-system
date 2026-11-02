@@ -247,9 +247,9 @@
 
     &--default { color: var(--color-text-tertiary); }
     &--active  { color: var(--color-primary-400); }
-    &--success { color: var(--color-success-default); }
-    &--warning { color: var(--color-warning-default); }
-    &--error   { color: var(--color-error-default); }
+    &--success { color: var(--color-on-success-subtle); }
+    &--warning { color: var(--color-on-warning-subtle); }
+    &--error   { color: var(--color-on-error-subtle); }
     &--muted   { color: var(--color-text-disabled); }
   }
 

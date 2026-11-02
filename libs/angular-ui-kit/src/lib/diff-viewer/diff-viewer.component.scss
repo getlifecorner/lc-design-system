@@ -19,8 +19,9 @@
   font-size: 0.6875rem;
   font-weight: 600;
 
-  &--add { color: var(--color-success-default); }
-  &--del { color: var(--color-error-default); }
+  // Status inks: 4.5:1 on the header in both themes.
+  &--add { color: var(--color-on-success-subtle); }
+  &--del { color: var(--color-on-error-subtle); }
 }
 
 .lc-diff__headers,
@@ -89,8 +90,9 @@
   user-select: none;
   font-weight: 600;
 
-  .lc-diff__line--added & { color: var(--color-success-default); }
-  .lc-diff__line--removed & { color: var(--color-error-default); }
+  // The +/− marker is a glyph (3:1) on its line tint, in the status ink.
+  .lc-diff__line--added & { color: var(--color-on-success-subtle); }
+  .lc-diff__line--removed & { color: var(--color-on-error-subtle); }
 }
 
 .lc-diff__content {

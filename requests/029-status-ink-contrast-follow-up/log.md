@@ -1,0 +1,14 @@
+# Log 029: Status ink contrast follow-up of 027 and the money Number Column caveat
+
+## Owner decisions
+
+none
+
+## Handoffs
+
+| Time | From → to | Status | Reason | Task |
+|---|---|---|---|---|
+| 02:53 | spec-writer → ui-ux-designer | done | The requirement is classified as a patch-level colour fix, so it needs token choices and measured values before the build. | Design the ink swap for AC-1…16 of request 029. For each listed element choose the existing ink token, give the computed old and new ratios in both themes, and add the Number Column caveat wording. Provide story shots at 360 and desktop widths. |
+| 04:32 | ui-ux-designer → web-developer | done | The design fixes every value, the four decisions beyond the plain swap and the expected shot diffs, and needs no owner decision. | Implement design.md for request 029 (the §2 value table, D-1 to D-4, the §7 texts and the theme-contrast block of §9) on fix/3.21.1-status-ink-contrast; record the gates and the AC-15 compare against tmp/story-shots/029/baseline (expected 271 different / 269 identical) in build.md. |
+| 05:04 | web-developer → ui-ux-designer | done | All gates are green and the build matches the prototype's CSS shot for shot, so the next step is the design review. | Review request 029 (stories: feedback-notification-center--with-priority/--default/--errors-only, components-card--with-badge, components-markdown--mermaid-support, data-display-status-dot--all-tones/--in-list-rows, components-pipeline--all-statuses, form-file-upload--default, form-rating--default/--half-stars, data-display-logviewer--default/--terminal, data-display-diff-viewer--inline/--side-by-side, data-display-dependency-viewer--complex-relationships/--layered-with-relations, data-display-kanban-board--with-wip-overflow/--default, feedback-progress-bar--colors/--circular); shots in tmp/story-shots/029/build, compare logs tmp/029/build-{a,b,c}.log and vsproto-{a,b,c}.log, and check the AC-15 deviation (Streaming, 265/275) in build.md. |
+| 05:19 | ui-ux-designer → web-developer | changes-requested | The build made the terminal variant's status text unreadable in the light theme (AC-9 fails), because a rule the design assumed would keep the terminal colours never matched. | Fix review.md finding 1 for request 029: rewrite the terminal level rules in log-viewer.component.scss per design.md §2 (r1 row), add the §9 r1 checks to theme-contrast.spec.ts and the terminal sentences to the changelog draft. Then re-shoot the 7 log-viewer stories (`--full`) with a level measure (terminal 5.81 / 7.78 / 11.43 / 6.19 in light and dark, log variant unchanged) and record the results in build.md. |

@@ -487,9 +487,9 @@ describe('LogViewerComponent', () => {
 
     it('uses status tokens for level ink and the search highlight', () => {
       expect(scss).not.toMatch(/#3b82f6|#f59e0b|#ef4444|#9ca3af|#fbbf2480/);
-      expect(scss).toMatch(/--color-info-default/);
+      expect(scss).toMatch(/--color-on-info-subtle/);
       expect(scss).toMatch(/--color-warning-default/);
-      expect(scss).toMatch(/--color-error-default/);
+      expect(scss).toMatch(/--color-on-error-subtle/);
     });
 
     it('drives the row height from --lc-log-viewer-line-height', () => {

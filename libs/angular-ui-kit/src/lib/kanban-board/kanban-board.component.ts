@@ -97,10 +97,11 @@ export class KanbanBoardComponent {
 
   protected getPriorityColor(priority?: string): string {
     switch (priority) {
-      case 'critical': return 'var(--color-error-default)';
-      case 'high': return 'var(--color-warning-default)';
-      case 'medium': return 'var(--color-info-default)';
-      case 'low': return 'var(--color-success-default)';
+      // Status inks: 3:1 on the card surface in both themes.
+      case 'critical': return 'var(--color-on-error-subtle)';
+      case 'high': return 'var(--color-on-warning-subtle)';
+      case 'medium': return 'var(--color-on-info-subtle)';
+      case 'low': return 'var(--color-on-success-subtle)';
       default: return '';
     }
   }

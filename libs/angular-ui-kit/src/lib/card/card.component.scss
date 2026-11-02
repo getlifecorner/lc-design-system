@@ -242,19 +242,20 @@
       border: 1px solid var(--color-border-strong);
     }
 
+    // Status chips: ink on the subtle tint (the badge pair), 4.5:1 in both themes.
     &--success {
-      background-color: rgba(142, 164, 117, 0.18);
-      color: var(--color-success);
+      background-color: var(--color-success-subtle);
+      color: var(--color-on-success-subtle);
     }
 
     &--warning {
-      background-color: rgba(225, 160, 64, 0.18);
-      color: var(--color-warning);
+      background-color: var(--color-warning-subtle);
+      color: var(--color-on-warning-subtle);
     }
 
     &--error {
-      background-color: rgba(157, 14, 14, 0.18);
-      color: var(--color-error);
+      background-color: var(--color-error-subtle);
+      color: var(--color-on-error-subtle);
     }
   }
 

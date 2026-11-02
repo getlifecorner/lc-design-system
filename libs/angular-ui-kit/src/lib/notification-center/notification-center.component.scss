@@ -177,10 +177,11 @@
   flex-shrink: 0;
   margin-top: 2px;
 
-  &--info { color: var(--color-info-default, #3b82f6); }
-  &--success { color: var(--color-success-default, #22c55e); }
-  &--warning { color: var(--color-warning-default, #f59e0b); }
-  &--error { color: var(--color-error-default, #ef4444); }
+  // Status inks (3:1 as icons in both themes); the shared fills stay for rails.
+  &--info { color: var(--color-on-info-subtle); }
+  &--success { color: var(--color-on-success-subtle); }
+  &--warning { color: var(--color-on-warning-subtle); }
+  &--error { color: var(--color-on-error-subtle); }
 }
 
 .lc-nc__item-body {
@@ -231,14 +232,15 @@
   flex-shrink: 0;
   text-transform: uppercase;
 
+  // Ink on the subtle tint: the badge pair, 4.5:1 in both themes.
   &--high {
-    background: rgba(225, 160, 64, 0.18);
-    color: var(--color-warning);
+    background: var(--color-warning-subtle);
+    color: var(--color-on-warning-subtle);
   }
 
   &--urgent {
-    background: rgba(157, 14, 14, 0.18);
-    color: var(--color-error);
+    background: var(--color-error-subtle);
+    color: var(--color-on-error-subtle);
   }
 
   &--low {

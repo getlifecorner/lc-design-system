@@ -29,9 +29,9 @@ lc-status-dot {
     height: 0.5rem;
   }
 
-  // Tones
+  // Tones (status inks: 3:1 on the surface and the page in both themes)
   &--done {
-    color: var(--color-success);
+    color: var(--color-on-success-subtle);
   }
 
   &--run {
@@ -39,11 +39,11 @@ lc-status-dot {
   }
 
   &--wait {
-    color: var(--color-warning);
+    color: var(--color-on-warning-subtle);
   }
 
   &--blocked {
-    color: var(--color-error);
+    color: var(--color-on-error-subtle);
   }
 
   &--open {

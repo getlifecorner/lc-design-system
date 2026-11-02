@@ -254,7 +254,8 @@ export const NumberColumn: Story = {
         story:
           'The column header names the unit („Kosten in €“), so each amount leaves the symbol out (`showCurrency=false`): end-aligned, tabular figures, with a zero and a negative row. ' +
           'Screen readers still hear the currency in every cell („minus 42,17 Euro“, „minus 42.17 euros“). ' +
-          "For a table `formatter` use `formatMoney(amountMinor, 'EUR', { locale: 'de-DE', showCurrency: false }).text`.",
+          "For a table `formatter` use `formatMoney(amountMinor, 'EUR', { locale: 'de-DE', showCurrency: false }).text`." +
+          ' That string has no spoken text, so the unit is then only in the column header; prefer `lc-money` in a cell template, as in this story.',
       },
     },
   },

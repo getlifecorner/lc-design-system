@@ -87,16 +87,17 @@
   border: none;
   cursor: pointer;
   font-family: var(--font-family-sans);
-  transition: opacity 0.15s;
-  opacity: 0.6;
+  transition: box-shadow 0.15s;
 
+  // Pills stay at full opacity (60 % dropped the text below 4.5:1); the
+  // pressed one adds a 1 px inset ring in its ink.
   &--active {
-    opacity: 1;
+    box-shadow: inset 0 0 0 1px currentColor;
   }
 
   &--error {
     background-color: rgba(157, 14, 14, 0.18);
-    color: var(--color-error-default);
+    color: var(--color-on-error-subtle);
 
     .lc-log-viewer--terminal & {
       background-color: #45202a;
@@ -106,12 +107,20 @@
 
   &--warn {
     background-color: rgba(225, 160, 64, 0.18);
-    color: var(--color-warning-default);
+    color: var(--color-on-warning-subtle);
 
     .lc-log-viewer--terminal & {
       background-color: #3d3520;
       color: #f9e2af;
     }
+  }
+}
+
+// Forced colours drop box-shadow: the pressed pill gets an outline instead.
+@media (forced-colors: active) {
+  .lc-log-viewer__level-pill--active:not(:focus-visible) {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
   }
 }
 
@@ -242,16 +251,16 @@
 
   // Semantic status ink (theme-tuned tokens) for the log variant.
   .lc-log-viewer__line--debug & { color: var(--color-text-tertiary); }
-  .lc-log-viewer__line--info & { color: var(--color-info-default); }
-  .lc-log-viewer__line--warn & { color: var(--color-warning-default); }
-  .lc-log-viewer__line--error & { color: var(--color-error-default); }
+  .lc-log-viewer__line--info & { color: var(--color-on-info-subtle); }
+  .lc-log-viewer__line--warn & { color: var(--color-on-warning-subtle); }
+  .lc-log-viewer__line--error & { color: var(--color-on-error-subtle); }
 
-  .lc-log-viewer--terminal & {
-    .lc-log-viewer__line--debug & { color: #6c7086; }
-    .lc-log-viewer__line--info & { color: #89b4fa; }
-    .lc-log-viewer__line--warn & { color: #f9e2af; }
-    .lc-log-viewer__line--error & { color: #f38ba8; }
-  }
+  // The terminal is always dark: its own palette in both themes (0,3,0, so it
+  // beats the log rules above).
+  .lc-log-viewer--terminal .lc-log-viewer__line--debug & { color: #9399b2; }
+  .lc-log-viewer--terminal .lc-log-viewer__line--info & { color: #89b4fa; }
+  .lc-log-viewer--terminal .lc-log-viewer__line--warn & { color: #f9e2af; }
+  .lc-log-viewer--terminal .lc-log-viewer__line--error & { color: #f38ba8; }
 }
 
 .lc-log-viewer__source {

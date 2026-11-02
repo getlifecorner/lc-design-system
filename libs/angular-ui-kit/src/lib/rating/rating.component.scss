@@ -43,8 +43,9 @@
   &__icon {
     transition: color 0.15s ease;
 
+    // Warning ink: 3:1 on the surface in both themes.
     &--filled {
-      color: var(--color-warning);
+      color: var(--color-on-warning-subtle);
     }
 
     // Half: the empty outline with a solid star clipped to its leading half on top.
@@ -62,7 +63,7 @@
   &__icon-fill {
     position: absolute;
     inset: 0;
-    color: var(--color-warning);
+    color: var(--color-on-warning-subtle);
     clip-path: inset(0 50% 0 0);
 
     :host-context([dir='rtl']) & {

@@ -657,3 +657,242 @@ describe('Component pairings of 3.20 (request 027)', () => {
     });
   });
 });
+
+// Request 029 (3.21.1): the follow-up candidates of 027 design §5. Status
+// colours used as text, icon, glyph, border or progress fill read the inks
+// --color-on-<v>-subtle in both themes (WCAG 1.4.3 4.5:1 for text, 1.4.11 3:1
+// for graphics). The shared fills, rails and line tints stay; the card and
+// notification chips sit on --color-<v>-subtle (design 029 D-1).
+describe('Component pairings of 3.21.1 (request 029)', () => {
+  const lib = (path: string) => resolve(__dirname, '../lib', path);
+  const sheets = {
+    nc: compile(lib('notification-center/notification-center.component.scss')).css,
+    card: compile(lib('card/card.component.scss')).css,
+    markdown: compile(lib('markdown/markdown.component.scss')).css,
+    dot: compile(lib('status-dot/status-dot.component.scss')).css,
+    pipeline: compile(lib('pipeline/pipeline.component.scss')).css,
+    upload: compile(lib('file-upload/file-upload.component.scss')).css,
+    rating: compile(lib('rating/rating.component.scss')).css,
+    log: compile(lib('log-viewer/log-viewer.component.scss')).css,
+    diff: compile(lib('diff-viewer/diff-viewer.component.scss')).css,
+    dep: compile(lib('dependency-viewer/dependency-viewer.component.scss')).css,
+    kanban: compile(lib('kanban-board/kanban-board.component.scss')).css,
+    progress: compile(lib('progress-bar/progress-bar.component.scss')).css,
+  };
+  type Sheet = keyof typeof sheets;
+  const rulesOf = (css: string) => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selector: m[1].trim(), body: m[2] }));
+  const rule = (sheet: Sheet, selector: string) => {
+    const found = rulesOf(sheets[sheet]).filter((r) => r.selector === selector);
+    expect(found).toHaveLength(1);
+    return found[0].body;
+  };
+  /** The declarations of a rule body, property → value. */
+  const decls = (body: string): Record<string, string> =>
+    Object.fromEntries([...body.matchAll(/([\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
+  const ink = (v: string) => `var(--color-on-${v}-subtle)`;
+  const sub = (v: string) => `var(--color-${v}-subtle)`;
+  const fills = (sheet: Sheet, selector: string) => decls(rule(sheet, selector));
+
+  const swaps: [Sheet, string, Record<string, string>][] = [
+    ...(['info', 'success', 'warning', 'error'] as const).map((v): [Sheet, string, Record<string, string>] => ['nc', `.lc-nc__item-icon--${v}`, { color: ink(v) }]),
+    ['nc', '.lc-nc__item-priority--high', { background: sub('warning'), color: ink('warning') }],
+    ['nc', '.lc-nc__item-priority--urgent', { background: sub('error'), color: ink('error') }],
+    ...(['success', 'warning', 'error'] as const).map((v): [Sheet, string, Record<string, string>] => ['card', `.card__badge--${v}`, { 'background-color': sub(v), color: ink(v) }]),
+    ['markdown', '.lc-markdown__mermaid-error', { color: ink('error') }],
+    ['dot', '.lc-status-dot--done', { color: ink('success') }],
+    ['dot', '.lc-status-dot--wait', { color: ink('warning') }],
+    ['dot', '.lc-status-dot--blocked', { color: ink('error') }],
+    ['pipeline', '.lc-pipeline__step--warning .lc-pipeline__node', { 'border-color': ink('warning'), color: ink('warning') }],
+    ['pipeline', '.lc-pipeline__step--error .lc-pipeline__node', { 'border-color': ink('error'), color: ink('error') }],
+    ['pipeline', '.lc-pipeline__step--complete .lc-pipeline__node', { 'background-color': 'var(--color-primary-500)', color: 'var(--color-surface)' }],
+    ['upload', '.file-upload__file-remove:hover', { background: 'rgba(157, 14, 14, 0.18)', color: ink('error') }],
+    ['rating', '.rating__icon--filled', { color: ink('warning') }],
+    ['rating', '.rating__icon-fill', { color: ink('warning') }],
+    ['log', '.lc-log-viewer__line--info .lc-log-viewer__level', { color: ink('info') }],
+    ['log', '.lc-log-viewer__line--warn .lc-log-viewer__level', { color: ink('warning') }],
+    ['log', '.lc-log-viewer__line--error .lc-log-viewer__level', { color: ink('error') }],
+    ['log', '.lc-log-viewer__level-pill--error', { 'background-color': 'rgba(157, 14, 14, 0.18)', color: ink('error') }],
+    ['log', '.lc-log-viewer__level-pill--warn', { 'background-color': 'rgba(225, 160, 64, 0.18)', color: ink('warning') }],
+    ['log', '.lc-log-viewer__level-pill--active', { 'box-shadow': 'inset 0 0 0 1px currentColor' }],
+    ['diff', '.lc-diff__stat--add', { color: ink('success') }],
+    ['diff', '.lc-diff__stat--del', { color: ink('error') }],
+    ['diff', '.lc-diff__line--added .lc-diff__prefix', { color: ink('success') }],
+    ['diff', '.lc-diff__line--removed .lc-diff__prefix', { color: ink('error') }],
+    ...(['success', 'warning', 'error'] as const).map((v): [Sheet, string, Record<string, string>] => ['dep', `.dep-viewer__detail-status--${v}`, { color: ink(v) }]),
+    ['kanban', '.lc-kanban__column-limit--over', { color: ink('error') }],
+    ...(['success', 'warning', 'error', 'info'] as const).flatMap((v): [Sheet, string, Record<string, string>][] => [
+      ['progress', `.progress-bar--${v} .progress-bar__fill`, { 'background-color': ink(v) }],
+      ['progress', `.progress-bar-circular--${v} .progress-bar-circular__fill`, { stroke: ink(v) }],
+    ]),
+  ];
+
+  it.each(swaps)('AC-1…10: %s %s reads the status ink (no raw colour)', (sheet, selector, expectedDecls) => {
+    const found = fills(sheet, selector);
+    for (const [property, value] of Object.entries(expectedDecls)) expect(found[property]).toBe(value);
+  });
+
+  it('AC-4: the notification type icons carry no hex fallback any more', () => {
+    expect(sheets.nc).not.toMatch(/#3b82f6|#22c55e|#f59e0b|#ef4444/i);
+  });
+
+  it('D-2: the level pills stay at full opacity; the pressed pill gets an outline in forced colours', () => {
+    expect(fills('log', '.lc-log-viewer__level-pill').opacity).toBeUndefined();
+    expect(fills('log', '.lc-log-viewer__level-pill--active').opacity).toBeUndefined();
+    expect(sheets.log).toMatch(
+      /@media \(forced-colors: active\) \{\s*\.lc-log-viewer__level-pill--active:not\(:focus-visible\) \{\s*outline: 2px solid Highlight;\s*outline-offset: 1px;\s*\}/,
+    );
+  });
+
+  it('AC-10: the progress track is unchanged; primary and secondary stay raw', () => {
+    // The base rule (the forced-colours block repeats the selector with an outline).
+    expect(sheets.progress).toMatch(/\n\.progress-bar__track \{\s*flex: 1;\s*background-color: var\(--color-surface-hover\);/);
+    expect(fills('progress', '.progress-bar--primary .progress-bar__fill')['background-color']).toMatch(/^#[0-9a-f]{6}$/i);
+    expect(fills('progress', '.progress-bar--secondary .progress-bar__fill')['background-color']).toMatch(/^#[0-9a-f]{6}$/i);
+  });
+
+  it('AC-9: kanban priorities, dependency relations, arrows and node borders read the inks', () => {
+    const source = (path: string) => readFileSync(lib(path), 'utf8');
+    const kanban = source('kanban-board/kanban-board.component.ts');
+    const depTs = source('dependency-viewer/dependency-viewer.component.ts');
+    const depHtml = source('dependency-viewer/dependency-viewer.component.html');
+    for (const text of [kanban, depTs, depHtml]) {
+      expect(text).not.toMatch(/--color-(success|warning|error|info)-default/);
+      expect(text).not.toMatch(/#3b82f6/i);
+    }
+    const priorities: [string, string][] = [['critical', 'error'], ['high', 'warning'], ['medium', 'info'], ['low', 'success']];
+    for (const [priority, v] of priorities) {
+      expect(kanban).toContain(`case '${priority}': return '${ink(v)}';`);
+    }
+    const relations: [string, string][] = [['blocks', 'error'], ['references', 'info'], ['requires', 'warning'], ['implements', 'success']];
+    for (const [relation, v] of relations) {
+      expect(depTs).toMatch(new RegExp(`${relation}:\\s*\\{ color: '${ink(v).replace(/[()]/g, '\\$&')}'`));
+      expect(depHtml).toMatch(new RegExp(`<marker id="arrow-${relation}"[^>]*><path [^>]*fill="${ink(v).replace(/[()]/g, '\\$&')}"/>`));
+    }
+    for (const v of ['success', 'warning', 'error']) {
+      expect(depTs).toMatch(new RegExp(`${v}:\\s*\\{ bg: '[^']+', border: '${ink(v).replace(/[()]/g, '\\$&')}'`));
+    }
+  });
+
+  /**
+   * Design 029 §5, per palette [light, dark]: the minimum over every listed
+   * element and its real backgrounds. Text 4.85 L (card success chip) and 4.60
+   * D (NC high on the panel top, card warning on surface-2); graphics 3.52 L
+   * (diff +, dependency success border) and 4.83 D (NC warning icon on an
+   * unread row). F-1: the NC high chip on an unread row in dark stays 3.67.
+   */
+  const expected = { text: [4.85, 4.6], graphic: [3.52, 4.83], ncUnread: [5.52, 3.67], completeGlyph: [4.36, 9.12] };
+  const floor = (n: number) => Math.floor(n * 100) / 100;
+
+  /**
+   * Design 029 §2/§5 (r1, review finding 1): the terminal is always dark, so
+   * its levels use its own palette in both themes. The nested block of 3.21.0
+   * compiled to `.lc-log-viewer__line--<lv> .lc-log-viewer--terminal
+   * .lc-log-viewer__level` (a line outside the terminal), never matched, and
+   * left the terminal levels on the theme's colours (light ink: warn 2.40).
+   */
+  const terminalLevels: [string, string, number][] = [
+    ['debug', '#9399b2', 5.81],
+    ['info', '#89b4fa', 7.78],
+    ['warn', '#f9e2af', 11.43],
+    ['error', '#f38ba8', 6.19],
+  ];
+
+  it('AC-9 (r1): the terminal levels read the terminal palette at (0,3,0); the dead selector shape is gone', () => {
+    for (const [lv, hexValue] of terminalLevels) {
+      // Three classes beat the log variant's `.lc-log-viewer__line--<lv> .lc-log-viewer__level` (0,2,0).
+      expect(fills('log', `.lc-log-viewer--terminal .lc-log-viewer__line--${lv} .lc-log-viewer__level`)).toEqual({ color: hexValue });
+    }
+    expect(sheets.log).not.toMatch(/\.lc-log-viewer__line--[\w-]+ \.lc-log-viewer--terminal/);
+  });
+
+  it('AC-9 (r1): the terminal levels reach 4.5:1 on the terminal and its warn and error line tints, in both themes', () => {
+    const terminal = parse(fills('log', '.lc-log-viewer--terminal')['background-color']);
+    const lineTint = (lv: string) => over(parse(fills('log', `.lc-log-viewer--terminal .lc-log-viewer__line--${lv}`)['background-color']), terminal);
+    const bases: Record<string, Rgba> = { debug: terminal, info: terminal, warn: lineTint('warn'), error: lineTint('error') };
+    for (const [lv, hexValue, expectedRatio] of terminalLevels) {
+      const level = ratio(hexValue, bases[lv]);
+      expect(floor(level)).toBe(expectedRatio);
+      expect(level).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  describe.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('%s palette', (_palette, tokens, i) => {
+    const c = (name: string) => color(tokens, name);
+    const S = c('--color-surface');
+    const S2 = c('--color-surface-2');
+    const BG = c('--color-background');
+    const LOW = c('--color-background-low');
+    const SUN = c('--color-surface-sunken');
+    const TILE = c('--color-muted-tile');
+    const hov = (base: Rgba) => over(c('--color-surface-hover'), base);
+    const sel = (base: Rgba) => over(c('--color-surface-selected'), base);
+    /** A token or literal from a rule body, composited over `base`. */
+    const layer = (value: string, base: Rgba) => {
+      const ref = value.match(/^var\((--[\w-]+)\)$/);
+      return over(ref ? c(ref[1]) : parse(value), base);
+    };
+    const inkOf = (v: string) => c(`--color-on-${v}-subtle`);
+    const lowest = (fg: Rgba, bases: Rgba[]) => Math.min(...bases.map((bg) => ratio(over(fg, bg), bg)));
+
+    const panel = [S2, S, hov(S)];
+    const unread = [sel(S2), sel(S)];
+    const chip = (sheet: Sheet, selector: string, v: string, bases: Rgba[]) => {
+      const d = fills(sheet, selector);
+      return lowest(inkOf(v), bases.map((b) => layer(d.background ?? d['background-color'], b)));
+    };
+    const tint = (sheet: Sheet, selector: string, property: string, base: Rgba) => layer(fills(sheet, selector)[property], base);
+
+    const text = () => [
+      chip('nc', '.lc-nc__item-priority--high', 'warning', panel),
+      chip('nc', '.lc-nc__item-priority--urgent', 'error', panel),
+      // A selected card's background is --color-surface-selected over the page.
+      ...(['success', 'warning', 'error'] as const).map((v) => chip('card', `.card__badge--${v}`, v, [S, S2, hov(S), sel(BG), TILE])),
+      lowest(inkOf('error'), [BG, S, S2, LOW, SUN]),
+      lowest(inkOf('info'), [S, hov(S), tint('log', '.lc-log-viewer__line:hover', 'background-color', S)]),
+      lowest(inkOf('warning'), [tint('log', '.lc-log-viewer--log .lc-log-viewer__line--warn', 'background-color', S)]),
+      lowest(inkOf('error'), [tint('log', '.lc-log-viewer--log .lc-log-viewer__line--error', 'background-color', S)]),
+      lowest(inkOf('warning'), [tint('log', '.lc-log-viewer__level-pill--warn', 'background-color', S)]),
+      lowest(inkOf('error'), [tint('log', '.lc-log-viewer__level-pill--error', 'background-color', S)]),
+      lowest(inkOf('success'), [S2]),
+      lowest(inkOf('error'), [S2]),
+      ...['success', 'warning', 'error', 'info'].map((v) => lowest(inkOf(v), [S, S2])),
+      lowest(inkOf('error'), [layer('var(--color-error-50)', S), layer('var(--color-error-50)', BG)]),
+    ];
+
+    const graphic = () => [
+      ...['success', 'warning', 'error', 'info'].map((v) => lowest(inkOf(v), [...panel, ...unread])),
+      ...['success', 'warning', 'error'].map((v) => lowest(inkOf(v), [S, BG, S2])),
+      lowest(inkOf('error'), [tint('upload', '.file-upload__file-remove:hover', 'background', S2)]),
+      ...['success', 'error'].map((v) => lowest(inkOf(v), [layer(`var(--color-${v}-50)`, S), layer(`var(--color-${v}-50)`, BG)])),
+      ...['success', 'warning', 'error'].map((v) => lowest(inkOf(v), [layer(`var(--color-${v}-50)`, S), S])),
+      ...['success', 'warning', 'error', 'info'].map((v) => lowest(inkOf(v), [S])),
+      ...['success', 'warning', 'error', 'info'].map((v) => lowest(inkOf(v), [hov(S), hov(BG), hov(S2)])),
+    ];
+
+    it('AC-1/2/3/9: every listed status text reaches 4.5:1 on its real backgrounds', () => {
+      const min = Math.min(...text());
+      expect(floor(min)).toBe(expected.text[i]);
+      expect(min).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it('AC-4…10: every listed status icon, glyph, border and progress fill reaches 3:1', () => {
+      const min = Math.min(...graphic());
+      expect(floor(min)).toBe(expected.graphic[i]);
+      expect(min).toBeGreaterThanOrEqual(3);
+    });
+
+    it('D-4: the pipeline complete check reaches 3:1 on its node fill', () => {
+      const glyph = ratio(c('--color-surface'), c('--color-primary-500'));
+      expect(floor(glyph)).toBe(expected.completeGlyph[i]);
+      expect(glyph).toBeGreaterThanOrEqual(3);
+    });
+
+    it('F-1 (known): the NC priority chips on an unread row', () => {
+      const min = Math.min(
+        chip('nc', '.lc-nc__item-priority--high', 'warning', unread),
+        chip('nc', '.lc-nc__item-priority--urgent', 'error', unread),
+      );
+      expect(floor(min)).toBe(expected.ncUnread[i]);
+    });
+  });
+});

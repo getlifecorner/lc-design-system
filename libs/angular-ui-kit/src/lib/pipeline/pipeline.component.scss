@@ -185,7 +185,9 @@
     .lc-pipeline__node {
       background-color: var(--color-primary-500);
       border-color: var(--color-primary-500);
-      color: var(--color-on-primary, #fff);
+      // The surface knocks the check out of the fill: white was 1.89:1 on the
+      // dark theme's primary-500; the surface is 9.12:1 (light unchanged, white).
+      color: var(--color-surface);
     }
     .lc-pipeline__connector {
       background-color: var(--lc-pipeline-line-done);
@@ -203,17 +205,18 @@
     }
   }
 
+  // Status inks: border and glyph reach 3:1 on the surface in both themes.
   &__step--warning {
     .lc-pipeline__node {
-      border-color: var(--color-warning);
-      color: var(--color-warning);
+      border-color: var(--color-on-warning-subtle);
+      color: var(--color-on-warning-subtle);
     }
   }
 
   &__step--error {
     .lc-pipeline__node {
-      border-color: var(--color-error);
-      color: var(--color-error);
+      border-color: var(--color-on-error-subtle);
+      color: var(--color-on-error-subtle);
     }
   }
 

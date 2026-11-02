@@ -375,11 +375,12 @@ function measureNodes(nodes: Iterable<DependencyNode>, measure: TextMeasure): No
 
 const RELATION_STYLES: Record<DependencyRelation, { color: string; dashed: boolean; label: string }> = {
   depends:    { color: 'var(--color-neutral-400)',  dashed: false, label: 'depends on' },
-  blocks:     { color: 'var(--color-error-default)', dashed: false, label: 'blocks' },
-  references: { color: 'var(--color-info-default, #3b82f6)', dashed: true,  label: 'references' },
-  requires:   { color: 'var(--color-warning-default)', dashed: false, label: 'requires' },
+  // Status relations use the status inks (3:1 as lines, 4.5:1 as labels).
+  blocks:     { color: 'var(--color-on-error-subtle)', dashed: false, label: 'blocks' },
+  references: { color: 'var(--color-on-info-subtle)', dashed: true,  label: 'references' },
+  requires:   { color: 'var(--color-on-warning-subtle)', dashed: false, label: 'requires' },
   extends:    { color: 'var(--color-primary-400)',  dashed: true,  label: 'extends' },
-  implements: { color: 'var(--color-success-default)', dashed: true,  label: 'implements' },
+  implements: { color: 'var(--color-on-success-subtle)', dashed: true,  label: 'implements' },
   uses:       { color: 'var(--color-neutral-300)',  dashed: true,  label: 'uses' },
 };
 
@@ -1373,9 +1374,9 @@ function layoutLayered(
 const STATUS_COLORS: Record<DependencyNodeStatus, { bg: string; border: string; text: string }> = {
   default: { bg: 'var(--color-neutral-50)', border: 'var(--color-neutral-300)', text: 'var(--color-text-primary)' },
   active:  { bg: 'var(--color-primary-50)', border: 'var(--color-primary-400)', text: 'var(--color-text-primary)' },
-  success: { bg: 'var(--color-success-50, #f0fdf4)', border: 'var(--color-success-default)', text: 'var(--color-text-primary)' },
-  warning: { bg: 'var(--color-warning-50, #fffbeb)', border: 'var(--color-warning-default)', text: 'var(--color-text-primary)' },
-  error:   { bg: 'var(--color-error-50, #fef2f2)', border: 'var(--color-error-default)', text: 'var(--color-text-primary)' },
+  success: { bg: 'var(--color-success-50, #f0fdf4)', border: 'var(--color-on-success-subtle)', text: 'var(--color-text-primary)' },
+  warning: { bg: 'var(--color-warning-50, #fffbeb)', border: 'var(--color-on-warning-subtle)', text: 'var(--color-text-primary)' },
+  error:   { bg: 'var(--color-error-50, #fef2f2)', border: 'var(--color-on-error-subtle)', text: 'var(--color-text-primary)' },
   muted:   { bg: 'var(--color-neutral-100)', border: 'var(--color-neutral-200)', text: 'var(--color-text-tertiary)' },
 };
 
