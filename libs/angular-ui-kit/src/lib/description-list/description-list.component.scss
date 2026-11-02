@@ -26,6 +26,8 @@
   }
 
   &__term {
+    // No browser dd margin (40 px inline start): the row gap is the only space (BA-8).
+    margin: 0;
     flex-shrink: 0;
     color: var(--color-text-secondary);
     font-weight: var(--font-weight-medium);
@@ -44,6 +46,8 @@
   // an IBAN) instead of overflowing the row (3.3, AC-10); the term keeps its
   // width.
   &__value {
+    // No browser dd margin (40 px inline start): the row gap is the only space (BA-8).
+    margin: 0;
     flex: 0 1 auto;
     min-width: 0;
     overflow-wrap: anywhere;

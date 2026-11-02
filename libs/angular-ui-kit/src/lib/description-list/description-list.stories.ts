@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/angular';
+import { moduleMetadata } from '@storybook/angular';
 import { DescriptionListComponent } from './description-list.component';
+import { CardComponent } from '../card/card.component';
 
 const meta: Meta<DescriptionListComponent> = {
   title: 'Components/Description List',
@@ -18,6 +20,7 @@ Description list for key/value metadata (a styled \`<dl>\`).
 - Semantic \`<dl>\`/\`<dt>\`/\`<dd>\` markup
 - 3.3: long unbroken values (an e-mail address, an IBAN) wrap instead of overflowing the row;
   an item's \`datetime\` (ISO 8601) renders its value inside \`<time datetime>\`
+- Term and value carry no browser margin; the row gap is the only space (BA-8)
 `,
       },
     },
@@ -128,6 +131,37 @@ export const LongValuesAndTimes: Story = {
         <lc-description-list [items]="items" [layout]="layout" [size]="size" />
       </div>
     `,
+  }),
+};
+
+/** BA-8 (life-os): short German values stay on one line at a phone width. */
+export const ShortValuesAtPhoneWidth: Story = {
+  name: 'Short values at a phone width (BA-8)',
+  decorators: [moduleMetadata({ imports: [CardComponent] })],
+  args: {
+    items: [
+      { term: 'Umbenennen', value: 'Alle Erwachsenen' },
+      { term: 'Entfernen', value: 'Alle Erwachsenen' },
+      { term: 'Sichtbarkeit', value: 'Nur du' },
+      { term: 'Claude-App', value: 'nicht eingerichtet', emphasis: 'muted' as const },
+      { term: 'Claude Code', value: 'seit 02.11.2026' },
+      { term: 'Konten', value: 'nicht erlaubt', emphasis: 'muted' as const },
+    ],
+    layout: 'rows',
+    leaders: false,
+    size: 'md',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'BA-8 (life-os connection and assistant pages): short German values in an outlined `lc-card padding="lg"` at the 312 px content width of `lc-app-page` at 360 px (262 px list). Term and value have no browser margin, so the row gap is the only space and each value stays on one line.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `<div style="max-width: 312px;"><lc-card variant="outlined" borderRadius="xl" padding="lg"><lc-description-list [items]="items" [layout]="layout" [leaders]="leaders" [size]="size" /></lc-card></div>`,
   }),
 };
 

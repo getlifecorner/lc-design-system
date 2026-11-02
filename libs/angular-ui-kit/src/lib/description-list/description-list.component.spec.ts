@@ -167,6 +167,41 @@ describe('DescriptionListComponent', () => {
       expect(value).toMatch(/min-width:\s*0/);
       expect(value).toMatch(/overflow-wrap:\s*anywhere/);
     });
+
+    it('resets the browser margin of term and value (BA-8)', () => {
+      const css = compile(join(__dirname, 'description-list.component.scss')).css;
+      const block = (selector: string) => {
+        const start = css.indexOf(`${selector} {`);
+        expect(start).toBeGreaterThanOrEqual(0);
+        return css.slice(start, css.indexOf('}', start));
+      };
+      // The user-agent `dd { margin-inline-start: 40px }` must not add space
+      // on top of the row gap; `margin: 0` covers all four sides.
+      expect(block('.lc-dl__term')).toMatch(/[\s{;]margin:\s*0;/);
+      expect(block('.lc-dl__value')).toMatch(/[\s{;]margin:\s*0;/);
+    });
+
+    it('keeps the default markup: dl > row > dt, hidden leader, dd (BA-8 is style-only)', () => {
+      const dl = hostElement.querySelector('dl') as HTMLElement;
+      expect(Array.from(dl.classList).sort()).toEqual([
+        'lc-dl',
+        'lc-dl--md',
+        'lc-dl--rows',
+        'lc-dl--sep-line',
+      ]);
+      const row = dl.querySelector('.lc-dl__row') as HTMLElement;
+      expect(row.parentElement).toBe(dl);
+      expect(row.getAttribute('role')).toBeNull();
+      expect(row.getAttribute('tabindex')).toBeNull();
+      const children = Array.from(row.children).map(
+        (el) => `${el.tagName.toLowerCase()}.${el.className}${el.getAttribute('aria-hidden') ? '[aria-hidden]' : ''}`,
+      );
+      expect(children).toEqual([
+        'dt.lc-dl__term',
+        'span.lc-dl__leader[aria-hidden]',
+        'dd.lc-dl__value lc-dl__value--primary',
+      ]);
+    });
   });
 });
 
