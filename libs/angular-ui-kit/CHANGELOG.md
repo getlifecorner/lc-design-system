@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.22.4] - 2026-11-02
+
+Seven contrast and target gaps that 3.21.1 left open (follow-ups F-1 to F-7 of request 029) now reach WCAG 2.2 AA in both themes, in six components. No API breaks.
+
+### Fixed
+
+- **`lc-notification-center` chips on an unread row**: the chips paint their tint over an opaque `--color-surface`, so the teal row no longer shows through. Dark „High“ 3.67 → 5.55, low and category 3.76 → 5.99, urgent 5.91 → 8.37, the same on every row of the panel gradient. Light colours are unchanged (5.52 / 10.97 / 5.30).
+- **`lc-progress-ring` arcs** use the progress-bar inks (`--color-on-<status>-subtle`, secondary `--color-secondary-600`). Against the track, light success 2.47 → 4.81, warning 2.05 → 5.47, secondary 2.83 → 4.19, error 7.62 → 11.43, info 5.60 → 9.22. Dark success 8.43 → 6.15 and warning 8.81 → 5.60 get slightly darker.
+- **`lc-diff-viewer`**: line numbers use `--color-text-secondary` and the line tints `--color-success-subtle` / `--color-error-subtle`. Numbers light added 3.88 → 6.91, removed 2.93 → 6.58, dark added 4.12 → 6.86; the `+` 3.52 → 4.85 (light). Light diffs are paler, as in dark (dark tints unchanged).
+- **`lc-card` `badgeVariant="primary"`** uses the `lc-badge` primary pair with a `--color-primary-500` border: text 3.12 → 8.48 (light, selected card), border 1.37 → 3.75 (light) / 1.82 → 6.87 (dark). Dark text is unchanged (5.79).
+- **`lc-log-viewer` level pills** have a 40 px tall hit area (WCAG 2.5.8 by size). The visible pill and the toolbar keep their size.
+- **`lc-dependency-viewer`**: `uses` reads `--color-text-tertiary`, `extends` `--color-on-primary-subtle` (edge, arrow, label, legend). Labels `uses` 1.47 → 5.83 (light) / 2.28 → 6.70 (dark), `extends` 1.89 → 9.13 / 3.95 → 9.12; lines ≥ 3.75 / 4.76. Dash styles are unchanged.
+- **`lc-log-viewer` text has no `opacity` any more.** Line number, time and source use `--color-text-secondary` (time/source 3.21 → 5.60 light, 4.43 → 8.29 dark). On debug lines they, the debug level, the line count and the search placeholder use `--color-text-tertiary` (debug level 2.53 → 5.34 / 3.25 → 6.12; debug-line meta 1.94 → 5.34 / 2.58 → 6.12). Terminal: `#a6adc8` for meta and debug text (numbers 2.20, time 3.64 → 5.85), `#9399b2` for the debug level and debug-line meta (2.97 → 5.28), line count and placeholder 6.21. Level colours are unchanged.
+- Stories: Charts/Progress Ring "All Colors", Feedback/Notification Center "Priority On Unread Rows", Components/Card "Primary Badge States", Data Display/LogViewer "Text Hierarchy", Data Display/Dependency Viewer "All Relation Types".
+
+### Compatibility
+
+- No API breaks and no new token: no input, output, slot, class, `--lc-*` hook or default changed; `--color-success/-error/-warning/-info` and their `-default` steps keep their values. Selectors keep their specificity; the log pills gain `position: relative` and an empty `::before`. A consumer rule on `.lc-diff__line--added` still wins. 96 of 360 story shots of the six components change colour only; 258 are pixel-identical.
+
+### Known
+
+- Follow-ups F-8 to F-12 (design 034 §9): notification message/time on unread rows in dark 4.23; the `depends` label 2.53 (light) and the neutral tree lines; the progress-bar secondary fill 2.83 (light); the 28 px log tool buttons. F-10, the log search match in dark, also covers debug lines (3.25) and the terminal (3.29).
+- F-13: the log viewer's `.ansi-gray` spans: light 2.60, terminal 3.35 (pre-existing; debug lines no longer dim them).
+- In the progress ring (dark), secondary and info arcs are 1.07:1 apart; the value text carries the number.
+
 ## [3.22.3] - 2026-11-02
 
 `lc-description-list` drops the browser's `<dd>` margin, so a short value stays on one line beside its term at 360 px (life-os bank accounts, gap BA-8). No API breaks.

@@ -77,6 +77,9 @@ metadata:
 - **Requester widths vs the 328 canvas (033).** A spec's "328 px container" may not reproduce the requester's wrap (BA-8 fit at 328 even with the bug). Rebuild the requester's real container (app-page 312 − card border/padding) in the story, and pick a measure that discriminates at any width (value − leader gap 8 vs 48), not only line counts.
 - **"Identical" baseline from another component's story (033 r1).** `components-card--footer-slot` was in the baseline as proof a card's list stays put, but card.stories doesn't import `DescriptionListComponent`: the list never renders (measure 0 rows, box 294×0). Before citing a cross-component story as evidence, check the measure's element count is > 0.
 
+- **DE review stories (034 r1).** When §7 sets German labels for a story, list every visible built-in string of the component (NC: clear-all, search placeholder, filter chips too), or the shot mixes languages; and put the rows the AC needs above the fold at 360.
+- **Two-layer fills and color-mix reads (034).** An opaque base plus a same-colour one-colour gradient on a rounded chip changes the corner raster, so the light shots differ even though the colours are equal. Prove that with a negative control (inject one layer: identical; two layers: different) and list those shots as raster-only diffs. `getComputedStyle().color` of a `color-mix()` returns `color(srgb r g b / a)` in 0–1 floats: scale by 255 before the WCAG formula (my first match values were wrong). Check every spec premise that something "stays ≥ X" (card chip border "stays ≥ 3" was 1.37). A `::before` hit area is limited by an ancestor's `overflow: hidden` and by later positioned siblings: hit-test it with `elementFromPoint` before quoting a size.
+
 **Why:** each of these cost a round trip or would have broken the build.
 
 **How to apply:** name the relevant ones in the design's risk list.
