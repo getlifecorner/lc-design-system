@@ -56,6 +56,9 @@ export type DescriptionListSize = 'sm' | 'md';
  */
 export type DescriptionListSeparator = 'line' | 'divider' | 'none';
 
+/** Counter for generated ids: they follow creation order, so prerendered HTML is the same in every build. */
+let nextUniqueId = 0;
+
 /**
  * Description list for key/value metadata (a styled `<dl>`).
  *
@@ -65,7 +68,8 @@ export type DescriptionListSeparator = 'line' | 'divider' | 'none';
  * - `stacked` layout: term above value, for narrow columns.
  * - Per-row value emphasis and optional links.
  * - Semantic markup (`<dl>`/`<dt>`/`<dd>`) for accessibility; `clickable`
- *   rows are focusable and keyboard-activatable.
+ *   rows hold a native button (named by term and value) that the keyboard
+ *   reaches, and the `dl` keeps its term and value pairs.
  *
  * @example
  * ```html
@@ -115,15 +119,29 @@ export class DescriptionListComponent {
   readonly separator = input<DescriptionListSeparator>('line');
 
   /**
-   * Whether rows are interactive. When set, each row is focusable and
-   * Enter / Space emit `itemClick`, so the click handler is reachable from
-   * the keyboard. Set this whenever you handle `itemClick`.
+   * Whether rows are interactive. When set, each row holds a native button,
+   * named by its term and value, that Tab reaches; Enter, Space and a click
+   * anywhere on the row emit `itemClick`. The `dl` keeps its term and value
+   * pairs. Set this whenever you handle `itemClick`.
    * @default false
    */
   readonly clickable = input<boolean>(false);
 
   /** Emitted when a row is clicked (or activated via keyboard when `clickable`). */
   readonly itemClick = output<DescriptionListItem>();
+
+  /** Generated id prefix, taken once per instance, so later ids don't shift. */
+  private readonly uid = `lc-dl-${nextUniqueId++}`;
+
+  /** Id of row `index`'s term (only rendered when `clickable`). */
+  protected termId(index: number): string {
+    return `${this.uid}-t${index}`;
+  }
+
+  /** Id of row `index`'s value (only rendered when `clickable`). */
+  protected valueId(index: number): string {
+    return `${this.uid}-v${index}`;
+  }
 
   protected readonly hostClasses = computed(() =>
     [
@@ -141,7 +159,11 @@ export class DescriptionListComponent {
     return `lc-dl__value lc-dl__value--${item.emphasis ?? 'default'}`;
   }
 
-  /** Keyboard activation of a clickable row (only from the row itself, not a nested link). */
+  /**
+   * Keydown dispatched on the row itself (a consumer's test, a script). Keys
+   * from the row's button or a nested link are theirs: the button's native
+   * activation clicks it, and the click bubbles to the row.
+   */
   protected onRowKeydown(event: KeyboardEvent, item: DescriptionListItem): void {
     if (event.target !== event.currentTarget) return;
     if (event.key === 'Enter' || event.key === ' ') {

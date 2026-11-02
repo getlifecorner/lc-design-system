@@ -1,5 +1,5 @@
 import { compile } from 'sass';
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync } from 'fs';
 import { resolve } from 'path';
 
 /**
@@ -743,10 +743,13 @@ describe('Component pairings of 3.21.1 (request 029)', () => {
     );
   });
 
-  it('AC-10: the progress track is unchanged; primary stays raw (secondary: request 036)', () => {
+  it('AC-10: the progress track is unchanged; primary reads the theme token (request 039), secondary the data mark (036)', () => {
     // The base rule (the forced-colours block repeats the selector with an outline).
     expect(sheets.progress).toMatch(/\n\.progress-bar__track \{\s*flex: 1;\s*background-color: var\(--color-surface-hover\);/);
-    expect(fills('progress', '.progress-bar--primary .progress-bar__fill')['background-color']).toMatch(/^#[0-9a-f]{6}$/i);
+    // 039 (F-14): the raw #208497 was 2.89:1 against the dark track; primary
+    // now reads --color-primary-500 (same hex in light, 6.69:1 dark). This
+    // line asserted the raw hex before 3.25.
+    expect(fills('progress', '.progress-bar--primary .progress-bar__fill')['background-color']).toBe('var(--color-primary-500)');
     // 036 (F-11): the raw secondary-500 was 2.83:1 against the light track;
     // secondary now reads the data-mark token (4.19 light, 4.05 dark).
     expect(fills('progress', '.progress-bar--secondary .progress-bar__fill')['background-color']).toBe('var(--color-secondary-graphic)');
@@ -1325,7 +1328,8 @@ describe('Component pairings of 3.23.1 (request 036)', () => {
     ['dl', '.lc-dl__value--primary', { color: 'var(--color-on-primary-subtle)', 'font-weight': 'var(--font-weight-semibold)' }],
     ['dl', '.lc-dl__link', { color: 'var(--color-link)', 'text-decoration': 'none' }],
     ['dl', '.lc-dl__link:hover', { color: 'var(--color-link-hover)', 'text-decoration': 'underline' }],
-    ['dl', '.lc-dl__row--clickable:focus-visible', { outline: '2px solid var(--color-primary-500)', 'outline-offset': '2px' }],
+    // 039 (F-17): the ring moved from the row to the row's button (same box).
+    ['dl', '.lc-dl__action:focus-visible', { outline: '2px solid var(--color-primary-500)', 'outline-offset': '2px' }],
     // F-8: unread message and time in the secondary ink.
     ['nc', '.lc-nc__item--unread .lc-nc__item-message', { color: secondary }],
     ['nc', '.lc-nc__item--unread .lc-nc__item-time', { color: secondary }],
@@ -1347,10 +1351,11 @@ describe('Component pairings of 3.23.1 (request 036)', () => {
   });
 
   it('AC-2: the clickable row has no halo any more; forced colours draw the outline in Highlight', () => {
-    const clickable = rulesOf(sheets.dl).filter((r) => r.selectors.some((s) => s.includes('lc-dl__row--clickable')));
+    // 039 (F-17): the focus rules moved to the row's button `.lc-dl__action`.
+    const clickable = rulesOf(sheets.dl).filter((r) => r.selectors.some((s) => /lc-dl__row--clickable|lc-dl__action/.test(s)));
     for (const r of clickable) expect(decls(r.body)['box-shadow']).toBeUndefined();
     expect(sheets.dl).not.toMatch(/color-mix/);
-    expect(forced('dl')).toMatch(/\.lc-dl__row--clickable:focus-visible \{\s*outline-color: Highlight;\s*\}/);
+    expect(forced('dl')).toMatch(/\.lc-dl__action:focus-visible \{\s*outline-color: Highlight;\s*\}/);
   });
 
   it('AC-9: forced colours paint every search match, the terminal one too, with Mark / MarkText', () => {
@@ -1416,7 +1421,8 @@ describe('Component pairings of 3.23.1 (request 036)', () => {
 
     function measure() {
       const dlInk = (selector: string) => value(fills('dl', selector).color);
-      const ringInk = value(fills('dl', '.lc-dl__row--clickable:focus-visible').outline.replace(/^2px solid /, ''));
+      // 039 (F-17): the ring is the row button's (it covers the row's padding box).
+      const ringInk = value(fills('dl', '.lc-dl__action:focus-visible').outline.replace(/^2px solid /, ''));
       const dl = {
         linkPage: lowest(dlInk('.lc-dl__link'), pages),
         linkHover: lowest(dlInk('.lc-dl__link'), hovered),
@@ -1548,5 +1554,227 @@ describe('Component pairings of 3.23.1 (request 036)', () => {
     };
     expect(Object.fromEntries(Object.entries(terminal).map(([k, v]) => [k, floor(v)]))).toEqual({ match: 12.9, grayPlain: 5.81, grayWorst: 4.61 });
     expect(Math.min(...Object.values(terminal))).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+/**
+ * Request 039 (3.25.0): F-14 the progress-bar primary fill, F-15 focus rings
+ * instead of 20–40 % halos, F-16 the dependency-viewer node and toggle
+ * borders. Design 039 §3 (rings) and §5 (ratios), floored, [light, dark].
+ */
+describe('Component pairings of 3.25.0 (request 039)', () => {
+  const lib = (path: string) => resolve(__dirname, '../lib', path);
+  const sheets = {
+    progress: compile(lib('progress-bar/progress-bar.component.scss')).css,
+    ring: compile(lib('progress-ring/progress-ring.component.scss')).css,
+    nc: compile(lib('notification-center/notification-center.component.scss')).css,
+    log: compile(lib('log-viewer/log-viewer.component.scss')).css,
+    code: compile(lib('code-block/code-block.component.scss')).css,
+    tree: compile(lib('tree-view/tree-view.component.scss')).css,
+    slider: compile(lib('slider/slider.component.scss')).css,
+    select: compile(lib('select/select.component.scss')).css,
+    digits: compile(lib('verification-code-input/verification-code-input.component.scss')).css,
+    password: compile(lib('password-input/password-input.component.scss')).css,
+    textarea: compile(lib('textarea/textarea.component.scss')).css,
+    number: compile(lib('number-input/number-input.component.scss')).css,
+    combobox: compile(lib('combobox/combobox.component.scss')).css,
+    dep: compile(lib('dependency-viewer/dependency-viewer.component.scss')).css,
+    dl: compile(lib('description-list/description-list.component.scss')).css,
+  };
+  type Sheet = keyof typeof sheets;
+  const depTs = readFileSync(lib('dependency-viewer/dependency-viewer.component.ts'), 'utf8');
+  const depHtml = readFileSync(lib('dependency-viewer/dependency-viewer.component.html'), 'utf8');
+
+  const rulesOf = (css: string) =>
+    [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({
+      selectors: m[1].split(/,(?![^(]*\))/).map((s) => s.trim()),
+      body: m[2],
+    }));
+  const decls = (body: string): Record<string, string> =>
+    Object.fromEntries([...body.matchAll(/([\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].replace(/\s+/g, ' ').trim()]));
+  const forcedBlock = /@media \(forced-colors: active\) \{((?:[^{}]*\{[^{}]*\})*)\s*\}/g;
+  /** Every rule naming `selector`, merged in source order, forced-colours blocks left out. */
+  const fills = (sheet: Sheet, selector: string): Record<string, string> => {
+    const found = rulesOf(sheets[sheet].replace(forcedBlock, '')).filter((r) => r.selectors.includes(selector));
+    expect([sheet, selector, found.length > 0]).toEqual([sheet, selector, true]);
+    return Object.assign({}, ...found.map((r) => decls(r.body)));
+  };
+  /** The same, inside the forced-colours blocks only. */
+  const forcedFills = (sheet: Sheet, selector: string): Record<string, string> => {
+    const inner = [...sheets[sheet].matchAll(forcedBlock)].map((m) => m[1]).join('\n');
+    return Object.assign({}, ...rulesOf(inner).filter((r) => r.selectors.includes(selector)).map((r) => decls(r.body)));
+  };
+  const primary = '2px solid var(--color-primary-500)';
+  const halo = /color-mix\(in srgb, var\(--color-(primary-500|error-600|error-default)\) \d+%|rgba\(32, 132, 151, 0?\.\d+\)/;
+
+  // Design 039 §3: [sheet, selector, outline, offset]. Every row was a halo or
+  // had no focus style (D-4: NC action, log tool buttons, dependency toolbar).
+  const rings: [Sheet, string, string, string][] = [
+    ['nc', '.lc-nc__item-title:focus-visible', primary, '2px'],
+    ['nc', '.lc-nc__item-action:focus-visible', primary, '2px'],
+    ['nc', '.lc-nc__item-dismiss:focus-visible', primary, '2px'],
+    ['log', '.lc-log-viewer__tool-btn:focus-visible', primary, '2px'],
+    ['log', '.lc-log-viewer__line--clickable:focus-visible', primary, '-2px'],
+    ['log', '.lc-log-viewer__jump-bottom:focus-visible', primary, '2px'],
+    ['code', '.code-block__copy:focus-visible', primary, '-2px'],
+    ['tree', '.lc-tree-view__tool-btn:focus-visible', primary, '2px'],
+    ['tree', '.lc-tree-view__item:focus-visible', primary, '-2px'],
+    ['select', '.lc-select__option.lc-select__option--highlighted', primary, '-2px'],
+    ['digits', '.lc-digit-input:focus', primary, '0'],
+    ['dep', '.dep-viewer__btn:focus-visible', primary, '2px'],
+    ['dl', '.lc-dl__action:focus-visible', primary, '2px'],
+    ['password', '.lc-input.lc-input-error:focus', '2px solid var(--color-error-600)', '0'],
+    ['textarea', '.lc-textarea--error:focus', '2px solid var(--color-error-600)', '0'],
+    ['number', '.number-input--error .number-input__control:focus-within', '2px solid var(--color-error-600)', '0'],
+    ['combobox', '.lc-combobox--error .lc-combobox__input-wrapper:focus-within', '2px solid var(--color-error-default)', '0'],
+  ];
+
+  it.each(rings)('AC-2: %s %s draws a solid 2 px outline, no halo', (sheet, selector, outline, offset) => {
+    const found = fills(sheet, selector);
+    expect([found.outline, found['outline-offset']]).toEqual([outline, offset]);
+    expect(found['box-shadow'] ?? 'none').not.toMatch(halo);
+  });
+
+  it.each(rings)('AC-3: %s %s turns Highlight in forced colours', (sheet, selector) => {
+    expect(forcedFills(sheet, selector)['outline-color']).toBe('Highlight');
+  });
+
+  it('AC-2, AC-3: an error digit keeps the error colour, and forced colours name its selector too', () => {
+    expect(fills('digits', '.lc-digit-input.lc-digit-input-error:focus')).toEqual({ 'outline-color': 'var(--color-error-600)' });
+    expect(forcedFills('digits', '.lc-digit-input.lc-digit-input-error:focus')['outline-color']).toBe('Highlight');
+  });
+
+  it('AC-2: the log tool buttons show the ring at full opacity (0.7 gave 2.66:1)', () => {
+    expect(fills('log', '.lc-log-viewer__tool-btn:focus-visible').opacity).toBe('1');
+  });
+
+  it('AC-2, AC-3: the slider thumb ring is solid primary-500; forced colours outline the input', () => {
+    for (const thumb of ['::-webkit-slider-thumb', '::-moz-range-thumb']) {
+      expect(fills('slider', `.slider__input:focus-visible${thumb}`)['box-shadow']).toBe('0 1px 3px rgba(0, 0, 0, 0.15), 0 0 0 3px var(--color-primary-500)');
+    }
+    expect(forcedFills('slider', '.slider__input:focus-visible')).toEqual({ outline: '2px solid Highlight', 'outline-offset': '8px' });
+  });
+
+  it('AC-11: the rings add no transition', () => {
+    for (const [sheet, selector] of rings) expect([selector, fills(sheet, selector).transition]).toEqual([selector, undefined]);
+  });
+
+  /**
+   * AC-5 guard (design 039 §9): no focus, `--focused` or `--highlighted` rule
+   * in lib/**\/*.scss draws a ≤ 40 % primary or error halo unless the same rule
+   * also changes the border or draws an outline (the "keep" rows of the
+   * inventory: the field border turns primary-500, ≥ 4.17 / 7.57).
+   */
+  it('AC-5: no focus style is a translucent halo alone', () => {
+    const root = resolve(__dirname, '../lib');
+    const files = (readdirSync(root, { recursive: true }) as string[]).filter((f) => /\.scss$/.test(f) && !/(^|\/)_/.test(f));
+    expect(files.length).toBeGreaterThan(100);
+    const offenders: string[] = [];
+    let focusRules = 0;
+    for (const file of files) {
+      for (const r of rulesOf(compile(resolve(root, file)).css)) {
+        if (!r.selectors.some((s) => /:focus|--focused|--highlighted/.test(s))) continue;
+        focusRules++;
+        const d = decls(r.body);
+        const shadow = d['box-shadow'] ?? '';
+        const weak = [...shadow.matchAll(/color-mix\(in srgb, var\(--color-(?:primary-500|error-600|error-default)\) (\d+)%/g)].some((m) => Number(m[1]) <= 60)
+          || [...shadow.matchAll(/rgba\(32, 132, 151, (0?\.\d+)\)/g)].some((m) => Number(m[1]) <= 0.4);
+        const outline = (d.outline !== undefined && !/^(none|0)\b/.test(d.outline)) || d['outline-color'] !== undefined;
+        if (weak && !d['border-color'] && !outline) offenders.push(`${file}: ${r.selectors.join(', ')}`);
+      }
+    }
+    expect(focusRules).toBeGreaterThan(100);
+    expect(offenders).toEqual([]);
+  });
+
+  it('AC-1: the progress primary reads the theme token in the bar and the circle, as the ring does', () => {
+    expect(fills('progress', '.progress-bar--primary .progress-bar__fill')['background-color']).toBe('var(--color-primary-500)');
+    expect(fills('progress', '.progress-bar-circular--primary .progress-bar-circular__fill').stroke).toBe('var(--color-primary-500)');
+    expect(fills('ring', '.lc-progress-ring__value--primary').stroke).toBe('var(--color-primary-500)');
+    expect(sheets.progress).not.toMatch(/#208497/i);
+  });
+
+  it('AC-6: default and muted nodes and the toggle ring read the field border, active primary-600', () => {
+    const border = (status: string) => depTs.match(new RegExp(`\\n  ${status}:\\s*\\{ bg: '[^']+', border: '([^']+)'`))?.[1];
+    expect(['default', 'active', 'muted'].map(border)).toEqual(['var(--color-field-border)', 'var(--color-primary-600)', 'var(--color-field-border)']);
+    expect(depHtml.match(/<circle[^>]*fill="var\(--color-neutral-100\)" stroke="var\(--color-field-border\)" stroke-width="1"/g)).toHaveLength(2);
+    expect(depHtml).not.toMatch(/--color-neutral-300|--color-neutral-200/);
+    // The selected stroke and the edge, label and legend colours of 036 stay.
+    expect(depHtml).toContain(`[attr.stroke]="selectedNodeId() === node.id ? 'var(--color-primary-500)' : getNodeBorder(node)"`);
+  });
+
+  const expected = {
+    progressTrack: [3.96, 6.69],
+    ringPages: [4.17, 7.57],
+    ringHovered: [3.96, 6.69],
+    ringUnread: [3.75, 5.77],
+    // Design §5 gave 3.23 light with the hover composited over the tints; the
+    // tint replaces the hover fill, so the lowest real line is the error tint.
+    ringLogLines: [3.49, 7.47],
+    ringTerminalLines: [3.28, 7.58],
+    ringLogToolbar: [4.02, 9.12],
+    ringCodeHeader: [3.78, 8.74],
+    ringTreeRows: [3.75, 6.96],
+    errorPages: [8.02, 7.21],
+    depField: [4.83, 6.7],
+    depFieldOwnFill: [4.39, 5.69],
+    depActive: [5.77, 10.8],
+  };
+  const floor = (n: number) => Math.floor(n * 100) / 100;
+
+  describe.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('%s palette', (_palette, tokens, i) => {
+    const c = (name: string) => color(tokens, name);
+    const lowest = (fg: Rgba, bases: Rgba[]) => Math.min(...bases.map((bg) => ratio(over(fg, bg), bg)));
+
+    function measure() {
+      const S = c('--color-surface');
+      const pages = [c('--color-background'), S, c('--color-surface-2')];
+      const hovered = pages.map((p) => over(c('--color-surface-hover'), p));
+      const ring = c('--color-primary-500');
+
+      const log = (selector: string) => parse(fills('log', selector)['background-color']);
+      const logBg = S;
+      const T = log('.lc-log-viewer--terminal');
+      const hover = log('.lc-log-viewer__line:hover');
+      // A tint (0,2,0, later) replaces the hover fill on warn and error lines,
+      // so hover only lightens the untinted lines.
+      const lines = (base: Rgba, variant: string) => [
+        base,
+        over(hover, base),
+        over(log(`${variant} .lc-log-viewer__line--warn`), base),
+        over(log(`${variant} .lc-log-viewer__line--error`), base),
+      ];
+
+      const codeVar = (name: string) => parse(sheets.code.match(new RegExp(`${name}: (#[0-9a-f]{6})`, 'i'))?.[1] ?? '');
+      const header = over(parse(fills('code', '.code-block__header')['background-color']), codeVar('--lc-code-block-bg'));
+      const copyHover = over(parse(fills('code', '.code-block__copy:hover')['background-color']), header);
+
+      const treeRows = [S, over(c('--color-surface-hover'), S), over(c('--color-primary-50'), S), over(c('--color-primary-100'), S)];
+      const field = c('--color-field-border');
+
+      return {
+        progressTrack: lowest(ring, pages.map((p) => over(c('--color-surface-hover'), p))),
+        ringPages: lowest(ring, pages),
+        ringHovered: lowest(ring, hovered),
+        ringUnread: lowest(ring, [S, c('--color-surface-2')].map((p) => over(c('--color-surface-selected'), p))),
+        ringLogLines: lowest(ring, lines(logBg, '.lc-log-viewer--log')),
+        ringTerminalLines: lowest(ring, lines(T, '.lc-log-viewer--terminal')),
+        ringLogToolbar: lowest(ring, [S, parse('#181825')]),
+        ringCodeHeader: lowest(ring, [header, copyHover]),
+        ringTreeRows: lowest(ring, treeRows),
+        errorPages: Math.min(lowest(c('--color-error-600'), pages), lowest(c('--color-error-default'), pages)),
+        depField: lowest(field, [S]),
+        depFieldOwnFill: lowest(field, [over(c('--color-neutral-50'), S), over(c('--color-neutral-100'), S)]),
+        depActive: lowest(c('--color-primary-600'), [S, over(c('--color-primary-50'), S)]),
+      };
+    }
+
+    it('AC-1, AC-2, AC-6: the design 039 §5 ratios; fills and boundaries ≥ 3:1', () => {
+      const m = measure();
+      for (const key of Object.keys(expected) as (keyof typeof expected)[]) {
+        expect([key, floor(m[key])]).toEqual([key, expected[key][i]]);
+      }
+      expect(Math.min(...Object.values(m))).toBeGreaterThanOrEqual(3);
+    });
   });
 });

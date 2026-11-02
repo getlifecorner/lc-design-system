@@ -434,6 +434,50 @@ export const AutoFit: Story = {
   },
 };
 
+const statusTree: DependencyNode = {
+  id: 'standard',
+  label: 'Standard',
+  status: 'default',
+  children: [
+    { id: 'aktiv', label: 'Aktiv', status: 'active' },
+    { id: 'erfolg', label: 'Erfolg', status: 'success' },
+    { id: 'warnung', label: 'Warnung', status: 'warning' },
+    { id: 'fehler', label: 'Fehler', status: 'error' },
+    {
+      id: 'gedaempft',
+      label: 'Gedämpft',
+      status: 'muted',
+      children: [{ id: 'unterknoten', label: 'Unterknoten', status: 'default' }],
+    },
+  ],
+};
+
+/** 3.25 (F-16): every node status and a collapse toggle in one frame. */
+export const NodeStatuses: Story = {
+  name: 'Node statuses (F-16)',
+  args: {
+    root: statusTree,
+    direction: 'horizontal',
+    autoFit: true,
+    height: '360px',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Every node status and a collapse toggle (on "Standard" and "Gedämpft"). Node and toggle ' +
+          'borders are UI boundaries and reach 3:1 on the surface since 3.25 (F-16): `default` and ' +
+          '`muted` nodes and the toggle ring use `--color-field-border`, 4.83:1 light and 6.70:1 dark ' +
+          '(4.39 / 5.69 against their own fill; neutral-300 was 1.47 / 2.28). `active` uses ' +
+          '`--color-primary-600`, 5.77:1 light and 10.80:1 dark (primary-400 was 1.89 / 3.95). ' +
+          '`success`, `warning` and `error` keep their status inks. `muted` stays apart from ' +
+          '`default` by its fill and its tertiary label; a selected node keeps its 2.5 px ' +
+          '`--color-primary-500` stroke. Tab shows a 2 px ring on the toolbar buttons (4.17 / 7.57).',
+      },
+    },
+  },
+};
+
 export const AutoFitVertical: Story = {
   args: {
     root: broadTree,

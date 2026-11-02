@@ -63,10 +63,12 @@
       background-color: rgba(255, 255, 255, 0.06);
     }
 
+    // 2 px ring inset (F-15): the header clips at the button's edge, and the
+    // 40 % halo measured 1.66:1 in light. The ink change stays.
+    @include mix.focus-ring($offset: -2px);
+
     &:focus-visible {
-      outline: none;
       color: var(--lc-code-block-muted-strong);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-500) 40%, transparent);
     }
   }
 
@@ -212,5 +214,13 @@
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     min-width: 0;
+  }
+}
+
+// Forced colours keep the copy button's ring in the system focus colour (the
+// body's ring has its own block above).
+@media (forced-colors: active) {
+  .code-block__copy:focus-visible {
+    outline-color: Highlight;
   }
 }

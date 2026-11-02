@@ -225,6 +225,19 @@ export const TextHierarchy: Story = {
             warningsLabel="Warnungen"
             linesLabel="Zeilen"
             searchPlaceholder="Logs durchsuchen…"
+            jumpToBottomLabel="Zum Ende springen"
+            pauseLabel="Pausieren"
+            resumeLabel="Fortsetzen"
+            pauseAriaLabel="Stream pausieren"
+            resumeAriaLabel="Stream fortsetzen"
+            clearLabel="Leeren"
+            clearAriaLabel="Log leeren"
+            copyLabel="Alle kopieren"
+            copyAriaLabel="Alle Zeilen kopieren"
+            searchLabel="Suchen (/)"
+            searchAriaLabel="Log durchsuchen"
+            searchInputLabel="Logs durchsuchen"
+            outputAriaLabel="Log-Ausgabe"
           />
         }
       </div>
@@ -234,7 +247,7 @@ export const TextHierarchy: Story = {
     docs: {
       description: {
         story:
-          'Since 3.22.4 no opacity dims text. Three steps: the message in the primary text, line number, time and source (and the debug message) in `--color-text-secondary`, and on debug lines the meta, the debug level, the line count and the search placeholder in `--color-text-tertiary`; the terminal uses Subtext0 `#a6adc8` and Overlay2 `#9399b2`. Every step reaches 4.5:1 on its line, also on the warn and error tints and under hover (debug level was 2.53 in light). The level pills keep their size but get a 40 px tall hit area (WCAG 2.5.8). The German labels wrap the pills to two lines at 360 px.',
+          'Since 3.22.4 no opacity dims text. Three steps: the message in the primary text, line number, time and source (and the debug message) in `--color-text-secondary`, and on debug lines the meta, the debug level, the line count and the search placeholder in `--color-text-tertiary`; the terminal uses Subtext0 `#a6adc8` and Overlay2 `#9399b2`. Every step reaches 4.5:1 on its line, also on the warn and error tints and under hover (debug level was 2.53 in light). The level pills keep their size but get a 40 px tall hit area (WCAG 2.5.8). The German labels wrap the pills to two lines at 360 px. 3.25 (F-15): every built-in string is German here; Tab shows a 2 px `--color-primary-500` ring on the tool buttons (at full opacity), a clickable line (inset) and the jump pill ("Zum Ende springen", after scrolling up): 4.36 / 9.12:1 on the toolbar and 4.02 / 9.28:1 on the terminal toolbar (light / dark), at least 3.23 / 7.47 on the line tints; `Highlight` in forced colours (the 20 % halo measured 1.28 / 1.50).',
       },
     },
   },

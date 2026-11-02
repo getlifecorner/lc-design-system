@@ -288,9 +288,12 @@
   }
 
   // Keyboard highlight (aria-activedescendant target) — must stay visible on top of the selected tint.
+  // An inset 2 px primary-500 ring (F-15): the 40 % inset shadow measured
+  // 1.65:1 light, 2.49:1 dark; now 3.96:1 and 6.69:1 on the hover fill.
   &.lc-select__option--highlighted {
     background-color: var(--color-surface-hover);
-    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-primary-500) 40%, transparent);
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: -2px;
   }
 
   &.lc-select__option--disabled {
@@ -338,4 +341,11 @@
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   margin-top: var(--spacing-1);
+}
+
+// Forced colours keep the highlight ring in the system focus colour.
+@media (forced-colors: active) {
+  .lc-select__option.lc-select__option--highlighted {
+    outline-color: Highlight;
+  }
 }

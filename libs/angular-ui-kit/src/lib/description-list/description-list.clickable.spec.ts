@@ -48,8 +48,10 @@ describe('DescriptionListComponent clickable rows (BA-10)', () => {
   });
 
   it('draws focus as a 2 px outline 2 px outside the row, Highlight in forced colours', () => {
-    expect(body('.lc-dl__row--clickable:focus-visible')).toMatch(/^\s*outline: 2px solid var\(--color-primary-500\);\s*outline-offset: 2px;\s*$/);
-    expect(css).toMatch(/@media \(forced-colors: active\) \{\s*\.lc-dl__row--clickable:focus-visible \{\s*outline-color: Highlight;\s*\}\s*\}/);
+    // 3.25 (F-17): the ring moved from the row to its button, which covers
+    // the row's padding box, so the outline sits where it did.
+    expect(body('.lc-dl__action:focus-visible')).toMatch(/^\s*outline: 2px solid var\(--color-primary-500\);\s*outline-offset: 2px;\s*$/);
+    expect(css).toMatch(/@media \(forced-colors: active\) \{\s*\.lc-dl__action:focus-visible \{\s*outline-color: Highlight;\s*\}\s*\}/);
   });
 
   describe('markup', () => {
@@ -85,8 +87,10 @@ describe('DescriptionListComponent clickable rows (BA-10)', () => {
         expect(fixture.nativeElement.querySelector('dl').className).toContain(`lc-dl--${size}`);
         for (const row of rows()) {
           expect(row.classList).toContain('lc-dl__row--clickable');
-          expect(row.getAttribute('role')).toBe('button');
-          expect(row.getAttribute('tabindex')).toBe('0');
+          // 3.25 (F-17): no role or tab stop on the row; its button is the target.
+          expect(row.hasAttribute('role')).toBe(false);
+          expect(row.hasAttribute('tabindex')).toBe(false);
+          expect(row.querySelectorAll('button.lc-dl__action')).toHaveLength(1);
         }
       }
     });

@@ -393,6 +393,18 @@ const EXPECT_IN_HTML = [
   // also stays on the lc-card host, so the checks name the anchor's class.
   ['link card route', /<h2\b[^>]*class="card__title"[^>]*>(?:<!--[^]*?-->|\s)*<a(?=[^>]*\sclass="card__link")(?=[^>]*\shref="\/quellen\/usm\?ansicht=laeufe")[^>]*>Quelle<\/a>/],
   ['link card href', /<h3\b[^>]*class="card__title"[^>]*>(?:<!--[^]*?-->|\s)*<a(?=[^>]*\sclass="card__link")(?=[^>]*\shref="\/de\/hilfe")[^>]*>Hilfe<\/a>/],
+  // 3.25 (request 039, F-17, home.html): a clickable description-list row
+  // keeps its dt + dd pair (no role, no tabindex on the row) and ends its dd
+  // with a native button named by the term and value ids, before JS.
+  ['clickable description list: dt/dd pair and a named row button (F-17, 039 AC-10)', (html) => {
+    const dl = html.match(/<lc-description-list(?=[^>]*\sid="compat-dl-325")[^>]*>(?:(?!<\/lc-description-list>)[^])*<\/lc-description-list>/)?.[0] ?? '';
+    const uid = dl.match(/<dt(?=[^>]*\sclass="lc-dl__term")[^>]*\sid="(lc-dl-\d+)-t0"/)?.[1];
+    return Boolean(uid)
+      && /<div(?=[^>]*\sclass="lc-dl__row lc-dl__row--clickable")[^>]*>/.test(dl)
+      && new RegExp(`<dd(?=[^>]*\\sid="${uid}-v0")[^>]*>`).test(dl)
+      && new RegExp(`<button(?=[^>]*\\stype="button")(?=[^>]*\\sclass="lc-dl__action")(?=[^>]*\\saria-labelledby="${uid}-t0 ${uid}-v0")[^>]*></button>(?:<!--[^]*?-->|\\s)*</dd>`).test(dl)
+      && !/\s(?:role|tabindex)=/.test(dl);
+  }],
 ];
 
 /**

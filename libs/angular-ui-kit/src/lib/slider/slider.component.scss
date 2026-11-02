@@ -92,16 +92,18 @@
     }
 
     // Focus ring on the thumb itself: an outline on the pseudo-element is not
-    // painted reliably across engines, the box-shadow ring is.
+    // painted reliably across engines, the box-shadow ring is. Solid
+    // primary-500 (F-15): the 30 % ring measured 1.46:1 light, 1.95:1 dark;
+    // now 4.17:1 and 7.57:1. Forced colours drop the shadow: see below.
     &:focus-visible {
       &::-webkit-slider-thumb {
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15),
-          0 0 0 3px color-mix(in srgb, var(--color-primary-500) 30%, transparent);
+          0 0 0 3px var(--color-primary-500);
       }
 
       &::-moz-range-thumb {
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15),
-          0 0 0 3px color-mix(in srgb, var(--color-primary-500) 30%, transparent);
+          0 0 0 3px var(--color-primary-500);
       }
     }
 
@@ -122,5 +124,15 @@
   &--disabled {
     opacity: 0.5;
     pointer-events: none;
+  }
+}
+
+// Forced colours drop box-shadows, and with them the thumb's ring: the input
+// draws an outline in the system focus colour instead, 8 px out so it clears
+// the thumb, which overhangs the 6 px track by 6 px.
+@media (forced-colors: active) {
+  .slider__input:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 8px;
   }
 }

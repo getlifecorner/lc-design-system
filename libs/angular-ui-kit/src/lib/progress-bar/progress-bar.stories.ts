@@ -82,6 +82,14 @@ export const Sizes: Story = {
 };
 
 export const Colors: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Every fill reaches 3:1 against its track in both themes. `primary` reads `--color-primary-500` (as `lc-progress-ring` does): 3.96:1 light, 6.69:1 dark on a surface-2 track (was 2.89:1 dark before 3.25, F-14). `secondary` reads `--color-secondary-graphic`; the status colours read their `--color-on-<status>-subtle` inks.',
+      },
+    },
+  },
   render: () => ({
     template: `
       <div style="display: flex; flex-direction: column; gap: 12px; max-width: 400px;">

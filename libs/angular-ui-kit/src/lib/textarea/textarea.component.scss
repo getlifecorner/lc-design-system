@@ -110,9 +110,13 @@
   &--error {
     border-color: var(--color-error-600);
     
+    // The border keeps its colour on focus, so a 2 px outline in it marks
+    // focus (F-15, lc-input's error pattern): the 20 % halo measured 1.45:1.
     &:focus {
       border-color: var(--color-error-600);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error-600) 20%, transparent);
+      outline: 2px solid var(--color-error-600);
+      outline-offset: 0;
+      box-shadow: none;
     }
   }
   
@@ -170,4 +174,10 @@
 .lc-textarea-required-indicator {
   color: var(--color-text-error);
   margin-inline-start: var(--spacing-1);
+}
+
+@media (forced-colors: active) {
+  .lc-textarea--error:focus {
+    outline-color: Highlight;
+  }
 }

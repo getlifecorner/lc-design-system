@@ -1,3 +1,5 @@
+@use '../../styles/mixins' as mix;
+
 // Column flex, not plain block: the canvas has to take the height left over by the
 // toolbar and legend. As a block with `height: 100%` it resolved against the *host*
 // instead, so it overhung by the toolbar's height — which pushed the legend out of
@@ -40,6 +42,16 @@
 
     &:hover {
       background: var(--color-surface-hover);
+    }
+
+    // It had no focus style (the global `button:focus { outline: none }`
+    // won): a 2 px ring, 4.17:1 light and 7.57:1 dark on the toolbar.
+    @include mix.focus-ring;
+
+    @media (forced-colors: active) {
+      &:focus-visible {
+        outline-color: Highlight;
+      }
     }
 
     &--reset {

@@ -81,6 +81,14 @@
     opacity: 1;
     background-color: rgba(128, 128, 128, 0.2);
   }
+
+  // It had no focus style (the global `button:focus { outline: none }` won).
+  // Full opacity on focus: at 0.7 the ring measured 2.66:1 in light.
+  &:focus-visible {
+    opacity: 1;
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
 }
 
 .lc-log-viewer__level-pill {
@@ -225,13 +233,15 @@
     background-color: rgba(128, 128, 128, 0.08);
   }
 
-  // Interactive rows (`clickableLines`): pointer + a visible focus ring.
+  // Interactive rows (`clickableLines`): pointer + a visible focus ring, inset
+  // because the output scrolls (F-15: the 60 % inset shadow measured 2.17:1
+  // in light).
   &--clickable {
     cursor: pointer;
 
     &:focus-visible {
-      outline: none;
-      box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-primary-500) 60%, transparent);
+      outline: 2px solid var(--color-primary-500);
+      outline-offset: -2px;
     }
   }
 
@@ -364,9 +374,10 @@
     background-color: var(--color-surface-hover);
   }
 
+  // 2 px ring (F-15), not the 20 % halo (1.28:1 light, 1.50:1 dark).
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-500) 20%, transparent);
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
   }
 
   .lc-log-viewer--terminal & {
@@ -377,6 +388,15 @@
     &:hover {
       background-color: #45475a;
     }
+  }
+}
+
+// Forced colours keep the rings and draw them in the system focus colour.
+@media (forced-colors: active) {
+  .lc-log-viewer__tool-btn:focus-visible,
+  .lc-log-viewer__line--clickable:focus-visible,
+  .lc-log-viewer__jump-bottom:focus-visible {
+    outline-color: Highlight;
   }
 }
 

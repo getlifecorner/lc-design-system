@@ -23,6 +23,8 @@ Description list for key/value metadata (a styled \`<dl>\`).
 - Term and value carry no browser margin; the row gap is the only space (BA-8)
 - 3.23.1 (BA-10): link and \`primary\` values reach 4.5:1 in both themes; clickable rows are
   at least 44 px tall and show a 2 px focus outline (\`Highlight\` in forced colours)
+- 3.25 (F-17): a clickable row holds a native button named by its term and value; the row
+  keeps \`dl > div > dt + dd\` with no \`role\`, so assistive tech still reads the pairs
 `,
       },
     },
@@ -53,7 +55,7 @@ Description list for key/value metadata (a styled \`<dl>\`).
     clickable: {
       control: 'boolean',
       description:
-        'Rows are focusable buttons (Enter / Space emit itemClick). Set this whenever itemClick is handled. 3.23.1 (BA-10): a clickable row in the `rows` layout is at least 44 px tall and shows a 2 px focus outline (`Highlight` in forced colours).',
+        'Each row holds a native button per row, named term + value, that Tab reaches; Enter, Space and a click anywhere on the row emit itemClick. The `dl` keeps its term and value pairs (F-17, 3.25). Set this whenever itemClick is handled. 3.23.1 (BA-10): a clickable row in the `rows` layout is at least 44 px tall and shows a 2 px focus outline (`Highlight` in forced colours).',
       table: { defaultValue: { summary: 'false' } },
     },
     itemClick: {
@@ -263,7 +265,7 @@ export const ClickableRows: Story = {
     docs: {
       description: {
         story:
-          'BA-10: a clickable row in the `rows` layout pads to `--size-min-touch-height`, so it is 45 px tall (44 px for the last row, which has no line) in `md` and `sm`, at every width (was 38 / 27 px); the `stacked` rows (62 / 48 px) and non-clickable rows keep their size. Focus shows a 2 px `--color-primary-500` outline 2 px outside the row (4.17:1 on the light page, 7.57:1 dark; the old 20 % halo measured 1.28 / 1.50); in forced colours the outline is `Highlight`.',
+          'BA-10: a clickable row in the `rows` layout pads to `--size-min-touch-height`, so it is 45 px tall (44 px for the last row, which has no line) in `md` and `sm`, at every width (was 38 / 27 px); the `stacked` rows (62 / 48 px) and non-clickable rows keep their size. 3.25 (F-17): each row holds a native button per row, named term + value ("Bank Sparkasse KölnBonn"), as the last child of its `dd`; the `dl` keeps its pairs (the row has no `role` and no `tabindex`, axe `definition-list` and `dlitem` pass). The button covers the row and takes no pointer events, so a click anywhere on the row emits as before. Focus shows a 2 px `--color-primary-500` outline 2 px outside the row (4.17:1 on the light page, 7.57:1 dark, also next to a hovered row; the old 20 % halo measured 1.28 / 1.50); in forced colours the outline is `Highlight`. Avoid `href` in clickable rows: a link inside the row is a second tab stop (link, then row button).',
       },
     },
   },

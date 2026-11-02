@@ -1,3 +1,5 @@
+@use '../../styles/mixins' as mix;
+
 :host {
   display: block;
 }
@@ -218,10 +220,12 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 
+  // 2 px ring outside the title (F-15): the 20 % halo measured 1.28:1 light
+  // and 1.50:1 dark. The outline is outside the box, so `overflow` keeps it.
+  @include mix.focus-ring;
+
   &:focus-visible {
-    outline: none;
     border-radius: var(--border-radius-sm);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-500) 20%, transparent);
   }
 
   .lc-nc__item--unread & {
@@ -326,6 +330,13 @@
   &:hover {
     text-decoration: underline;
   }
+
+  // It had no focus style (the global `button:focus { outline: none }` won).
+  @include mix.focus-ring;
+
+  &:focus-visible {
+    border-radius: var(--border-radius-sm);
+  }
 }
 
 .lc-nc__item-dismiss {
@@ -355,9 +366,16 @@
     color: var(--color-text-secondary);
   }
 
-  &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-500) 20%, transparent);
+  // 2 px ring (F-15), not the 20 % halo.
+  @include mix.focus-ring;
+}
+
+// Forced colours keep the rings and draw them in the system focus colour.
+@media (forced-colors: active) {
+  .lc-nc__item-title:focus-visible,
+  .lc-nc__item-action:focus-visible,
+  .lc-nc__item-dismiss:focus-visible {
+    outline-color: Highlight;
   }
 }
 

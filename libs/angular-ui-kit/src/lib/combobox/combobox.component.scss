@@ -39,8 +39,12 @@
   .lc-combobox--error & {
     border-color: var(--color-error-default);
 
+    // The border keeps its colour on focus, so a 2 px outline in it marks
+    // focus (F-15, lc-input's error pattern): the 20 % halo measured 1.45:1.
     &:focus-within {
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error-default) 20%, transparent);
+      outline: 2px solid var(--color-error-default);
+      outline-offset: 0;
+      box-shadow: none;
     }
   }
 
@@ -198,4 +202,10 @@
 .lc-combobox__error {
   font-size: var(--font-size-xs, 0.75rem);
   color: var(--color-text-error);
+}
+
+@media (forced-colors: active) {
+  .lc-combobox--error .lc-combobox__input-wrapper:focus-within {
+    outline-color: Highlight;
+  }
 }

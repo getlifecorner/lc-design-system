@@ -120,7 +120,8 @@
           </g>
         }
 
-        <!-- Collapse/expand toggle -->
+        <!-- Collapse/expand toggle. Its ring is a UI boundary: the field border
+             reaches 3:1 on the surface (F-16, neutral-300 was 1.47:1 light). -->
         @if (hasChildren(node.id)) {
           <g
             class="dep-viewer__toggle"
@@ -131,7 +132,7 @@
                 [attr.cx]="node.x + node.width + 10"
                 [attr.cy]="node.y + node.height / 2"
                 r="8"
-                fill="var(--color-neutral-100)" stroke="var(--color-neutral-300)" stroke-width="1"
+                fill="var(--color-neutral-100)" stroke="var(--color-field-border)" stroke-width="1"
               />
               <text
                 [attr.x]="node.x + node.width + 10"
@@ -144,7 +145,7 @@
                 [attr.cx]="node.x + node.width / 2"
                 [attr.cy]="node.y + node.height + 10"
                 r="8"
-                fill="var(--color-neutral-100)" stroke="var(--color-neutral-300)" stroke-width="1"
+                fill="var(--color-neutral-100)" stroke="var(--color-field-border)" stroke-width="1"
               />
               <text
                 [attr.x]="node.x + node.width / 2"

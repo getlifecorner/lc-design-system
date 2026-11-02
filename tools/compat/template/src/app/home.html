@@ -57,6 +57,8 @@
     <lc-table id="compat-table-319" [columns]="columns" [data]="rows" [paginate]="true" [pageSize]="5" />
     <lc-list [items]="listItems" />
     <lc-description-list [items]="dlItems" />
+    <!-- 3.25 (request 039, F-17): a clickable row keeps dt + dd and holds a named native button. -->
+    <lc-description-list id="compat-dl-325" [items]="dlItems" [clickable]="true" />
     <lc-tree-view [nodes]="tree" />
     <lc-timeline [items]="timeline" />
     <lc-pipeline [steps]="pipeline" />

@@ -13,18 +13,34 @@
     gap: var(--spacing-2);
 
     &--clickable {
+      // The containing block of the row's button (F-17).
+      position: relative;
       cursor: pointer;
       border-radius: var(--border-radius-sm);
 
       &:hover {
         background: var(--color-surface-hover);
       }
-
-      // 2 px ring outside the row (BA-10): it reads against the card, also on
-      // a hovered row. The old 20 % box-shadow halo measured 1.28:1 (light)
-      // and 1.50:1 (dark) and vanished in forced colours.
-      @include mix.focus-ring;
     }
+  }
+
+  // The row's native button (F-17): the last child of the `dd`, stretched
+  // over the row's padding box, so the `dl` keeps its term and value pairs
+  // (a `role="button"` row made them presentational). It takes no pointer
+  // events: a click lands on the row as before, and text and links stay
+  // selectable and clickable. Its 2 px ring sits outside the row (BA-10):
+  // 4.17:1 light, 7.57:1 dark on the card, also on a hovered row.
+  &__action {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    border-radius: var(--border-radius-sm);
+    pointer-events: none;
+
+    @include mix.focus-ring;
   }
 
   &__term {
@@ -171,7 +187,7 @@
 // Forced colours keep the outline but force its colour to the system's
 // focus colour (system colours survive forcing).
 @media (forced-colors: active) {
-  .lc-dl__row--clickable:focus-visible {
+  .lc-dl__action:focus-visible {
     outline-color: Highlight;
   }
 }

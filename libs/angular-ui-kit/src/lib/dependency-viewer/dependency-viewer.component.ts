@@ -1377,13 +1377,18 @@ function layoutLayered(
 // dark theme's translucent tint over #14222e is dark-on-dark. The status is
 // carried by the border and tint; the label just has to be readable, and
 // --color-text-* is the one pair that flips with the theme.
+// Borders are UI boundaries and reach 3:1 on the surface (request 039, F-16):
+// default and muted read the field border, as the tree edges do (neutral-300
+// was 1.47:1 light, neutral-200 1.23:1; now 4.83 light, 6.70 dark), active
+// reads primary-600 (primary-400 was 1.89:1 light; now 5.77, 10.80 dark).
+// Muted stays apart by its fill and tertiary label.
 const STATUS_COLORS: Record<DependencyNodeStatus, { bg: string; border: string; text: string }> = {
-  default: { bg: 'var(--color-neutral-50)', border: 'var(--color-neutral-300)', text: 'var(--color-text-primary)' },
-  active:  { bg: 'var(--color-primary-50)', border: 'var(--color-primary-400)', text: 'var(--color-text-primary)' },
+  default: { bg: 'var(--color-neutral-50)', border: 'var(--color-field-border)', text: 'var(--color-text-primary)' },
+  active:  { bg: 'var(--color-primary-50)', border: 'var(--color-primary-600)', text: 'var(--color-text-primary)' },
   success: { bg: 'var(--color-success-50, #f0fdf4)', border: 'var(--color-on-success-subtle)', text: 'var(--color-text-primary)' },
   warning: { bg: 'var(--color-warning-50, #fffbeb)', border: 'var(--color-on-warning-subtle)', text: 'var(--color-text-primary)' },
   error:   { bg: 'var(--color-error-50, #fef2f2)', border: 'var(--color-on-error-subtle)', text: 'var(--color-text-primary)' },
-  muted:   { bg: 'var(--color-neutral-100)', border: 'var(--color-neutral-200)', text: 'var(--color-text-tertiary)' },
+  muted:   { bg: 'var(--color-neutral-100)', border: 'var(--color-field-border)', text: 'var(--color-text-tertiary)' },
 };
 
 /** Parses `#rgb`, `#rrggbb`, `rgb()` and `rgba()`. Anything else → null. */

@@ -1,16 +1,15 @@
 <dl [class]="hostClasses()">
-  @for (item of items(); track item.term) {
+  @for (item of items(); track item.term; let i = $index) {
+    <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- the row stays a dt/dd group (F-17): its button is the focusable control, and its click and keys bubble here -->
     <div
       class="lc-dl__row"
       [class.lc-dl__row--clickable]="clickable()"
-      [attr.role]="clickable() ? 'button' : null"
-      [attr.tabindex]="clickable() ? 0 : null"
       (click)="itemClick.emit(item)"
       (keydown)="onRowKeydown($event, item)"
     >
-      <dt class="lc-dl__term">{{ item.term }}</dt>
+      <dt class="lc-dl__term" [attr.id]="clickable() ? termId(i) : null">{{ item.term }}</dt>
       <span class="lc-dl__leader" aria-hidden="true"></span>
-      <dd [class]="valueClass(item)">
+      <dd [class]="valueClass(item)" [attr.id]="clickable() ? valueId(i) : null">
         @if (item.href) {
           <a class="lc-dl__link" [href]="item.href">{{ item.value }}</a>
         } @else if (item.datetime) {
@@ -20,6 +19,14 @@
         }
         @if (item.valueSuffix) {
           <span class="lc-dl__value-suffix">{{ item.valueSuffix }}</span>
+        }
+        @if (clickable()) {
+          <!-- eslint-disable-next-line @angular-eslint/template/elements-content -- named by aria-labelledby (the row's term and value); text inside would repeat the value -->
+          <button
+            type="button"
+            class="lc-dl__action"
+            [attr.aria-labelledby]="termId(i) + ' ' + valueId(i)"
+          ></button>
         }
       </dd>
     </div>

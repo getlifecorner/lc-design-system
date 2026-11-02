@@ -100,8 +100,12 @@ describe('DescriptionListComponent', () => {
     host.clickable.set(true);
     fixture.detectChanges();
     row = hostElement.querySelector<HTMLElement>('.lc-dl__row') as HTMLElement;
-    expect(row.getAttribute('role')).toBe('button');
-    expect(row.getAttribute('tabindex')).toBe('0');
+    // 3.25 (F-17): the row keeps the dl group (no role, no tab stop); a
+    // native button inside its dd is the keyboard target (was role="button"
+    // and tabindex="0" on the row).
+    expect(row.hasAttribute('role')).toBe(false);
+    expect(row.hasAttribute('tabindex')).toBe(false);
+    expect(row.querySelector('dd > button.lc-dl__action')).not.toBeNull();
     expect(row.classList).toContain('lc-dl__row--clickable');
 
     const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
