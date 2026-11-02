@@ -21,6 +21,9 @@ let accordionUid = 0;
 /** Where the disclosure chevron sits relative to the header content. */
 export type AccordionChevronPosition = 'leading' | 'trailing';
 
+/** Visual variant of `lc-accordion`. */
+export type AccordionVariant = 'outlined' | 'flat' | 'plain';
+
 /**
  * Accordion component for collapsible content sections.
  *
@@ -88,8 +91,16 @@ export class AccordionComponent {
   /** Whether the accordion is expanded (two-way binding) */
   readonly expanded = model<boolean>(false);
 
-  /** Visual variant */
-  readonly variant = input<'outlined' | 'flat'>('outlined');
+  /**
+   * Visual variant. `'outlined'`: border and surface. `'flat'`: no border or
+   * background; header and body keep their inset. `'plain'`: no border,
+   * background or inline inset, so the title, chevron and body line up with
+   * the content edge of the sheet or card around it; the hover background and
+   * focus ring reach 8 px past that edge (`--lc-accordion-header-bleed`), so
+   * keep that much room before a clipping edge.
+   * @default 'outlined'
+   */
+  readonly variant = input<AccordionVariant>('outlined');
 
   /** Size of the header */
   readonly size = input<'sm' | 'md' | 'lg'>('md');

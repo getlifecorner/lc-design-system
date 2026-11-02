@@ -192,3 +192,130 @@
     padding: var(--lc-accordion-body-padding, 1rem 1.375rem 1.25rem);
   }
 }
+
+// Plain variant (3.23, BA-9): no border, background or inline inset, so the
+// title, chevron and body line up with the content edge of the sheet or card
+// around them. The header keeps its block padding and a 44 px minimum height,
+// and paints its hover background and focus ring on a `::before` bleed box that
+// reaches past the text into the gutter, so neither touches the glyphs.
+// Public theming hook (plain only, read here, never declared on the host):
+//   --lc-accordion-header-bleed  how far the hover background and focus ring
+//                                reach past the text on both inline sides
+//                                (default var(--spacing-2), 8 px; a length,
+//                                `0px` not `0`). From 4px the ring keeps 2 px
+//                                from the glyphs; 0px puts it on the text.
+// --lc-accordion-header-bg, -hover-bg and -border paint the bleed box instead of
+// the button. In --lc-accordion-header-padding / --lc-accordion-body-padding set
+// only block values: an inline value moves the text off the edge. These rules
+// come after the size rules and are at least as specific, so they win at every
+// size.
+.lc-accordion--plain {
+  border: none;
+  background: transparent;
+  // The bleed box reaches past the inline edges.
+  overflow: visible;
+}
+
+.lc-accordion--plain .lc-accordion__header {
+  position: relative;
+  isolation: isolate;
+  min-height: var(--size-min-touch-height, 2.75rem);
+  background: transparent;
+  border: none;
+}
+
+.lc-accordion--plain.lc-accordion--sm .lc-accordion__header {
+  padding: var(--lc-accordion-header-padding, 0.625rem 0);
+}
+
+.lc-accordion--plain.lc-accordion--md .lc-accordion__header {
+  padding: var(--lc-accordion-header-padding, 0.875rem 0);
+}
+
+.lc-accordion--plain.lc-accordion--lg .lc-accordion__header {
+  padding: var(--lc-accordion-header-padding, 1.125rem 0);
+}
+
+// The button itself stays transparent and ring-less; the bleed box takes both.
+.lc-accordion--plain .lc-accordion__header:hover {
+  background-color: transparent;
+}
+
+.lc-accordion--plain .lc-accordion__header:focus-visible {
+  outline: none;
+}
+
+.lc-accordion--plain .lc-accordion__header::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline: calc(-1 * var(--lc-accordion-header-bleed, var(--spacing-2)));
+  z-index: -1;
+  border: var(--lc-accordion-header-border, none);
+  border-radius: var(--border-radius-md);
+  background: var(--lc-accordion-header-bg, transparent);
+  transition: background-color 150ms ease;
+}
+
+.lc-accordion--plain .lc-accordion__header:hover::before {
+  background-color: var(--lc-accordion-header-hover-bg, var(--color-surface-hover));
+}
+
+.lc-accordion--plain .lc-accordion__header:focus-visible::before {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+// A long (German) title wraps inside the header and hyphenates long compounds.
+.lc-accordion--plain .lc-accordion__title {
+  min-width: 0;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  hyphenate-limit-chars: 12 4 3;
+  text-align: start;
+}
+
+// The collapse still clips vertically (0fr row), while focus rings of body
+// content that sits at the edge are not cut on the inline sides.
+.lc-accordion--plain .lc-accordion__panel {
+  overflow-x: visible;
+  overflow-y: clip;
+}
+
+// Collapsed: no padding at all, so the inline start never moves while the
+// block padding animates in.
+.lc-accordion--plain .lc-accordion__body {
+  padding: 0;
+  overflow-x: visible;
+  overflow-y: clip;
+}
+
+.lc-accordion--plain.lc-accordion--sm.lc-accordion--expanded .lc-accordion__body {
+  padding: var(--lc-accordion-body-padding, 0.625rem 0 0.75rem);
+}
+
+.lc-accordion--plain.lc-accordion--md.lc-accordion--expanded .lc-accordion__body {
+  padding: var(--lc-accordion-body-padding, 0.875rem 0 1rem);
+}
+
+.lc-accordion--plain.lc-accordion--lg.lc-accordion--expanded .lc-accordion__body {
+  padding: var(--lc-accordion-body-padding, 1rem 0 1.25rem);
+}
+
+// The global reduced-motion rule only shortens durations and keeps the body's
+// delays: the plain form drops its transitions outright.
+@media (prefers-reduced-motion: reduce) {
+  .lc-accordion--plain .lc-accordion__header,
+  .lc-accordion--plain .lc-accordion__header::before,
+  .lc-accordion--plain .lc-accordion__icon,
+  .lc-accordion--plain .lc-accordion__panel,
+  .lc-accordion--plain .lc-accordion__body {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .lc-accordion--plain .lc-accordion__header:focus-visible::before {
+    outline-color: Highlight;
+  }
+}

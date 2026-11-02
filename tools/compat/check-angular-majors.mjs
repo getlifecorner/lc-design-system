@@ -381,6 +381,9 @@ const EXPECT_IN_HTML = [
     return /<div[^>]*\sclass="icon-container[^"]*"[^>]*>(?:<!--[^]*?-->|\s)*<svg(?=[^>]*\saria-hidden="true")(?=[^>]*\swidth="24px")[^>]*>(?:<!--[^]*?-->|\s)*<path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/.test(icon)
       && !/<rect\b|<text\b/.test(icon);
   }],
+  // 3.23 (request 035, home.html): the flush form's class is in the server
+  // HTML, so the plain layout holds before JS (BA-9, 035 AC-11)
+  ['plain accordion', /class="[^"]*lc-accordion--plain/],
 ];
 
 /**

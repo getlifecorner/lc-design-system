@@ -4,6 +4,9 @@ import { AccordionComponent } from './accordion.component';
 import { AccordionHeaderDirective } from './accordion-header.directive';
 import { AccordionContentDirective } from './accordion-content.directive';
 import { BadgeComponent } from '../badge/badge.component';
+import { CardComponent } from '../card/card.component';
+import { DescriptionListComponent } from '../description-list/description-list.component';
+import { ButtonComponent } from '../button/button.component';
 
 /**
  * Accordions expand and collapse sections of content, helping users focus on
@@ -17,8 +20,10 @@ const meta: Meta<AccordionComponent> = {
     title: { description: 'Header text displayed in the toggle button' },
     variant: {
       control: 'select',
-      options: ['outlined', 'flat'],
-      description: 'Visual style — outlined adds a border, flat blends with the page',
+      options: ['outlined', 'flat', 'plain'],
+      description:
+        'Visual style — `outlined` adds a border, `flat` blends with the page, `plain` also drops the inline inset so the text lines up with the content around it',
+      table: { defaultValue: { summary: "'outlined'" } },
     },
     size: {
       control: 'select',
@@ -69,6 +74,7 @@ Accordion component for collapsible content sections.
 - Plain-string \`title\` **or** a rich projected header via \`<ng-template lcAccordionHeader>\`
 - Eager \`<ng-content>\` body **or** lazy / destroyable template body via \`<ng-template lcAccordionContent>\` + \`[lazy]\` / \`[destroyOnClose]\`
 - Configurable chevron side (\`chevronPosition\`) so right-aligned header elements stay pinned
+- Plain: \`variant="plain"\` drops the border, background and inline inset, so title, chevron and body line up with the content edge of a sheet or card; the hover background and focus ring reach 8 px into the gutter (\`--lc-accordion-header-bleed\`)
 - Accessible: real \`<button>\` header with \`aria-expanded\` / \`aria-controls\`, keyboard support and focus ring
 
 **Rich header + lazy body**
@@ -277,6 +283,93 @@ export const LazyBody: Story = {
             <p style="margin: 0; color: var(--lc-color-neutral-600);">This paragraph is only instantiated the first time the panel opens, then kept mounted. Swap in any expensive component here.</p>
           </ng-template>
         </lc-accordion>
+      </div>`,
+  }),
+};
+
+export const PlainVariant: Story = {
+  name: 'Plain Variant',
+  args: { title: 'Show source', variant: 'plain', size: 'md', disabled: false, expanded: true, chevronPosition: 'trailing' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'BA-9: `variant="plain"` has no border, background or inline inset, so the title, the chevron and the body line up with the text above. The header keeps its block padding and at least 44 px of height; its hover background and focus ring reach 8 px past the text (`--lc-accordion-header-bleed`), so leave that much room before a clipping edge.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `<div style="max-width: 560px;">
+      <p style="margin: 0 0 4px; font-size: 14px; color: var(--color-text-secondary);">Booked on 2 Nov 2026 from the household account.</p>
+      <lc-accordion [title]="title" [variant]="variant" [size]="size" [disabled]="disabled" [expanded]="expanded" [chevronPosition]="chevronPosition">
+        <p style="margin: 0;">LifeCorner keeps the bank's raw data for 90 days, then only the booking itself.</p>
+      </lc-accordion>
+    </div>`,
+  }),
+};
+
+export const PlainSizes: Story = {
+  name: 'Plain Sizes and Chevron',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The plain form at `sm`, `md` and `lg`, then `chevronPosition="leading"`: no inline padding at any size, collapsed or expanded, and every header at least 44 px high (`sm` included). The chevron sits at the end edge, or at the start edge when leading, 12 px from the title.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="max-width: 560px; display: flex; flex-direction: column; gap: 8px;">
+        <lc-accordion title="Small plain accordion" variant="plain" size="sm" [expanded]="true">
+          <p style="margin: 0;">Body text starts at the same edge as the title.</p>
+        </lc-accordion>
+        <lc-accordion title="Medium plain accordion" variant="plain" size="md" [expanded]="true">
+          <p style="margin: 0;">Body text starts at the same edge as the title.</p>
+        </lc-accordion>
+        <lc-accordion title="Large plain accordion" variant="plain" size="lg" [expanded]="true">
+          <p style="margin: 0;">Body text starts at the same edge as the title.</p>
+        </lc-accordion>
+        <lc-accordion title="Leading chevron" variant="plain" size="md" chevronPosition="leading">
+          <p style="margin: 0;">Body text starts at the same edge as the title.</p>
+        </lc-accordion>
+      </div>`,
+  }),
+};
+
+export const PlainInCard: Story = {
+  name: 'Plain in a Card (Sheet Alignment)',
+  decorators: [moduleMetadata({ imports: [CardComponent, DescriptionListComponent, ButtonComponent] })],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'BA-9 (life-os booking sheet "Quelle ansehen"): plain accordions inside `lc-card padding="lg"`, in German. The description list, the header titles, the body text and the flush link all start at the content edge of the card; the long title wraps inside the header and keeps the chevron at the end edge.',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      items: [
+        { term: 'Betrag', value: '−42,90 €' },
+        { term: 'Datum', value: '2. Nov. 2026' },
+        { term: 'Konto', value: 'Gemeinsames Girokonto' },
+      ],
+    },
+    template: `
+      <div lang="de" style="max-width: 480px;">
+        <lc-card padding="lg">
+          <lc-description-list [items]="items" />
+          <lc-accordion title="Quelle ansehen" variant="plain" [expanded]="true">
+            <p style="margin: 0;">Quelle: Sparkasse KölnBonn (FinTS)</p>
+            <p style="margin: 0;">Abgerufen am 2.11.2026, 08:15</p>
+            <lc-button variant="link" [flush]="true">Abrufprotokoll öffnen</lc-button>
+          </lc-accordion>
+          <lc-accordion title="Herkunft und Abrufzeitpunkt der Buchung" variant="plain">
+            <p style="margin: 0;">Die Bank hat diese Buchung beim täglichen Abruf geliefert.</p>
+          </lc-accordion>
+        </lc-card>
       </div>`,
   }),
 };

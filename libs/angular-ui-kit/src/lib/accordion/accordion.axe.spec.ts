@@ -138,3 +138,49 @@ describe('AccordionComponent — axe-core 4.14 (AS-33)', () => {
     expect(outcomeFor(results, RULE, rich)).toBe('violation');
   });
 });
+
+/**
+ * Request 035 (BA-9, AC-9): `variant="plain"` changes no markup, so the plain
+ * form passes axe-core 4.14 collapsed and expanded, at every size, in German.
+ */
+@Component({
+  standalone: true,
+  imports: [AccordionComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  template: `
+    <div lang="de">
+      <lc-accordion class="sm" variant="plain" size="sm" title="Quelle ansehen" [expanded]="true">Quelle: Sparkasse KölnBonn (FinTS)</lc-accordion>
+      <lc-accordion class="md" variant="plain" title="Herkunft und Abrufzeitpunkt der Buchung">Die Bank hat diese Buchung geliefert.</lc-accordion>
+      <lc-accordion class="lg" variant="plain" size="lg" chevronPosition="leading" title="Abruf" ariaLabel="Abrufprotokoll">Protokoll</lc-accordion>
+    </div>
+  `,
+})
+class PlainHostComponent {}
+
+describe('AccordionComponent variant="plain" — axe-core 4.14 (BA-9)', () => {
+  let restoreCanvas: () => void;
+
+  beforeAll(() => {
+    restoreCanvas = installFakeCanvas();
+  });
+
+  afterAll(() => {
+    restoreCanvas();
+  });
+
+  it('has no violations, and every plain header passes label-in-name', async () => {
+    await TestBed.configureTestingModule({ imports: [PlainHostComponent] }).compileComponents();
+    const fixture = TestBed.createComponent(PlainHostComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const root = fixture.nativeElement as HTMLElement;
+    const header = (which: string) => root.querySelector(`lc-accordion.${which} .lc-accordion__header`) as HTMLButtonElement;
+    expect(root.querySelectorAll('.lc-accordion--plain')).toHaveLength(3);
+    expect(computedName(root, header('sm'))).toBe('Quelle ansehen');
+    expect(computedName(root, header('md'))).toBe('Herkunft und Abrufzeitpunkt der Buchung');
+    expect(computedName(root, header('lg'))).toBe('Abrufprotokoll, Abruf');
+    const results = await audit(root);
+    expect(violations(results)).toEqual([]);
+    for (const which of ['sm', 'md', 'lg']) expect(outcomeFor(results, RULE, header(which))).toBe('pass');
+  });
+});
