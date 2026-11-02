@@ -102,6 +102,9 @@ describe('lc-accordion variant="plain" (3.23, BA-9)', () => {
       const text = jsdoc.replace(/\s*\n\s*\*\s?/g, ' ').trim();
       expect(text).toContain("`'plain'`: no border, background or inline inset");
       expect(text).toContain('reach 8 px past that edge (`--lc-accordion-header-bleed`)');
+      // Request 038 (review 035 findings 1, 2): scroll containers and the 0px form.
+      expect(text).toContain('clipping or scrolling edge (`overflow: hidden` or `overflow-x: auto`)');
+      expect(text).toContain('The hook takes a length; `0px` puts them on the edge.');
       expect(text).toMatch(/@default 'outlined'$/);
     });
 
@@ -164,10 +167,11 @@ describe('lc-accordion variant="plain" (3.23, BA-9)', () => {
       expect(createHash('sha1').update(before).digest('hex')).toBe('ad615247dbf5a56f1b282a860f7d1ce27fcad2c9');
       expect(before).not.toContain('plain');
       // Every selector after the cut (media blocks included) starts with .lc-accordion--plain.
+      // The one exception is the private registered property of request 038, pinned below.
       const selectors = css
         .slice(cut)
         .match(/[^{}]+(?=\{)/g)
-        ?.filter((s) => !s.trim().startsWith('@media'))
+        ?.filter((s) => !s.trim().startsWith('@media') && s.trim() !== '@property --_lc-accordion-header-bleed')
         .flatMap((s) => s.split(','))
         .map((s) => s.trim());
       expect(selectors?.length).toBeGreaterThan(0);
@@ -219,12 +223,16 @@ describe('lc-accordion variant="plain" (3.23, BA-9)', () => {
     });
 
     it('AC-5, AC-7: the bleed box reaches --lc-accordion-header-bleed (default 8 px) past the text, behind it', () => {
+      // 038 AC-1: the hook goes through the registered private property, so a
+      // unitless 0 computes to 0px instead of making inset-inline invalid.
+      // The declared value (hook, token fallback) is the one 3.23.0 read in place.
       expect(rule('.lc-accordion--plain .lc-accordion__header::before')).toBe(
         [
+          '--_lc-accordion-header-bleed: var(--lc-accordion-header-bleed, var(--spacing-2));',
           'content: "";',
           'position: absolute;',
           'inset-block: 0;',
-          'inset-inline: calc(-1 * var(--lc-accordion-header-bleed, var(--spacing-2)));',
+          'inset-inline: calc(-1 * var(--_lc-accordion-header-bleed));',
           'z-index: -1;',
           'border: var(--lc-accordion-header-border, none);',
           'border-radius: var(--border-radius-md);',
@@ -235,6 +243,18 @@ describe('lc-accordion variant="plain" (3.23, BA-9)', () => {
       // Read at the use site only, never declared on the host (ancestor-settable).
       expect(css.match(/--lc-accordion-header-bleed/g)).toHaveLength(1);
       expect(css).not.toMatch(/--lc-accordion-header-bleed\s*:/);
+    });
+
+    it('038 AC-1, AC-3: a private <length-percentage> property, not inherited, 0px when the value does not parse', () => {
+      expect(rule('@property --_lc-accordion-header-bleed')).toBe(
+        ['syntax: "<length-percentage>";', 'inherits: false;', 'initial-value: 0px;'].join('\n  '),
+      );
+      // The only registration; the public hook itself stays unregistered.
+      expect(css.match(/@property/g)).toHaveLength(1);
+      expect(css).not.toMatch(/@property\s+--lc-accordion-header-bleed/);
+      // Declared once (on the bleed box), read once (in inset-inline).
+      expect(css.match(/--_lc-accordion-header-bleed\s*:/g)).toHaveLength(1);
+      expect(css.match(/var\(--_lc-accordion-header-bleed\)/g)).toHaveLength(1);
     });
 
     it('AC-7: hover fills the bleed box; the button itself stays transparent', () => {

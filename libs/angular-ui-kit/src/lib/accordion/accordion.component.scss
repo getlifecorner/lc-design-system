@@ -201,9 +201,10 @@
 // Public theming hook (plain only, read here, never declared on the host):
 //   --lc-accordion-header-bleed  how far the hover background and focus ring
 //                                reach past the text on both inline sides
-//                                (default var(--spacing-2), 8 px; a length,
-//                                `0px` not `0`). From 4px the ring keeps 2 px
-//                                from the glyphs; 0px puts it on the text.
+//                                (default var(--spacing-2), 8 px; a length or
+//                                percentage; `0` and `0px` put the box on the
+//                                header). From 4px the ring keeps 2 px from the
+//                                glyphs; 0 puts it on the text.
 // --lc-accordion-header-bg, -hover-bg and -border paint the bleed box instead of
 // the button. In --lc-accordion-header-padding / --lc-accordion-body-padding set
 // only block values: an inline value moves the text off the edge. These rules
@@ -245,11 +246,24 @@
   outline: none;
 }
 
+// Private and registered, so a unitless `0` (a valid <length>) still gives a
+// 0 px bleed: unregistered, calc(-1 * 0) is a number, inset-inline is dropped
+// and the box is 0 px wide (no ring, no hover fill; request 038). The public
+// hook stays unregistered and keeps its token default. A value that is not a
+// length or percentage computes to 0px, so the ring never disappears. Without
+// @property (Firefox < 128) this is the plain calc again: write 0px there.
+@property --_lc-accordion-header-bleed {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 0px;
+}
+
 .lc-accordion--plain .lc-accordion__header::before {
+  --_lc-accordion-header-bleed: var(--lc-accordion-header-bleed, var(--spacing-2));
   content: '';
   position: absolute;
   inset-block: 0;
-  inset-inline: calc(-1 * var(--lc-accordion-header-bleed, var(--spacing-2)));
+  inset-inline: calc(-1 * var(--_lc-accordion-header-bleed));
   z-index: -1;
   border: var(--lc-accordion-header-border, none);
   border-radius: var(--border-radius-md);

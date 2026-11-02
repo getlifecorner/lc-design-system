@@ -74,7 +74,7 @@ Accordion component for collapsible content sections.
 - Plain-string \`title\` **or** a rich projected header via \`<ng-template lcAccordionHeader>\`
 - Eager \`<ng-content>\` body **or** lazy / destroyable template body via \`<ng-template lcAccordionContent>\` + \`[lazy]\` / \`[destroyOnClose]\`
 - Configurable chevron side (\`chevronPosition\`) so right-aligned header elements stay pinned
-- Plain: \`variant="plain"\` drops the border, background and inline inset, so title, chevron and body line up with the content edge of a sheet or card; the hover background and focus ring reach 8 px into the gutter (\`--lc-accordion-header-bleed\`)
+- Plain: \`variant="plain"\` drops the border, background and inline inset, so title, chevron and body line up with the content edge of a sheet or card; the hover background and focus ring reach 8 px into the gutter (\`--lc-accordion-header-bleed\`, a length; \`0px\` puts them on the edge), so keep 8 px of room before a clipping or scrolling edge (an \`overflow: hidden\` or \`overflow-x: auto\` box without inline padding)
 - Accessible: real \`<button>\` header with \`aria-expanded\` / \`aria-controls\`, keyboard support and focus ring
 
 **Rich header + lazy body**
@@ -294,7 +294,7 @@ export const PlainVariant: Story = {
     docs: {
       description: {
         story:
-          'BA-9: `variant="plain"` has no border, background or inline inset, so the title, the chevron and the body line up with the text above. The header keeps its block padding and at least 44 px of height; its hover background and focus ring reach 8 px past the text (`--lc-accordion-header-bleed`), so leave that much room before a clipping edge.',
+          'BA-9: `variant="plain"` has no border, background or inline inset, so the title, the chevron and the body line up with the text above. The header keeps its block padding and at least 44 px of height; its hover background and focus ring reach 8 px past the text (`--lc-accordion-header-bleed`, a length; `0px` puts them on the text), so leave that much room before a clipping or scrolling edge: an `overflow-x: auto` box without inline padding would scroll 8 px sideways.',
       },
     },
   },

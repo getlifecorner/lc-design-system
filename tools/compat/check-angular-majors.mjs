@@ -384,6 +384,10 @@ const EXPECT_IN_HTML = [
   // 3.23 (request 035, home.html): the flush form's class is in the server
   // HTML, so the plain layout holds before JS (BA-9, 035 AC-11)
   ['plain accordion', /class="[^"]*lc-accordion--plain/],
+  // 3.24.1 (request 038, AC-9): the registered private bleed property survives
+  // the style shim and the inlined component CSS, unscoped, so a unitless
+  // `--lc-accordion-header-bleed: 0` gives a 0 px bleed before JS too.
+  ['plain accordion bleed @property', /@property\s+--_lc-accordion-header-bleed\s*\{[^}]*initial-value:\s*0(?:px)?/],
   // 3.24 (request 037, home.html): a link card is a real link before JS, its
   // anchor inside the heading (quellen row 1, 037 AC-15). The static `href`
   // also stays on the lc-card host, so the checks name the anchor's class.

@@ -97,7 +97,9 @@ export class AccordionComponent {
    * background or inline inset, so the title, chevron and body line up with
    * the content edge of the sheet or card around it; the hover background and
    * focus ring reach 8 px past that edge (`--lc-accordion-header-bleed`), so
-   * keep that much room before a clipping edge.
+   * keep that much room before a clipping or scrolling edge (`overflow: hidden`
+   * or `overflow-x: auto`). The hook takes a length; `0px` puts them on the
+   * edge.
    * @default 'outlined'
    */
   readonly variant = input<AccordionVariant>('outlined');
