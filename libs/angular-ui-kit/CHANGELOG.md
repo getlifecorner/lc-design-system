@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.24.0] - 2026-11-02
+
+`lc-card` gets a link mode, and `lc-file-upload` rejects with a code, checks `accept` on drop and writes sizes in the page's locale (finance-intelligence, sources page „Quellen“, rows 1–3). No API breaks.
+
+### Added
+
+- **`lc-card` link mode** (quellen row 1): `href` (plain URL) or `route` + `queryParams` (Angular router) make the whole card a real link: click, Enter, middle click, Ctrl/Cmd+click, "open in new tab", "copy link". The title is an `<a>` inside its `h2`–`h6`, so screen readers list the heading and the link (name: the title, or `ariaLabel`); the card is no longer `role="button"`. Look, hover, press, `selected` and focus ring (2 px `--color-primary-500`, 4.37:1 light, 9.95:1 dark; `Highlight` in forced colours) are those of `clickable`; `cardClick` is not emitted (one navigation). Projected links and buttons stay clickable; the link is in the prerendered HTML.
+- **`lc-file-upload` `fileRejected.code`** `'type' | 'size'` (`FileUploadRejectionCode`, payload `FileUploadRejection`, quellen row 2a): translate from `code`; `reason` keeps its English text.
+- **`lc-file-upload` `locale`** (quellen row 2c): `de-DE` writes „Höchstens: 20,0 MB“, „9,6 KB“, „1.023,9 KB“ in the max line, the zone's name and the list. Empty keeps „20.0 MB“; an invalid locale falls back.
+- Stories: Card *Link Cards*, *Link Cards (German, router)*, *Link and Clickable*; File Upload *Type Rejected On Drop*, *Size Rejected*, *German Locale*. The four older File Upload stories carry code and text, so the MCP returns them; the one-file behaviour is documented (quellen row 3).
+
+### Fixed
+
+- **`lc-file-upload` checks `accept` for dropped files** (quellen row 2b): before, only the picker applied it, so a dropped `liste.xlsx` on `accept=".csv"` was selected. Dropped and picked files are checked alike (extensions, MIME types, `type/*`, case-insensitive; `*/*` accepts every type, and a MIME type with parameters such as `text/csv;charset=utf-8` is ignored, as by the picker): type first, then size, one `fileRejected` per file.
+- **`lc-card` long titles** hyphenate in the page's `lang` (words of 12+ characters): „Leistungsverrechnungsschlüssel“ ran 17 px past the card at 360 px, now 2 lines inside it. Other titles unchanged (174 story shots identical).
+
+### Compatibility
+
+- No API breaks: new inputs are optional and the default DOM is unchanged; `FileUploadRejection` stays assignable to `{ file; reason }`. The `card` entry imports `RouterLink`, created only with `route` (no router provider needed otherwise; `@angular/router` was already a peer).
+- With a MIME-only `accept`, a file whose system type differs (a CSV as `application/vnd.ms-excel` on Windows) is now rejected: list the extension too (`.csv,text/csv`). A dropped file of another type now emits `fileRejected` and, with `multiple=false`, clears the selection.
+- Card titles use `hyphens: auto`; Safari ignores `hyphenate-limit-chars`, so a wrapping title there can also hyphenate words under 12 characters (as lc-accordion and lc-toast titles).
+
+### Migration
+
+- Overview cards: replace `[clickable]` + `(cardClick)` navigation with `route` (+ `queryParams`) or `href`, and shorten `ariaLabel` (it now names the link and the heading).
+
+### Known
+
+- axe reports `nested-interactive` on `.file-upload` (the `role="button"` drop zone holds the file input) in every File Upload story. It is not new (3.23.1 has it too) and is planned as a follow-up.
+
 ## [3.23.1] - 2026-11-02
 
 `lc-description-list` link and primary values reach 4.5:1, clickable rows are 44 px tall with a visible focus outline (life-os BA-10, bank accounts page), and the follow-ups F-8 to F-13 of 3.22.4 reach WCAG 2.2 AA. No API breaks.
