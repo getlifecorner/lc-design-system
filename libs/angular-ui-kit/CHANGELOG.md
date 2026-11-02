@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.24.1] - 2026-11-02
+
+`--lc-accordion-header-bleed: 0` (unitless) keeps the focus ring and hover fill of `lc-accordion` `variant="plain"`, and the docs name scroll containers (life-os BA-9, review 035 findings 1 and 2). No API breaks.
+
+### Fixed
+
+- **`--lc-accordion-header-bleed: 0`** (unitless) now puts the hover background and focus ring of `variant="plain"` on the header edge, like `0px` (BA-9, review 035 finding 1). In 3.23.0–3.24.0 `calc(-1 * 0)` was a number, the bleed box lost `inset-inline` and was 0 px wide: no ring, no hover fill. A value that is neither a length nor a percentage (`8`, `auto`) now also gives 0 px instead of no box. Measured in *Plain Variant*: `0` 328 / 560 px at 360 / 1280 (= header, was 0); default 344 / 576 and `0px`, `4px`, `1rem`, `5%`, `-4px`, `0.5em` unchanged.
+
+### Changed
+
+- The `variant` JSDoc, the accordion docs and the *Plain Variant* story say to keep 8 px of room before a clipping or scrolling edge: in an `overflow-x: auto` box with 0 inline padding a plain accordion scrolls 8 px sideways, with 8 px of padding it does not (review 035 finding 2).
+
+### Compatibility
+
+- No API break: no input, output, class, template or default changed; the hook stays unregistered with default `var(--spacing-2)`. The fix registers a private `--_lc-accordion-header-bleed` with `@property` (Chrome 85, Safari 16.4, Firefox 128); older browsers render as 3.24.0, where only `0px` zeroes the hook. Closes the two *Known* items of 3.23.0: the bare `0` is fixed; the 8 px sideways scroll in a scroll container without inline padding stays and is now documented. The 108 story shots of `lc-accordion` and `lc-accordion-group` are hash-identical.
+
 ## [3.24.0] - 2026-11-02
 
 `lc-card` gets a link mode, and `lc-file-upload` rejects with a code, checks `accept` on drop and writes sizes in the page's locale (finance-intelligence, sources page „Quellen“, rows 1–3). No API breaks.

@@ -72,3 +72,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [035](035-accordion-flush-inset/) lc-accordion flush form without inline padding | life-os | BA-9 | 3.23.0 | 3.23.0 |
 | [036](036-description-list-and-status-ink-follow-ups/) Description-list contrast and targets, 033 story and comment fixes, 034 status-ink follow-ups (notification-center, dependency-viewer, log-viewer, progress-bar, progress-ring) | owner | BA-10; 033 review findings 2–4; 034 F-8 to F-13 | 3.23.1 | 3.23.1 |
 | [037](037-card-link-file-upload-checks/) lc-card link mode; lc-file-upload rejection code, type check on drop, locale sizes and docs | finance-intelligence | gap file rows 1–3 (quellen-2026-11-02) | 3.24.0 | 3.24.0 |
+| [038](038-accordion-bleed-hook-follow-ups/) lc-accordion bleed hook robust to a unitless 0, scroll-container note | owner | 035 review findings 1–2 (BA-9) | 3.24.1 | 3.24.1 |
