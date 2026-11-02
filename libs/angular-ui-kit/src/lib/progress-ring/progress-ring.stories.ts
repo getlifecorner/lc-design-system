@@ -52,6 +52,31 @@ export const AllSizes: Story = {
   }),
 };
 
+export const AllColors: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'All six colours at 60 %. Since 3.22.4 the status arcs use the status inks (`--color-on-<variant>-subtle`) and secondary uses `--color-secondary-600`, so every arc reaches 3:1 against its track in both themes (light success was 2.47, warning 2.05).',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-wrap: wrap; gap: 16px;">
+        @for (color of colors; track color) {
+          <div style="text-align: center;">
+            <lc-progress-ring [value]="60" [color]="color" size="md"></lc-progress-ring>
+            <div style="margin-top: 4px; font-size: 12px; color: var(--color-text-secondary);">{{ color }}</div>
+          </div>
+        }
+      </div>
+    `,
+    props: { colors: ['primary', 'secondary', 'success', 'warning', 'error', 'info'] },
+    moduleMetadata: { imports: [ProgressRingComponent] },
+  }),
+};
+
 export const Dashboard: Story = {
   render: () => ({
     template: `

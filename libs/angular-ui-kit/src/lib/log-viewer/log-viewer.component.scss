@@ -81,6 +81,7 @@
 }
 
 .lc-log-viewer__level-pill {
+  position: relative;
   font-size: 0.6875rem;
   padding: 0.125rem 0.5rem;
   border-radius: 9999px;
@@ -88,6 +89,17 @@
   cursor: pointer;
   font-family: var(--font-family-sans);
   transition: box-shadow 0.15s;
+
+  // Hit area (WCAG 2.5.8): the toolbar's inner height (40 px) and half of each
+  // 4 px gap, so neighbouring pills touch without overlapping. The visible pill
+  // and the toolbar keep their size.
+  &::before {
+    content: '';
+    position: absolute;
+    inset-inline: -0.125rem;
+    top: calc(50% - 20px);
+    bottom: calc(50% - 20px);
+  }
 
   // Pills stay at full opacity (60 % dropped the text below 4.5:1); the
   // pressed one adds a 1 px inset ring in its ink.
@@ -126,7 +138,7 @@
 
 .lc-log-viewer__line-count {
   font-size: 0.6875rem;
-  opacity: 0.5;
+  color: var(--color-text-tertiary);
   font-family: var(--font-family-sans);
   padding: 0 0.25rem;
 }
@@ -155,8 +167,10 @@
   font-family: inherit;
   font-size: inherit;
 
+  // A text token, not opacity (Firefox's UA placeholder opacity is 0.54).
   &::placeholder {
-    opacity: 0.4;
+    color: var(--color-text-tertiary);
+    opacity: 1;
   }
 }
 
@@ -218,8 +232,8 @@
     }
   }
 
-  // Level colors
-  &--debug { opacity: 0.6; }
+  // Level colors. No opacity on text: debug lines are dimmed by a text token.
+  &--debug { color: var(--color-text-secondary); }
   &--info {}
   &--warn {
     .lc-log-viewer--log & { background-color: rgba(225, 160, 64, 0.12); }
@@ -231,17 +245,17 @@
   }
 }
 
+// Meta (number, time, source): the secondary text step on every line, the
+// tertiary one on debug lines (no tint there), 4.5:1 on every line background.
 .lc-log-viewer__line-num {
-  color: inherit;
-  opacity: 0.3;
+  color: var(--color-text-secondary);
   min-width: 3ch;
   text-align: right;
   user-select: none;
 }
 
 .lc-log-viewer__timestamp {
-  color: inherit;
-  opacity: 0.5;
+  color: var(--color-text-secondary);
   min-width: 12ch;
 }
 
@@ -264,8 +278,30 @@
 }
 
 .lc-log-viewer__source {
-  color: inherit;
-  opacity: 0.5;
+  color: var(--color-text-secondary);
+}
+
+.lc-log-viewer__line--debug .lc-log-viewer__line-num,
+.lc-log-viewer__line--debug .lc-log-viewer__timestamp,
+.lc-log-viewer__line--debug .lc-log-viewer__source {
+  color: var(--color-text-tertiary);
+}
+
+// The terminal is always dark: the same three steps in its own palette
+// (Mocha Subtext0 / Overlay2), as flat selectors so they beat the rules above.
+.lc-log-viewer--terminal .lc-log-viewer__line-num,
+.lc-log-viewer--terminal .lc-log-viewer__timestamp,
+.lc-log-viewer--terminal .lc-log-viewer__source,
+.lc-log-viewer--terminal .lc-log-viewer__line--debug {
+  color: #a6adc8;
+}
+
+.lc-log-viewer--terminal .lc-log-viewer__line--debug .lc-log-viewer__line-num,
+.lc-log-viewer--terminal .lc-log-viewer__line--debug .lc-log-viewer__timestamp,
+.lc-log-viewer--terminal .lc-log-viewer__line--debug .lc-log-viewer__source,
+.lc-log-viewer--terminal .lc-log-viewer__line-count,
+.lc-log-viewer--terminal .lc-log-viewer__search-input::placeholder {
+  color: #9399b2;
 }
 
 .lc-log-viewer__text {

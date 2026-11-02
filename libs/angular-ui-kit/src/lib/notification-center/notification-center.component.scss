@@ -280,6 +280,27 @@
   color: var(--color-text-tertiary);
 }
 
+// Unread rows are a translucent teal: a translucent chip tint over them drops
+// the ink below 4.5:1 in dark (high 3.67). The chips paint their tint over an
+// opaque surface instead, so the pair reads as on a plain row (5.55 dark).
+.lc-nc__item--unread .lc-nc__item-priority,
+.lc-nc__item--unread .lc-nc__item-category {
+  background-color: var(--color-surface);
+}
+
+.lc-nc__item--unread .lc-nc__item-priority--high {
+  background-image: linear-gradient(var(--color-warning-subtle), var(--color-warning-subtle));
+}
+
+.lc-nc__item--unread .lc-nc__item-priority--urgent {
+  background-image: linear-gradient(var(--color-error-subtle), var(--color-error-subtle));
+}
+
+.lc-nc__item--unread .lc-nc__item-priority--low,
+.lc-nc__item--unread .lc-nc__item-category {
+  background-image: linear-gradient(var(--color-surface-hover), var(--color-surface-hover));
+}
+
 .lc-nc__item-action {
   border: none;
   background: none;

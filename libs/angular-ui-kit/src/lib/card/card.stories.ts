@@ -241,6 +241,25 @@ export const Clickable: Story = {
   }),
 };
 
+export const PrimaryBadgeStates: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`badgeVariant="primary"` on an outlined, a selected and an elevated card. Since 3.22.4 the chip is the lc-badge primary pair (`--color-primary-subtle` / `--color-on-primary-subtle`) with a `--color-primary-500` border: the text reads 8.48:1 in light also on a selected card (was 3.12), and the border 3:1 against every card fill.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+        <lc-card variant="outlined" title="Members" badge="1" badgeVariant="primary" padding="md"></lc-card>
+        <lc-card variant="outlined" [clickable]="true" [selected]="true" title="Projects" badge="2" badgeVariant="primary" padding="md"></lc-card>
+        <lc-card variant="elevated" title="Teams" badge="3" badgeVariant="primary" padding="md"></lc-card>
+      </div>`,
+  }),
+};
+
 export const WithFooter: Story = {
   parameters: {
     docs: { description: { story: 'Cards can contain multiple projected sections for header, body, and footer areas.' } },

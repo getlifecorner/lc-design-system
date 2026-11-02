@@ -5,12 +5,13 @@
 }
 .lc-progress-ring__value {
   transition: stroke-dashoffset 0.4s ease;
+  // The arcs take the progress-bar inks: 3:1 against the track in both themes.
   &--primary { stroke: var(--color-primary-500); }
-  &--secondary { stroke: var(--color-secondary-500); }
-  &--success { stroke: var(--color-success-default); }
-  &--warning { stroke: var(--color-warning-default); }
-  &--error { stroke: var(--color-error-default); }
-  &--info { stroke: var(--color-info-default); }
+  &--secondary { stroke: var(--color-secondary-600); }
+  &--success { stroke: var(--color-on-success-subtle); }
+  &--warning { stroke: var(--color-on-warning-subtle); }
+  &--error { stroke: var(--color-on-error-subtle); }
+  &--info { stroke: var(--color-on-info-subtle); }
 }
 .lc-progress-ring__text {
   font-weight: 700;

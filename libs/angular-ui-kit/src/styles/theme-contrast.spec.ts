@@ -778,9 +778,10 @@ describe('Component pairings of 3.21.1 (request 029)', () => {
    * element and its real backgrounds. Text 4.85 L (card success chip) and 4.60
    * D (NC high on the panel top, card warning on surface-2); graphics 3.52 L
    * (diff +, dependency success border) and 4.83 D (NC warning icon on an
-   * unread row). F-1: the NC high chip on an unread row in dark stays 3.67.
+   * unread row). F-1: the NC high chip on an unread row in dark was 3.67; since
+   * 3.22.4 (request 034 D-1) the chip paints its tint over an opaque surface: 5.55.
    */
-  const expected = { text: [4.85, 4.6], graphic: [3.52, 4.83], ncUnread: [5.52, 3.67], completeGlyph: [4.36, 9.12] };
+  const expected = { text: [4.85, 4.6], graphic: [3.52, 4.83], ncUnread: [5.52, 5.55], completeGlyph: [4.36, 9.12] };
   const floor = (n: number) => Math.floor(n * 100) / 100;
 
   /**
@@ -887,12 +888,382 @@ describe('Component pairings of 3.21.1 (request 029)', () => {
       expect(glyph).toBeGreaterThanOrEqual(3);
     });
 
-    it('F-1 (known): the NC priority chips on an unread row', () => {
-      const min = Math.min(
-        chip('nc', '.lc-nc__item-priority--high', 'warning', unread),
-        chip('nc', '.lc-nc__item-priority--urgent', 'error', unread),
+    // F-1 was a known residual (3.67 dark) until 3.22.4: request 034 D-1 gives
+    // the chips on an unread row an opaque --color-surface under their tint, so
+    // the translucent teal row no longer shows through.
+    it('F-1 (fixed in 3.22.4): the NC priority chips on an unread row', () => {
+      const unreadBase = rulesOf(sheets.nc).filter((r) =>
+        r.selector.split(/,(?![^(]*\))/).map((s) => s.trim()).includes('.lc-nc__item--unread .lc-nc__item-priority'),
       );
+      expect(unreadBase).toHaveLength(1);
+      const tintOf = (modifier: string) => {
+        const image = fills('nc', `.lc-nc__item--unread .lc-nc__item-priority--${modifier}`)['background-image'];
+        const token = image.match(/^linear-gradient\((var\(--[\w-]+\)), \1\)$/);
+        expect(token).not.toBeNull();
+        return (token as RegExpMatchArray)[1];
+      };
+      const chipOnUnread = (v: string, modifier: string) =>
+        lowest(inkOf(v), unread.map((row) => layer(tintOf(modifier), layer(decls(unreadBase[0].body)['background-color'], row))));
+      const min = Math.min(chipOnUnread('warning', 'high'), chipOnUnread('error', 'urgent'));
       expect(floor(min)).toBe(expected.ncUnread[i]);
+      expect(min).toBeGreaterThanOrEqual(4.5);
     });
+  });
+});
+
+// Request 034 (3.22.4): follow-ups F-1 to F-7 of 029. Text reaches 4.5:1 and
+// graphics and boundaries 3:1 on their real backgrounds in both themes, with
+// pairings the kit already asserts (status inks, the lc-badge primary pair, the
+// text steps). No token is added and no shared status value changes (design
+// 034 §2, §5).
+describe('Component pairings of 3.22.4 (request 034)', () => {
+  const lib = (path: string) => resolve(__dirname, '../lib', path);
+  const sheets = {
+    nc: compile(lib('notification-center/notification-center.component.scss')).css,
+    ring: compile(lib('progress-ring/progress-ring.component.scss')).css,
+    diff: compile(lib('diff-viewer/diff-viewer.component.scss')).css,
+    card: compile(lib('card/card.component.scss')).css,
+    log: compile(lib('log-viewer/log-viewer.component.scss')).css,
+    dep: compile(lib('dependency-viewer/dependency-viewer.component.scss')).css,
+  };
+  type Sheet = keyof typeof sheets;
+  const depTs = readFileSync(lib('dependency-viewer/dependency-viewer.component.ts'), 'utf8');
+  const depHtml = readFileSync(lib('dependency-viewer/dependency-viewer.component.html'), 'utf8');
+
+  /** Every rule as its selector list and body (`a, b { … }` names both). */
+  const rulesOf = (css: string) =>
+    [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({
+      selectors: m[1].split(/,(?![^(]*\))/).map((s) => s.trim()),
+      body: m[2],
+    }));
+  const decls = (body: string): Record<string, string> =>
+    Object.fromEntries([...body.matchAll(/([\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
+  /** The declarations of every rule that names `selector`, merged in source order. */
+  const fills = (sheet: Sheet, selector: string): Record<string, string> => {
+    const found = rulesOf(sheets[sheet]).filter((r) => r.selectors.includes(selector));
+    expect(found.length).toBeGreaterThan(0);
+    return Object.assign({}, ...found.map((r) => decls(r.body)));
+  };
+  /** The colour a relation reads in RELATION_STYLES. */
+  const relationColor = (relation: string) => {
+    const found = depTs.match(new RegExp(`\\n  ${relation}:\\s*\\{ color: '([^']+)'`));
+    expect(found).not.toBeNull();
+    return (found as RegExpMatchArray)[1];
+  };
+
+  const ink = (v: string) => `var(--color-on-${v}-subtle)`;
+  const flat = (token: string) => `linear-gradient(var(${token}), var(${token}))`;
+  const secondary = 'var(--color-text-secondary)';
+  const tertiary = 'var(--color-text-tertiary)';
+  const meta = ['line-num', 'timestamp', 'source'];
+  type Row = [Sheet, string, Record<string, string>];
+
+  const declared: Row[] = [
+    // F-1: the chips on an unread row paint their tint over an opaque surface.
+    ['nc', '.lc-nc__item--unread .lc-nc__item-priority', { 'background-color': 'var(--color-surface)' }],
+    ['nc', '.lc-nc__item--unread .lc-nc__item-category', { 'background-color': 'var(--color-surface)', 'background-image': flat('--color-surface-hover') }],
+    ['nc', '.lc-nc__item--unread .lc-nc__item-priority--high', { 'background-image': flat('--color-warning-subtle') }],
+    ['nc', '.lc-nc__item--unread .lc-nc__item-priority--urgent', { 'background-image': flat('--color-error-subtle') }],
+    ['nc', '.lc-nc__item--unread .lc-nc__item-priority--low', { 'background-image': flat('--color-surface-hover') }],
+    // F-2: the ring arcs take the progress-bar inks.
+    ['ring', '.lc-progress-ring__value--primary', { stroke: 'var(--color-primary-500)' }],
+    ['ring', '.lc-progress-ring__value--secondary', { stroke: 'var(--color-secondary-600)' }],
+    ...['success', 'warning', 'error', 'info'].map((v): Row => ['ring', `.lc-progress-ring__value--${v}`, { stroke: ink(v) }]),
+    // F-3: subtle line tints, secondary line numbers.
+    ['diff', '.lc-diff__line--added', { background: 'var(--color-success-subtle)' }],
+    ['diff', '.lc-diff__line--removed', { background: 'var(--color-error-subtle)' }],
+    ['diff', '.lc-diff__num', { color: secondary }],
+    // F-4: the lc-badge primary pair with a primary border.
+    ['card', '.card__badge--primary', { 'background-color': 'var(--color-primary-subtle)', color: 'var(--color-on-primary-subtle)', border: '1px solid var(--color-primary-500)' }],
+    // F-5: a 40 px hit area into half of each gap; the visible pill is unchanged.
+    ['log', '.lc-log-viewer__level-pill', { position: 'relative', padding: '0.125rem 0.5rem', 'font-size': '0.6875rem' }],
+    ['log', '.lc-log-viewer__level-pill::before', { content: '""', position: 'absolute', 'inset-inline': '-0.125rem', top: 'calc(50% - 20px)', bottom: 'calc(50% - 20px)' }],
+    // F-7: three text steps instead of opacity, in the log and the terminal.
+    ['log', '.lc-log-viewer__line--debug', { color: secondary }],
+    ...meta.map((m): Row => ['log', `.lc-log-viewer__${m}`, { color: secondary }]),
+    ...meta.map((m): Row => ['log', `.lc-log-viewer__line--debug .lc-log-viewer__${m}`, { color: tertiary }]),
+    ['log', '.lc-log-viewer__line-count', { color: tertiary }],
+    ['log', '.lc-log-viewer__search-input::placeholder', { color: tertiary, opacity: '1' }],
+    ...meta.map((m): Row => ['log', `.lc-log-viewer--terminal .lc-log-viewer__${m}`, { color: '#a6adc8' }]),
+    ['log', '.lc-log-viewer--terminal .lc-log-viewer__line--debug', { color: '#a6adc8' }],
+    ...meta.map((m): Row => ['log', `.lc-log-viewer--terminal .lc-log-viewer__line--debug .lc-log-viewer__${m}`, { color: '#9399b2' }]),
+    ['log', '.lc-log-viewer--terminal .lc-log-viewer__line-count', { color: '#9399b2' }],
+    ['log', '.lc-log-viewer--terminal .lc-log-viewer__search-input::placeholder', { color: '#9399b2' }],
+  ];
+
+  it.each(declared)('AC-1…9: %s %s declares the design 034 values', (sheet, selector, expectedDecls) => {
+    const found = fills(sheet, selector);
+    for (const [property, value] of Object.entries(expectedDecls)) expect(found[property]).toBe(value);
+  });
+
+  it('AC-7: no opacity dims log text (debug line, number, time, source, line count, placeholder)', () => {
+    const textRules = rulesOf(sheets.log).filter((r) =>
+      r.selectors.some((s) => /__line--debug|__line-num|__timestamp|__source|__line-count|::placeholder/.test(s)),
+    );
+    expect(textRules.length).toBeGreaterThanOrEqual(8);
+    for (const r of textRules) {
+      const opacity = decls(r.body).opacity;
+      if (opacity !== undefined) expect(Number(opacity)).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it('AC-7: the terminal rules are flat selectors (no inverted nesting)', () => {
+    expect(sheets.log).not.toMatch(/\.lc-log-viewer__[\w-]+ \.lc-log-viewer--terminal/);
+  });
+
+  it('AC-9: uses and extends read the tertiary text and the primary ink (edge, arrow, label, legend)', () => {
+    const relations: [string, string][] = [['uses', tertiary], ['extends', 'var(--color-on-primary-subtle)']];
+    for (const [relation, value] of relations) {
+      expect(relationColor(relation)).toBe(value);
+      const escaped = value.replace(/[()]/g, '\\$&');
+      expect(depHtml).toMatch(new RegExp(`<marker id="arrow-${relation}"[^>]*><path [^>]*fill="${escaped}"/>`));
+    }
+    // The dash style still tells the relations apart (not colour alone).
+    expect(depTs).toMatch(/\n {2}uses:\s*\{ color: '[^']+', dashed: true,/);
+    expect(depTs).toMatch(/\n {2}extends:\s*\{ color: '[^']+', dashed: true,/);
+    // Out of scope (follow-up F-9): `depends` and the tree edges keep their neutral lines.
+    expect(relationColor('depends')).toBe('var(--color-neutral-400)');
+    expect(depTs.match(/color: 'var\(--color-neutral-300\)', dashed: false, isCrossRef: false/g)).toHaveLength(2);
+  });
+
+  // The shared status values of 3.22.3, per palette [light, dark] (AC-2).
+  const shared: Record<string, [string, string]> = {
+    '--color-success': ['#8ea475', '#8ea475'],
+    '--color-error': ['#9d0e0e', '#9d0e0e'],
+    '--color-warning': ['#e1a040', '#e1a040'],
+    '--color-info': ['#3b6588', '#3b6588'],
+    '--color-success-default': ['#8ea475', '#cdd6c2'],
+    '--color-error-default': ['#9d0e0e', '#f7a1a1'],
+    '--color-warning-default': ['#e1a040', '#f1d3a7'],
+    '--color-info-default': ['#3b6588', '#b8cee0'],
+  };
+
+  /**
+   * Design 034 §5, floored, per palette [light, dark]. Text minimum: the diff
+   * `+` (4.85 L, 5.17 D). Graphic minimum: the card border on hover and
+   * selected and the `uses` cross-reference line (3.75 L), the `uses` line
+   * (4.76 D). The terminal is always dark: 5.28 (debug level and meta).
+   */
+  const expected = {
+    text: [4.85, 5.17],
+    graphic: [3.75, 4.76],
+    ncUnread: { high: [5.52, 5.55], urgent: [10.97, 8.37], low: [5.3, 5.99], category: [5.3, 5.99] },
+    ringTrack: { primary: [3.96, 6.69], secondary: [4.19, 8.35], success: [4.81, 6.15], warning: [5.47, 5.6], error: [11.43, 6.37], info: [9.22, 7.8] },
+    diff: {
+      numAdded: [6.91, 6.86], numRemoved: [6.58, 9.26], numContext: [7.23, 9.25],
+      plus: [4.85, 5.17], minus: [10.97, 7.21], contentAdded: [16.24, 9.75], contentRemoved: [15.46, 13.16],
+    },
+    // The border on the chip fill computes to 4.05 L from the tokens (the design's browser value: 4.06).
+    card: { text: [8.48, 5.79], borderOnCard: [3.75, 6.87], borderOnChip: [4.05, 5.79] },
+    dep: { usesLabel: [5.83, 6.7], usesLine: [3.75, 4.76], usesLegend: [5.58, 5.56], extendsLabel: [9.13, 9.12], extendsLine: [5.32, 6.29], extendsLegend: [8.74, 7.57] },
+    log: { meta: [5.6, 8.29], debugMessage: [6.92, 10.18], debugDim: [5.34, 6.12], count: [5.83, 6.7] },
+  };
+  const floor = (n: number) => Math.floor(n * 100) / 100;
+
+  describe.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('%s palette', (_palette, tokens, i) => {
+    const c = (name: string) => color(tokens, name);
+    /** A `var(--x)`, a one-colour gradient of it, or a literal colour. */
+    const value = (text: string): Rgba => {
+      const gradient = text.match(/^linear-gradient\((var\(--[\w-]+\)), \1\)$/);
+      const ref = (gradient ? gradient[1] : text).match(/^var\((--[\w-]+)\)$/);
+      return ref ? c(ref[1]) : parse(text);
+    };
+    const lowest = (fg: Rgba, bases: Rgba[]) => Math.min(...bases.map((bg) => ratio(over(fg, bg), bg)));
+    const S = c('--color-surface');
+    const S2 = c('--color-surface-2');
+    const BG = c('--color-background');
+    const pages = [BG, S, S2];
+    const ringVariants = ['primary', 'secondary', 'success', 'warning', 'error', 'info'] as const;
+    let cache: ReturnType<typeof measure> | undefined;
+    /** Every §5 cell, measured once on first use (inside a test, not at collection). */
+    const measured = () => (cache ??= measure());
+
+    function measure() {
+      // F-1: the chip fill is its tint over the opaque base, on any unread row.
+      const unreadRows = [S, S2].map((row) => over(c('--color-surface-selected'), row));
+      const unreadChip = (selector: string) => {
+        const base = fills('nc', '.lc-nc__item--unread .lc-nc__item-priority')['background-color'];
+        return unreadRows.map((row) => over(value(fills('nc', selector)['background-image']), over(value(base), row)));
+      };
+      const chipInk = (selector: string) => value(fills('nc', selector).color);
+      const nc = {
+        high: lowest(chipInk('.lc-nc__item-priority--high'), unreadChip('.lc-nc__item--unread .lc-nc__item-priority--high')),
+        urgent: lowest(chipInk('.lc-nc__item-priority--urgent'), unreadChip('.lc-nc__item--unread .lc-nc__item-priority--urgent')),
+        low: lowest(chipInk('.lc-nc__item-priority--low'), unreadChip('.lc-nc__item--unread .lc-nc__item-priority--low')),
+        category: lowest(chipInk('.lc-nc__item-category'), unreadChip('.lc-nc__item--unread .lc-nc__item-category')),
+      };
+
+      // F-2: the arc against the track (over every page) and against the page.
+      const track = value(fills('ring', '.lc-progress-ring__track').stroke);
+      const arc = (v: string) => value(fills('ring', `.lc-progress-ring__value--${v}`).stroke);
+      const ringTrack = Object.fromEntries(ringVariants.map((v) => [v, lowest(arc(v), pages.map((p) => over(track, p)))]));
+      const ringPage = ringVariants.map((v) => lowest(arc(v), pages));
+      const ringText = lowest(value(fills('ring', '.lc-progress-ring__text').fill), pages);
+
+      // F-3: the line tints over every page the viewer sits on.
+      const lineOf = (selector: string) => pages.map((p) => over(value(fills('diff', selector).background), p));
+      const added = lineOf('.lc-diff__line--added');
+      const removed = lineOf('.lc-diff__line--removed');
+      const num = value(fills('diff', '.lc-diff__num').color);
+      const content = value(fills('diff', '.lc-diff__content').color);
+      const diff = {
+        numAdded: lowest(num, added),
+        numRemoved: lowest(num, removed),
+        numContext: lowest(num, pages),
+        plus: lowest(value(fills('diff', '.lc-diff__line--added .lc-diff__prefix').color), added),
+        minus: lowest(value(fills('diff', '.lc-diff__line--removed .lc-diff__prefix').color), removed),
+        contentAdded: lowest(content, added),
+        contentRemoved: lowest(content, removed),
+      };
+
+      // F-4: a card is surface, surface-2, hover, selected (over the page and
+      // over the surface), the muted tile or the page itself.
+      const sel = (base: Rgba) => over(c('--color-surface-selected'), base);
+      const cards = [S, S2, over(c('--color-surface-hover'), S), sel(BG), sel(S), c('--color-muted-tile'), BG];
+      const badge = fills('card', '.card__badge--primary');
+      const chipFills = cards.map((base) => over(value(badge['background-color']), base));
+      const border = value(badge.border.replace(/^1px solid /, ''));
+      const card = {
+        text: lowest(value(badge.color), chipFills),
+        borderOnCard: lowest(border, cards),
+        borderOnChip: lowest(border, chipFills),
+      };
+
+      // F-6: labels on their surface halo, lines at the cross-reference opacity
+      // on the viewer, legend lines on the legend's surface-2.
+      const halo = value(fills('dep', '.dep-viewer__edge-label').stroke);
+      const lineOpacity = Number(fills('dep', '.dep-viewer__edge--cross-ref').opacity);
+      const legend = value(fills('dep', '.dep-viewer__legend').background);
+      const faded = (rgba: Rgba): Rgba => [rgba[0], rgba[1], rgba[2], rgba[3] * lineOpacity];
+      const relation = (name: string) => value(relationColor(name));
+      const dep = {
+        usesLabel: lowest(relation('uses'), [halo]),
+        usesLine: lowest(faded(relation('uses')), [S]),
+        usesLegend: lowest(relation('uses'), [legend]),
+        extendsLabel: lowest(relation('extends'), [halo]),
+        extendsLine: lowest(faded(relation('extends')), [S]),
+        extendsLegend: lowest(relation('extends'), [legend]),
+      };
+
+      // F-7: surface, the warn and error tints, each with and without hover;
+      // debug lines have no tint. The toolbar and the search row are the surface.
+      const logBg = value(fills('log', '.lc-log-viewer--log')['background-color']);
+      const hover = parse(fills('log', '.lc-log-viewer__line:hover')['background-color']);
+      const withHover = (bases: Rgba[]) => bases.flatMap((b) => [b, over(hover, b)]);
+      const tintOf = (lv: string) => over(parse(fills('log', `.lc-log-viewer--log .lc-log-viewer__line--${lv}`)['background-color']), logBg);
+      const logLines = withHover([logBg, tintOf('warn'), tintOf('error')]);
+      const debugLines = withHover([logBg]);
+      const ink7 = (selector: string) => value(fills('log', selector).color);
+      const log = {
+        meta: Math.min(...meta.map((m) => lowest(ink7(`.lc-log-viewer__${m}`), logLines))),
+        debugMessage: lowest(ink7('.lc-log-viewer__line--debug'), debugLines),
+        debugDim: Math.min(
+          lowest(ink7('.lc-log-viewer__line--debug .lc-log-viewer__level'), debugLines),
+          ...meta.map((m) => lowest(ink7(`.lc-log-viewer__line--debug .lc-log-viewer__${m}`), debugLines)),
+        ),
+        count: Math.min(
+          lowest(ink7('.lc-log-viewer__line-count'), [logBg]),
+          lowest(ink7('.lc-log-viewer__search-input::placeholder'), [logBg]),
+        ),
+      };
+      return { nc, ringTrack, ringPage, ringText, diff, card, dep, log };
+    }
+
+    it('AC-1: the NC chips on an unread row (high, urgent, low, category)', () => {
+      const { nc } = measured();
+      for (const [key, ncRatio] of Object.entries(nc)) {
+        expect([key, floor(ncRatio)]).toEqual([key, expected.ncUnread[key as keyof typeof nc][i]]);
+        expect(ncRatio).toBeGreaterThanOrEqual(4.5);
+      }
+    });
+
+    it('AC-3: every ring arc reaches 3:1 against its track and the page; the centre text 4.5:1', () => {
+      const { ringTrack, ringPage, ringText } = measured();
+      for (const v of ringVariants) {
+        expect([v, floor(ringTrack[v])]).toEqual([v, expected.ringTrack[v][i]]);
+        expect(ringTrack[v]).toBeGreaterThanOrEqual(3);
+      }
+      expect(Math.min(...ringPage)).toBeGreaterThanOrEqual(3);
+      expect(ringText).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it('AC-4: diff numbers and prefixes reach 4.5:1 on added, removed and context lines', () => {
+      const { diff } = measured();
+      for (const key of Object.keys(expected.diff) as (keyof typeof expected.diff)[]) {
+        expect([key, floor(diff[key])]).toEqual([key, expected.diff[key][i]]);
+      }
+      expect(Math.min(...Object.values(diff))).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it('AC-5: the card primary chip text reaches 4.5:1 and its border 3:1, also on a selected card', () => {
+      const { card } = measured();
+      for (const key of Object.keys(card) as (keyof typeof card)[]) {
+        expect([key, floor(card[key])]).toEqual([key, expected.card[key][i]]);
+      }
+      expect(card.text).toBeGreaterThanOrEqual(4.5);
+      expect(Math.min(card.borderOnCard, card.borderOnChip)).toBeGreaterThanOrEqual(3);
+    });
+
+    it('AC-9: uses and extends labels reach 4.5:1, their lines and legend lines 3:1', () => {
+      const { dep } = measured();
+      for (const key of Object.keys(dep) as (keyof typeof dep)[]) {
+        expect([key, floor(dep[key])]).toEqual([key, expected.dep[key][i]]);
+      }
+      expect(Math.min(dep.usesLabel, dep.extendsLabel)).toBeGreaterThanOrEqual(4.5);
+      expect(Math.min(dep.usesLine, dep.usesLegend, dep.extendsLine, dep.extendsLegend)).toBeGreaterThanOrEqual(3);
+    });
+
+    it('AC-8: log meta, debug text, line count and placeholder reach 4.5:1 on every line background', () => {
+      const { log } = measured();
+      for (const key of Object.keys(log) as (keyof typeof log)[]) {
+        expect([key, floor(log[key])]).toEqual([key, expected.log[key][i]]);
+        expect(log[key]).toBeGreaterThanOrEqual(4.5);
+      }
+    });
+
+    it('§5: the text minimum is the diff +, the graphic minimum the card border and the uses line', () => {
+      const { nc, ringTrack, ringPage, ringText, diff, card, dep, log } = measured();
+      const text = Math.min(...Object.values(nc), ...Object.values(diff), card.text, dep.usesLabel, dep.extendsLabel, ...Object.values(log), ringText);
+      const graphic = Math.min(...Object.values(ringTrack), ...ringPage, card.borderOnCard, card.borderOnChip,
+        dep.usesLine, dep.usesLegend, dep.extendsLine, dep.extendsLegend);
+      expect(floor(text)).toBe(expected.text[i]);
+      expect(floor(graphic)).toBe(expected.graphic[i]);
+    });
+
+    it('AC-2: the shared status values keep their 3.22.3 hex', () => {
+      for (const [name, hexes] of Object.entries(shared)) expect([name, hex(tokens, name)]).toEqual([name, hexes[i]]);
+    });
+  });
+
+  it('AC-8: the terminal meta, debug text, line count and placeholder reach 4.5:1; the levels keep their 029 ratios', () => {
+    const T = parse(fills('log', '.lc-log-viewer--terminal')['background-color']);
+    const bar = parse(fills('log', '.lc-log-viewer--terminal .lc-log-viewer__toolbar')['background-color']);
+    const searchRow = parse(fills('log', '.lc-log-viewer--terminal .lc-log-viewer__search')['background-color']);
+    const hover = parse(fills('log', '.lc-log-viewer__line:hover')['background-color']);
+    const tint = (lv: string) => over(parse(fills('log', `.lc-log-viewer--terminal .lc-log-viewer__line--${lv}`)['background-color']), T);
+    const withHover = (bases: Rgba[]) => bases.flatMap((b) => [b, over(hover, b)]);
+    const lines = withHover([T, tint('warn'), tint('error')]);
+    const debugLines = withHover([T]);
+    const ink7 = (selector: string) => parse(fills('log', selector).color);
+    const lowest = (fg: Rgba, bases: Rgba[]) => Math.min(...bases.map((bg) => ratio(fg, bg)));
+    const terminal = {
+      meta: Math.min(...meta.map((m) => lowest(ink7(`.lc-log-viewer--terminal .lc-log-viewer__${m}`), lines))),
+      debugMessage: lowest(ink7('.lc-log-viewer--terminal .lc-log-viewer__line--debug'), debugLines),
+      debugDim: Math.min(
+        lowest(ink7('.lc-log-viewer--terminal .lc-log-viewer__line--debug .lc-log-viewer__level'), debugLines),
+        ...meta.map((m) => lowest(ink7(`.lc-log-viewer--terminal .lc-log-viewer__line--debug .lc-log-viewer__${m}`), debugLines)),
+      ),
+      count: Math.min(
+        lowest(ink7('.lc-log-viewer--terminal .lc-log-viewer__line-count'), [bar]),
+        lowest(ink7('.lc-log-viewer--terminal .lc-log-viewer__search-input::placeholder'), [searchRow]),
+      ),
+    };
+    expect(Object.fromEntries(Object.entries(terminal).map(([k, v]) => [k, floor(v)]))).toEqual({ meta: 5.85, debugMessage: 6.7, debugDim: 5.28, count: 6.21 });
+    expect(Math.min(...Object.values(terminal))).toBeGreaterThanOrEqual(4.5);
+    const levelBases: Record<string, Rgba> = { debug: T, info: T, warn: tint('warn'), error: tint('error') };
+    const levels = ['debug', 'info', 'warn', 'error'].map((lv) =>
+      floor(ratio(ink7(`.lc-log-viewer--terminal .lc-log-viewer__line--${lv} .lc-log-viewer__level`), levelBases[lv])),
+    );
+    expect(levels).toEqual([5.81, 7.78, 11.43, 6.19]);
   });
 });

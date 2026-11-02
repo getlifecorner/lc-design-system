@@ -199,6 +199,47 @@ export const LargeBuffer: Story = {
 const fixedLogs = (count: number): LogLine[] =>
   generateLogs(count).map((line, i) => ({ ...line, timestamp: new Date(Date.UTC(2026, 10, 2, 8, 0, i)) }));
 
+/** 120 lines (30 per level) with fixed local timestamps (2 Nov 2026, 09:00:00, one per second). */
+const hierarchyLogs = (count: number): LogLine[] =>
+  generateLogs(count).map((line, i) => ({ ...line, timestamp: new Date(2026, 10, 2, 9, 0, i) }));
+
+/**
+ * 3.22.4: the log and the terminal variant with line numbers, timestamps and
+ * German labels, for the text steps that replaced the opacities and the pill
+ * hit areas.
+ */
+export const TextHierarchy: Story = {
+  render: () => ({
+    props: { lines: hierarchyLogs(120), variants: ['log', 'terminal'] },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        @for (variant of variants; track variant) {
+          <lc-log-viewer
+            [lines]="lines"
+            [variant]="variant"
+            height="240px"
+            [showTimestamps]="true"
+            [showLineNumbers]="true"
+            locale="de-DE"
+            errorsLabel="Fehler"
+            warningsLabel="Warnungen"
+            linesLabel="Zeilen"
+            searchPlaceholder="Logs durchsuchen…"
+          />
+        }
+      </div>
+    `,
+  }),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Since 3.22.4 no opacity dims text. Three steps: the message in the primary text, line number, time and source (and the debug message) in `--color-text-secondary`, and on debug lines the meta, the debug level, the line count and the search placeholder in `--color-text-tertiary`; the terminal uses Subtext0 `#a6adc8` and Overlay2 `#9399b2`. Every step reaches 4.5:1 on its line, also on the warn and error tints and under hover (debug level was 2.53 in light). The level pills keep their size but get a 40 px tall hit area (WCAG 2.5.8). The German labels wrap the pills to two lines at 360 px.',
+      },
+    },
+  },
+};
+
 /**
  * 3.22 (BA-6): with an app that registers no icons and sets
  * `unregistered: 'placeholder'`, every glyph lc-log-viewer draws is its own

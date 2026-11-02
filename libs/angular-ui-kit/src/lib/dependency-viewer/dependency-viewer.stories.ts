@@ -645,3 +645,32 @@ export const LayeredCycle: Story = {
     },
   },
 };
+
+export const AllRelationTypes: Story = {
+  args: {
+    root: [
+      { id: 'core', label: 'Core' },
+      { id: 'api', label: 'API', dependsOn: [{ id: 'core', relation: 'depends' }] },
+      { id: 'web', label: 'Web', dependsOn: [{ id: 'api', relation: 'uses' }] },
+      { id: 'admin', label: 'Admin', dependsOn: [{ id: 'web', relation: 'extends' }] },
+      { id: 'jobs', label: 'Jobs', dependsOn: [{ id: 'core', relation: 'requires' }] },
+      { id: 'audit', label: 'Audit', dependsOn: [{ id: 'api', relation: 'implements' }] },
+      { id: 'docs', label: 'Docs', dependsOn: [{ id: 'api', relation: 'references' }] },
+      { id: 'legacy', label: 'Legacy', status: 'error', dependsOn: [{ id: 'jobs', relation: 'blocks' }] },
+    ],
+    layout: 'layered',
+    direction: 'horizontal',
+    height: '420px',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'All seven relation types in one graph, with their labels and the legend. Since 3.22.4 `uses` reads ' +
+          '`--color-text-tertiary` and `extends` `--color-on-primary-subtle` (edge, arrow, label and legend), so ' +
+          'their labels reach 4.5:1 in both themes (light `uses` was 1.47, `extends` 1.89) and their lines 3:1. ' +
+          'The dash style and the label still tell the relations apart, not the colour alone.',
+      },
+    },
+  },
+};

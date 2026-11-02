@@ -152,6 +152,54 @@ export const ErrorsOnly: Story = {
   },
 };
 
+export const PriorityOnUnreadRows: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Priority and category chips on unread rows, with German labels. Since 3.22.4 a chip on an unread row paints its tint over an opaque `--color-surface`, so the teal row does not show through: the "Hoch" chip reads 5.55:1 in dark (was 3.67) and 5.52:1 in light, the same on every row of the panel gradient.',
+      },
+    },
+  },
+  args: {
+    notifications: [
+      {
+        id: 'p1', title: 'Deployment fehlgeschlagen', message: 'Pipeline #2210 ist in der Teststufe abgebrochen.',
+        type: 'error', priority: 'urgent', timestamp: ago(5), read: false, category: 'CI/CD',
+      },
+      {
+        id: 'p2', title: 'Speicherplatz knapp', message: 'Server db-primary nutzt 91 % des Speichers.',
+        type: 'warning', priority: 'high', timestamp: ago(20), read: false, category: 'Infrastruktur',
+      },
+      {
+        id: 'p3', title: 'Zertifikat läuft bald ab', message: 'Das TLS-Zertifikat für api.example.com läuft in 7 Tagen ab.',
+        type: 'warning', priority: 'high', timestamp: ago(50), read: false, category: 'Sicherheit',
+      },
+      {
+        id: 'p4', title: 'Rechnung überfällig', message: 'Die Rechnung RE-1042 ist seit 3 Tagen fällig.',
+        type: 'warning', priority: 'high', timestamp: ago(180), read: true, category: 'Abrechnung',
+      },
+      {
+        id: 'p5', title: 'Neuer Kommentar zu PR #142', message: 'Alice: „Sieht gut aus, nur ein kleiner Vorschlag zur Validierung.“',
+        type: 'info', priority: 'normal', timestamp: ago(300), read: true, category: 'Code-Review',
+      },
+      {
+        id: 'p6', title: 'Neues Teammitglied', message: 'Bob wurde dem Entwicklungsteam hinzugefügt.',
+        type: 'info', priority: 'low', timestamp: ago(1500), read: false, category: 'Team',
+      },
+    ],
+    showPriority: true,
+    title: 'Benachrichtigungen',
+    highPriorityLabel: 'Hoch',
+    urgentPriorityLabel: 'Dringend',
+    lowPriorityLabel: 'Niedrig',
+    markAllReadLabel: 'Alle als gelesen markieren',
+    minutesAgoLabel: 'vor {n} Min.',
+    hoursAgoLabel: 'vor {n} Std.',
+    daysAgoLabel: 'vor {n} T.',
+  },
+};
+
 export const Compact: Story = {
   parameters: {
     docs: { description: { story: 'Compact mode with limited height and no filter pills — ideal for sidebar widgets.' } },

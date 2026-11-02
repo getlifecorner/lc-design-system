@@ -375,13 +375,14 @@ function measureNodes(nodes: Iterable<DependencyNode>, measure: TextMeasure): No
 
 const RELATION_STYLES: Record<DependencyRelation, { color: string; dashed: boolean; label: string }> = {
   depends:    { color: 'var(--color-neutral-400)',  dashed: false, label: 'depends on' },
-  // Status relations use the status inks (3:1 as lines, 4.5:1 as labels).
+  // Status relations use the status inks (3:1 as lines, 4.5:1 as labels);
+  // `extends` the primary ink and `uses` the tertiary text, for the same reason.
   blocks:     { color: 'var(--color-on-error-subtle)', dashed: false, label: 'blocks' },
   references: { color: 'var(--color-on-info-subtle)', dashed: true,  label: 'references' },
   requires:   { color: 'var(--color-on-warning-subtle)', dashed: false, label: 'requires' },
-  extends:    { color: 'var(--color-primary-400)',  dashed: true,  label: 'extends' },
+  extends:    { color: 'var(--color-on-primary-subtle)', dashed: true,  label: 'extends' },
   implements: { color: 'var(--color-on-success-subtle)', dashed: true,  label: 'implements' },
-  uses:       { color: 'var(--color-neutral-300)',  dashed: true,  label: 'uses' },
+  uses:       { color: 'var(--color-text-tertiary)', dashed: true,  label: 'uses' },
 };
 
 // ── Layout algorithm ─────────────────────────────────────────────────────────
