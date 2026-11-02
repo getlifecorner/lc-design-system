@@ -85,6 +85,9 @@ const INLINE_TABLER_NAMES = [
   'info-circle', 'circle-check', 'alert-triangle', 'alert-circle', 'circle-x',
   // finances: bottom-nav/sidenav destination, banks and connections, consent (3.16, TD-3)
   'wallet', 'building-bank', 'shield-lock',
+  // search fields, the health lock line, Settings → devices (3.22, BA-6, BA-7), and the
+  // glyphs log-viewer, code-block, copy-field and kanban-board draw (registered by them)
+  'search', 'lock', 'device-tablet', 'player-play', 'player-pause', 'clipboard', 'arrow-down',
 ];
 
 /** One Tabler SVG as a compact, class-free string (CSS sizes it, like the other inline icons). */

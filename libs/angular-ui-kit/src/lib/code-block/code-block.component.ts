@@ -6,7 +6,7 @@ import {
   signal,
 } from '@angular/core';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
-import { ICON_CHECK } from '@lifecorner/angular-ui-kit/icons';
+import { ICON_CHECK, ICON_CLIPBOARD } from '@lifecorner/angular-ui-kit/icons';
 
 export type CodeBlockLanguage =
   | 'typescript'
@@ -205,7 +205,7 @@ function highlightLines(code: string, language: string): CodeLine[] {
   selector: 'lc-code-block',
   standalone: true,
   imports: [IconComponent],
-  viewProviders: [ɵprovideKitIcons([ICON_CHECK])],
+  viewProviders: [ɵprovideKitIcons([ICON_CHECK, ICON_CLIPBOARD])],
   templateUrl: './code-block.component.html',
   styleUrls: ['./code-block.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

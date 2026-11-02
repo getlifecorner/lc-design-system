@@ -11,7 +11,7 @@ import {
   output,
 } from '@angular/core';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
-import { ICON_EXCLAMATION_CIRCLE } from '@lifecorner/angular-ui-kit/icons';
+import { ICON_ARROW_DOWN, ICON_EXCLAMATION_CIRCLE } from '@lifecorner/angular-ui-kit/icons';
 
 export interface KanbanCard {
   id: string;
@@ -46,7 +46,7 @@ export interface KanbanMoveEvent {
   selector: 'lc-kanban-board',
   standalone: true,
   imports: [IconComponent],
-  viewProviders: [ɵprovideKitIcons([ICON_EXCLAMATION_CIRCLE])],
+  viewProviders: [ɵprovideKitIcons([ICON_EXCLAMATION_CIRCLE, ICON_ARROW_DOWN])],
   templateUrl: './kanban-board.component.html',
   styleUrls: ['./kanban-board.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

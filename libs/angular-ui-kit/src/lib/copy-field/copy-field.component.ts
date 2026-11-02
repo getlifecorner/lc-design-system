@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { ButtonComponent } from '@lifecorner/angular-ui-kit/button';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
-import { ICON_CHECK } from '@lifecorner/angular-ui-kit/icons';
+import { ICON_CHECK, ICON_CLIPBOARD } from '@lifecorner/angular-ui-kit/icons';
 import { InputComponent } from '@lifecorner/angular-ui-kit/input';
 
 /** `stacked`: the button below the value at full width (phones); `inline`: beside it. */
@@ -34,7 +34,7 @@ const CONFIRMATION_MS = 2000;
 @Component({
   selector: 'lc-copy-field',
   imports: [InputComponent, ButtonComponent, IconComponent],
-  viewProviders: [ɵprovideKitIcons([ICON_CHECK])],
+  viewProviders: [ɵprovideKitIcons([ICON_CHECK, ICON_CLIPBOARD])],
   templateUrl: './copy-field.component.html',
   styleUrl: './copy-field.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

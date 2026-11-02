@@ -10,8 +10,10 @@ import {
   BUNDLED_ICONS,
   ICON_CHECK_CIRCLE,
   ICON_CHECK_CIRCLE_SOLID,
+  ICON_DEVICE_TABLET,
   ICON_HOME,
   ICON_HOME_SOLID,
+  ICON_LOCK,
   ICON_MAIL,
 } from '@lifecorner/angular-ui-kit/icons';
 // The package's exports map only exposes ./icons/*, so the catalogue JSON has to be
@@ -462,6 +464,94 @@ export const UnregisteredName: Story = {
   }),
 };
 
+/**
+ * 3.22 (BA-6, BA-7): `search` (alias `magnifying-glass`), `lock` (aliases
+ * `lock-closed`, `locked`) and `device-tablet` are in the inline set, with
+ * their filled glyphs; so are the glyphs lc-log-viewer, lc-code-block,
+ * lc-copy-field and lc-kanban-board draw, which those components now register.
+ */
+export const SearchLockTabletIcons: Story = {
+  name: 'Search, Lock and Tablet Icons',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`magnifying-glass` (alias of `search`), `lock` (aliases `lock-closed`, `locked`) and `device-tablet` in the five sizes, outline and solid, from the inline set since 3.22: no request, prerendered. ' +
+          'Register them with `ICON_SEARCH`, `ICON_LOCK`, `ICON_DEVICE_TABLET` (and `_SOLID`). Below, the glyphs kit components draw and register themselves: `player-play`, `player-pause` (lc-log-viewer), `clipboard-document` (alias of `clipboard`; log-viewer, code-block, copy-field) and `arrow-down` (log-viewer, kanban priority low; no filled glyph).',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      rows: [
+        { name: 'magnifying-glass', variant: 'outline' },
+        { name: 'search', variant: 'outline' },
+        { name: 'search', variant: 'solid' },
+        { name: 'lock', variant: 'outline' },
+        { name: 'lock-closed', variant: 'outline' },
+        { name: 'lock', variant: 'solid' },
+        { name: 'device-tablet', variant: 'outline' },
+        { name: 'device-tablet', variant: 'solid' },
+      ],
+      kitRows: [
+        { name: 'player-play', variant: 'outline' },
+        { name: 'player-pause', variant: 'outline' },
+        { name: 'clipboard-document', variant: 'outline' },
+        { name: 'arrow-down', variant: 'outline' },
+      ],
+      sizes: ['xs', 'sm', 'md', 'lg', 'xl'],
+      caption,
+    },
+    template: `
+      <div style="display: grid; grid-template-columns: max-content repeat(5, auto); gap: 12px 8px; align-items: center; justify-content: start; color: var(--color-text-primary);">
+        @for (row of rows; track $index) {
+          <div style="font: 12px monospace; color: var(--color-text-secondary);">{{ row.name }}<div style="font-size: 11px; color: var(--color-text-tertiary);">{{ row.variant }}</div></div>
+          @for (size of sizes; track size) {
+            <lc-icon [name]="row.name" [variant]="row.variant" [size]="size" [decorative]="true" />
+          }
+        }
+        <div style="grid-column: 1 / -1; font: 11px monospace; color: var(--color-text-tertiary);">── kit components ──</div>
+        @for (row of kitRows; track $index) {
+          <div style="font: 12px monospace; color: var(--color-text-secondary);">{{ row.name }}<div style="font-size: 11px; color: var(--color-text-tertiary);">{{ row.variant }}</div></div>
+          @for (size of sizes; track size) {
+            <lc-icon [name]="row.name" [variant]="row.variant" [size]="size" [decorative]="true" />
+          }
+        }
+      </div>`,
+  }),
+};
+
+/**
+ * 3.22 (BA-7, AC-5): the life-os setup. The app registers `ICON_LOCK` and
+ * `ICON_DEVICE_TABLET` with `unregistered: 'placeholder'`; the alias
+ * `lock-closed` finds `ICON_LOCK`. No placeholder.
+ */
+export const RegisteredWithPlaceholderMode: Story = {
+  name: 'Lock and Tablet, Registered (placeholder mode)',
+  decorators: [
+    applicationConfig({ providers: [provideLcIcons([ICON_LOCK, ICON_DEVICE_TABLET], { unregistered: 'placeholder' })] }),
+  ],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`provideLcIcons([ICON_LOCK, ICON_DEVICE_TABLET], { unregistered: \'placeholder\' })`, as in life-os. A decorative `lock` beside the text „Nur für dich“, `lock-closed` (alias, finds `ICON_LOCK`) labelled "Gesperrt" and `device-tablet` labelled "Tablet": each draws its glyph. Decorative icons are `aria-hidden`; labelled ones are `role="img"` with their name. An app that draws `lock` without registering `ICON_LOCK` gets the placeholder and a console warning naming the constant.',
+      },
+    },
+  },
+  render: () => ({
+    props: { caption },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px; color: var(--color-text-primary);">
+        <p style="display: flex; align-items: center; gap: 6px; margin: 0; font-size: 14px; color: var(--color-text-secondary);"><lc-icon name="lock" size="xs" [decorative]="true" />Nur für dich</p>
+        <div style="display: flex; gap: 32px; align-items: flex-start;">
+          <div style="text-align: center;"><lc-icon name="lock-closed" size="md" ariaLabel="Gesperrt" /><div [style]="caption">lock-closed · ICON_LOCK</div></div>
+          <div style="text-align: center;"><lc-icon name="device-tablet" size="md" ariaLabel="Tablet" /><div [style]="caption">device-tablet · ICON_DEVICE_TABLET</div></div>
+        </div>
+      </div>`,
+  }),
+};
+
 /** Upper snake case of the 3.5.1 key, `_SOLID` for the solid glyph. */
 const constantOf = (name: string, variant: string) =>
   `ICON_${name.toUpperCase().replace(/-/g, '_')}${variant === 'solid' ? '_SOLID' : ''}`;
@@ -477,7 +567,7 @@ export const IconConstants: Story = {
     docs: {
       description: {
         story:
-          'All 133 constants (`BUNDLED_ICONS` registers them all — for tests or a page that really shows every glyph; an app that imports it bundles all of them). A name that is an alias finds the constant of its target: `x-circle` → `ICON_CIRCLE_X`, `envelope` → `ICON_MAIL`, `cog-6-tooth` → `ICON_SETTINGS`.',
+          'All 150 constants (`BUNDLED_ICONS` registers them all — for tests or a page that really shows every glyph; an app that imports it bundles all of them). A name that is an alias finds the constant of its target: `x-circle` → `ICON_CIRCLE_X`, `envelope` → `ICON_MAIL`, `cog-6-tooth` → `ICON_SETTINGS`.',
       },
     },
   },

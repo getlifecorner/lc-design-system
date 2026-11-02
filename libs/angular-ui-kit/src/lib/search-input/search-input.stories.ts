@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/angular';
+import { applicationConfig } from '@storybook/angular';
+import { provideLcIcons } from '@lifecorner/angular-ui-kit/icon';
 import { SearchInputComponent } from './search-input.component';
 
 const meta: Meta<SearchInputComponent> = {
@@ -59,4 +61,30 @@ export const WithPresetValue: Story = {
     docs: { description: { story: 'A parent can preset or reset the query via `[value]`; external writes do not emit `searchChange`.' } },
   },
   args: { placeholder: 'Search…', value: 'preset query', size: 'md', debounceMs: 300 },
+};
+
+/**
+ * 3.22 (BA-6): an app that registers no icons and sets
+ * `unregistered: 'placeholder'` (life-os) still gets the magnifier and the
+ * clear icon, because lc-search-input registers both itself.
+ */
+export const AppRegistersNoIcons: Story = {
+  name: 'App Registers No Icons',
+  decorators: [applicationConfig({ providers: [provideLcIcons([], { unregistered: 'placeholder' })] })],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`provideLcIcons([], { unregistered: 'placeholder' })`: the app registers nothing. lc-search-input registers `ICON_SEARCH` (drawn as `magnifying-glass`) and `ICON_X_MARK` itself, so neither shows the placeholder (before 3.22 the magnifier did). English, German, and German with a value and its clear button.",
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <lc-search-input placeholder="Search banks…" ariaLabel="Search banks"></lc-search-input>
+        <lc-search-input lang="de" placeholder="Bank, BIC oder Ort suchen …" ariaLabel="Banken durchsuchen"></lc-search-input>
+        <lc-search-input lang="de" placeholder="Bank, BIC oder Ort suchen …" ariaLabel="Banken durchsuchen" value="Sparkasse" clearAriaLabel="Suche leeren"></lc-search-input>
+      </div>`,
+  }),
 };

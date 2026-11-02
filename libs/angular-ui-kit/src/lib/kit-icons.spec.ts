@@ -20,7 +20,10 @@ import { NumberInputComponent } from '@lifecorner/angular-ui-kit/number-input';
 import { PasswordInputComponent } from '@lifecorner/angular-ui-kit/password-input';
 import { PipelineComponent } from '@lifecorner/angular-ui-kit/pipeline';
 import { RatingComponent } from '@lifecorner/angular-ui-kit/rating';
+import { SearchInputComponent } from '@lifecorner/angular-ui-kit/search-input';
+import { LogViewerComponent } from '@lifecorner/angular-ui-kit/log-viewer';
 import { ToastComponent } from '@lifecorner/angular-ui-kit/toast';
+import { NEVER } from 'rxjs';
 import { resetIconCache, resetIconWarnings } from './icon/icon.component';
 import { resetIconRendering } from './icon/icon-dom';
 import { resolveInlineGlyph } from './icon/icon-inline-lookup';
@@ -57,6 +60,7 @@ const NOT_ICONS: Record<string, string> = {
   'chip/chip.component.ts: error': 'chip variant',
   'input/input.component.ts: done': 'enterkeyhint value',
   'input/input.component.ts: password': 'input type',
+  'input/input.component.ts: search': 'enterkeyhint value',
   'list/list.component.ts: error': 'badge variant',
   'log-viewer/log-viewer.component.html: error': 'log level',
   'log-viewer/log-viewer.component.ts: error': 'log level',
@@ -271,6 +275,45 @@ describe('kit-internal glyphs (AS-17, AC-3)', () => {
         status,
       }));
       expectOwnGlyphs(render(ChatComponent, { messages }), 4);
+    });
+
+    // 3.22 (request 030, BA-6): lc-search-input drew `magnifying-glass` without
+    // registering it, so life-os (`unregistered: 'placeholder'`) showed "?".
+    const pathsOf = (svg: Element | string) =>
+      Array.from((typeof svg === 'string' ? new DOMParser().parseFromString(svg, 'image/svg+xml').documentElement : svg).querySelectorAll('path')).map(
+        (p) => p.getAttribute('d'),
+      );
+
+    it('lc-search-input: magnifying-glass (search) and the clear x-mark', () => {
+      const fixture = render(SearchInputComponent, { value: 'Sparkasse' });
+      expectOwnGlyphs(fixture, 2);
+      const host = fixture.nativeElement as HTMLElement;
+      const magnifier = host.querySelector('lc-icon.search-input__icon .icon-container > svg') as Element;
+      expect(pathsOf(magnifier)).toEqual(pathsOf(ICONS.ICON_SEARCH.svg));
+      expect(pathsOf(magnifier)).toEqual(['M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0', 'M21 21l-6 -6']);
+      const clear = host.querySelector('lc-icon.search-input__clear-icon .icon-container > svg') as Element;
+      expect(pathsOf(clear)).toEqual(pathsOf(ICONS.ICON_X_MARK.svg));
+    });
+
+    // 3.22 (request 030, BA-6, AC-4): every glyph of the default template —
+    // pause/play, trash, clipboard-document, the magnifier in the toolbar and
+    // in the search row, and the jump-to-bottom arrow-down.
+    it('lc-log-viewer: pause, trash, clipboard, both magnifiers and arrow-down; play after pausing', () => {
+      const fixture = render(LogViewerComponent, { lines: [{ text: 'boot' }, { text: 'ready' }], stream$: NEVER });
+      const viewer = fixture.componentInstance as unknown as Record<string, { set(v: boolean): void }>;
+      viewer['showSearch'].set(true);
+      viewer['atBottom'].set(false);
+      fixture.detectChanges();
+      expectOwnGlyphs(fixture, 6);
+      const host = fixture.nativeElement as HTMLElement;
+      const drawn = () => Array.from(host.querySelectorAll('lc-icon .icon-container > svg')).map((svg) => pathsOf(svg).join(' '));
+      const expected = (...icons: Array<{ svg: string }>) => icons.map((icon) => pathsOf(icon.svg).join(' '));
+      const { ICON_PLAYER_PAUSE, ICON_PLAYER_PLAY, ICON_TRASH, ICON_CLIPBOARD, ICON_SEARCH, ICON_ARROW_DOWN } = ICONS;
+      expect(drawn()).toEqual(expected(ICON_PLAYER_PAUSE, ICON_TRASH, ICON_CLIPBOARD, ICON_SEARCH, ICON_SEARCH, ICON_ARROW_DOWN));
+      viewer['paused'].set(true);
+      fixture.detectChanges();
+      expectOwnGlyphs(fixture, 6);
+      expect(drawn()[0]).toBe(expected(ICON_PLAYER_PLAY)[0]);
     });
 
     it("a name the app passes in is the app's: it follows the app's unregistered setting", () => {

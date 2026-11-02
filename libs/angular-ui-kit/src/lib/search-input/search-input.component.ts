@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
-import { ICON_X_MARK } from '@lifecorner/angular-ui-kit/icons';
+import { ICON_SEARCH, ICON_X_MARK } from '@lifecorner/angular-ui-kit/icons';
 import { Subject, debounce, distinctUntilChanged, filter, of, timer } from 'rxjs';
 
 export type SearchInputSize = 'sm' | 'md' | 'lg';
@@ -54,7 +54,7 @@ let nextUniqueId = 0;
   selector: 'lc-search-input',
   standalone: true,
   imports: [IconComponent],
-  viewProviders: [ɵprovideKitIcons([ICON_X_MARK])],
+  viewProviders: [ɵprovideKitIcons([ICON_X_MARK, ICON_SEARCH])],
   templateUrl: './search-input.component.html',
   styleUrls: ['./search-input.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -235,9 +235,10 @@ describe('IconComponent under Trusted Types (AS-14)', () => {
     });
 
     // 3.16 (TD-3) added wallet, building-bank and shield-lock (+ its filled glyph): 133 → 137.
-    it('returns each of the 137 bundled constants and the placeholder unchanged', () => {
-      expect(ALL_BUNDLED).toHaveLength(137);
-      expect(bundledIconSvgs().size).toBe(138);
+    // 3.22 (BA-6, BA-7) added 7 Tabler keys with 6 filled glyphs: 137 → 150.
+    it('returns each of the 150 bundled constants and the placeholder unchanged', () => {
+      expect(ALL_BUNDLED).toHaveLength(150);
+      expect(bundledIconSvgs().size).toBe(151);
       for (const svg of [...ALL_BUNDLED, ICON_FALLBACK_SVG]) expect(rules.createHTML(svg)).toBe(svg);
     });
 

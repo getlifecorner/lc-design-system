@@ -16,6 +16,7 @@ import {
   ICON_FILE,
   ICON_FILE_TEXT,
   ICON_KEY,
+  ICON_LOCK,
   ICON_SETTINGS,
 } from '@lifecorner/angular-ui-kit/icons';
 import {
@@ -162,7 +163,7 @@ function isExpandable(node: TreeNode): boolean {
   standalone: true,
   imports: [IconComponent],
   // Its own glyphs and the inline ones of the built-in file-type map (file-icons.ts).
-  viewProviders: [ɵprovideKitIcons([ICON_CHEVRON_RIGHT, ICON_CHECK, ICON_FILE, ICON_FILE_TEXT, ICON_KEY, ICON_SETTINGS])],
+  viewProviders: [ɵprovideKitIcons([ICON_CHEVRON_RIGHT, ICON_CHECK, ICON_FILE, ICON_FILE_TEXT, ICON_KEY, ICON_LOCK, ICON_SETTINGS])],
   templateUrl: './tree-view.component.html',
   styleUrls: ['./tree-view.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

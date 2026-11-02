@@ -5,6 +5,6 @@
  * a plain object literal, so a bundler keeps only the ones an app imports.
  *
  * Name: `ICON_` plus the 3.5.1 key in upper snake case (`x-mark` →
- * `ICON_X_MARK`); the solid glyph adds `_SOLID`. `BUNDLED_ICONS` holds all 133.
+ * `ICON_X_MARK`); the solid glyph adds `_SOLID`. `BUNDLED_ICONS` holds all 150.
  */
 export * from './icons.data';

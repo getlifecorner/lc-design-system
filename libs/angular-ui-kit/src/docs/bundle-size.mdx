@@ -11,7 +11,7 @@ Both are opt-in: an app that changes nothing renders exactly as with 3.5.1.
 ## Icons: register the glyphs you render
 
 The kit ships one constant per glyph in `@lifecorner/angular-ui-kit/icons` (`ICON_HOME`, `ICON_X_MARK`,
-`ICON_HOME_SOLID`, … — the 3.5.1 key in upper snake case, `_SOLID` for the solid glyph; 133 in all). Each is a
+`ICON_HOME_SOLID`, … — the 3.5.1 key in upper snake case, `_SOLID` for the solid glyph; 150 in all). Each is a
 plain object literal, so a bundler keeps only the ones you import. Register them with `provideLcIcons` from
 `@lifecorner/angular-ui-kit/icon`:
 
@@ -34,7 +34,7 @@ export const appConfig: ApplicationConfig = {
 - **Aliases:** a name is looked up as written, then by its alias target: `envelope` finds `ICON_MAIL`,
   `x-circle` finds `ICON_CIRCLE_X`, `cog-6-tooth` finds `ICON_SETTINGS`.
 - **Which constant?** The story [Icon constants](?path=/story/components-icon--icon-constants) shows every
-  constant with its glyph and name. `BUNDLED_ICONS` holds all 133 (for tests or Storybook; an app that imports it
+  constant with its glyph and name. `BUNDLED_ICONS` holds all 150 (for tests or Storybook; an app that imports it
   bundles all of them).
 - **Trusted Types:** registered glyphs go through the same `lc-icon` policy as before and must pass the same
   allow-list as a fetched icon; markup you write yourself is not supported.

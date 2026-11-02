@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/angular';
-import { interval, map } from 'rxjs';
+import { applicationConfig } from '@storybook/angular';
+import { NEVER, interval, map } from 'rxjs';
+import { provideLcIcons } from '@lifecorner/angular-ui-kit/icon';
 import { LogViewerComponent, LogLine } from './log-viewer.component';
 
 const meta: Meta<LogViewerComponent> = {
@@ -190,5 +192,41 @@ export const LargeBuffer: Story = {
   },
   parameters: {
     docs: { description: { story: '5000 lines with virtualized rendering for smooth scrolling.' } },
+  },
+};
+
+/** 40 lines with fixed timestamps (2 Nov 2026, 08:00:00 UTC, one per second), so the shot is stable. */
+const fixedLogs = (count: number): LogLine[] =>
+  generateLogs(count).map((line, i) => ({ ...line, timestamp: new Date(Date.UTC(2026, 10, 2, 8, 0, i)) }));
+
+/**
+ * 3.22 (BA-6): with an app that registers no icons and sets
+ * `unregistered: 'placeholder'`, every glyph lc-log-viewer draws is its own
+ * registration — pause/play, trash, clipboard, the magnifier (toolbar and
+ * search row) and jump-to-bottom.
+ */
+export const AppRegistersNoIcons: Story = {
+  name: 'App Registers No Icons',
+  decorators: [applicationConfig({ providers: [provideLcIcons([], { unregistered: 'placeholder' })] })],
+  render: (args) => ({
+    props: { ...args, lines: fixedLogs(40), stream$: NEVER },
+    template: `
+      <lc-log-viewer
+        [lines]="lines"
+        [stream$]="stream$"
+        [variant]="variant"
+        [height]="height"
+        [showTimestamps]="showTimestamps"
+      />
+    `,
+  }),
+  args: { variant: 'log', height: '240px', showTimestamps: true },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`provideLcIcons([], { unregistered: 'placeholder' })`: the app registers nothing. lc-log-viewer registers `ICON_PLAYER_PAUSE`, `ICON_PLAYER_PLAY`, `ICON_TRASH`, `ICON_CLIPBOARD`, `ICON_SEARCH` and `ICON_ARROW_DOWN` itself, so none of them shows the placeholder (before 3.22 every glyph but the trash did). Open the search (magnifier button or `/`) for the second magnifier, scroll up for the jump-to-bottom arrow, and pause for the play glyph.",
+      },
+    },
   },
 };

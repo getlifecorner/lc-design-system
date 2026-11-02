@@ -369,6 +369,15 @@ const EXPECT_IN_HTML = [
       && new RegExp(`<div(?=[^>]*\\sclass="lc-bar-chart__category-labels")(?=[^>]*\\saria-hidden="true")[^>]*>(?:(?:<!--[^]*?-->|\\s)*<span[^>]*\\sclass="lc-bar-chart__category-label"[^>]*>${c}(?:Demo Applikation|Demo Arbeitsplatz|Demo Netz)${c}</span>){3}`).test(columns)
       && new RegExp(`<span[^>]*\\sclass="lc-bar-chart__row-value"[^>]*>${c}313000 ${dot} 54\\.8%${c}</span>`).test(share);
   }],
+  // 3.22 (request 030, probe-322.ts): with `unregistered: 'placeholder'` and
+  // nothing registered by the app, lc-search-input's magnifier (`ICON_SEARCH`,
+  // registered by the component) is the Tabler glyph in the server HTML, not
+  // the placeholder (BA-6, 030 AC-6).
+  ['search input: the magnifier prerendered, not the placeholder (BA-6, 030 AC-6)', (html) => {
+    const icon = html.match(/<lc-search-input(?=[^>]*\sid="compat-search-322")[^>]*>(?:(?!<\/lc-search-input>)[^])*?<lc-icon(?=[^>]*\sclass="[^"]*\bsearch-input__icon\b)[^>]*>(?:(?!<\/lc-icon>)[^])*<\/lc-icon>/)?.[0] ?? '';
+    return /<div[^>]*\sclass="icon-container[^"]*"[^>]*>(?:<!--[^]*?-->|\s)*<svg(?=[^>]*\saria-hidden="true")(?=[^>]*\swidth="24px")[^>]*>(?:<!--[^]*?-->|\s)*<path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/.test(icon)
+      && !/<rect\b|<text\b/.test(icon);
+  }],
 ];
 
 /**
