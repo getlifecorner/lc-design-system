@@ -21,6 +21,8 @@ Description list for key/value metadata (a styled \`<dl>\`).
 - 3.3: long unbroken values (an e-mail address, an IBAN) wrap instead of overflowing the row;
   an item's \`datetime\` (ISO 8601) renders its value inside \`<time datetime>\`
 - Term and value carry no browser margin; the row gap is the only space (BA-8)
+- 3.23.1 (BA-10): link and \`primary\` values reach 4.5:1 in both themes; clickable rows are
+  at least 44 px tall and show a 2 px focus outline (\`Highlight\` in forced colours)
 `,
       },
     },
@@ -29,13 +31,35 @@ Description list for key/value metadata (a styled \`<dl>\`).
     items: {
       description:
         '`DescriptionListItem[]`: `term`, `value`, `valueSuffix`, `href`, `emphasis`, `id`; 3.3: `datetime` (ISO 8601) renders the value inside `<time datetime>` (ignored with `href`).',
+      table: { defaultValue: { summary: 'required' } },
     },
-    layout: { control: 'inline-radio', options: ['rows', 'stacked'] },
-    leaders: { control: 'boolean' },
-    size: { control: 'inline-radio', options: ['sm', 'md'] },
+    layout: {
+      control: 'inline-radio',
+      options: ['rows', 'stacked'],
+      description: '`rows`: term left, value right; `stacked`: term above value, for narrow columns.',
+      table: { defaultValue: { summary: 'rows' } },
+    },
+    leaders: {
+      control: 'boolean',
+      description: 'A dotted leader line between term and value (rows layout).',
+      table: { defaultValue: { summary: 'false' } },
+    },
+    size: {
+      control: 'inline-radio',
+      options: ['sm', 'md'],
+      description: 'Density of the rows: `sm` 12 px, `md` 14 px.',
+      table: { defaultValue: { summary: 'md' } },
+    },
     clickable: {
       control: 'boolean',
-      description: 'Rows are focusable buttons (Enter / Space emit itemClick). Set this whenever itemClick is handled.',
+      description:
+        'Rows are focusable buttons (Enter / Space emit itemClick). Set this whenever itemClick is handled. 3.23.1 (BA-10): a clickable row in the `rows` layout is at least 44 px tall and shows a 2 px focus outline (`Highlight` in forced colours).',
+      table: { defaultValue: { summary: 'false' } },
+    },
+    itemClick: {
+      action: 'itemClick',
+      description: 'Emitted with the item when a clickable row is clicked or activated with Enter / Space.',
+      table: { defaultValue: { summary: '—' } },
     },
     separator: {
       control: 'inline-radio',
@@ -163,5 +187,102 @@ export const ShortValuesAtPhoneWidth: Story = {
     props: args,
     template: `<div style="max-width: 312px;"><lc-card variant="outlined" borderRadius="xl" padding="lg"><lc-description-list [items]="items" [layout]="layout" [leaders]="leaders" [size]="size" /></lc-card></div>`,
   }),
+};
+
+const bankItemsDe = [
+  { term: 'Bank', value: 'Sparkasse KölnBonn' },
+  { term: 'Freigabe', value: 'Alle Erwachsenen', emphasis: 'primary' as const },
+  { term: 'Einwilligung', value: 'Details ansehen', href: '#' },
+  { term: 'Letzter Abruf', value: 'heute 09:14', datetime: '2026-11-02T09:14:00+01:00', emphasis: 'muted' as const },
+];
+
+// A clickable row holds no link (a nested interactive).
+const bankRowsDe = [
+  { term: 'Bank', value: 'Sparkasse KölnBonn' },
+  { term: 'Freigabe', value: 'Alle Erwachsenen', emphasis: 'primary' as const },
+  { term: 'Letzter Abruf', value: 'heute 09:14', datetime: '2026-11-02T09:14:00+01:00', emphasis: 'muted' as const },
+];
+
+const bankRowsEn = [
+  { term: 'Bank', value: 'Northwind Savings' },
+  { term: 'Shared with', value: 'All adults', emphasis: 'primary' as const },
+  { term: 'Last sync', value: 'today 09:14', datetime: '2026-11-02T09:14:00+01:00', emphasis: 'muted' as const },
+];
+
+/** BA-10 (life-os): link and primary values in the kit's link and primary inks. */
+export const LinkAndPrimaryValues: Story = {
+  name: 'Link and primary values (BA-10)',
+  decorators: [moduleMetadata({ imports: [CardComponent] })],
+  args: { items: bankItemsDe, layout: 'rows', leaders: false },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'BA-10 (life-os bank accounts page): a link value uses `--color-link` (hover `--color-link-hover`, underlined) and a `primary` value `--color-on-primary-subtle`, both at least 4.5:1 at 14 px (`md`) and 12 px (`sm`). Light: link 5.94:1 on the page, 5.64:1 on a hovered row (was 4.17 / 3.96 with `--color-primary-500`); primary 8.74 / 8.29. Dark: link 8.96 / 7.92; primary 7.57 / 6.69 (unchanged value).',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div style="max-width: 312px;">
+        <lc-card variant="outlined" borderRadius="xl" padding="lg">
+          <div style="display: grid; gap: 16px;">
+            <lc-description-list [items]="items" [layout]="layout" [leaders]="leaders" size="md" />
+            <lc-description-list [items]="items" [layout]="layout" [leaders]="leaders" size="sm" />
+          </div>
+        </lc-card>
+      </div>
+    `,
+  }),
+};
+
+const clickableRowsTemplate = `
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+    <lc-card variant="outlined" borderRadius="xl" padding="lg" title="rows · md">
+      <lc-description-list [items]="items" layout="rows" size="md" [clickable]="true" (itemClick)="itemClick($event)" />
+    </lc-card>
+    <lc-card variant="outlined" borderRadius="xl" padding="lg" title="rows · sm">
+      <lc-description-list [items]="items" layout="rows" size="sm" [clickable]="true" (itemClick)="itemClick($event)" />
+    </lc-card>
+    <lc-card variant="outlined" borderRadius="xl" padding="lg" title="stacked · md">
+      <lc-description-list [items]="items" layout="stacked" size="md" [clickable]="true" (itemClick)="itemClick($event)" />
+    </lc-card>
+    <lc-card variant="outlined" borderRadius="xl" padding="lg" title="stacked · sm">
+      <lc-description-list [items]="items" layout="stacked" size="sm" [clickable]="true" (itemClick)="itemClick($event)" />
+    </lc-card>
+  </div>
+`;
+
+/** BA-10 (life-os): clickable rows are at least 44 px tall and show a 2 px focus ring. */
+export const ClickableRows: Story = {
+  name: 'Clickable rows (BA-10)',
+  decorators: [moduleMetadata({ imports: [CardComponent] })],
+  args: { items: bankRowsDe },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'BA-10: a clickable row in the `rows` layout pads to `--size-min-touch-height`, so it is 45 px tall (44 px for the last row, which has no line) in `md` and `sm`, at every width (was 38 / 27 px); the `stacked` rows (62 / 48 px) and non-clickable rows keep their size. Focus shows a 2 px `--color-primary-500` outline 2 px outside the row (4.17:1 on the light page, 7.57:1 dark; the old 20 % halo measured 1.28 / 1.50); in forced colours the outline is `Highlight`.',
+      },
+    },
+  },
+  render: (args) => ({ props: args, template: clickableRowsTemplate }),
+};
+
+/** BA-10: the clickable rows with English values. */
+export const ClickableRowsEnglish: Story = {
+  name: 'Clickable rows, English',
+  decorators: [moduleMetadata({ imports: [CardComponent] })],
+  args: { items: bankRowsEn },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The `Clickable rows (BA-10)` layout with English values: every clickable row is at least 44 px tall in `rows` and `stacked`, `md` and `sm`.',
+      },
+    },
+  },
+  render: (args) => ({ props: args, template: clickableRowsTemplate }),
 };
 

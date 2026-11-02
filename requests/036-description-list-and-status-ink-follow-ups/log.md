@@ -1,0 +1,14 @@
+# Log 036: Description-list contrast and targets, 033 story and comment fixes, 034 status-ink follow-ups
+
+## Owner decisions
+
+2026-11-02: standing rule — fixable review and release findings go into the pipeline without asking; a release may bundle requests.
+
+## Handoffs
+
+| Time | From → to | Status | Reason | Task |
+|---|---|---|---|---|
+| 2026-11-02 | spec-writer → ui-ux-designer | done | Spec is ready; there are no owner questions and no breaking change. | Design the API and visuals for AC-1…17 of request 036. Re-measure the baselines first. Decide the F-12 rule (44 px or the 2.5.8 exception), the ink tokens for the description-list link and primary values, and the dependency-viewer, log-viewer, progress-bar and progress-ring colours. Then write design.md. |
+| 2026-11-02 | ui-ux-designer → web-developer | done | The design covers every AC with measured values and a captured baseline; the only spec tension (AC-15 versus the pinned follow-up values) is resolved as a recorded assumption, so there is nothing for spec-writer or the owner to decide. | Implement design.md for request 036 (§2 declarations, the new token, the 4 new and 3 changed stories, the new theme-contrast block, and the six assertion updates listed in §9 with their reason), then record the gates in build.md. |
+| 2026-11-02 | web-developer → ui-ux-designer | done | All gates are green and every AC is measured; design review of the new and changed stories is the next step. | Review request 036 (stories components-description-list--link-and-primary-values, --clickable-rows, --clickable-rows-english, data-display-logviewer--ansi-gray-on-every-line, components-card--footer-slot, feedback-notification-center--priority-on-unread-rows, charts-progress-ring--all-colors); shots and measures are in tmp/story-shots/036/build-* and tmp/036/*.log. Decide on the "For the review" item in build.md (German header action clipped 13 px at 360) and on deviations 1–3. |
+| 2026-11-02 | ui-ux-designer → web-developer | changes-requested | One must-fix (German NC header clipped at 360) needs a code change; the design was corrected and prototyped, so it is a small, fully specified round. | Fix review 036 round 1. Finding 1 (must-fix): add the NC header wrap rule from design §2 (r1 row) and check it against §7/§9 (header 75 at 360, 93 at 320, scroll 0; the 8 NC stories `--full --compare=tmp/story-shots/036/build-c` differ only in Priority On Unread Rows 360 L/D). Finding 2: in the changelog draft, name 033 findings 2–4 and move the NC clip from Known to Fixed. Finding 3: the RELATION_STYLES alignment nit. |

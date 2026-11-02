@@ -254,6 +254,12 @@ the matching `--color-*-subtle` tint.
 | `--color-field-border` | `#6b7280` — 4.83:1 on white | `#93a4ad` — 6.71:1 on a card | **form field boundaries** (WCAG 1.4.11 asks 3:1): inputs, selects, text areas |
 | `--color-divider` | `#e5e7eb` | `rgba(255,255,255,.06)` | dividers inside a surface |
 
+### Data marks
+
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--color-secondary-graphic` | `#5a798c` — 4.19:1 on the `--color-surface-hover` track, 4.41:1 on the page | `#7097af` — 4.05:1 / 4.59:1; 1.92:1 apart from `--color-info` | secondary data marks (WCAG 1.4.11 asks 3:1): the `secondary` progress-bar fill and progress-ring arc. Not a text colour. Since 3.23.1 |
+
 ## Themes: light, dark and following the OS
 
 The palette is chosen by a class on `<html>`:

@@ -1,3 +1,5 @@
+@use '../../styles/mixins' as mix;
+
 :host {
   display: block;
 }
@@ -18,15 +20,15 @@
         background: var(--color-surface-hover);
       }
 
-      &:focus-visible {
-        outline: none;
-        box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-500) 20%, transparent);
-      }
+      // 2 px ring outside the row (BA-10): it reads against the card, also on
+      // a hovered row. The old 20 % box-shadow halo measured 1.28:1 (light)
+      // and 1.50:1 (dark) and vanished in forced colours.
+      @include mix.focus-ring;
     }
   }
 
   &__term {
-    // No browser dd margin (40 px inline start): the row gap is the only space (BA-8).
+    // No browser margin: the row gap is the only space (BA-8).
     margin: 0;
     flex-shrink: 0;
     color: var(--color-text-secondary);
@@ -66,8 +68,10 @@
       font-weight: var(--font-weight-semibold);
     }
 
+    // Primary ink, not the primary fill (BA-10): primary-500 measured 4.37:1
+    // on the light canvas and 3.96:1 on a hovered row.
     &--primary {
-      color: var(--color-primary-500);
+      color: var(--color-on-primary-subtle);
       font-weight: var(--font-weight-semibold);
     }
 
@@ -84,11 +88,13 @@
     font-weight: var(--font-weight-normal);
   }
 
+  // The kit's link ink (BA-10): primary-500 measured 4.37:1 in light.
   &__link {
-    color: var(--color-primary-500);
+    color: var(--color-link);
     text-decoration: none;
 
     &:hover {
+      color: var(--color-link-hover);
       text-decoration: underline;
     }
   }
@@ -145,5 +151,27 @@
 
   &--md {
     font-size: var(--font-size-sm);
+  }
+}
+
+// ── clickable row target (BA-10) ────────────────────────────────────────────
+// A clickable row in the rows layout is at least 44 px tall: the padding grows
+// until one line plus both paddings reach --size-min-touch-height (md 38 → 45,
+// sm 27 → 45). Non-clickable rows and the stacked layout (62 / 48) keep their
+// padding. 0,3,0 and 0,4,0 beat `.lc-dl--sm .lc-dl__row`. Without `lh`
+// support the declaration drops and the row keeps its old padding.
+.lc-dl--rows .lc-dl__row.lc-dl__row--clickable {
+  padding-block: max(var(--spacing-2), calc((var(--size-min-touch-height) - 1lh) / 2));
+}
+
+.lc-dl--rows.lc-dl--sm .lc-dl__row.lc-dl__row--clickable {
+  padding-block: max(var(--spacing-1), calc((var(--size-min-touch-height) - 1lh) / 2));
+}
+
+// Forced colours keep the outline but force its colour to the system's
+// focus colour (system colours survive forcing).
+@media (forced-colors: active) {
+  .lc-dl__row--clickable:focus-visible {
+    outline-color: Highlight;
   }
 }

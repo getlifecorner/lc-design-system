@@ -743,11 +743,13 @@ describe('Component pairings of 3.21.1 (request 029)', () => {
     );
   });
 
-  it('AC-10: the progress track is unchanged; primary and secondary stay raw', () => {
+  it('AC-10: the progress track is unchanged; primary stays raw (secondary: request 036)', () => {
     // The base rule (the forced-colours block repeats the selector with an outline).
     expect(sheets.progress).toMatch(/\n\.progress-bar__track \{\s*flex: 1;\s*background-color: var\(--color-surface-hover\);/);
     expect(fills('progress', '.progress-bar--primary .progress-bar__fill')['background-color']).toMatch(/^#[0-9a-f]{6}$/i);
-    expect(fills('progress', '.progress-bar--secondary .progress-bar__fill')['background-color']).toMatch(/^#[0-9a-f]{6}$/i);
+    // 036 (F-11): the raw secondary-500 was 2.83:1 against the light track;
+    // secondary now reads the data-mark token (4.19 light, 4.05 dark).
+    expect(fills('progress', '.progress-bar--secondary .progress-bar__fill')['background-color']).toBe('var(--color-secondary-graphic)');
   });
 
   it('AC-9: kanban priorities, dependency relations, arrows and node borders read the inks', () => {
@@ -967,7 +969,8 @@ describe('Component pairings of 3.22.4 (request 034)', () => {
     ['nc', '.lc-nc__item--unread .lc-nc__item-priority--low', { 'background-image': flat('--color-surface-hover') }],
     // F-2: the ring arcs take the progress-bar inks.
     ['ring', '.lc-progress-ring__value--primary', { stroke: 'var(--color-primary-500)' }],
-    ['ring', '.lc-progress-ring__value--secondary', { stroke: 'var(--color-secondary-600)' }],
+    // 036: secondary reads the data-mark token (dark secondary-600 was 1.07:1 from info).
+    ['ring', '.lc-progress-ring__value--secondary', { stroke: 'var(--color-secondary-graphic)' }],
     ...['success', 'warning', 'error', 'info'].map((v): Row => ['ring', `.lc-progress-ring__value--${v}`, { stroke: ink(v) }]),
     // F-3: subtle line tints, secondary line numbers.
     ['diff', '.lc-diff__line--added', { background: 'var(--color-success-subtle)' }],
@@ -1021,9 +1024,11 @@ describe('Component pairings of 3.22.4 (request 034)', () => {
     // The dash style still tells the relations apart (not colour alone).
     expect(depTs).toMatch(/\n {2}uses:\s*\{ color: '[^']+', dashed: true,/);
     expect(depTs).toMatch(/\n {2}extends:\s*\{ color: '[^']+', dashed: true,/);
-    // Out of scope (follow-up F-9): `depends` and the tree edges keep their neutral lines.
-    expect(relationColor('depends')).toBe('var(--color-neutral-400)');
-    expect(depTs.match(/color: 'var\(--color-neutral-300\)', dashed: false, isCrossRef: false/g)).toHaveLength(2);
+    // Follow-up F-9, done in request 036: `depends` reads the secondary text
+    // (neutral-400 was 2.53:1 light) and the tree edges the field border
+    // (neutral-300 was 1.47:1 light); their contrast is in the 036 block.
+    expect(relationColor('depends')).toBe('var(--color-text-secondary)');
+    expect(depTs.match(/color: 'var\(--color-field-border\)', dashed: false, isCrossRef: false/g)).toHaveLength(2);
   });
 
   // The shared status values of 3.22.3, per palette [light, dark] (AC-2).
@@ -1043,12 +1048,15 @@ describe('Component pairings of 3.22.4 (request 034)', () => {
    * `+` (4.85 L, 5.17 D). Graphic minimum: the card border on hover and
    * selected and the `uses` cross-reference line (3.75 L), the `uses` line
    * (4.76 D). The terminal is always dark: 5.28 (debug level and meta).
+   * Request 036: the dark ring secondary moved from the inverted
+   * secondary-600 (8.35, 1.07:1 from info) to --color-secondary-graphic
+   * (4.05), which is now the dark graphic minimum.
    */
   const expected = {
     text: [4.85, 5.17],
-    graphic: [3.75, 4.76],
+    graphic: [3.75, 4.05],
     ncUnread: { high: [5.52, 5.55], urgent: [10.97, 8.37], low: [5.3, 5.99], category: [5.3, 5.99] },
-    ringTrack: { primary: [3.96, 6.69], secondary: [4.19, 8.35], success: [4.81, 6.15], warning: [5.47, 5.6], error: [11.43, 6.37], info: [9.22, 7.8] },
+    ringTrack: { primary: [3.96, 6.69], secondary: [4.19, 4.05], success: [4.81, 6.15], warning: [5.47, 5.6], error: [11.43, 6.37], info: [9.22, 7.8] },
     diff: {
       numAdded: [6.91, 6.86], numRemoved: [6.58, 9.26], numContext: [7.23, 9.25],
       plus: [4.85, 5.17], minus: [10.97, 7.21], contentAdded: [16.24, 9.75], contentRemoved: [15.46, 13.16],
@@ -1265,5 +1273,280 @@ describe('Component pairings of 3.22.4 (request 034)', () => {
       floor(ratio(ink7(`.lc-log-viewer--terminal .lc-log-viewer__line--${lv} .lc-log-viewer__level`), levelBases[lv])),
     );
     expect(levels).toEqual([5.81, 7.78, 11.43, 6.19]);
+  });
+});
+
+describe('Component pairings of 3.23.1 (request 036)', () => {
+  const lib = (path: string) => resolve(__dirname, '../lib', path);
+  const sheets = {
+    dl: compile(lib('description-list/description-list.component.scss')).css,
+    nc: compile(lib('notification-center/notification-center.component.scss')).css,
+    dep: compile(lib('dependency-viewer/dependency-viewer.component.scss')).css,
+    log: compile(lib('log-viewer/log-viewer.component.scss')).css,
+    progress: compile(lib('progress-bar/progress-bar.component.scss')).css,
+    ring: compile(lib('progress-ring/progress-ring.component.scss')).css,
+  };
+  type Sheet = keyof typeof sheets;
+  const depTs = readFileSync(lib('dependency-viewer/dependency-viewer.component.ts'), 'utf8');
+  const depHtml = readFileSync(lib('dependency-viewer/dependency-viewer.component.html'), 'utf8');
+
+  /** Every rule as its selector list and body (`a, b { … }` names both). */
+  const rulesOf = (css: string) =>
+    [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({
+      selectors: m[1].split(/,(?![^(]*\))/).map((s) => s.trim()),
+      body: m[2],
+    }));
+  const decls = (body: string): Record<string, string> =>
+    Object.fromEntries([...body.matchAll(/([\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
+  const forcedBlock = /@media \(forced-colors: active\) \{((?:[^{}]*\{[^{}]*\})*)\s*\}/g;
+  /**
+   * The declarations of every rule that names `selector`, merged in source
+   * order; rules in forced-colours blocks are left out (`Mark` is no colour).
+   */
+  const fills = (sheet: Sheet, selector: string): Record<string, string> => {
+    const found = rulesOf(sheets[sheet].replace(forcedBlock, '')).filter((r) => r.selectors.includes(selector));
+    expect(found.length).toBeGreaterThan(0);
+    return Object.assign({}, ...found.map((r) => decls(r.body)));
+  };
+  /** The body of the `@media (forced-colors: active)` blocks of a sheet. */
+  const forced = (sheet: Sheet) => [...sheets[sheet].matchAll(forcedBlock)].map((m) => m[1]).join('\n');
+  const relationColor = (relation: string) => {
+    const found = depTs.match(new RegExp(`\\n  ${relation}:\\s*\\{ color: '([^']+)'`));
+    expect(found).not.toBeNull();
+    return (found as RegExpMatchArray)[1];
+  };
+
+  const secondary = 'var(--color-text-secondary)';
+  const graphic = 'var(--color-secondary-graphic)';
+  type Row = [Sheet, string, Record<string, string>];
+
+  const declared: Row[] = [
+    // A (BA-10): the link and primary inks, a 2 px outline instead of the halo.
+    ['dl', '.lc-dl__value--primary', { color: 'var(--color-on-primary-subtle)', 'font-weight': 'var(--font-weight-semibold)' }],
+    ['dl', '.lc-dl__link', { color: 'var(--color-link)', 'text-decoration': 'none' }],
+    ['dl', '.lc-dl__link:hover', { color: 'var(--color-link-hover)', 'text-decoration': 'underline' }],
+    ['dl', '.lc-dl__row--clickable:focus-visible', { outline: '2px solid var(--color-primary-500)', 'outline-offset': '2px' }],
+    // F-8: unread message and time in the secondary ink.
+    ['nc', '.lc-nc__item--unread .lc-nc__item-message', { color: secondary }],
+    ['nc', '.lc-nc__item--unread .lc-nc__item-time', { color: secondary }],
+    // F-10: an opaque marker with its own ink.
+    ['log', '.lc-log-viewer__match', { 'background-color': 'var(--color-warning)', color: 'var(--color-on-warning)' }],
+    ['log', '.lc-log-viewer--terminal .lc-log-viewer__match', { 'background-color': '#f9e2af', color: '#1e1e2e' }],
+    // F-13: gray is Overlay2 (Mocha) and Subtext1 (Latte).
+    ['log', '.ansi-gray', { color: '#9399b2' }],
+    ['log', ':root.light .lc-log-viewer--log .ansi-gray', { color: '#5c5f77' }],
+    // F-11 and the ring: the secondary data-mark token.
+    ['progress', '.progress-bar--secondary .progress-bar__fill', { 'background-color': graphic }],
+    ['progress', '.progress-bar-circular--secondary .progress-bar-circular__fill', { stroke: graphic }],
+    ['ring', '.lc-progress-ring__value--secondary', { stroke: graphic }],
+  ];
+
+  it.each(declared)('AC-1…13: %s %s declares the design 036 values', (sheet, selector, expectedDecls) => {
+    const found = fills(sheet, selector);
+    for (const [property, value] of Object.entries(expectedDecls)) expect(found[property]).toBe(value);
+  });
+
+  it('AC-2: the clickable row has no halo any more; forced colours draw the outline in Highlight', () => {
+    const clickable = rulesOf(sheets.dl).filter((r) => r.selectors.some((s) => s.includes('lc-dl__row--clickable')));
+    for (const r of clickable) expect(decls(r.body)['box-shadow']).toBeUndefined();
+    expect(sheets.dl).not.toMatch(/color-mix/);
+    expect(forced('dl')).toMatch(/\.lc-dl__row--clickable:focus-visible \{\s*outline-color: Highlight;\s*\}/);
+  });
+
+  it('AC-9: forced colours paint every search match, the terminal one too, with Mark / MarkText', () => {
+    expect(forced('log')).toMatch(
+      /\.lc-log-viewer__match,\s*\.lc-log-viewer--terminal \.lc-log-viewer__match \{\s*background-color: Mark;\s*color: MarkText;\s*\}/,
+    );
+  });
+
+  it('AC-8: depends, the structural edges and both arrows read the secondary text; tree edges the field border', () => {
+    expect(relationColor('depends')).toBe(secondary);
+    expect(depTs).toContain(`color: edge.structural ? '${secondary}' : style.color,`);
+    expect(depTs.match(/color: 'var\(--color-field-border\)', dashed: false, isCrossRef: false/g)).toHaveLength(2);
+    for (const id of ['default', 'depends']) {
+      expect(depHtml).toMatch(new RegExp(`<marker id="arrow-${id}"[^>]*><path [^>]*fill="var\\(--color-text-secondary\\)"/>`));
+    }
+    expect(depTs).not.toMatch(/--color-neutral-400/);
+    expect(depHtml).not.toMatch(/--color-neutral-400/);
+    // `depends` stays solid; the relations stay apart by dash and label too.
+    expect(depTs).toMatch(/\n {2}depends:\s*\{ color: '[^']+', dashed: false,/);
+  });
+
+  it('AC-12: the log tool buttons stay 28 × 28 (WCAG 2.5.8 by size)', () => {
+    const btn = fills('log', '.lc-log-viewer__tool-btn');
+    expect([btn.width, btn.height]).toEqual(['28px', '28px']);
+  });
+
+  /**
+   * Design 036 §5, floored, per palette [light, dark]. Pages: background,
+   * surface, surface-2; a hovered row is --color-surface-hover over them; an
+   * unread NC row is --color-surface-selected over surface and surface-2; the
+   * progress track is --color-surface-hover over the pages.
+   */
+  const expected = {
+    dl: {
+      linkPage: [5.94, 8.96], linkHover: [5.64, 7.92], linkHoverInkPage: [8.74, 10.53], linkHoverInkHover: [8.29, 9.3],
+      primaryPage: [8.74, 7.57], primaryHover: [8.29, 6.69], ring: [4.17, 7.57],
+    },
+    ncUnread: [6.49, 7.05],
+    dep: { dependsLabel: [7.55, 11.15], dependsLine: [7.55, 11.15], dependsCrossRef: [4.52, 7.55], dependsLegend: [7.23, 9.25], treeSurface: [4.83, 6.7], treeSurface2: [4.62, 5.56] },
+    dependsVsUses: [1.29, 1.66],
+    match: [7.85, 7.85],
+    secondary: { track: [4.19, 4.05], page: [4.41, 4.59], vsInfo: [2.19, 1.92] },
+    // The log variant's gray: Latte in light, Mocha in dark; plain surface and the worst line.
+    ansiGray: { plain: [6.25, 6.11], worst: [4.63, 4.55] },
+  };
+  const floor = (n: number) => Math.floor(n * 100) / 100;
+
+  describe.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('%s palette', (_palette, tokens, i) => {
+    const c = (name: string) => color(tokens, name);
+    const value = (text: string): Rgba => {
+      const ref = text.match(/^var\((--[\w-]+)\)$/);
+      return ref ? c(ref[1]) : parse(text);
+    };
+    const lowest = (fg: Rgba, bases: Rgba[]) => Math.min(...bases.map((bg) => ratio(over(fg, bg), bg)));
+    const S = c('--color-surface');
+    const S2 = c('--color-surface-2');
+    const BG = c('--color-background');
+    const pages = [BG, S, S2];
+    const hovered = pages.map((p) => over(c('--color-surface-hover'), p));
+    let cache: ReturnType<typeof measure> | undefined;
+    /** Every §5 cell, measured once on first use (inside a test, not at collection). */
+    const measured = () => (cache ??= measure());
+
+    function measure() {
+      const dlInk = (selector: string) => value(fills('dl', selector).color);
+      const ringInk = value(fills('dl', '.lc-dl__row--clickable:focus-visible').outline.replace(/^2px solid /, ''));
+      const dl = {
+        linkPage: lowest(dlInk('.lc-dl__link'), pages),
+        linkHover: lowest(dlInk('.lc-dl__link'), hovered),
+        linkHoverInkPage: lowest(dlInk('.lc-dl__link:hover'), pages),
+        linkHoverInkHover: lowest(dlInk('.lc-dl__link:hover'), hovered),
+        primaryPage: lowest(dlInk('.lc-dl__value--primary'), pages),
+        primaryHover: lowest(dlInk('.lc-dl__value--primary'), hovered),
+        // The outline sits 2 px outside the row, on the card or the page.
+        ring: lowest(ringInk, pages),
+      };
+
+      const unreadRows = [S, S2].map((row) => over(c('--color-surface-selected'), row));
+      const ncUnread = Math.min(
+        lowest(value(fills('nc', '.lc-nc__item--unread .lc-nc__item-message').color), unreadRows),
+        lowest(value(fills('nc', '.lc-nc__item--unread .lc-nc__item-time').color), unreadRows),
+      );
+
+      // Labels on their surface halo, lines on the viewer surface (cross-refs
+      // at their opacity), legend lines on the legend's surface-2.
+      const halo = value(fills('dep', '.dep-viewer__edge-label').stroke);
+      const lineOpacity = Number(fills('dep', '.dep-viewer__edge--cross-ref').opacity);
+      const legend = value(fills('dep', '.dep-viewer__legend').background);
+      const depends = value(relationColor('depends'));
+      const tree = c('--color-field-border');
+      const dep = {
+        dependsLabel: lowest(depends, [halo]),
+        dependsLine: lowest(depends, [S]),
+        dependsCrossRef: lowest([depends[0], depends[1], depends[2], depends[3] * lineOpacity], [S]),
+        dependsLegend: lowest(depends, [legend]),
+        treeSurface: lowest(tree, [S]),
+        treeSurface2: lowest(tree, [S2]),
+      };
+      const dependsVsUses = ratio(depends, value(relationColor('uses')));
+
+      const mark = fills('log', '.lc-log-viewer__match');
+      const match = ratio(value(mark.color), value(mark['background-color']));
+
+      const track = value(fills('progress', '.progress-bar__track')['background-color']);
+      const bar = value(fills('progress', '.progress-bar--secondary .progress-bar__fill')['background-color']);
+      const ringTrack = value(fills('ring', '.lc-progress-ring__track').stroke);
+      const arc = (v: string) => value(fills('ring', `.lc-progress-ring__value--${v}`).stroke);
+      const secondaryCells = {
+        track: Math.min(lowest(bar, pages.map((p) => over(track, p))), lowest(arc('secondary'), pages.map((p) => over(ringTrack, p)))),
+        page: Math.min(lowest(bar, pages), lowest(arc('secondary'), pages)),
+        vsInfo: ratio(arc('secondary'), arc('info')),
+      };
+
+      // The log variant: surface, the warn and error tints, each with and without hover.
+      const logBg = value(fills('log', '.lc-log-viewer--log')['background-color']);
+      const hover = parse(fills('log', '.lc-log-viewer__line:hover')['background-color']);
+      const tintOf = (lv: string) => over(parse(fills('log', `.lc-log-viewer--log .lc-log-viewer__line--${lv}`)['background-color']), logBg);
+      const logLines = [logBg, tintOf('warn'), tintOf('error')].flatMap((b) => [b, over(hover, b)]);
+      const gray = parse(fills('log', i === 0 ? ':root.light .lc-log-viewer--log .ansi-gray' : '.ansi-gray').color);
+      const ansiGray = { plain: lowest(gray, [logBg]), worst: lowest(gray, logLines) };
+
+      return { dl, ncUnread, dep, dependsVsUses, match, secondaryCells, ansiGray };
+    }
+
+    it('AC-1, AC-2: dl link and primary values reach 4.5:1 on the page and a hovered row; the focus ring 3:1', () => {
+      const { dl } = measured();
+      for (const key of Object.keys(dl) as (keyof typeof dl)[]) {
+        expect([key, floor(dl[key])]).toEqual([key, expected.dl[key][i]]);
+      }
+      expect(Math.min(dl.linkPage, dl.linkHover, dl.linkHoverInkPage, dl.linkHoverInkHover, dl.primaryPage, dl.primaryHover)).toBeGreaterThanOrEqual(4.5);
+      expect(dl.ring).toBeGreaterThanOrEqual(3);
+    });
+
+    it('AC-7: the NC unread message and time reach 4.5:1 on every unread row', () => {
+      const { ncUnread } = measured();
+      expect(floor(ncUnread)).toBe(expected.ncUnread[i]);
+      expect(ncUnread).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it('AC-8: the depends label reaches 4.5:1; depends, cross-ref, legend and tree lines 3:1', () => {
+      const { dep, dependsVsUses } = measured();
+      for (const key of Object.keys(dep) as (keyof typeof dep)[]) {
+        expect([key, floor(dep[key])]).toEqual([key, expected.dep[key][i]]);
+      }
+      expect(dep.dependsLabel).toBeGreaterThanOrEqual(4.5);
+      expect(Math.min(...Object.values(dep))).toBeGreaterThanOrEqual(3);
+      expect(floor(dependsVsUses)).toBe(expected.dependsVsUses[i]);
+    });
+
+    it('AC-9: the search match ink reaches 4.5:1 on its opaque marker', () => {
+      const { match } = measured();
+      expect(floor(match)).toBe(expected.match[i]);
+      expect(match).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it('AC-10, AC-11: the secondary bar fill and ring arc reach 3:1 on the track and the page, 1.5:1 from info', () => {
+      const { secondaryCells } = measured();
+      for (const key of Object.keys(secondaryCells) as (keyof typeof secondaryCells)[]) {
+        expect([key, floor(secondaryCells[key])]).toEqual([key, expected.secondary[key][i]]);
+      }
+      expect(Math.min(secondaryCells.track, secondaryCells.page)).toBeGreaterThanOrEqual(3);
+      expect(secondaryCells.vsInfo).toBeGreaterThanOrEqual(1.5);
+    });
+
+    it('AC-13: the log variant gray ANSI text reaches 4.5:1 on every line', () => {
+      const { ansiGray } = measured();
+      expect([floor(ansiGray.plain), floor(ansiGray.worst)]).toEqual([expected.ansiGray.plain[i], expected.ansiGray.worst[i]]);
+      expect(ansiGray.worst).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it('AC-15: the shared status values keep their hex; the new token has the design 036 values', () => {
+      const shared: Record<string, [string, string]> = {
+        '--color-success': ['#8ea475', '#8ea475'],
+        '--color-error': ['#9d0e0e', '#9d0e0e'],
+        '--color-warning': ['#e1a040', '#e1a040'],
+        '--color-info': ['#3b6588', '#3b6588'],
+        '--color-secondary-graphic': ['#5a798c', '#7097af'],
+      };
+      for (const [name, hexes] of Object.entries(shared)) expect([name, hex(tokens, name)]).toEqual([name, hexes[i]]);
+    });
+  });
+
+  it('AC-9, AC-13: the terminal match reads 12.90:1 on every line; gray 4.5:1 on every line', () => {
+    const T = parse(fills('log', '.lc-log-viewer--terminal')['background-color']);
+    const hover = parse(fills('log', '.lc-log-viewer__line:hover')['background-color']);
+    const tint = (lv: string) => over(parse(fills('log', `.lc-log-viewer--terminal .lc-log-viewer__line--${lv}`)['background-color']), T);
+    const lines = [T, tint('warn'), tint('error')].flatMap((b) => [b, over(hover, b)]);
+    const mark = fills('log', '.lc-log-viewer--terminal .lc-log-viewer__match');
+    const gray = parse(fills('log', '.ansi-gray').color);
+    const lowest = (fg: Rgba, bases: Rgba[]) => Math.min(...bases.map((bg) => ratio(fg, bg)));
+    const terminal = {
+      match: ratio(parse(mark.color), parse(mark['background-color'])),
+      grayPlain: ratio(gray, T),
+      grayWorst: lowest(gray, lines),
+    };
+    expect(Object.fromEntries(Object.entries(terminal).map(([k, v]) => [k, floor(v)]))).toEqual({ match: 12.9, grayPlain: 5.81, grayWorst: 4.61 });
+    expect(Math.min(...Object.values(terminal))).toBeGreaterThanOrEqual(4.5);
   });
 });

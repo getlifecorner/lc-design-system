@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { By } from '@angular/platform-browser';
+import { compile } from 'sass';
+import { join } from 'path';
 import { NotificationCenterComponent, Notification } from './notification-center.component';
 
 const now = new Date();
@@ -322,5 +324,34 @@ describe('NotificationCenterComponent', () => {
 
   it('should show search input', () => {
     expect(el.querySelector('lc-search-input')).toBeTruthy();
+  });
+});
+
+/**
+ * Request 036 (review r1): with German labels the header actions need 324 of
+ * 294 px at 360 and were clipped. The header wraps them onto a second line,
+ * end-aligned; geometry is measured in the browser (build.md).
+ */
+describe('NotificationCenterComponent header wrap (036)', () => {
+  const css = compile(join(__dirname, 'notification-center.component.scss')).css;
+  const body = (selector: string) => {
+    const found = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((m) => m[1].trim() === selector);
+    expect(found).toHaveLength(1);
+    return found[0][2];
+  };
+
+  it('wraps the actions with a row gap only, so a header that fits stays on one line', () => {
+    const header = body('.lc-nc__header');
+    expect(header).toMatch(/flex-wrap:\s*wrap;/);
+    expect(header).toMatch(/row-gap:\s*var\(--spacing-1\);/);
+    expect(header).not.toMatch(/(^|[\s;])(column-)?gap:/);
+    expect(header).toMatch(/justify-content:\s*space-between;/);
+    expect(header).toMatch(/padding:\s*12px 16px;/);
+  });
+
+  it('keeps the wrapped actions at the end of the line', () => {
+    const actions = body('.lc-nc__header-actions');
+    expect(actions).toMatch(/margin-inline-start:\s*auto;/);
+    expect(actions).toMatch(/gap:\s*8px;/);
   });
 });

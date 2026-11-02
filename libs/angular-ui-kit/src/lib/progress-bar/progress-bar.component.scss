@@ -3,10 +3,12 @@
 // ---------------------------------------------------------------------------
 // Color map. The status fills read the theme's status inks (3:1 against the
 // track in both themes); the raw -default steps were 1.83:1 to 2.5:1.
+// `secondary` reads the secondary data-mark token (request 036, F-11: the raw
+// secondary-500 was 2.83:1 against the light track; now 4.19 light, 4.05 dark).
 // ---------------------------------------------------------------------------
 $progress-colors: (
   'primary': colors.$color-primary-500,
-  'secondary': colors.$color-secondary-500,
+  'secondary': var(--color-secondary-graphic),
   'success': var(--color-on-success-subtle),
   'warning': var(--color-on-warning-subtle),
   'error': var(--color-on-error-subtle),

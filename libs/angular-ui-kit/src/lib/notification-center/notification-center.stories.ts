@@ -157,7 +157,7 @@ export const PriorityOnUnreadRows: Story = {
     docs: {
       description: {
         story:
-          'Priority and category chips on unread rows, with German labels. Since 3.22.4 a chip on an unread row paints its tint over an opaque `--color-surface`, so the teal row does not show through: the "Hoch" chip reads 5.55:1 in dark (was 3.67) and 5.52:1 in light, the same on every row of the panel gradient.',
+          'Priority and category chips on unread rows, with German labels. Since 3.22.4 a chip on an unread row paints its tint over an opaque `--color-surface`, so the teal row does not show through: the "Hoch" chip reads 5.55:1 in dark (was 3.67) and 5.52:1 in light, the same on every row of the panel gradient. Since 3.23.1 (F-8) the message and time of an unread row use `--color-text-secondary`: 7.05:1 in dark (was 4.23 with the tertiary ink) and 6.49:1 in light. Every built-in text is German.',
       },
     },
   },
@@ -194,6 +194,17 @@ export const PriorityOnUnreadRows: Story = {
     urgentPriorityLabel: 'Dringend',
     lowPriorityLabel: 'Niedrig',
     markAllReadLabel: 'Alle als gelesen markieren',
+    clearAllLabel: 'Alle löschen',
+    searchPlaceholder: 'Benachrichtigungen durchsuchen…',
+    filterAllLabel: 'Alle',
+    filterErrorLabel: 'Fehler',
+    filterWarningLabel: 'Warnung',
+    filterSuccessLabel: 'Erfolg',
+    filterInfoLabel: 'Info',
+    dismissAriaLabel: 'Benachrichtigung schließen:',
+    otherCategoryLabel: 'Sonstige',
+    justNowLabel: 'Gerade eben',
+    emptyMessage: 'Keine Benachrichtigungen',
     minutesAgoLabel: 'vor {n} Min.',
     hoursAgoLabel: 'vor {n} Std.',
     daysAgoLabel: 'vor {n} T.',

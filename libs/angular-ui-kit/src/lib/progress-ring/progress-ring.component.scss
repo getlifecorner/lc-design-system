@@ -7,7 +7,8 @@
   transition: stroke-dashoffset 0.4s ease;
   // The arcs take the progress-bar inks: 3:1 against the track in both themes.
   &--primary { stroke: var(--color-primary-500); }
-  &--secondary { stroke: var(--color-secondary-600); }
+  // Request 036: the inverted dark secondary-600 was 1.07:1 from info.
+  &--secondary { stroke: var(--color-secondary-graphic); }
   &--success { stroke: var(--color-on-success-subtle); }
   &--warning { stroke: var(--color-on-warning-subtle); }
   &--error { stroke: var(--color-on-error-subtle); }

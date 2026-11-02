@@ -55,6 +55,9 @@
   gap: 0.25rem;
 }
 
+// 28 × 28: WCAG 2.5.8 by size (≥ 24). 44 px pitches need 160 px for four
+// buttons and overflow the 360 px toolbar with German pills by 22 px (request
+// 036, F-12).
 .lc-log-viewer__tool-btn {
   display: inline-flex;
   align-items: center;
@@ -309,14 +312,30 @@
   min-width: 0;
 }
 
+// An opaque marker with its own ink, like find-in-page (F-10, request 036):
+// the translucent amber let the line ink through (3.82:1 dark, 3.25 on debug
+// lines, terminal 3.29). The fill/on-fill pair reads 7.85:1 in both themes,
+// the terminal pair (Mocha Yellow on Base) 12.90:1, on every line tint, on
+// hover and over any ANSI colour.
 .lc-log-viewer__match {
-  background-color: color-mix(in srgb, var(--color-warning-default) 45%, transparent);
-  color: inherit;
+  background-color: var(--color-warning);
+  color: var(--color-on-warning);
   border-radius: 2px;
   padding: 0 1px;
 
   .lc-log-viewer--terminal & {
-    background-color: #f9e2af40;
+    background-color: #f9e2af;
+    color: #1e1e2e;
+  }
+}
+
+// Forced colours: the system's highlight pair (the terminal selector too, so
+// its 0,2,0 marker doesn't win and get forced to Canvas).
+@media (forced-colors: active) {
+  .lc-log-viewer__match,
+  .lc-log-viewer--terminal .lc-log-viewer__match {
+    background-color: Mark;
+    color: MarkText;
   }
 }
 
@@ -373,7 +392,9 @@
 .ansi-magenta { color: #cba6f7; }
 .ansi-cyan { color: #94e2d5; }
 .ansi-white { color: #cdd6f4; }
-.ansi-gray { color: #6c7086; }
+// Gray is Overlay2, not Overlay0 (#6c7086 measured 3.35:1 on the terminal,
+// F-13, request 036): 5.81:1 plain, 4.61 on the worst line tint.
+.ansi-gray { color: #9399b2; }
 .ansi-bright-red { color: #eba0ac; }
 .ansi-bright-green { color: #a6e3a1; }
 .ansi-bright-yellow { color: #f9e2af; }
@@ -395,7 +416,9 @@
   .ansi-magenta { color: #8839ef; }
   .ansi-cyan { color: #179299; }
   .ansi-white { color: #6c6f85; }
-  .ansi-gray { color: #9ca0b0; }
+  // Subtext1, not Overlay0 (#9ca0b0 measured 2.60:1, F-13): 6.25:1 plain,
+  // 4.63 on the worst line tint. It now equals bright white.
+  .ansi-gray { color: #5c5f77; }
   .ansi-bright-red { color: #e64553; }
   .ansi-bright-green { color: #40a02b; }
   .ansi-bright-yellow { color: #df8e1d; }

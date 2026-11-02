@@ -271,3 +271,45 @@ export const AppRegistersNoIcons: Story = {
     },
   },
 };
+
+/** Gray ANSI text on a debug, info, warn and error line, with fixed local timestamps (2 Nov 2026, 09:00:00, one per second). */
+const ansiGrayLines: Pick<LogLine, 'text' | 'level'>[] = [
+  { text: '\x1b[90m[debug]\x1b[0m cache warm-up', level: 'debug' },
+  { text: 'Request served \x1b[90m· 34 ms\x1b[0m', level: 'info' },
+  { text: 'Slow query \x1b[90m· 812 ms\x1b[0m', level: 'warn' },
+  { text: 'Upstream timeout \x1b[90m· 30 s\x1b[0m', level: 'error' },
+  { text: '\x1b[30mblack\x1b[0m \x1b[90mgray\x1b[0m \x1b[37mwhite\x1b[0m \x1b[97mbright white\x1b[0m', level: 'info' },
+];
+const ansiGrayLogs: LogLine[] = ansiGrayLines.map((line, i) => ({ ...line, timestamp: new Date(2026, 10, 2, 9, 0, i) }));
+
+/**
+ * 3.23.1 (F-13): gray ANSI text (`\x1b[90m`) on every line tint, in the log
+ * and the terminal variant.
+ */
+export const AnsiGrayOnEveryLine: Story = {
+  name: 'ANSI gray on every line',
+  render: () => ({
+    props: { lines: ansiGrayLogs, variants: ['log', 'terminal'] },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        @for (variant of variants; track variant) {
+          <lc-log-viewer
+            [lines]="lines"
+            [variant]="variant"
+            height="160px"
+            [showTimestamps]="true"
+            [ansiColors]="true"
+          />
+        }
+      </div>
+    `,
+  }),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Since 3.23.1 (F-13) gray ANSI text reaches 4.5:1 on every line. Light log (Catppuccin Latte): Subtext1 `#5c5f77`, 6.25:1 on the surface and 4.63:1 on the worst line tint (was Overlay0 `#9ca0b0`, 2.60 / 1.92); it now matches bright white. Terminal and dark log (Mocha): Overlay2 `#9399b2`, 5.81:1 on the terminal and 4.61:1 on its worst line, 4.55:1 on the worst dark log line (was Overlay0 `#6c7086`, 3.35 / 2.66 / 2.63). The other ANSI colours are unchanged. A search match is an opaque marker with its own ink (7.85:1, terminal 12.90:1), over any ANSI colour.',
+      },
+    },
+  },
+};

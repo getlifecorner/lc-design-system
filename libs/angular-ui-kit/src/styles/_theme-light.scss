@@ -44,6 +44,10 @@
   --color-secondary-700: #{$color-secondary-700};
   --color-secondary-800: #{$color-secondary-800};
   --color-secondary-900: #{$color-secondary-900};
+  // Secondary data marks (progress fill, ring arc), not a text colour: at
+  // least 3:1 against the --color-surface-hover track and the page in both
+  // themes (request 036, F-11: the bar fill was secondary-500, 2.83:1).
+  --color-secondary-graphic: #{$color-secondary-600};
 
   // ============================================================================
   // Colors - Neutral (Grays)

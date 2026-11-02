@@ -3,11 +3,13 @@ import { moduleMetadata } from '@storybook/angular';
 import { CardComponent } from './card.component';
 import { IconComponent } from '../icon/icon.component';
 import { BadgeComponent } from '../badge/badge.component';
+import { DescriptionListComponent } from '../description-list/description-list.component';
 
+// `lc-button` and `a[lcButton]` come from the preview's global imports.
 const meta: Meta<CardComponent> = {
   title: 'Components/Card',
   component: CardComponent,
-  decorators: [moduleMetadata({ imports: [IconComponent, BadgeComponent] })],
+  decorators: [moduleMetadata({ imports: [IconComponent, BadgeComponent, DescriptionListComponent] })],
   parameters: {
     docs: {
       description: {
@@ -299,7 +301,7 @@ export const FooterSlot: Story = {
           ]" />
         <div card-footer style="width: 100%; display: flex; align-items: center; justify-content: space-between;">
           <lc-button variant="ghost" size="sm">Edit</lc-button>
-          <a href="#" style="font-size: 13px; color: var(--color-primary-500); text-decoration: none;">Details ›</a>
+          <a lcButton variant="link" size="sm" [flush]="true" href="#" style="--lc-btn-flush-align: end">Details ›</a>
         </div>
       </lc-card>`,
   }),

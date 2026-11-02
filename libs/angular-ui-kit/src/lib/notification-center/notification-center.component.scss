@@ -10,8 +10,12 @@
 }
 
 // Header
+// Long (German) actions move to a second line, end-aligned, instead of being
+// clipped (request 036). No column gap: a header that fits today stays on one line.
 .lc-nc__header {
   display: flex;
+  flex-wrap: wrap;
+  row-gap: var(--spacing-1);
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
@@ -50,6 +54,7 @@
 .lc-nc__header-actions {
   display: flex;
   gap: 8px;
+  margin-inline-start: auto;
 }
 
 .lc-nc__action-btn {
@@ -270,6 +275,14 @@
 .lc-nc__item-time {
   font-size: 0.6875rem;
   color: var(--color-text-tertiary);
+}
+
+// Unread rows sit on the translucent --color-surface-selected: tertiary ink
+// measured 4.23:1 there in dark (F-8, request 036). Secondary ink reads 7.05
+// dark / 6.49 light; read rows keep the tertiary ink.
+.lc-nc__item--unread .lc-nc__item-message,
+.lc-nc__item--unread .lc-nc__item-time {
+  color: var(--color-text-secondary);
 }
 
 .lc-nc__item-category {

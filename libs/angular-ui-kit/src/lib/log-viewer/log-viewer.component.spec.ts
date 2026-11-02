@@ -488,7 +488,10 @@ describe('LogViewerComponent', () => {
     it('uses status tokens for level ink and the search highlight', () => {
       expect(scss).not.toMatch(/#3b82f6|#f59e0b|#ef4444|#9ca3af|#fbbf2480/);
       expect(scss).toMatch(/--color-on-info-subtle/);
-      expect(scss).toMatch(/--color-warning-default/);
+      // 036 (F-10): the match is an opaque `--color-warning` fill with its
+      // own ink; the translucent `--color-warning-default` mix let the line
+      // ink through (3.25:1 on dark debug lines).
+      expect(scss).toMatch(/background-color:\s*var\(--color-warning\);\s*color:\s*var\(--color-on-warning\)/);
       expect(scss).toMatch(/--color-on-error-subtle/);
     });
 

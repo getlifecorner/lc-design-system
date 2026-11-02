@@ -57,7 +57,7 @@ export const AllColors: Story = {
     docs: {
       description: {
         story:
-          'All six colours at 60 %. Since 3.22.4 the status arcs use the status inks (`--color-on-<variant>-subtle`) and secondary uses `--color-secondary-600`, so every arc reaches 3:1 against its track in both themes (light success was 2.47, warning 2.05).',
+          'All six colours at 60 %. Since 3.22.4 the status arcs use the status inks (`--color-on-<variant>-subtle`) and every arc reaches 3:1 against its track in both themes (light success was 2.47, warning 2.05). Since 3.23.1 secondary reads `--color-secondary-graphic` (#5a798c light, #7097af dark): in dark it is 1.92:1 apart from info (was 1.07 with the inverted `--color-secondary-600`) and 4.05:1 against the track; light is unchanged (4.19:1).',
       },
     },
   },

@@ -373,10 +373,13 @@ function measureNodes(nodes: Iterable<DependencyNode>, measure: TextMeasure): No
   return { width, height: twoLine ? NODE_HEIGHT_TWO_LINE : NODE_HEIGHT, gap: H_GAP, labels, measure };
 }
 
+// Every relation ink reads 3:1 as a line and 4.5:1 as a label in both themes.
+// `depends` (also the layered layout's structural edges) uses the secondary
+// text ink: neutral-400 measured 2.53:1 in light (request 036, F-9). Status
+// relations use the status inks, `extends` the primary ink and `uses` the
+// tertiary text, for the same reason.
 const RELATION_STYLES: Record<DependencyRelation, { color: string; dashed: boolean; label: string }> = {
-  depends:    { color: 'var(--color-neutral-400)',  dashed: false, label: 'depends on' },
-  // Status relations use the status inks (3:1 as lines, 4.5:1 as labels);
-  // `extends` the primary ink and `uses` the tertiary text, for the same reason.
+  depends:    { color: 'var(--color-text-secondary)', dashed: false, label: 'depends on' },
   blocks:     { color: 'var(--color-on-error-subtle)', dashed: false, label: 'blocks' },
   references: { color: 'var(--color-on-info-subtle)', dashed: true,  label: 'references' },
   requires:   { color: 'var(--color-on-warning-subtle)', dashed: false, label: 'requires' },
@@ -494,7 +497,8 @@ function layoutTreeH(
       id: `${parentId}→${measure.node.id}`, sourceId: parentId, targetId: measure.node.id,
       path: `M ${sx} ${sy} C ${mx} ${sy}, ${mx} ${ty}, ${tx} ${ty}`,
       labelX: mx, labelY: (sy + ty) / 2,
-      color: 'var(--color-neutral-300)', dashed: false, isCrossRef: false,
+      // Tree lines stay quieter than `depends` but reach 3:1 (F-9: neutral-300 was 1.47:1 light).
+      color: 'var(--color-field-border)', dashed: false, isCrossRef: false,
       arrow: false, marker: 'depends',
     });
   }
@@ -527,7 +531,8 @@ function layoutTreeV(
       id: `${parentId}→${measure.node.id}`, sourceId: parentId, targetId: measure.node.id,
       path: `M ${sx} ${sy} C ${sx} ${my}, ${tx} ${my}, ${tx} ${ty}`,
       labelX: (sx + tx) / 2, labelY: my,
-      color: 'var(--color-neutral-300)', dashed: false, isCrossRef: false,
+      // Tree lines stay quieter than `depends` but reach 3:1 (F-9: neutral-300 was 1.47:1 light).
+      color: 'var(--color-field-border)', dashed: false, isCrossRef: false,
       arrow: false, marker: 'depends',
     });
   }
@@ -1341,7 +1346,7 @@ function layoutLayered(
       sourceId: edge.from, targetId: edge.to,
       path: geo.path, relation: edge.relation, label: edge.label,
       labelX: geo.labelX, labelY: geo.labelY, labelAnchor: geo.labelAnchor,
-      color: edge.structural ? 'var(--color-neutral-400)' : style.color,
+      color: edge.structural ? 'var(--color-text-secondary)' : style.color,
       dashed: edge.back || (!edge.structural && style.dashed),
       // Everything here is a real dependency, so nothing is dimmed as secondary
       // except the return edges — which the layering had to break to lay out.
