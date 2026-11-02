@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.21.1] - 2026-11-02
+
+Status colours used as text, icons and fills reach WCAG 2.2 AA in both themes in twelve components (follow-up of 3.20, request 027 design §5), and the terminal variant of `lc-log-viewer` finally uses its own level colours. No API breaks.
+
+### Fixed
+
+- **Status colours as text, icons and fills now reach WCAG 2.2 AA in both themes** (follow-up of 3.20, request 027 design §5): the status foreground of twelve components uses its ink `--color-on-<status>-subtle` instead of the fill `--color-<status>` or `--color-<status>-default`, as the toast and alert icons since 3.20. Old → new on the element's real background, light / dark:
+  - `lc-notification-center`: priority chips high 1.96 → 5.52 (L), urgent 1.98 → 8.37 (D); type icons success 2.72 → 5.29 and warning 2.25 → 6.02 (L), lowest 4.83 (D, warning on an unread row). The raw hex fallbacks of the icons are gone.
+  - `lc-card` status chips success 2.32 → 4.85, warning 1.96 → 5.52 (L), error 1.98 → 8.37 (D).
+  - `lc-markdown` mermaid error text 2.05 → 8.68 (D).
+  - `lc-status-dot` done 2.72 → 5.29, wait 2.25 → 6.02 (L), blocked 2.05 → 8.68 (D).
+  - `lc-pipeline` warning node 2.25 → 6.02 (L), error node 2.05 → 8.68 (D), border and glyph; the check on a complete node 1.89 → 9.12 (D).
+  - `lc-file-upload` remove × on hover 1.70 → 7.21 (D).
+  - `lc-rating` filled and half star 2.25 → 6.02 (L).
+  - `lc-log-viewer` warn level 2.06 → 5.50 (L); level pills no longer sit at 60 % opacity (warn 1.53 → 5.25 L, 4.62 → 5.55 D); the pressed pill shows a 1 px ring in its ink (forced colours: a 2 px `Highlight` outline). In the terminal variant the level colours now use the terminal's own palette in both themes (the rule never matched, so they followed the page theme): light info 2.65 → 7.78, warn 6.43 → 11.43, error 1.70 → 6.19, debug 2.81 → 5.81; dark 10.10 → 7.78, 10.11 → 11.43, 7.21 → 6.19, 6.36 → 5.81. These are the level colours before the line's opacity; see Known.
+  - `lc-diff-viewer` stats add 2.60 → 5.06, `+` marker 1.81 → 3.52 (L).
+  - `lc-dependency-viewer` edges, arrows, edge labels, legend, node borders and detail dots: lowest 3.52 (L, success border on its node), was 1.81.
+  - `lc-kanban-board` priority icons low 2.72 → 5.29, high 2.25 → 6.02 (L); over-limit count 4.22 → 6.33 (L).
+  - `lc-progress-bar` status fills against the track: success 2.47 → 4.81, warning 2.05 → 5.47 (L), error 1.83 → 7.76, info 2.50 → 9.51 (D), linear and circular.
+- Story Data Display/Money "Number Column": the tip now says that a `formatMoney(...).text` string has no spoken text, so prefer `lc-money` in a cell template (027 review finding 2).
+
+### Compatibility
+
+- No API breaks: no input, output, selector, `--lc-*` hook or default changed, and every selector keeps its specificity, so your overrides still win. Exception: in the terminal variant, a level-colour override needs `.lc-log-viewer--terminal .lc-log-viewer__line--<level> .lc-log-viewer__level` (0,3,0). `--color-success/-error/-warning/-info` and their steps are unchanged; the rails, line tints and node fills keep them. Status text and icons get darker in light; in dark they get lighter where the fill was used, and slightly darker (still at least 4.83:1) where the light step `-default` was used (notification icons, log warn level, diff add, dependency viewer, kanban). In light, the card and notification chips sit on the opaque `--color-<status>-subtle` tint (dark is unchanged). Layout is unchanged.
+
+### Known
+
+- `lc-notification-center`: the high chip on an unread row in dark stays at 3.67–4.26:1 (the dark warning ink equals the old fill); read rows reach 4.60 (F-1).
+- `lc-log-viewer`: debug lines (60 % opacity), timestamps and sources (50 %) and line numbers (30 %) are dimmed with `opacity`, so their effective contrast stays below 4.5:1. The debug ratios above are the level colour before the line's opacity; effective: log 2.53 L / 3.25 D, terminal 2.97 (was 1.82 L / 3.18 D). Follow-up (F-7).
+
 ## [3.21.0] - 2026-11-02
 
 `lc-bar-chart` for a ranking in a card: category labels as wrapping HTML text (`labelLayout="wrap"`), and a bar that shows text from its data item (`valueText`, `formatValue(value, item)`) (finance-intelligence cockpit, gap row 1 of cockpit-2026-11-01). No API breaks.
