@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.22.0] - 2026-11-02
+
+The magnifier, `lock` and `device-tablet` are in the inline set, and `lc-search-input` and `lc-log-viewer` register every glyph they draw, so an app with `unregistered: 'placeholder'` no longer sees "?" in them (life-os BA-6, BA-7). No API breaks.
+
+### Added
+
+- **Inline icons `search` (alias `magnifying-glass`), `lock` (aliases `lock-closed`, `locked`) and `device-tablet`** (BA-7: the health lock line „Nur für dich“, Settings → devices) and the constants `ICON_SEARCH`, `ICON_LOCK`, `ICON_DEVICE_TABLET` with their `_SOLID` glyphs: no request, prerendered. Also inline now, for the kit's own components: `player-play`, `player-pause`, `clipboard` (alias `clipboard-document`) and `arrow-down`, with `ICON_PLAYER_PLAY`, `ICON_PLAYER_PAUSE`, `ICON_CLIPBOARD`, `ICON_ARROW_DOWN` (+ `_SOLID` except `arrow-down`, which Tabler has no filled glyph for). `BUNDLED_ICONS` holds 150 (was 137). A constant names the glyph key, so there is no `ICON_MAGNIFYING_GLASS`.
+- Stories: Components/Icon "Search, Lock and Tablet Icons" and "Lock and Tablet, Registered (placeholder mode)"; Form/Search Input and Data Display/LogViewer "App Registers No Icons".
+
+### Fixed
+
+- **`lc-search-input` draws its magnifier with `provideLcIcons(…, { unregistered: 'placeholder' })`** (BA-6, the bank picker search on life-os's connect page): it registers `ICON_SEARCH` itself; before, it showed the placeholder "?". Same for `lc-notification-center` and `lc-filter-bar`, which contain it.
+- **`lc-log-viewer`** registers pause/play, clipboard, both magnifiers and jump-to-bottom (only the trash before); `lc-code-block` and `lc-copy-field` their clipboard, `lc-kanban-board` the low-priority `arrow-down`, `lc-tree-view` the `.lock` file glyph.
+
+### Compatibility
+
+- No API breaks; no input, style or layout changed. The artwork is the Tabler glyph the assets delivered, so pixels are equal (122 story shots hash-identical); the server HTML now contains these glyphs, and under the default `'load'` they render without a request.
+- With `unregistered: 'placeholder'`, an app that draws `magnifying-glass`/`search`, `lock`/`lock-closed`/`locked`, `device-tablet`, `player-play`, `player-pause`, `clipboard`/`clipboard-document` or `arrow-down` **itself** must now register the constant: these names were fetched before. The console warning names the constant.
+- Size (raw / gzip, before → after): the lazy kit icon set 62,788 → 66,928 B / 12,792 → 13,306 B; the `icons` entry, which apps importing `BUNDLED_ICONS` pay for, 75,141 → 80,417 B / 14,963 → 15,650 B; `lc-icon`'s key index (`icon` entry) 32,710 → 32,843 B / 9,558 → 9,588 B. A constant costs 231–398 B raw only when imported: `ICON_SEARCH` 283, `ICON_LOCK` 381, `ICON_DEVICE_TABLET` 355. Using `lc-search-input` adds `ICON_SEARCH`; `lc-log-viewer` 1,597 B raw (five constants).
+
+### Known
+
+- `lc-log-viewer` stories: `color-contrast` on `.lc-log-viewer__line-count` and the dimmed debug lines and timestamps, `scrollable-region-focusable` on `.lc-log-viewer__content`, and at 360 px the "10 errors"/"10 warnings" pills wrap to two lines (pre-existing, follow-up F-7; review nit 5).
+- Story "Icon constants" at 1280 px: three long names (`ICON_EXCLAMATION_TRIANGLE_SOLID`, `ICON_PRESENTATION_CHART_LINE_SOLID`, `ICON_ARROW_TRENDING_DOWN_SOLID`) run into the next column. Docs only (review nit 4).
+
+### Migration
+
+- life-os: replace the local `lock` with `ICON_LOCK` and add `ICON_DEVICE_TABLET` to `APP_ICONS`. The local `magnifying-glass` can go (`lc-search-input` draws it); register `ICON_SEARCH` only where the app draws the magnifier itself.
+
 ## [3.21.1] - 2026-11-02
 
 Status colours used as text, icons and fills reach WCAG 2.2 AA in both themes in twelve components (follow-up of 3.20, request 027 design §5), and the terminal variant of `lc-log-viewer` finally uses its own level colours. No API breaks.
