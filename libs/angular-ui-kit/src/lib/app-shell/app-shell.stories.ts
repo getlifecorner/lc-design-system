@@ -223,8 +223,9 @@ const todayLoadingTemplate = `
                 variant="transparent" ariaLabel="Hauptnavigation" [items]="nav" activeRoute="/" />
     <lc-app-page [busy]="busy">
       <p class="sr-only">Heute wird geladen …</p>
-      <!-- lc-skeleton sizes its host and its box with the same width, so a
-           percentage goes on a wrapper and the skeleton fills it. -->
+      <!-- The wrappers hold the widths (written when lc-skeleton applied a
+           percentage twice; width="45%" on the skeleton gives the same box
+           since 3.22.2). -->
       <div class="story-skeleton-heading">
         <div style="width: 45%"><lc-skeleton height="17px" borderRadius="6px" /></div>
         <div style="width: 70%"><lc-skeleton height="42px" borderRadius="8px" /></div>

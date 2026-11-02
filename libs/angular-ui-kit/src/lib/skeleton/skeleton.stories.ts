@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { SkeletonComponent } from './skeleton.component';
+import { CardComponent } from '../card/card.component';
 
 /**
  * Skeleton loaders provide a visual placeholder while content is loading.
@@ -14,10 +15,20 @@ const meta: Meta<SkeletonComponent> = {
       control: 'select',
       options: ['line', 'circle', 'rect'],
       description: 'Shape of the skeleton — line for text, circle for avatars, rect for images/cards',
+      table: { defaultValue: { summary: "'line'" } },
     },
-    width: { description: 'Custom width (CSS value, e.g. "200px" or "60%")' },
-    height: { description: 'Custom height (CSS value)' },
-    borderRadius: { description: 'Custom border radius for the rect variant' },
+    width: {
+      description: 'Custom width (CSS value, e.g. "200px" or "60%"), applied once on the host',
+      table: { defaultValue: { summary: "'100%' for line and rect, '40px' for circle" } },
+    },
+    height: {
+      description: 'Custom height (CSS value)',
+      table: { defaultValue: { summary: "'0.875rem' for line, '40px' for circle, '100px' for rect" } },
+    },
+    borderRadius: {
+      description: 'Custom border radius for the rect variant',
+      table: { defaultValue: { summary: "'0.25rem' for line, '50%' for circle, '0.5rem' for rect" } },
+    },
   },
 
   parameters: {
@@ -43,6 +54,10 @@ stands for. It wins over the \`height\` input (which stays the default) and work
 variant; it changes only the height, so a circle becomes an oval unless its width follows.
 Set it on the \`lc-skeleton\` element (a class): set on a wrapper, it reaches every skeleton
 inside. See *Height from container*.
+
+**Width (3.22.2):** \`width\` (CSS value) is applied once, to the host: a percentage is a share of
+the containing block and the fill always spans the host (since 3.22.2; before, a percentage applied
+twice, so \`30%\` drew 9 %). See *Percentage widths*.
 `,
       },
     },
@@ -119,19 +134,19 @@ export const TableLoading: Story = {
   render: () => ({
     template: `
       <div style="max-width: 500px;">
-        <div style="display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid #eee;">
+        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee;">
           <lc-skeleton variant="line" width="30%"></lc-skeleton>
           <lc-skeleton variant="line" width="20%"></lc-skeleton>
           <lc-skeleton variant="line" width="25%"></lc-skeleton>
           <lc-skeleton variant="line" width="15%"></lc-skeleton>
         </div>
-        <div style="display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid #eee;">
+        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee;">
           <lc-skeleton variant="line" width="30%"></lc-skeleton>
           <lc-skeleton variant="line" width="20%"></lc-skeleton>
           <lc-skeleton variant="line" width="25%"></lc-skeleton>
           <lc-skeleton variant="line" width="15%"></lc-skeleton>
         </div>
-        <div style="display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid #eee;">
+        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee;">
           <lc-skeleton variant="line" width="30%"></lc-skeleton>
           <lc-skeleton variant="line" width="20%"></lc-skeleton>
           <lc-skeleton variant="line" width="25%"></lc-skeleton>
@@ -162,6 +177,71 @@ export const DashboardGrid: Story = {
           <div style="margin-top: 8px;"><lc-skeleton variant="line" width="40%"></lc-skeleton></div>
         </div>
       </div>`,
+  }),
+};
+
+/**
+ * 3.22.2 (request 032, finance-intelligence cockpit row 3): a percentage
+ * `width` is applied once, on the host, so `60%` / `30%` in a `space-between`
+ * row are 60 % and 30 % of the row, and the second ends at its right edge.
+ */
+export const PercentageWidths: Story = {
+  name: 'Percentage widths',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Since 3.22.2 a percentage `width` is applied once, on the host, and the fill spans it: in this 294 px row (360 px) `60%` is 176.4 px and `30%` is 88.2 px and ends at the card\'s content edge (3.22.1: 105.8 / 26.5 px).',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [SkeletonComponent, CardComponent] },
+    template: `
+      <div class="story-pw">
+        <lc-card variant="outlined" padding="md" borderRadius="md">
+          <div class="story-pw__lines">
+            <lc-skeleton width="45%" height="1.25rem" />
+            <lc-skeleton width="30%" />
+            <div class="story-pw__item">
+              <div class="story-pw__row">
+                <lc-skeleton width="60%" height="1.25rem" />
+                <lc-skeleton width="30%" height="1.25rem" />
+              </div>
+              <div class="story-pw__row">
+                <lc-skeleton width="80%" height="0.75rem" />
+                <lc-skeleton width="15%" height="0.75rem" />
+              </div>
+            </div>
+            <div class="story-pw__item">
+              <div class="story-pw__row">
+                <lc-skeleton width="60%" height="1.25rem" />
+                <lc-skeleton width="30%" height="1.25rem" />
+              </div>
+              <div class="story-pw__row">
+                <lc-skeleton width="80%" height="0.75rem" />
+                <lc-skeleton width="15%" height="0.75rem" />
+              </div>
+            </div>
+            <div class="story-pw__item">
+              <div class="story-pw__row">
+                <lc-skeleton width="60%" height="1.25rem" />
+                <lc-skeleton width="30%" height="1.25rem" />
+              </div>
+              <div class="story-pw__row">
+                <lc-skeleton width="80%" height="0.75rem" />
+                <lc-skeleton width="15%" height="0.75rem" />
+              </div>
+            </div>
+          </div>
+        </lc-card>
+      </div>
+      <style>
+        .story-pw { max-width: 30rem; }
+        .story-pw__lines { display: flex; flex-direction: column; gap: var(--spacing-3); }
+        .story-pw__item { display: flex; flex-direction: column; gap: var(--spacing-2); }
+        .story-pw__row { display: flex; justify-content: space-between; align-items: center; }
+      </style>`,
   }),
 };
 

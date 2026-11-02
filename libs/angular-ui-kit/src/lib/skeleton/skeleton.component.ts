@@ -2,6 +2,13 @@ import { Component, ChangeDetectionStrategy, input, computed } from '@angular/co
 
 export type SkeletonVariant = 'line' | 'circle' | 'rect';
 
+/** Per-variant defaults: width (on the host), height and border radius (on the fill). */
+const SKELETON_DEFAULTS: Record<SkeletonVariant, { w: string; h: string; r: string }> = {
+  line: { w: '100%', h: '0.875rem', r: '0.25rem' },
+  circle: { w: '40px', h: '40px', r: '50%' },
+  rect: { w: '100%', h: '100px', r: '0.5rem' },
+};
+
 /**
  * Skeleton loader component for placeholder loading states.
  *
@@ -31,44 +38,54 @@ export type SkeletonVariant = 'line' | 'circle' | 'rect';
   styleUrl: './skeleton.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    // The host mirrors the box width so the skeleton sizes correctly inside
-    // flex layouts, and never shrinks below it.
+    // The host takes the width once, so the skeleton sizes correctly inside
+    // flex layouts and never shrinks below it; the fill spans it (3.22.2:
+    // before, the fill took the width again, so a percentage applied twice).
     '[style.width]': 'hostWidth()',
     '[style.flex-shrink]': '"0"',
   },
 })
 export class SkeletonComponent {
-  /** Shape variant. */
+  /**
+   * Shape variant.
+   * @default 'line'
+   */
   readonly variant = input<SkeletonVariant>('line');
 
-  /** Width (CSS value). Defaults to '100%' for line/rect, '40px' for circle. */
+  /**
+   * Width (CSS value), applied once, to the host: a percentage is a share of the
+   * containing block and the fill always spans the host (since 3.22.2; before, a
+   * percentage applied twice, so `30%` drew 9 %).
+   * @default '100%' for line and rect, '40px' for circle
+   */
   readonly width = input<string>();
 
   /**
    * Height (CSS value). Defaults to '0.875rem' for line, '40px' for circle, '100px' for rect.
    * The `--lc-skeleton-height` custom property, when set, wins over it.
+   * @default '0.875rem' for line, '40px' for circle, '100px' for rect
    */
   readonly height = input<string>();
 
-  /** Border radius override (CSS value). */
+  /**
+   * Border radius override (CSS value).
+   * @default '0.25rem' for line, '50%' for circle, '0.5rem' for rect
+   */
   readonly borderRadius = input<string>();
 
   protected readonly variantClass = computed(() => `lc-skeleton--${this.variant()}`);
 
+  private readonly defaults = computed(() => SKELETON_DEFAULTS[this.variant()]);
+
+  /** The fill's inline styles: it always spans the host, which holds the width. */
   protected readonly styles = computed(() => {
-    const v = this.variant();
-    const defaults: Record<SkeletonVariant, { w: string; h: string; r: string }> = {
-      line: { w: '100%', h: '0.875rem', r: '0.25rem' },
-      circle: { w: '40px', h: '40px', r: '50%' },
-      rect: { w: '100%', h: '100px', r: '0.5rem' },
-    };
-    const d = defaults[v];
+    const d = this.defaults();
     return {
-      width: this.width() ?? d.w,
+      width: '100%',
       height: this.height() ?? d.h,
       'border-radius': this.borderRadius() ?? d.r,
     };
   });
 
-  protected readonly hostWidth = computed(() => this.styles().width);
+  protected readonly hostWidth = computed(() => this.width() ?? this.defaults().w);
 }

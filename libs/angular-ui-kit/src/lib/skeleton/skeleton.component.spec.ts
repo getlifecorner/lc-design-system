@@ -28,7 +28,8 @@ describe('SkeletonComponent', () => {
     fixture.componentRef.setInput('variant', 'circle');
     fixture.detectChanges();
     expect(box().classList).toContain('lc-skeleton--circle');
-    expect(box().style.width).toBe('40px');
+    // 3.22.2 (request 032, AC-3): the width lives on the host only; the fill spans it.
+    expect(box().style.width).toBe('100%');
     expect(box().style.height).toBe('40px');
     expect(box().style.borderRadius).toBe('50%');
     expect(el.style.width).toBe('40px');
@@ -44,7 +45,8 @@ describe('SkeletonComponent', () => {
     fixture.componentRef.setInput('height', '2rem');
     fixture.componentRef.setInput('borderRadius', '4px');
     fixture.detectChanges();
-    expect(box().style.width).toBe('120px');
+    // 3.22.2 (request 032, AC-3): the width lives on the host only; the fill spans it.
+    expect(box().style.width).toBe('100%');
     expect(box().style.height).toBe('2rem');
     expect(box().style.borderRadius).toBe('4px');
     expect(el.style.width).toBe('120px');

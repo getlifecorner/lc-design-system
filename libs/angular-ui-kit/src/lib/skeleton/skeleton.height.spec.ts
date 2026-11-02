@@ -45,7 +45,8 @@ describe('lc-skeleton --lc-skeleton-height (AS-27)', () => {
 
     it.each([
       ['line', { width: '100%', height: '0.875rem', 'border-radius': '0.25rem' }, '100%'],
-      ['circle', { width: '40px', height: '40px', 'border-radius': '50%' }, '40px'],
+      // 3.22.2 (request 032): the circle's 40px is on the host only; the fill spans it.
+      ['circle', { width: '100%', height: '40px', 'border-radius': '50%' }, '40px'],
       ['rect', { width: '100%', height: '100px', 'border-radius': '0.5rem' }, '100%'],
     ] as const)('%s defaults: the same inline styles and host width', (variant: SkeletonVariant, style, width) => {
       fixture.componentRef.setInput('variant', variant);
