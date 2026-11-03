@@ -309,6 +309,33 @@ export const LightThemeExplicit: Story = {
   },
 };
 
+/** 3.27.1 (request 043, F-25): a themed header keeps its palette inside a page of the other theme. */
+export const ThemeScope: Story = {
+  name: 'Theme Scope',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27.1 (request 043, F-25): a header with `theme="light"` and one with `theme="dark"`, each with three slot controls and the theme toggle. The header re-declares every colour token of its theme, so its slot content resolves the header palette, not the page one. In a dark page the light header now matches a light page (primary 6.21:1, outline 17.12:1, link 6.21:1; the outline and link text were 1.05:1 and 1.59:1); in a light page the dark header matches a dark page (6.21 / 16.32 / 12.13:1, were 1.00 and 3.12:1; header ring 10.25:1). A root-level token override does not reach inside a themed header.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        @for (theme of themes; track theme) {
+          <lc-header title="LifeCorner" [theme]="theme" [sticky]="false" [showUserMenu]="false" [showThemeButton]="true">
+            <lc-button slot="end" variant="primary">Anmelden</lc-button>
+            <lc-button slot="end" variant="outline">Registrieren</lc-button>
+            <a slot="end" lcButton variant="link" href="#hilfe">Hilfe</a>
+          </lc-header>
+        }
+      </div>
+    `,
+    props: { themes: ['light', 'dark'] },
+  }),
+};
+
 export const WithOrgInfo: Story = {
   name: 'With Context Info (Organization)',
   args: {

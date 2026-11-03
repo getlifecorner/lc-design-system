@@ -34,10 +34,13 @@
   }
 
   // `:not(:focus)` (request 042, F-19): the hover rule is more specific than
-  // the focus rule, so a focused field under the pointer showed
-  // --color-primary-400 (1.89:1 light) instead of its focus colour.
-  &:hover:not(:disabled):not([readonly]):not(:focus) {
-    border-color: var(--color-primary-400);
+  // the focus rule, so a focused field under the pointer lost its focus
+  // colour. Request 043 (F-23): the hover border is --color-text-secondary,
+  // as in lc-input and lc-select (7.55:1 light, 12.16:1 dark; it was
+  // --color-primary-400, 1.89:1 light, below the 3:1 field boundary), and an
+  // error field keeps its error border under the pointer.
+  &:hover:not(:disabled):not([readonly]):not(.lc-datepicker--error):not(:focus) {
+    border-color: var(--color-text-secondary);
   }
 
   &:focus {
@@ -103,7 +106,7 @@
     background-color: var(--color-surface-sunken);
     border-color: transparent;
 
-    &:hover:not(:disabled):not([readonly]):not(:focus) {
+    &:hover:not(:disabled):not([readonly]):not(.lc-datepicker--error):not(:focus) {
       background-color: var(--color-surface-hover);
       border-color: var(--color-border);
     }

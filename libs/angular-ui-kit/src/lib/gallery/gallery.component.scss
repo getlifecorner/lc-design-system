@@ -23,20 +23,25 @@
     cursor: pointer;
     transition: all 0.15s ease;
 
+    // Request 043 (F-26): the link ink, 6.21:1 light and 11.78:1 dark (the
+    // primary-500 hover ink was 4.36:1 in light).
     &:hover {
       border-color: var(--color-primary-300);
-      color: var(--color-primary-500);
+      color: var(--color-link);
     }
 
+    // The fill pair (request 043, F-26): white on --color-primary-fill is
+    // 6.21:1 in both themes (white on primary-500 was 4.36 light, 1.89 dark);
+    // the primary-500 rim keeps 3:1 against the page (4.36 / 9.95).
     &--active {
-      background: var(--color-primary-500);
+      background: var(--color-primary-fill);
       border-color: var(--color-primary-500);
-      color: #fff;
+      color: var(--color-on-primary);
 
       &:hover {
-        background: var(--color-primary-600);
+        background: var(--color-primary-fill-hover);
         border-color: var(--color-primary-600);
-        color: #fff;
+        color: var(--color-on-primary);
       }
     }
 

@@ -117,3 +117,24 @@ export const KeyboardFocus: Story = {
   },
 };
 
+/** 3.27.1 (request 043, F-22): the dismiss button's 44 px hit area. */
+export const TouchTargets: Story = {
+  name: 'Touch Targets',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27.1 (request 043, F-22): the 24 px dismiss button has a 44 × 44 px hit area (WCAG 2.5.8), centred on it and without paint, so the button looks as before. The area stays inside the callout, 4 px from its top and 6 px from its end, with or without a title. Its ring is still drawn round the visible button.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <lc-callout variant="error" title="Fehler" [dismissible]="true" dismissAriaLabel="Schließen">Verbindung zum Server konnte nicht hergestellt werden.</lc-callout>
+        <lc-callout variant="neutral" [dismissible]="true" dismissAriaLabel="Schließen">Ein einfacher Hinweis ohne Titel.</lc-callout>
+      </div>
+    `,
+  }),
+};
+

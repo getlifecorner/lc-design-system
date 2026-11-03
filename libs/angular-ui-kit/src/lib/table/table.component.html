@@ -34,14 +34,18 @@
       <tr>
         @if (selectable()) {
           <th class="lc-table__select-cell" scope="col">
-            <input
-              type="checkbox"
-              class="lc-table__checkbox"
-              [checked]="allSelected()"
-              [indeterminate]="someSelected()"
-              (change)="toggleSelectAll()"
-              [attr.aria-label]="selectAllAriaLabel()"
-            />
+            <!-- The label's ::before covers the cell: a 44 px hit area (request 043). -->
+            <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- only stops the click; the checkbox inside is the keyboard control -->
+            <label class="lc-table__select-hit" (click)="$event.stopPropagation()">
+              <input
+                type="checkbox"
+                class="lc-table__checkbox"
+                [checked]="allSelected()"
+                [indeterminate]="someSelected()"
+                (change)="toggleSelectAll()"
+                [attr.aria-label]="selectAllAriaLabel()"
+              />
+            </label>
           </th>
         }
         @for (column of columns(); track column.key) {
@@ -121,14 +125,18 @@
           >
             @if (selectable()) {
               <td class="lc-table__select-cell" [attr.role]="treeMode() ? 'gridcell' : null">
-                <input
-                  type="checkbox"
-                  class="lc-table__checkbox"
-                  [checked]="isRowSelected(dr.row)"
-                  (change)="toggleRowSelect(dr.row)"
-                  (click)="$event.stopPropagation()"
-                  [attr.aria-label]="selectRowAriaLabel() + ' ' + (dr.absIndex + 1)"
-                />
+                <!-- A click in the cell toggles the box, never the row (request 043). -->
+                <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- only stops the click; the checkbox inside is the keyboard control -->
+                <label class="lc-table__select-hit" (click)="$event.stopPropagation()">
+                  <input
+                    type="checkbox"
+                    class="lc-table__checkbox"
+                    [checked]="isRowSelected(dr.row)"
+                    (change)="toggleRowSelect(dr.row)"
+                    (click)="$event.stopPropagation()"
+                    [attr.aria-label]="selectRowAriaLabel() + ' ' + (dr.absIndex + 1)"
+                  />
+                </label>
               </td>
             }
             @for (column of columns(); track column.key) {

@@ -44,7 +44,9 @@ const rings: [string, string, string][] = [
   ['document-viewer/document-viewer.component.scss', '.doc-viewer__btn', '2px'],
   ['document-viewer/document-viewer.component.scss', '.doc-viewer__download-btn', '2px'],
   ['filter-bar/filter-bar.component.scss', '.lc-filter-bar__toggle-btn', '-2px'],
-  ['select/select.component.scss', '.lc-select__clear', '2px'],
+  // 2px → 0 by review 043 r1 F3: the button grew from 20 to 24 px (2 px padding
+  // inside a −2 px margin), so offset 0 draws the ring where 2 px round 20 px did.
+  ['select/select.component.scss', '.lc-select__clear', '0'],
   ['gallery/gallery.component.scss', '.gallery__filter-btn', '2px'],
   ['log-viewer/log-viewer.component.scss', '.lc-log-viewer__level-pill', '2px'],
   ['callout/callout.component.scss', '.callout__dismiss', '2px'],
@@ -171,14 +173,18 @@ describe('Focus indicators (request 042)', () => {
 
   describe('D-6: focus wins over hover in every field with the pattern (F-19)', () => {
     // [sheet, hover selector after the fix, declarations it keeps]
+    // Request 043 (F-23, design D-5) changed the first seven rows on purpose:
+    // they also exclude the error class (an error field kept no error border
+    // under the pointer), and the textarea/datepicker outline hover moved from
+    // --color-primary-400 (1.89:1 light) to --color-text-secondary (7.55:1).
     const hovers: [string, string, Record<string, string>][] = [
-      ['textarea/textarea.component.scss', '.lc-textarea--outline:hover:not(:disabled):not(:read-only):not(:focus)', { 'border-color': 'var(--color-primary-400)' }],
-      ['textarea/textarea.component.scss', '.lc-textarea--filled:hover:not(:disabled):not(:read-only):not(:focus)', { 'background-color': 'var(--color-surface-hover)' }],
-      ['datepicker/datepicker.component.scss', '.lc-datepicker:hover:not(:disabled):not([readonly]):not(:focus)', { 'border-color': 'var(--color-primary-400)' }],
-      ['datepicker/datepicker.component.scss', '.lc-datepicker.lc-datepicker--filled:hover:not(:disabled):not([readonly]):not(:focus)', { 'background-color': 'var(--color-surface-hover)', 'border-color': 'var(--color-border)' }],
-      ['input/input.component.scss', '.input-container:hover:not(.input-disabled):not(.input-readonly):not(:focus-within)', { 'border-color': 'var(--color-text-secondary)' }],
-      ['select/select.component.scss', '.lc-select:hover:not(.lc-select--disabled):not(:focus)', { 'border-color': 'var(--color-text-secondary)' }],
-      ['select/select.component.scss', '.lc-select.lc-select--filled:hover:not(.lc-select--disabled):not(:focus)', { 'background-color': 'var(--color-surface-hover)', 'border-color': 'var(--color-border)' }],
+      ['textarea/textarea.component.scss', '.lc-textarea--outline:hover:not(:disabled):not(:read-only):not(.lc-textarea--error):not(:focus)', { 'border-color': 'var(--color-text-secondary)' }],
+      ['textarea/textarea.component.scss', '.lc-textarea--filled:hover:not(:disabled):not(:read-only):not(.lc-textarea--error):not(:focus)', { 'background-color': 'var(--color-surface-hover)' }],
+      ['datepicker/datepicker.component.scss', '.lc-datepicker:hover:not(:disabled):not([readonly]):not(.lc-datepicker--error):not(:focus)', { 'border-color': 'var(--color-text-secondary)' }],
+      ['datepicker/datepicker.component.scss', '.lc-datepicker.lc-datepicker--filled:hover:not(:disabled):not([readonly]):not(.lc-datepicker--error):not(:focus)', { 'background-color': 'var(--color-surface-hover)', 'border-color': 'var(--color-border)' }],
+      ['input/input.component.scss', '.input-container:hover:not(.input-disabled):not(.input-readonly):not(.input-invalid):not(:focus-within)', { 'border-color': 'var(--color-text-secondary)' }],
+      ['select/select.component.scss', '.lc-select:hover:not(.lc-select--disabled):not(.lc-select--error):not(:focus)', { 'border-color': 'var(--color-text-secondary)' }],
+      ['select/select.component.scss', '.lc-select.lc-select--filled:hover:not(.lc-select--disabled):not(.lc-select--error):not(:focus)', { 'background-color': 'var(--color-surface-hover)', 'border-color': 'var(--color-border)' }],
       ['search-input/search-input.component.scss', '.search-input:hover:not(.search-input--disabled):not(:focus-within)', { 'border-color': 'var(--color-text-secondary)' }],
       ['tag-input/tag-input.component.scss', '.lc-tag-input__container:hover:not(.lc-tag-input__container--focused)', { 'border-color': 'var(--color-text-secondary)' }],
       ['date-range-picker/date-range-picker.component.scss', '.lc-drp__field:hover:not(.lc-drp__field--disabled):not(:focus-within)', { 'border-color': 'var(--color-text-secondary)' }],

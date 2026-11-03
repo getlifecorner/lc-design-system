@@ -55,6 +55,7 @@ $callout-colors: (
   }
 
   &__dismiss {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -68,6 +69,15 @@ $callout-colors: (
     cursor: pointer;
     flex-shrink: 0;
     transition: opacity 0.15s ease, background-color 0.15s ease;
+
+    // Hit area (WCAG 2.5.8, request 043 F-22): 44 × 44 px centred on the 24 px
+    // button, without paint; it stays inside the callout (4 px from its top,
+    // 6 px from its end).
+    &::before {
+      content: '';
+      position: absolute;
+      inset: calc((1.5rem - var(--size-min-touch-height, 2.75rem)) / 2);
+    }
 
     &:hover {
       opacity: 1;

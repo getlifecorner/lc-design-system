@@ -349,3 +349,84 @@ export const KeyboardFocus: Story = {
     canvasElement.querySelector<HTMLElement>('.lc-log-viewer__level-pill--error')?.focus({ preventScroll: true });
   },
 };
+
+/** 30 lines at fixed times (3 errors, 5 warnings), so the shots are stable. */
+const touchTargetLines: LogLine[] = Array.from({ length: 30 }, (_, i): LogLine => ({
+  text: [
+    'Anfrage empfangen GET /api/belege',
+    'Stapelverarbeitung #4521 gestartet',
+    'Zwischenspeicher für Sitzung erneuert',
+    'Integritätsprüfung bestanden',
+    'Transaktion erfolgreich abgeschlossen',
+  ][i % 5],
+  level: [2, 11, 23].includes(i) ? 'error' : [5, 9, 15, 19, 27].includes(i) ? 'warn' : 'info',
+  timestamp: new Date(2026, 10, 3, 9, 15, i * 2),
+  source: ['api', 'worker', 'db'][i % 3],
+}));
+
+/** The German labels of every built-in text. */
+const germanLogLabels = {
+  locale: 'de-DE',
+  pauseLabel: 'Pausieren',
+  resumeLabel: 'Fortsetzen',
+  pauseAriaLabel: 'Pausieren',
+  resumeAriaLabel: 'Fortsetzen',
+  clearLabel: 'Leeren',
+  clearAriaLabel: 'Leeren',
+  copyLabel: 'Alles kopieren',
+  copyAriaLabel: 'Alles kopieren',
+  searchLabel: 'Suchen (/)',
+  searchAriaLabel: 'Protokoll durchsuchen',
+  searchInputLabel: 'Protokoll durchsuchen',
+  searchPlaceholder: 'Protokoll durchsuchen …',
+  errorsLabel: 'Fehler',
+  warningsLabel: 'Warnungen',
+  linesLabel: 'Zeilen',
+  outputAriaLabel: 'Protokollausgabe',
+  jumpToBottomLabel: 'Zum Ende springen',
+};
+
+/** 3.27.1 (request 043, F-22): the level pills' 44 px hit areas, in German. */
+export const TouchTargets: Story = {
+  name: 'Touch Targets (DE)',
+  args: {
+    lines: touchTargetLines,
+    variant: 'log',
+    height: '320px',
+    showTimestamps: true,
+    showLineNumbers: false,
+    ...germanLogLabels,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27.1 (request 043, F-22), every built-in text German. The level pills ("3 Fehler", "5 Warnungen", 15 px high, 26 when the label wraps) have a 44 × 44 px hit area each, without paint: half of each 4 px gap, so neighbouring pills touch without overlapping, and at least 44 px wide. The pill looks as before; the 2.5.8 spacing exception of 3.23 is no longer needed. The toolbar is 45 px high (was 41): 8 px padding holds the hit areas. The line count is not a target. Fixed times, so the shot is stable.',
+      },
+    },
+  },
+};
+
+/** 3.27.1 (request 043, F-26): the scrolling output is a keyboard stop with the kit ring. */
+export const OutputRegionFocus: Story = {
+  name: 'Output Region Focus',
+  args: {
+    lines: touchTargetLines,
+    variant: 'log',
+    height: '240px',
+    showTimestamps: true,
+    showLineNumbers: false,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27.1 (request 043, F-26): the log output is focused as Tab would focus it (in the story view). It is the viewer\'s one keyboard stop after the toolbar (`tabindex="0"`, `role="log"`, named by `outputAriaLabel`), so the arrow and page keys scroll it (axe `scrollable-region-focusable`); until 3.27 the whole viewer was the stop. It draws the kit ring inset, because the viewer clips: 2 px `--color-primary-500` (4.36:1 light, 9.12:1 dark on the surface; 3.75:1 on the terminal), `Highlight` in forced colours. With `clickableLines` the lines are the stops and the output adds none. `/`, `g` and `G` work from any control inside.',
+      },
+    },
+  },
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    canvasElement.querySelector<HTMLElement>('.lc-log-viewer__content')?.focus({ preventScroll: true });
+  },
+};

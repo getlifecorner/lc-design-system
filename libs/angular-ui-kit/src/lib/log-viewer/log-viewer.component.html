@@ -1,7 +1,12 @@
+<!--
+  No tab stop on the root (request 043, D-9): the output region below is the
+  viewer's stop. The shortcuts (`/`, `g`, `G`) reach this handler from any
+  control inside by bubbling.
+-->
+<!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- keydown bubbles from the focused output region and the toolbar controls -->
 <div
   [class]="containerClasses()"
   [style.height]="height()"
-  tabindex="0"
   (keydown)="onKeydown($event)"
 >
   <!-- Toolbar -->
@@ -100,6 +105,8 @@
     Log content (virtualized). `role="log"` names the region; live
     announcements are switched off because rows enter/leave the DOM on every
     scroll of the virtual window — announcing them would be pure noise.
+    Keyboard-scrollable (request 043, F-26): one tab stop, unless the lines
+    are buttons themselves (`clickableLines`).
   -->
   <div
     #scrollContainer
@@ -107,6 +114,7 @@
     role="log"
     aria-live="off"
     [attr.aria-label]="outputAriaLabel()"
+    [attr.tabindex]="clickableLines() ? null : 0"
   >
     <div
       class="lc-log-viewer__spacer"

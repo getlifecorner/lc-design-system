@@ -40,4 +40,4 @@ Code (`libs`, `tools`) is unchanged since gate commit `bc2de05` (`git diff` empt
 
 At 360 px nodes draw 200 px wide and the canvas scrolls sideways; from 1024 px the graph fits at 100 %. Focus rings, the field hover fix and the 44 px remove target need no code.
 
-- **Stories:** `dependency-viewer--phone-width`, `dependency-viewer--phone-width-german`, `file-upload--remove-targets`, and a *Keyboard Focus* story in 16 components (e.g. `kanban-board--keyboard-focus`); check the exact IDs in `https://design.life-cockpit.de/index.json`.
+- **Stories:** `data-display-dependency-viewer--phone-width`, `data-display-dependency-viewer--phone-width-de`, `form-file-upload--remove-targets`, and a *Keyboard Focus* story in 16 components (e.g. `data-display-kanban-board--keyboard-focus`); IDs checked against `index.json` (request 043, AC-11: the German story was misnamed `phone-width-german`).

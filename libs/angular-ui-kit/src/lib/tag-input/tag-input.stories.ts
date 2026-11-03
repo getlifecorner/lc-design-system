@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/angular';
+import { FormsModule } from '@angular/forms';
 import { TagInputComponent } from './tag-input.component';
 
 const meta: Meta<TagInputComponent> = {
@@ -133,4 +134,24 @@ export const KeyboardFocus: Story = {
     await new Promise((resolve) => setTimeout(resolve, 50));
     canvasElement.querySelector<HTMLElement>('.lc-tag-input__tag-remove')?.focus({ preventScroll: true });
   },
+};
+
+/** 3.27.1 (request 043, F-22, F-26): the × hit areas with six German tags. */
+export const TouchTargets: Story = {
+  name: 'Touch Targets (DE)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27.1 (request 043): six German tags, three chip rows at 360 px, one row from 1024 px. Each × (16 px) has a 24 × 24 px hit area inside its chip (0.8 px from the chip top, 4 px from its end), without paint: WCAG 2.5.8 is met by size. A 44 px area would cover the next chip row (29.6 px apart) and the text input 12 px after the last ×. The chip text uses `--color-on-primary-subtle` (F-26): 7.18:1 in light on its tint (was 3.43), 6.34:1 in dark (unchanged); the × at rest 3.59:1 / 3.96:1.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [TagInputComponent, FormsModule] },
+    // Not `tags`: Storybook copies every story prop that is not an input onto the
+    // story component, so `tags` replaced the component's `tags` signal (review 043 r1 F1).
+    props: { seedTags: ['Kostenstellenverantwortung', 'Budget', 'Freigabe', 'Reisekosten', 'Personal', 'Quartal'] },
+    template: `<lc-tag-input label="Schlagwörter" placeholder="Schlagwort hinzufügen…" removeTagAriaLabel="Entfernen" [ngModel]="seedTags"></lc-tag-input>`,
+  }),
 };

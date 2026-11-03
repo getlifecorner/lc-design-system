@@ -208,3 +208,47 @@ export const KeyboardFocus: Story = {
     canvasElement.querySelector<HTMLElement>('.lc-rich-text-editor__rich')?.focus({ preventScroll: true });
   },
 };
+
+/** 3.27.1 (request 043, F-22, F-24, F-26): 44 px buttons, the field frame and the pressed mode, in German. */
+export const TouchTargets: Story = {
+  name: 'Touch Targets (DE)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27.1 (request 043), every built-in text German. The 14 toolbar buttons are 44 × 44 px (were 32) and the mode buttons at least 44 px high (were 26), WCAG 2.5.8: the buttons sit 2 px apart, so a hit area alone would overlap the neighbour. The toolbar is 201 px high at 360 px (was 113) and 61 px from 1024 px (was 49); the German modes fit at 320 px. The frame is the field boundary `--color-field-border` (F-24): 4.83:1 in light and 7.31:1 in dark on the page (`--color-border` was 1.23 / 1.29). The pressed mode uses the fill pair (F-26): 6.21:1 in both themes (was 4.36 light, 1.89 dark).',
+      },
+    },
+  },
+  args: {
+    mode: 'rich',
+    placeholder: 'Notiz schreiben …',
+    minHeight: 200,
+    showWordCount: true,
+    richModeLabel: 'Formatiert',
+    richModeTitle: 'Formatierter Text',
+    markdownModeLabel: 'Markdown',
+    markdownModeTitle: 'Markdown',
+    splitModeLabel: 'Geteilt',
+    splitModeTitle: 'Geteilte Ansicht',
+    markdownEditorAriaLabel: 'Markdown-Editor',
+    wordsLabel: 'Wörter',
+    charactersLabel: 'Zeichen',
+    actionTitles: {
+      bold: 'Fett',
+      italic: 'Kursiv',
+      underline: 'Unterstrichen',
+      strikethrough: 'Durchgestrichen',
+      h1: 'Überschrift 1',
+      h2: 'Überschrift 2',
+      h3: 'Überschrift 3',
+      ul: 'Aufzählung',
+      ol: 'Nummerierung',
+      blockquote: 'Zitat',
+      code: 'Code',
+      codeblock: 'Codeblock',
+      link: 'Link',
+      hr: 'Trennlinie',
+    },
+  },
+};

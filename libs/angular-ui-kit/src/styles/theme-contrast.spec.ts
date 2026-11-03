@@ -981,9 +981,21 @@ describe('Component pairings of 3.22.4 (request 034)', () => {
     ['diff', '.lc-diff__num', { color: secondary }],
     // F-4: the lc-badge primary pair with a primary border.
     ['card', '.card__badge--primary', { 'background-color': 'var(--color-primary-subtle)', color: 'var(--color-on-primary-subtle)', border: '1px solid var(--color-primary-500)' }],
-    // F-5: a 40 px hit area into half of each gap; the visible pill is unchanged.
+    // F-5: a hit area into half of each gap; the visible pill is unchanged.
+    // Request 043 (F-22) raised it from 40 to 44 px high (and at least 44 wide):
+    // the spacing exception is no longer relied on.
     ['log', '.lc-log-viewer__level-pill', { position: 'relative', padding: '0.125rem 0.5rem', 'font-size': '0.6875rem' }],
-    ['log', '.lc-log-viewer__level-pill::before', { content: '""', position: 'absolute', 'inset-inline': '-0.125rem', top: 'calc(50% - 20px)', bottom: 'calc(50% - 20px)' }],
+    [
+      'log',
+      '.lc-log-viewer__level-pill::before',
+      {
+        content: '""',
+        position: 'absolute',
+        'inset-inline': 'min(-0.125rem, (100% - var(--size-min-touch-height, 2.75rem)) / 2)',
+        top: 'calc(50% - var(--size-min-touch-height, 2.75rem) / 2)',
+        bottom: 'calc(50% - var(--size-min-touch-height, 2.75rem) / 2)',
+      },
+    ],
     // F-7: three text steps instead of opacity, in the log and the terminal.
     ['log', '.lc-log-viewer__line--debug', { color: secondary }],
     ...meta.map((m): Row => ['log', `.lc-log-viewer__${m}`, { color: secondary }]),

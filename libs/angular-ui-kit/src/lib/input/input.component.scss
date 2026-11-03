@@ -40,8 +40,9 @@
 
   // Hover darkens the boundary (--color-border-strong is lighter than the
   // field border since SI-8). Not while focused (request 042, F-19): this rule
-  // is more specific than `:focus-within` and replaced the focus colour.
-  &:hover:not(.input-disabled):not(.input-readonly):not(:focus-within) {
+  // is more specific than `:focus-within` and replaced the focus colour. Not on
+  // an error field either (request 043, F-23): it replaced the error border.
+  &:hover:not(.input-disabled):not(.input-readonly):not(.input-invalid):not(:focus-within) {
     border-color: var(--color-text-secondary);
   }
 

@@ -13,11 +13,6 @@
   font-family: var(--font-family-mono, 'Menlo', 'Monaco', 'Courier New', monospace);
   font-size: 0.8125rem;
   line-height: 1;
-
-  &:focus-visible {
-    outline: 2px solid var(--color-primary-500);
-    outline-offset: 2px;
-  }
 }
 
 // Variants
@@ -32,12 +27,13 @@
   border-color: #313244;
 }
 
-// Toolbar
+// Toolbar. 8 px rows (was 6, request 043): 45 px high, so the pills' 44 px
+// hit areas fit inside it.
 .lc-log-viewer__toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.375rem 0.5rem;
+  padding: 0.5rem;
   border-bottom: 1px solid var(--color-divider, #e5e7eb);
   gap: 0.5rem;
   flex-shrink: 0;
@@ -101,15 +97,15 @@
   font-family: var(--font-family-sans);
   transition: box-shadow 0.15s;
 
-  // Hit area (WCAG 2.5.8): the toolbar's inner height (40 px) and half of each
-  // 4 px gap, so neighbouring pills touch without overlapping. The visible pill
-  // and the toolbar keep their size.
+  // Hit area (WCAG 2.5.8, 44 × 44 since request 043 F-22; it was 40 high under
+  // the spacing exception): half of each 4 px gap, so neighbouring pills touch
+  // without overlapping, and at least 44 wide. The visible pill keeps its size.
   &::before {
     content: '';
     position: absolute;
-    inset-inline: -0.125rem;
-    top: calc(50% - 20px);
-    bottom: calc(50% - 20px);
+    inset-inline: min(-0.125rem, calc((100% - var(--size-min-touch-height, 2.75rem)) / 2));
+    top: calc(50% - var(--size-min-touch-height, 2.75rem) / 2);
+    bottom: calc(50% - var(--size-min-touch-height, 2.75rem) / 2);
   }
 
   // Pills stay at full opacity (60 % dropped the text below 4.5:1); the
@@ -204,13 +200,21 @@
   border: 0;
 }
 
-// Content area
+// Content area. The scrolling output is the viewer's tab stop (request 043,
+// F-26: axe scrollable-region-focusable; it was the whole root), unless its
+// lines are buttons. Inset ring: the root clips (4.36:1 light, 9.12:1 dark on
+// the surface; 3.75:1 on the terminal).
 .lc-log-viewer__content {
   flex: 1;
   overflow-y: auto;
   overflow-x: auto;
   position: relative;
   min-height: 0;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: -2px;
+  }
 }
 
 .lc-log-viewer__spacer {
@@ -402,7 +406,8 @@
   .lc-log-viewer__tool-btn:focus-visible,
   .lc-log-viewer__level-pill:focus-visible,
   .lc-log-viewer__line--clickable:focus-visible,
-  .lc-log-viewer__jump-bottom:focus-visible {
+  .lc-log-viewer__jump-bottom:focus-visible,
+  .lc-log-viewer__content:focus-visible {
     outline-color: Highlight;
   }
 }

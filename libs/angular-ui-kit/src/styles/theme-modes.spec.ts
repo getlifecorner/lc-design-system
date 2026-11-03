@@ -58,3 +58,43 @@ describe('Theme modes', () => {
     expect(tokens['--app-background-image']).toContain('rgba(78, 63, 132, 0.14)');
   });
 });
+
+/**
+ * Request 043 (F-25, design D-7): a header with `theme="light"` / `"dark"`
+ * re-declares every colour token of that theme, so its slot content (buttons,
+ * links, the theme toggle, the account menu) resolves the header's palette
+ * instead of the page's. Derived tokens resolve where they are declared, so
+ * the set must be complete.
+ */
+describe('Theme scope of a themed header', () => {
+  const COLOUR = /^--(color-|gradient-|shadow-|elevation-|accent-line$|app-background-image$)/;
+  const colours = (tokens: Record<string, string>) =>
+    Object.fromEntries(Object.entries(tokens).filter(([name]) => COLOUR.test(name)));
+
+  it('AC-6: .lc-header--light declares exactly the colour tokens of the light root (172), with the same values', () => {
+    const root = tokensOf(light, ':root,');
+    const header = tokensOf(light, '\n.lc-header--light {');
+    expect(Object.keys(header)).toHaveLength(172);
+    expect(header).toEqual(colours(root));
+  });
+
+  it('AC-7: .lc-header--dark declares exactly the colour tokens of the dark root (172), with the same values', () => {
+    const root = tokensOf(dark, ':root.dark,');
+    const header = tokensOf(dark, '\n.lc-header--dark {');
+    expect(Object.keys(header)).toHaveLength(172);
+    expect(header).toEqual(colours(root));
+  });
+
+  it('AC-12: the root rules still declare the full token set (252 per theme), colours and the rest', () => {
+    expect(Object.keys(tokensOf(light, ':root,'))).toHaveLength(252);
+    expect(Object.keys(tokensOf(dark, ':root.dark,'))).toHaveLength(252);
+    expect(Object.keys(colours(tokensOf(light, ':root,')))).toHaveLength(172);
+  });
+
+  it('scopes only the header: each theme file emits the header rule once, after its root rules', () => {
+    expect(light.match(/\.lc-header--light \{/g)).toHaveLength(1);
+    expect(dark.match(/\.lc-header--dark \{/g)).toHaveLength(1);
+    expect(light.indexOf('.lc-header--light {')).toBeGreaterThan(light.indexOf(':root,'));
+    expect(dark.indexOf('.lc-header--dark {')).toBeGreaterThan(dark.indexOf(':root.system {'));
+  });
+});

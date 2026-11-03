@@ -278,6 +278,28 @@ export const KeyboardFocus: Story = {
   },
 };
 
+/** 3.27.1 (request 043, F-22): the selection cell is the checkbox's hit area. */
+export const TouchTargets: Story = {
+  name: 'Touch Targets',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27.1 (request 043, F-22): the selection column is 44 px wide at every width (was 40, squeezed to 32 at 360 px), and the whole cell is the checkbox\'s hit area: 44 × 45.5 px in `md`. `size="sm"` rows are 37–38 px, so the cell area is 44 × 37 px there: below 44 px high, WCAG 2.5.8 met by size (at least 24 px), because the row height is the density the consumer chose. The box stays 16 px and keeps its name and ring; a click anywhere in the cell toggles it and never reaches a clickable row.',
+      },
+    },
+  },
+  render: () => ({
+    props: { columns: userColumns, data: userData.slice(0, 4) },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 32px;">
+        <lc-table [columns]="columns" [data]="data" [selectable]="true" [hoverable]="true" caption="size md"></lc-table>
+        <lc-table [columns]="columns" [data]="data" [selectable]="true" [hoverable]="true" size="sm" caption="size sm"></lc-table>
+      </div>
+    `,
+  }),
+};
+
 export const WithRowActions: Story = {
   parameters: {
     docs: {

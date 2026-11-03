@@ -464,3 +464,30 @@ export const KeyboardFocus: Story = {
     },
   },
 };
+
+/** 3.27.1 (request 043, F-22, F-26): the composer's 44 px hit areas and the monogram ink. */
+export const TouchTargets: Story = {
+  name: 'Touch Targets',
+  render: () => ({
+    template: `
+      <div style="height: 420px;">
+        <lc-chat title="Assistent" [messages]="messages" [allowFileUpload]="true" accept="image/*,.pdf"></lc-chat>
+      </div>
+    `,
+    props: {
+      messages: [
+        { id: 't1', role: 'user', content: 'Kannst du die Reisekosten für das dritte Quartal zusammenfassen?', name: 'Alex Example', timestamp: new Date(2026, 10, 3, 9, 15) },
+        { id: 't2', role: 'agent', content: 'Gern. Die Reisekosten liegen 4 % unter dem Budget.', name: 'Assistent', timestamp: new Date(2026, 10, 3, 9, 16) },
+      ] as ChatMessage[],
+    },
+    moduleMetadata: { imports: [ChatComponent] },
+  }),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27.1 (request 043). The send and attach buttons (32 px) have a 44 × 44 px hit area each (F-22, WCAG 2.5.8), centred and without paint, 2 px clear of the message input; they look as before. The user monogram uses `--color-on-primary-subtle` (F-26): 7.00:1 in light on its 18 % tint (was 3.34), 5.11:1 in dark (unchanged). Fixed message times, so the shot is stable.',
+      },
+    },
+  },
+};

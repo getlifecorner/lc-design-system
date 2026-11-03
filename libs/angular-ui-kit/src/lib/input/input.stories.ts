@@ -313,6 +313,37 @@ export const ErrorKeepsHeight: Story = {
 };
 
 /**
+ * 3.27.1 (request 043, F-23): the four fields in their error state. Under the
+ * pointer they keep the error border and message colour.
+ */
+export const ErrorStateOnHover: Story = {
+  name: 'Error State on Hover',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27.1 (request 043, F-23): lc-input, lc-select, lc-textarea and lc-datepicker with an error. Hover one: the border and the message keep the error colour (8.39:1 light, 9.47:1 dark on the page); the hover rule used to replace the border with the hover colour. Without an error, the hover border of every field is `--color-text-secondary` (7.55:1 light, 12.16:1 dark): textarea and datepicker used `--color-primary-400`, 1.89:1 in light, below the 3:1 a field boundary needs. Focus still wins over hover.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="max-width: 400px; display: flex; flex-direction: column; gap: 16px;">
+        <lc-input label="Email" type="email" value="jana.mueller@" error="Enter a valid email address"></lc-input>
+        <lc-select ariaLabel="Country" placeholder="Select a country" [options]="options" [error]="true" errorMessage="Select a country to continue"></lc-select>
+        <lc-textarea label="Message" [rows]="3" [error]="true" errorMessage="Enter a message"></lc-textarea>
+        <lc-datepicker ariaLabel="Start date" placeholder="Select a date" [error]="true" errorMessage="Select a start date"></lc-datepicker>
+      </div>`,
+    props: {
+      options: [
+        { value: 'de', label: 'Germany' },
+        { value: 'fr', label: 'France' },
+      ],
+    },
+  }),
+};
+
+/**
  * 3.12 (G-CF6): the `*` sits 4 px after the label in every size of both
  * fields, is hidden from assistive technology (the native required state says
  * it once) and never wraps onto a line by itself.

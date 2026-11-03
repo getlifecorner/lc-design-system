@@ -242,3 +242,42 @@ export const KeyboardFocus: Story = {
     canvasElement.querySelectorAll<HTMLElement>('.lc-nc__filter')[1]?.focus({ preventScroll: true });
   },
 };
+
+/** 3.27.1 (request 043, F-22): the header actions' and filter chips' 44 px hit areas, in German. */
+export const TouchTargets: Story = {
+  name: 'Touch Targets (DE)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27.1 (request 043, F-22), every built-in text German. The header actions (26 px high) and the filter chips (26.5 px) get a 44 px high hit area each, at least 44 px wide (the chip "Alle" is 42.2), centred and without paint, so they look as before (WCAG 2.5.8). The filter row is 45.5 px (was 43.5): its 9 px padding holds the chip areas inside the scroll box. At 360 px the German actions take a second header row, as since 3.23.1; the chips scroll as before.',
+      },
+    },
+  },
+  args: {
+    notifications: [
+      { id: 't1', title: 'Deployment fehlgeschlagen', message: 'Pipeline #2210 ist in der Teststufe abgebrochen.', type: 'error', timestamp: ago(0), read: false },
+      { id: 't2', title: 'Speicherplatz knapp', message: 'Server db-primary nutzt 91 % des Speichers.', type: 'warning', timestamp: ago(20), read: false },
+      { id: 't3', title: 'Sicherung abgeschlossen', message: 'Die nächtliche Sicherung wurde erfolgreich erstellt.', type: 'success', timestamp: ago(180), read: true },
+      { id: 't4', title: 'Neuer Kommentar', message: 'Alice hat die Rechnung RE-1042 kommentiert.', type: 'info', timestamp: ago(300), read: true },
+      { id: 't5', title: 'Neues Teammitglied', message: 'Bob wurde dem Team hinzugefügt.', type: 'info', timestamp: ago(1500), read: false },
+    ],
+    maxHeight: '420px',
+    title: 'Benachrichtigungen',
+    markAllReadLabel: 'Alle als gelesen markieren',
+    clearAllLabel: 'Alle löschen',
+    searchPlaceholder: 'Benachrichtigungen durchsuchen…',
+    filterAllLabel: 'Alle',
+    filterErrorLabel: 'Fehler',
+    filterWarningLabel: 'Warnung',
+    filterSuccessLabel: 'Erfolg',
+    filterInfoLabel: 'Info',
+    dismissAriaLabel: 'Benachrichtigung schließen:',
+    otherCategoryLabel: 'Sonstige',
+    justNowLabel: 'Gerade eben',
+    emptyMessage: 'Keine Benachrichtigungen',
+    minutesAgoLabel: 'vor {n} Min.',
+    hoursAgoLabel: 'vor {n} Std.',
+    daysAgoLabel: 'vor {n} T.',
+  },
+};

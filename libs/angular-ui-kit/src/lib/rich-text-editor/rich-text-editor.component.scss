@@ -2,7 +2,9 @@
 @use '../../styles/mixins' as mix;
 
 .lc-rich-text-editor {
-  border: 1px solid var(--color-border);
+  // The field boundary (request 043, F-24): lc-input's token, 4.83:1 light and
+  // 7.31:1 dark on the page (--color-border was 1.23 / 1.29, below 3:1).
+  border: 1px solid var(--color-field-border);
   border-radius: var(--border-radius-md);
   background-color: var(--color-surface);
   overflow: hidden;
@@ -45,8 +47,10 @@
     border: none;
     background: transparent;
     color: var(--color-text-secondary);
-    width: 32px;
-    height: 32px;
+    // 44 × 44 (WCAG 2.5.8, request 043 F-22; was 32): the buttons sit 2 px
+    // apart, so a hit area alone would overlap the neighbour.
+    width: var(--size-min-touch-height, 2.75rem);
+    height: var(--size-min-touch-height, 2.75rem);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -84,6 +88,9 @@
     border: none;
     background: transparent;
     color: var(--color-text-secondary);
+    // At least 44 × 44 (WCAG 2.5.8, request 043 F-22; was 26 high).
+    min-width: var(--size-min-touch-height, 2.75rem);
+    min-height: var(--size-min-touch-height, 2.75rem);
     padding: var(--spacing-1) var(--spacing-2);
     border-radius: var(--border-radius-sm);
     font-size: var(--typography-font-size-xs);
@@ -96,9 +103,11 @@
       color: var(--color-text-primary);
     }
 
+    // The fill pair (request 043, F-26): white on --color-primary-fill is
+    // 6.21:1 in both themes (white on --color-primary was 4.36 light, 1.89 dark).
     &.active {
-      background-color: var(--color-primary);
-      color: white;
+      background-color: var(--color-primary-fill);
+      color: var(--color-on-primary);
     }
 
     @include mix.focus-ring;

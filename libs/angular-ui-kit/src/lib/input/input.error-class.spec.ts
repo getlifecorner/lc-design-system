@@ -122,7 +122,10 @@ describe('InputComponent 3.13: error-state class (G-WL3)', () => {
       expect(focus).toMatch(/border-color:\s*var\(--color-error-600\);/);
 
       const stateRules = [...css.matchAll(/\n([^{}\n]*input-invalid[^{}\n]*)\{([^}]*)\}/g)];
-      expect(stateRules).toHaveLength(2);
+      // Request 043 (F-23): the hover rule names the class too, to exclude it
+      // (`:not(.input-invalid)`); the rules that style the state are still two.
+      expect(stateRules.filter(([, selector]) => !selector.includes(':not(.input-invalid)'))).toHaveLength(2);
+      expect(stateRules).toHaveLength(3);
       for (const [, , body] of stateRules) {
         expect(body).not.toMatch(/\b(flex|height|min-height|font-size|margin|padding)\s*:/);
       }

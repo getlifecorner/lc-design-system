@@ -250,7 +250,9 @@
   height: 1.5rem;
   border-radius: 50%;
   background: color-mix(in srgb, var(--color-primary-500) 18%, var(--color-surface-2));
-  color: var(--color-primary-500);
+  // The subtle ink (request 043, F-26): 7.00:1 light on the 18 % tint
+  // (primary-500 was 3.34:1, axe color-contrast); dark is unchanged (5.11:1).
+  color: var(--color-on-primary-subtle);
   font-size: var(--font-size-xs, 0.75rem);
   font-weight: var(--font-weight-semibold, 600);
   line-height: 1;
@@ -467,6 +469,7 @@
 }
 
 .lc-chat__send-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -481,6 +484,14 @@
   flex-shrink: 0;
   transition: background 0.15s, opacity 0.15s;
 
+  // Hit area (WCAG 2.5.8, request 043 F-22): 44 × 44 px centred on the 32 px
+  // button, without paint; 2 px clear of the message input above.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: calc((2rem - var(--size-min-touch-height, 2.75rem)) / 2);
+  }
+
   &:hover:not(:disabled) { background: var(--color-primary-fill-hover); }
   &:disabled { opacity: 0.4; cursor: not-allowed; }
 
@@ -494,6 +505,7 @@
 }
 
 .lc-chat__attach-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -506,6 +518,13 @@
   cursor: pointer;
   flex-shrink: 0;
   transition: background 0.15s, color 0.15s;
+
+  // Hit area (WCAG 2.5.8, request 043 F-22): as on the send button.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: calc((2rem - var(--size-min-touch-height, 2.75rem)) / 2);
+  }
 
   &:hover:not(:disabled) {
     background: var(--color-surface-hover);

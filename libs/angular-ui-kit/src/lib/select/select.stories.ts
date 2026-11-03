@@ -187,3 +187,27 @@ export const KeyboardFocus: Story = {
     canvasElement.querySelector<HTMLElement>('.lc-select__clear')?.focus({ preventScroll: true });
   },
 };
+
+/** 3.27.1 (request 043, F-22): the clear button is 24 × 24 px in every size. */
+export const TouchTargets: Story = {
+  name: 'Touch Targets',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27.1 (request 043, F-22): every size with a value, so the clear button shows. The button is 24 × 24 px: a 2 px padding that its −2 px margin takes back, so the layout, the 20 px hover fill and the focus ring are as before, and WCAG 2.5.8 (and axe `target-size`) is met by size. A 44 px target would be taller than the md field (40 px), leave the xs and sm fields by 10 and 6 px and cover 8 px of the chevron, which opens the list; at 24 px it stays 2 px clear of the chevron and inside every field.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [SelectComponent, FormsModule] },
+    props: { options: countryOptions, sizes: ['xs', 'sm', 'md', 'lg'] },
+    template: `
+      <div style="max-width: 320px; display: flex; flex-direction: column; gap: 16px;">
+        @for (size of sizes; track size) {
+          <lc-select [size]="size" placeholder="Select a country" [ariaLabel]="'Country (' + size + ')'" [options]="options" [ngModel]="'de'"></lc-select>
+        }
+      </div>
+    `,
+  }),
+};

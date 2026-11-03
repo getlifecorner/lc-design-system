@@ -14,9 +14,14 @@
 @use './tokens/animation' as *;
 @use './tokens/size' as *;
 
-// Default theme (light) on :root
-:root,
-:root.light {
+// Every colour token of the light theme: --color-*, --gradient-*, --shadow-*,
+// --elevation-*, --accent-line and --app-background-image (request 043, F-25).
+// The root rule below emits them, and `.lc-header--light` emits them a second
+// time: derived tokens (`--color-primary: var(--color-primary-500)`) resolve
+// where they are declared, so only the full set on the header gives its slot
+// content (buttons, links, the theme toggle, the account menu) the light
+// values inside a dark page.
+@mixin -light-theme-colors {
   // ============================================================================
   // Colors - Primary
   // ============================================================================
@@ -92,65 +97,6 @@
   --color-accent-violet: #{$color-accent-violet};
 
   // ============================================================================
-  // Spacing
-  // ============================================================================
-  --spacing-0: #{$spacing-0};
-  --spacing-0-5: #{$spacing-0-5};
-  --spacing-1: #{$spacing-1};
-  --spacing-1-5: #{$spacing-1-5};
-  --spacing-2: #{$spacing-2};
-  --spacing-2-5: #{$spacing-2-5};
-  --spacing-3: #{$spacing-3};
-  --spacing-3-5: #{$spacing-3-5};
-  --spacing-4: #{$spacing-4};
-  --spacing-5: #{$spacing-5};
-  --spacing-6: #{$spacing-6};
-  --spacing-7: #{$spacing-7};
-  --spacing-8: #{$spacing-8};
-  --spacing-9: #{$spacing-9};
-  --spacing-10: #{$spacing-10};
-  --spacing-11: #{$spacing-11};
-  --spacing-12: #{$spacing-12};
-  --spacing-14: #{$spacing-14};
-  --spacing-16: #{$spacing-16};
-
-  // ============================================================================
-  // Typography - Font Families
-  // ============================================================================
-  --typography-font-family-base: #{$typography-font-family-base};
-  --typography-font-family-mono: #{$typography-font-family-mono};
-
-  // ============================================================================
-  // Typography - Font Sizes
-  // ============================================================================
-  --typography-font-size-xs: #{$typography-font-size-xs};
-  --typography-font-size-sm: #{$typography-font-size-sm};
-  --typography-font-size-base: #{$typography-font-size-base};
-  --typography-font-size-lg: #{$typography-font-size-lg};
-  --typography-font-size-xl: #{$typography-font-size-xl};
-  --typography-font-size-2xl: #{$typography-font-size-2xl};
-  --typography-font-size-3xl: #{$typography-font-size-3xl};
-  --typography-font-size-4xl: #{$typography-font-size-4xl};
-  --typography-font-size-5xl: #{$typography-font-size-5xl};
-  --typography-font-size-6xl: #{$typography-font-size-6xl};
-  --typography-font-size-7xl: #{$typography-font-size-7xl};
-
-  // ============================================================================
-  // Typography - Font Weights
-  // ============================================================================
-  --typography-font-weight-normal: #{$typography-font-weight-normal};
-  --typography-font-weight-medium: #{$typography-font-weight-medium};
-  --typography-font-weight-semibold: #{$typography-font-weight-semibold};
-  --typography-font-weight-bold: #{$typography-font-weight-bold};
-
-  // ============================================================================
-  // Typography - Line Heights
-  // ============================================================================
-  --typography-line-height-tight: #{$typography-line-height-tight};
-  --typography-line-height-normal: #{$typography-line-height-normal};
-  --typography-line-height-relaxed: #{$typography-line-height-relaxed};
-
-  // ============================================================================
   // Elevation (Box Shadows) — light-tuned
   // ============================================================================
   // The raw $elevation-* scale is built for dark surfaces (wide, 35–48% black
@@ -161,58 +107,6 @@
   --elevation-2: 0 2px 4px -2px rgba(16, 24, 40, 0.06), 0 4px 8px -2px rgba(16, 24, 40, 0.10);
   --elevation-3: 0 4px 6px -2px rgba(16, 24, 40, 0.05), 0 12px 16px -4px rgba(16, 24, 40, 0.10);
   --elevation-4: 0 8px 8px -4px rgba(16, 24, 40, 0.04), 0 20px 24px -4px rgba(16, 24, 40, 0.10);
-
-  // ============================================================================
-  // Border Radius
-  // ============================================================================
-  --border-radius-none: #{$border-radius-none};
-  --border-radius-sm: #{$border-radius-sm};
-  --border-radius-md: #{$border-radius-md};
-  --border-radius-lg: #{$border-radius-lg};
-  --border-radius-xl: #{$border-radius-xl};
-  --border-radius-2xl: #{$border-radius-2xl};
-  --border-radius-full: #{$border-radius-full};
-
-  // ============================================================================
-  // Animation
-  // ============================================================================
-  --animation-duration-base: #{$animation-duration-fast};
-  --animation-easing-ease-in: #{$animation-easing-ease-in};
-  --animation-easing-ease-out: #{$animation-easing-ease-out};
-  --animation-easing-ease-in-out: #{$animation-easing-ease-in-out};
-
-  // ============================================================================
-  // Size - Interactive Elements
-  // ============================================================================
-  --size-interactive-xs-height: #{$size-interactive-xs-height};
-  --size-interactive-xs-padding: #{$size-interactive-xs-padding};
-  --size-interactive-xs-font-size: #{$size-interactive-xs-font-size};
-  
-  --size-interactive-sm-height: #{$size-interactive-sm-height};
-  --size-interactive-sm-padding: #{$size-interactive-sm-padding};
-  --size-interactive-sm-font-size: #{$size-interactive-sm-font-size};
-  
-  --size-interactive-md-height: #{$size-interactive-md-height};
-  --size-interactive-md-padding: #{$size-interactive-md-padding};
-  --size-interactive-md-font-size: #{$size-interactive-md-font-size};
-  
-  --size-interactive-lg-height: #{$size-interactive-lg-height};
-  --size-interactive-lg-padding: #{$size-interactive-lg-padding};
-  --size-interactive-lg-font-size: #{$size-interactive-lg-font-size};
-
-  // ============================================================================
-  // Size - Minimum Touch Target
-  // ============================================================================
-  --size-min-touch-width: #{$size-min-touch-width};
-  --size-min-touch-height: #{$size-min-touch-height};
-
-  // ============================================================================
-  // Layout - Content Width
-  // ============================================================================
-  // Canonical cap for page content. `lc-container size="xxl"` reads this, so an
-  // app shell that centres its own content against the same custom property
-  // stays in lockstep with the container instead of hard-coding a width.
-  --lc-content-max-width: #{$size-content-max-width};
 
   // ============================================================================
   // Semantic Color Mappings for Light Theme (DS2.0 — mirrors dark token names)
@@ -415,6 +309,147 @@
   --color-skeleton: #e6eff1;
   --color-skeleton-highlight: #f2f7f8;
 
+  // Semantic color scale aliases — map the numeric scale some components use
+  // onto the three canonical semantic shades so they always resolve.
+  --color-error-50: #{$color-error-light};
+  --color-error-100: #{$color-error-light};
+  --color-error-500: var(--color-error-default);
+  --color-error-600: var(--color-error-default);
+  --color-error-700: var(--color-error-dark);
+  --color-error-800: #5a0707; // Darker shade for active state
+  --color-success-50: #{$color-success-light};
+  --color-success-100: #{$color-success-light};
+  --color-success-500: var(--color-success-default);
+  --color-success-600: var(--color-success-default);
+  --color-success-700: var(--color-success-dark);
+  --color-warning-50: #{$color-warning-light};
+  --color-warning-100: #{$color-warning-light};
+  --color-warning-500: var(--color-warning-default);
+  --color-warning-600: var(--color-warning-default);
+  --color-warning-700: var(--color-warning-dark);
+  --color-info-50: #{$color-info-light};
+  --color-info-100: #{$color-info-light};
+  --color-info-500: var(--color-info-default);
+  --color-info-600: var(--color-info-default);
+  --color-info-700: var(--color-info-dark);
+}
+
+// Default theme (light) on :root
+:root,
+:root.light {
+  @include -light-theme-colors;
+
+  // ============================================================================
+  // Spacing
+  // ============================================================================
+  --spacing-0: #{$spacing-0};
+  --spacing-0-5: #{$spacing-0-5};
+  --spacing-1: #{$spacing-1};
+  --spacing-1-5: #{$spacing-1-5};
+  --spacing-2: #{$spacing-2};
+  --spacing-2-5: #{$spacing-2-5};
+  --spacing-3: #{$spacing-3};
+  --spacing-3-5: #{$spacing-3-5};
+  --spacing-4: #{$spacing-4};
+  --spacing-5: #{$spacing-5};
+  --spacing-6: #{$spacing-6};
+  --spacing-7: #{$spacing-7};
+  --spacing-8: #{$spacing-8};
+  --spacing-9: #{$spacing-9};
+  --spacing-10: #{$spacing-10};
+  --spacing-11: #{$spacing-11};
+  --spacing-12: #{$spacing-12};
+  --spacing-14: #{$spacing-14};
+  --spacing-16: #{$spacing-16};
+
+  // ============================================================================
+  // Typography - Font Families
+  // ============================================================================
+  --typography-font-family-base: #{$typography-font-family-base};
+  --typography-font-family-mono: #{$typography-font-family-mono};
+
+  // ============================================================================
+  // Typography - Font Sizes
+  // ============================================================================
+  --typography-font-size-xs: #{$typography-font-size-xs};
+  --typography-font-size-sm: #{$typography-font-size-sm};
+  --typography-font-size-base: #{$typography-font-size-base};
+  --typography-font-size-lg: #{$typography-font-size-lg};
+  --typography-font-size-xl: #{$typography-font-size-xl};
+  --typography-font-size-2xl: #{$typography-font-size-2xl};
+  --typography-font-size-3xl: #{$typography-font-size-3xl};
+  --typography-font-size-4xl: #{$typography-font-size-4xl};
+  --typography-font-size-5xl: #{$typography-font-size-5xl};
+  --typography-font-size-6xl: #{$typography-font-size-6xl};
+  --typography-font-size-7xl: #{$typography-font-size-7xl};
+
+  // ============================================================================
+  // Typography - Font Weights
+  // ============================================================================
+  --typography-font-weight-normal: #{$typography-font-weight-normal};
+  --typography-font-weight-medium: #{$typography-font-weight-medium};
+  --typography-font-weight-semibold: #{$typography-font-weight-semibold};
+  --typography-font-weight-bold: #{$typography-font-weight-bold};
+
+  // ============================================================================
+  // Typography - Line Heights
+  // ============================================================================
+  --typography-line-height-tight: #{$typography-line-height-tight};
+  --typography-line-height-normal: #{$typography-line-height-normal};
+  --typography-line-height-relaxed: #{$typography-line-height-relaxed};
+
+  // ============================================================================
+  // Border Radius
+  // ============================================================================
+  --border-radius-none: #{$border-radius-none};
+  --border-radius-sm: #{$border-radius-sm};
+  --border-radius-md: #{$border-radius-md};
+  --border-radius-lg: #{$border-radius-lg};
+  --border-radius-xl: #{$border-radius-xl};
+  --border-radius-2xl: #{$border-radius-2xl};
+  --border-radius-full: #{$border-radius-full};
+
+  // ============================================================================
+  // Animation
+  // ============================================================================
+  --animation-duration-base: #{$animation-duration-fast};
+  --animation-easing-ease-in: #{$animation-easing-ease-in};
+  --animation-easing-ease-out: #{$animation-easing-ease-out};
+  --animation-easing-ease-in-out: #{$animation-easing-ease-in-out};
+
+  // ============================================================================
+  // Size - Interactive Elements
+  // ============================================================================
+  --size-interactive-xs-height: #{$size-interactive-xs-height};
+  --size-interactive-xs-padding: #{$size-interactive-xs-padding};
+  --size-interactive-xs-font-size: #{$size-interactive-xs-font-size};
+  
+  --size-interactive-sm-height: #{$size-interactive-sm-height};
+  --size-interactive-sm-padding: #{$size-interactive-sm-padding};
+  --size-interactive-sm-font-size: #{$size-interactive-sm-font-size};
+  
+  --size-interactive-md-height: #{$size-interactive-md-height};
+  --size-interactive-md-padding: #{$size-interactive-md-padding};
+  --size-interactive-md-font-size: #{$size-interactive-md-font-size};
+  
+  --size-interactive-lg-height: #{$size-interactive-lg-height};
+  --size-interactive-lg-padding: #{$size-interactive-lg-padding};
+  --size-interactive-lg-font-size: #{$size-interactive-lg-font-size};
+
+  // ============================================================================
+  // Size - Minimum Touch Target
+  // ============================================================================
+  --size-min-touch-width: #{$size-min-touch-width};
+  --size-min-touch-height: #{$size-min-touch-height};
+
+  // ============================================================================
+  // Layout - Content Width
+  // ============================================================================
+  // Canonical cap for page content. `lc-container size="xxl"` reads this, so an
+  // app shell that centres its own content against the same custom property
+  // stays in lockstep with the container instead of hard-coding a width.
+  --lc-content-max-width: #{$size-content-max-width};
+
   // ============================================================================
   // Short Aliases for Common Usage (Component Convenience)
   // ============================================================================
@@ -441,28 +476,13 @@
   --line-height-normal: var(--typography-line-height-normal);
   --line-height-relaxed: var(--typography-line-height-relaxed);
   --animation-timing-ease: var(--animation-easing-ease-in-out);
-  
-  // Semantic color scale aliases — map the numeric scale some components use
-  // onto the three canonical semantic shades so they always resolve.
-  --color-error-50: #{$color-error-light};
-  --color-error-100: #{$color-error-light};
-  --color-error-500: var(--color-error-default);
-  --color-error-600: var(--color-error-default);
-  --color-error-700: var(--color-error-dark);
-  --color-error-800: #5a0707; // Darker shade for active state
-  --color-success-50: #{$color-success-light};
-  --color-success-100: #{$color-success-light};
-  --color-success-500: var(--color-success-default);
-  --color-success-600: var(--color-success-default);
-  --color-success-700: var(--color-success-dark);
-  --color-warning-50: #{$color-warning-light};
-  --color-warning-100: #{$color-warning-light};
-  --color-warning-500: var(--color-warning-default);
-  --color-warning-600: var(--color-warning-default);
-  --color-warning-700: var(--color-warning-dark);
-  --color-info-50: #{$color-info-light};
-  --color-info-100: #{$color-info-light};
-  --color-info-500: var(--color-info-default);
-  --color-info-600: var(--color-info-default);
-  --color-info-700: var(--color-info-dark);
+}
+
+// `<lc-header theme="light">` keeps the light palette inside a dark page
+// (request 043, F-25): its slot buttons and primary inks measured 1.05:1
+// (outline) and 1.59:1 (link) there; with the tokens re-declared they match a
+// light page (17.12:1, 6.21:1). A root-level token override does not reach
+// inside a themed header.
+.lc-header--light {
+  @include -light-theme-colors;
 }

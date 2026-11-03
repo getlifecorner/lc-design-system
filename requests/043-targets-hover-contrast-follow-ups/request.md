@@ -1,0 +1,11 @@
+# Request 043: Targets, hover borders and contrast follow-ups of 042
+
+- **From:** owner
+- **Received:** 2026-11-03
+- **Gap IDs:** 042 F-22 to F-27
+- **Referenced files:** /Users/eric/Documents/Projekte/life-cockpit/lc-design-system/requests/042-focus-hover-targets-follow-ups/design.md (section 9), /Users/eric/Documents/Projekte/life-cockpit/lc-design-system/requests/042-focus-hover-targets-follow-ups/release.md
+- **Kit version at intake:** 3.27.0
+
+## Requirement (verbatim)
+
+Follow-ups F-22 to F-27 of request 042 (queued by the dispatcher under the owner's standing rule of 2026-11-02 that fixable findings go into the pipeline without asking, bundled into one release; details in requests/042-focus-hover-targets-follow-ups/design.md section 9). F-22: 44 px targets found by the 042 sweep: notification-center action 26 px and filter chips 27 px, log-viewer pills 15 px (hit area 40; requests 034 and 036 accepted them under the WCAG 2.5.8 exception, so the spec decides whether they stay), the callout, select and tag remove x (16 to 24 px), the rich-text-editor toolbar 32 px and mode switch 26 px, document-viewer 32 px, chat 32 px, table checkbox 16 px; each needs at least 44 px or a documented 2.5.8 exception. F-23: unfocused hover: textarea and datepicker borders turn --color-primary-400 (1.89:1 light), and error fields lose the error colour on hover (input, select, textarea, datepicker). F-24: the rich-text-editor frame border --color-border is 1.23:1 in light and needs 3:1 as a field boundary. F-25: in a header with theme=light, child lc-buttons and primary inks follow the page theme in dark instead of the header theme. F-26: pre-existing axe findings the new 042 stories expose: rich-text-editor mode .active contrast, gallery __filter-btn--active contrast, chat monogram and tag chip text contrast in light, log-viewer scrollable-region-focusable. F-27: the kanban over-limit column uses --color-error-50 (#f7a1a1 light) and its title is 3.80:1; --color-error-subtle gives 6.58 (dark already 5.42). Also fix the story ID typo in requests/042-focus-hover-targets-follow-ups/release.md (phone-width-german is data-display-dependency-viewer--phone-width-de). Both themes, 360/1024/1280 px, EN and DE. No API break; the spec decides patch or minor.

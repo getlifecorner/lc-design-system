@@ -300,14 +300,32 @@
   font-size: var(--typography-font-size-xs);
 }
 
-// Selection
+// Selection. The column is 44 px wide at every width (request 043, F-22: it was
+// 40, squeezed to 32 at 360 px), and the whole cell is the checkbox's hit area:
+// the label around it carries a `::before` over the cell (its containing
+// block), so a click anywhere in the cell toggles it. The box stays 16 px.
 .lc-table__select-cell {
-  width: 40px;
+  position: relative;
+  width: var(--size-min-touch-height, 2.75rem);
   text-align: center !important;
-  padding: var(--spacing-2) !important;
+  padding: var(--spacing-2) calc((var(--size-min-touch-height, 2.75rem) - 1rem) / 2) !important;
+}
+
+// Inline (the label default): the box stays exactly where a bare checkbox sat
+// (an inline-flex label moved it 2 px down in md rows).
+.lc-table__select-hit {
+  cursor: pointer;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
 }
 
 .lc-table__checkbox {
+  // Above the label's hit area, so hover and the ring stay on the box.
+  position: relative;
   width: 16px;
   height: 16px;
   cursor: pointer;
