@@ -9,12 +9,21 @@ import {
   input,
   viewChild,
 } from '@angular/core';
+import { OverlayInsetsService } from '@lifecorner/angular-ui-kit/internal/overlay';
 
 /**
  * Private custom property the shell writes on `.lc-app-shell` in the browser:
  * the bar's content height. Its CSS fallback is 72 px (4 + 64 + 4 at 100 % text).
  */
 const BAR_VAR = '--_lc-app-shell-bar';
+
+/** What a fixed overlay keeps free without a header or without a shown bar (AS-34). */
+const TOP_INSET = 'env(safe-area-inset-top, 0px)';
+const BOTTOM_INSET = 'env(safe-area-inset-bottom, 0px)';
+
+/** The border-box height of a ResizeObserver entry, with a layout read where the browser doesn't report it. */
+const borderBoxHeight = (entry: ResizeObserverEntry, target: Element) =>
+  entry.borderBoxSize?.[0]?.blockSize ?? target.getBoundingClientRect().height;
 
 /**
  * Where the side navigation sits from 1024 px: `'below-header'` (the header
@@ -69,6 +78,12 @@ export type AppShellNavPlacement = 'below-header' | 'full-height';
  * come before a brand at the top of the nav (banner, then navigation, then
  * content). The land and the footer run under the nav; the footer's content
  * starts at the nav width.
+ *
+ * Toasts (3.28, AS-34): in the browser the shell tells `lc-toast-outlet` —
+ * wherever the app puts it, also after `</lc-app-shell>` — where its header
+ * ends and where the shown bar starts, so top toasts sit below the header and
+ * bottom toasts 16 px above the bar (from 1024 px: above the safe-area
+ * inset). `--lc-toast-outlet-offset-top` / `-bottom` override both.
  *
  * CSS hooks (set them on `lc-app-shell` or any ancestor):
  * - `--lc-app-shell-nav-width` — the nav column from 1024 px. Default
@@ -137,27 +152,51 @@ export class AppShellComponent {
   });
 
   private readonly shell = viewChild.required<ElementRef<HTMLElement>>('shell');
+  private readonly headerSlot = viewChild.required<ElementRef<HTMLElement>>('headerSlot');
   private readonly barSlot = viewChild.required<ElementRef<HTMLElement>>('barSlot');
 
   constructor() {
     const destroyRef = inject(DestroyRef);
+    const insets = inject(OverlayInsetsService);
     // Browser only (afterNextRender never runs on the server): follow the
     // bar's content height, so the clearance and the land grow with a bar
     // that grows with the text size (AS-31). Without ResizeObserver, and
     // before this runs, the CSS fallback (72 px → 112 px clearance) holds.
+    // The same measurements tell a fixed overlay (lc-toast-outlet, AS-34)
+    // what to keep free: the header's bottom edge and the bar's top edge.
     afterNextRender(() => {
       if (typeof ResizeObserver === 'undefined') return;
       const shell = this.shell().nativeElement;
+      const header = this.headerSlot().nativeElement;
       const slot = this.barSlot().nativeElement;
-      const clear = () => shell.style.removeProperty(BAR_VAR);
+      // Until a box is measured (a hidden bar or an empty header reports
+      // nothing): the safe-area insets.
+      insets.top.set(TOP_INSET);
+      insets.bottom.set(BOTTOM_INSET);
+      let bar: Element | null = null;
+      const clear = () => {
+        shell.style.removeProperty(BAR_VAR);
+        insets.bottom.set(BOTTOM_INSET);
+      };
       const sizes = new ResizeObserver((entries) => {
         const entry = entries[entries.length - 1];
         const height = entry.contentBoxSize?.[0]?.blockSize ?? entry.contentRect.height;
         // 0 when the bar is hidden (from 1024 px).
-        if (height > 0) shell.style.setProperty(BAR_VAR, `${height}px`);
-        else clear();
+        if (height > 0 && bar) {
+          shell.style.setProperty(BAR_VAR, `${height}px`);
+          // Its top edge from the viewport's bottom: its own `bottom` (16 px
+          // plus the inset when floating) plus its border box.
+          const bottom = parseFloat(getComputedStyle(bar).bottom);
+          insets.bottom.set(`${(Number.isFinite(bottom) ? bottom : 0) + borderBoxHeight(entry, bar)}px`);
+        } else clear();
       });
-      let bar: Element | null = null;
+      // The header wrapper carries the top inset (its padding), so its border
+      // box ends at the header's bottom edge; 0 when the slot is empty.
+      const headerSizes = new ResizeObserver((entries) => {
+        const height = borderBoxHeight(entries[entries.length - 1], header);
+        insets.top.set(height > 0 ? `${height}px` : TOP_INSET);
+      });
+      headerSizes.observe(header);
       // The bar may come later (`@if (items())` around it) or go again.
       const pick = () => {
         const next = slot.querySelector('.lc-bottom-nav') ?? slot.firstElementChild;
@@ -172,7 +211,10 @@ export class AppShellComponent {
       changes?.observe(slot, { childList: true, subtree: true });
       destroyRef.onDestroy(() => {
         sizes.disconnect();
+        headerSizes.disconnect();
         changes?.disconnect();
+        insets.top.set(null);
+        insets.bottom.set(null);
       });
     });
   }

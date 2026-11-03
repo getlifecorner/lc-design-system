@@ -1,14 +1,19 @@
-<div [class]="pageClasses()" [style.--lc-app-page-content-max]="contentMaxWidth()">
+<div [class]="pageClasses()" [style.--lc-app-page-content-max]="contentMaxWidth()" [style.--_lc-app-page-wide-max]="wideMax()">
   <main class="lc-app-page__main" [id]="mainId()" [attr.aria-busy]="busy() ? 'true' : null">
     <div class="lc-app-page__content"><ng-content /></div>
   </main>
-  @if (hasAside()) {
-    <aside
-      class="lc-app-page__aside"
-      [attr.aria-labelledby]="asideLabelledby() || null"
-      [attr.aria-label]="asideLabelledby() ? null : asideAriaLabel()"
-    >
-      <ng-content select="[page-aside]" />
-    </aside>
+  <!-- One outer block, so a page without a right column keeps 3.27.2's single
+       anchor (an @else branch adds one); the reserved column (AS-35) is empty,
+       aria-hidden and no landmark. -->
+  @if (hasAside() || reserved()) {
+    @if (hasAside()) {
+      <aside
+        class="lc-app-page__aside"
+        [attr.aria-labelledby]="asideLabelledby() || null"
+        [attr.aria-label]="asideLabelledby() ? null : asideAriaLabel()"
+      >
+        <ng-content select="[page-aside]" />
+      </aside>
+    } @else {<div class="lc-app-page__aside lc-app-page__aside--reserved" aria-hidden="true"></div>}
   }
 </div>

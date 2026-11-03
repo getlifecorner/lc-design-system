@@ -1,8 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { moduleMetadata } from '@storybook/angular';
+import { ChangeDetectionStrategy, Component, inject, input, type OnDestroy, type OnInit } from '@angular/core';
 import { AppShellComponent } from './app-shell.component';
 import { AppPageComponent } from './app-page.component';
-import type { AppPagePaddingTop, AppPagePaddingX } from './app-page.component';
+import type { AppPageContentWidth, AppPagePaddingTop, AppPagePaddingX } from './app-page.component';
+import { ToastOutletComponent } from '../toast/toast-outlet.component';
+import { ToastService, type ToastConfig } from '../toast/toast.service';
+import { TableComponent, type TableColumn } from '../table/table.component';
 import { HeaderComponent } from '../header/header.component';
 import { PageHeaderComponent } from '../page-header/page-header.component';
 import { SidenavComponent } from '../sidenav/sidenav.component';
@@ -26,6 +30,30 @@ const members = [
   { label: 'Tom Ek', subtitle: 'Mitglied seit 12. Okt. 2026', avatar: 'TE', avatarColor: 'member-2' as const },
 ];
 
+/**
+ * Story helper (3.28, AS-34): shows `toasts` through `ToastService` when it is
+ * created, the way a page calls it, and closes them when it goes.
+ */
+@Component({
+  selector: 'lc-story-toasts',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: '',
+})
+class StoryToastsComponent implements OnInit, OnDestroy {
+  readonly toasts = input<ToastConfig[]>([]);
+  private readonly service = inject(ToastService);
+  private shown: string[] = [];
+
+  ngOnInit(): void {
+    this.shown = this.toasts().map((toast) => this.service.show(toast));
+  }
+
+  ngOnDestroy(): void {
+    for (const id of this.shown) this.service.close(id);
+  }
+}
+
 const placeholder = (text: string, height = 160, fontSize = '13px', attrs = '') =>
   `<div ${attrs}style="min-height: ${height}px; box-sizing: border-box; border: 1.5px dashed var(--color-border); border-radius: 12px;
               display: flex; align-items: center; justify-content: center; padding: 16px; text-align: center;
@@ -35,9 +63,10 @@ const placeholder = (text: string, height = 160, fontSize = '13px', attrs = '') 
  * Today in the "Weite" frame: every slot of the shell and the page's right
  * column. `figure` goes into the shell's figure slot (3.9; empty: as before),
  * `shellAttrs` onto `lc-app-shell`, `footer` before the bar, `headerAttrs`
- * onto `lc-header` and `navAttrs` onto `lc-sidenav` (3.14; empty: as before).
+ * onto `lc-header` and `navAttrs` onto `lc-sidenav` (3.14; empty: as before),
+ * `pageAttrs` onto `lc-app-page` (3.28; empty: as before).
  */
-const today = (figure = '', shellAttrs = '', footer = '', headerAttrs = '', navAttrs = '') => `
+const today = (figure = '', shellAttrs = '', footer = '', headerAttrs = '', navAttrs = '', pageAttrs = '') => `
   <lc-app-shell [horizon]="horizon"${shellAttrs}>
     <lc-header shell-header variant="transparent" [sticky]="false"${headerAttrs} title="Produkt" titleTag="span"
                subtitle="Unser Haushalt" homeAriaLabel="Produkt – Startseite"
@@ -48,7 +77,7 @@ const today = (figure = '', shellAttrs = '', footer = '', headerAttrs = '', navA
                profileLabel="Einstellungen" logoutLabel="Abmelden" menuSize="md" />
     <lc-sidenav shell-nav mode="docked" [isOpen]="true" width="100%" [mobileBreakpoint]="0"
                 variant="transparent"${navAttrs} ariaLabel="Hauptnavigation" [items]="nav" activeRoute="/" />
-    <lc-app-page asideLabelledby="story-members">
+    <lc-app-page asideLabelledby="story-members"${pageAttrs}>
       <div>
         <p style="margin: 0 0 12px; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--color-overline, var(--color-link));">Donnerstag, 15. Oktober</p>
         <h1 style="margin: 0; font-size: 40px; line-height: 1.05; letter-spacing: -0.035em; color: var(--color-text-primary);">Guten Abend, Johanna</h1>
@@ -79,7 +108,7 @@ const meta: Meta<AppShellComponent> = {
       imports: [
         AppPageComponent, HeaderComponent, SidenavComponent, SidenavPlaceholderComponent, BottomNavComponent,
         AvatarGroupComponent, ListComponent, SkeletonComponent, FooterComponent, CharacterComponent,
-        PageHeaderComponent,
+        PageHeaderComponent, ToastOutletComponent, StoryToastsComponent, TableComponent,
       ],
     }),
   ],
@@ -129,6 +158,8 @@ Input \`horizon\` closes the page with the horizon block (\`.lc-horizon\`, from 
 
 **\`lc-app-page\`** — the page inside the shell: \`<main [id]="mainId">\` (default \`main\`) with the content as a column (24 px apart, 40 px from 1024 px), centred and at most \`contentMaxWidth\` wide (880 px; side padding 24 · 32 · 48 · 56 · 72 · 96 px). \`[page-aside]\` is the right column: an \`<aside>\` after \`<main>\`, docked to the window's right edge from 1280 px (360 · 400 · 460 px; \`--lc-app-page-aside-width\`) with a fading tint and hairline that start behind the header (set a changed \`--lc-app-page-aside-width\` on the shell, so both parts line up), hidden below 1280 px (show a narrow equivalent inside main). It renders only with \`asideLabelledby\` or \`asideAriaLabel\`.
 
+Inputs \`reserveAside\` and \`contentWidth\` (3.28) keep one frame on every page from 1280 px. \`reserveAside\` (default \`false\`) keeps the right column, with its width, tint and hairline, on a page that has nothing to put there: an empty \`<div aria-hidden="true">\` with no role, no name and no content, so the page's \`main\` and content sit exactly where they sit on a page with a named aside (AS-35). A named aside wins. \`contentWidth="wide"\` (default \`'default'\`; type \`AppPageContentWidth\`) lays the page out like a page with a right column, leaves the column empty and untinted, and lets children marked \`[page-wide]\` (e.g. a table's wrapper) run over it, up to 928 px of content (or \`contentMaxWidth\` when it is not \`880px\`; \`none\` means the whole column). The other children, such as the page header and the next-step card, keep the standard column, so the title doesn't move between pages (AS-36). With a named aside, \`'wide'\` has no effect: the content stays in the standard column and the aside keeps its content and tint. Below 1280 px both inputs change nothing.
+
 Inputs \`paddingX\` and \`paddingTop\` (3.15) line a page up with the header. \`paddingX="header"\` takes \`lc-header\`'s padding (16 px up to 768 px, 24 px above), so the content starts at the header title's x and ends at the user menu's right edge; combine it with \`contentMaxWidth="none"\` (or a page narrower than the cap), because centred content doesn't align. \`paddingTop\` sets the space above the content: \`'none'\` 0, \`'sm'\` 8 px, \`'md'\` 16 px at every width; with \`lc-page-header paddingTop="none"\` the \`h1\` sits 16 px below the header. Both default to \`'default'\` (the steps above).
 
 **\`lc-app-page\` CSS hooks** (set them on \`lc-app-page\` or any ancestor; each wins over the inputs and holds one value at every width):
@@ -145,6 +176,13 @@ For a value per breakpoint, set the hook inside your own media query (story *Pag
 lc-app-page { --lc-app-page-padding-x: 16px; }
 @media (min-width: 1024px) { lc-app-page { --lc-app-page-padding-x: 32px; } }
 \`\`\`
+
+**Toasts in the shell** (3.28, AS-34): \`lc-app-shell\` tells \`lc-toast-outlet\` where its header ends and where the shown bar starts, also when the app renders the outlet after \`</lc-app-shell>\`. The \`top-*\` stacks start below the header and the \`bottom-*\` stacks end 16 px above the floating bar (the stack's padding); from 1024 px, where the bar is hidden, above the safe-area inset. A stack taller than the space between them scrolls (200 % text). In the shell, prefer the \`bottom-*\` positions: a top toast can still cover a page title placed right under the header. Outside a shell, and in prerendered HTML, the offsets are \`0px\`, as before.
+
+| Hook (on \`lc-toast-outlet\` or any ancestor, e.g. \`:root\`) | Default | What |
+|---|---|---|
+| \`--lc-toast-outlet-offset-top\` | \`0px\`; in the shell: the header's bottom edge (or \`env(safe-area-inset-top, 0px)\` without a header) | the space kept free above the \`top-*\` stacks; wins over the shell's value |
+| \`--lc-toast-outlet-offset-bottom\` | \`0px\`; in the shell: the shown bar's top edge from the viewport's bottom (or \`env(safe-area-inset-bottom, 0px)\` without a bar) | the space kept free below the \`bottom-*\` stacks; wins over the shell's value |
 
 \`busy\` marks the page as loading: \`aria-busy="true"\` on its \`<main>\` while \`true\`, no attribute while \`false\` (default). Set it while a skeleton stands in for the content. Screen readers may hold back changes inside a busy region until it clears, so a loading message that must be heard belongs outside \`<main>\` (for example a \`.sr-only\` \`role="status"\` next to the page, in the shell's default slot) or is static text such as a \`.sr-only\` line inside the page, read when reached. No visual change (3.5, AS-12).
 
@@ -584,6 +622,8 @@ const barEN = barItems(['Today', 'Household', 'Documents', 'Finances', 'Settings
 /**
  * The signed-in frame of life-os (AS-31) with a page taller than the screen;
  * the last block is `[data-story-last]`. Sizes are rem, so 200 % text grows them.
+ * `after` goes after `</lc-app-shell>` (3.28: the toast outlet, as in life-os;
+ * empty: as before).
  */
 const signedIn = (
   lang = 'de',
@@ -593,6 +633,7 @@ const signedIn = (
   heading = 'Heute',
   profile = 'Einstellungen',
   logout = 'Abmelden',
+  after = '',
 ) => `
   <div lang="${lang}" [attr.data-lc-story-text]="textSize">
     <lc-app-shell [horizon]="horizon">
@@ -609,7 +650,7 @@ const signedIn = (
         ${placeholder('‹4›', 120, '1rem', 'data-story-last ')}
       </lc-app-page>
       <lc-bottom-nav shell-bottom-nav variant="floating" [items]="bar" activeRoute="/" />
-    </lc-app-shell>
+    </lc-app-shell>${after}
   </div>
   ${largeTextStyle}`;
 
@@ -815,5 +856,253 @@ export const PagePaddingPerBreakpoint: Story = {
         .story-page-padding lc-app-page { --lc-app-page-padding-x: 16px; }
         @media (min-width: 1024px) { .story-page-padding lc-app-page { --lc-app-page-padding-x: 32px; } }
       </style>`,
+  }),
+};
+
+// ── 3.28 (request 045): toasts in the shell (AS-34) ─────────────────────────
+
+/** The toast outlet after `</lc-app-shell>`, as life-os renders it, and the toasts a page shows. */
+const shellToasts = `
+    <lc-toast-outlet closeAriaLabel="Benachrichtigung schließen" />
+    <lc-story-toasts [toasts]="storyToasts" />`;
+
+/** The signed-in frame (German) with the outlet after the shell. */
+const shellToastsTemplate = signedIn(
+  'de',
+  'Familie Apfelbaum-Kieselbacher-Morgentau',
+  'Menü für Johanna Apfelbaum',
+  'LifeCorner – Startseite',
+  'Heute',
+  'Einstellungen',
+  'Abmelden',
+  shellToasts,
+);
+
+/** Toasts stay (`duration: 0`) so the canvas shows them; on the docs page each story renders in its own frame. */
+const toastStoryDocs = (story: string) => ({ description: { story }, story: { inline: false, height: '640px' } });
+
+/** AS-34: a top and a bottom toast in the signed-in frame on a phone, German. */
+export const ToastsInTheShell: LargeTextStory = {
+  name: 'Toasts in the shell (phone, German)',
+  args: { horizon: false, textSize: '100%' },
+  argTypes: { textSize: { ...textSizeArgType, table: { defaultValue: { summary: "'100%'" } } } },
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
+  parameters: {
+    docs: toastStoryDocs(
+      'AS-34: `<lc-toast-outlet>` sits after `</lc-app-shell>` (as in life-os), so nothing inherits; the shell measures its header and its bar in the browser and hands both edges to the outlet. The `top-center` toast starts 16 px below the header (56 px: y 72), the `bottom-center` toast ends 16 px above the floating bar (its top edge plus the safe-area inset), so neither covers the header or the bar. A title placed right under the header can still be covered by a top toast: in the shell, prefer `bottom-*`. Without a shell both offsets are `0px`, as before (*Feedback/Toast Outlet*).',
+    ),
+  },
+  render: (args) => ({
+    props: {
+      ...args,
+      bar: barDE,
+      storyToasts: [
+        { message: 'Link kopiert.', variant: 'info', position: 'top-center', duration: 0, showCloseButton: false },
+        { message: 'Änderungen gespeichert.', variant: 'success', position: 'bottom-center', duration: 0, showCloseButton: false },
+      ] satisfies ToastConfig[],
+    },
+    template: shellToastsTemplate,
+  }),
+};
+
+/** AS-34 at 200 % text: three bottom toasts taller than the space between header and bar; the stack scrolls. */
+export const ToastsInTheShellLargeText: LargeTextStory = {
+  name: 'Toasts in the shell, large text (phone, German)',
+  args: { horizon: false, textSize: '200%' },
+  argTypes: { textSize: textSizeArgType },
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
+  parameters: {
+    docs: toastStoryDocs(
+      'AS-34, WCAG 1.4.4 and 2.4.11: root text at 200 %, three German `bottom-center` toasts (info, warning, and an error with a close button). The header and the bar grow with the text, the shell measures both, and the stack stays between them: at most the space between the offsets high, it scrolls (wheel or touch over a toast; Tab to the close button scrolls it into view). The newest toast stays at the bottom edge.',
+    ),
+  },
+  render: (args) => ({
+    props: {
+      ...args,
+      bar: barDE,
+      storyToasts: [
+        { message: 'Link kopiert.', variant: 'info', position: 'bottom-center', duration: 0, showCloseButton: false },
+        {
+          message: 'Die Verbindung zur Bank ist unterbrochen. Wir versuchen es gleich noch einmal.',
+          variant: 'warning',
+          position: 'bottom-center',
+          duration: 0,
+          showCloseButton: false,
+        },
+        { message: 'Konto konnte nicht geladen werden.', variant: 'error', position: 'bottom-center', duration: 0 },
+      ] satisfies ToastConfig[],
+    },
+    template: shellToastsTemplate,
+  }),
+};
+
+// ── 3.28 (request 045): one frame for every page (AS-35, AS-36) ────────────
+
+type PageWidthStory = StoryObj<AppShellComponent & { reserveAside: boolean; contentWidth: AppPageContentWidth }>;
+
+const pageWidthArgTypes: PageWidthStory['argTypes'] = {
+  reserveAside: {
+    control: 'boolean',
+    description:
+      '`lc-app-page` keeps the right column from 1280 px (360 · 400 · 460 px, `--lc-app-page-aside-width`) with its tint and hairline but no content and no landmark (`aria-hidden="true"`, no role). A named aside (`asideLabelledby` / `asideAriaLabel`) wins; `contentWidth="wide"` leaves the column empty and untinted. Below 1280 px nothing shows',
+    table: { defaultValue: { summary: 'false' } },
+  },
+  contentWidth: {
+    control: 'inline-radio',
+    options: ['default', 'wide'],
+    description:
+      "`lc-app-page` from 1280 px. `'wide'`: the page keeps the standard column of a page with a right column, the column stays empty and untinted, and `[page-wide]` children run over it, up to 928 px (or `contentMaxWidth` when it is not `880px`). The other children keep the standard column. With a named aside, `'wide'` has no effect. Below 1280 px like `'default'`",
+    table: { defaultValue: { summary: "'default'" } },
+  },
+};
+
+/** The header and nav of *Today (desktop)*, for the pages below. */
+const frameHeader = `
+    <lc-header shell-header variant="transparent" [sticky]="false" title="Produkt" titleTag="span"
+               subtitle="Unser Haushalt" homeAriaLabel="Produkt – Startseite"
+               userMenuTrigger="avatar" userAvatarColor="member-1"
+               userName="Johanna-Friederike Apfelbaum-Kieselbacher-Morgentau"
+               userEmail="johanna.apfelbaum-kieselbacher@example.org"
+               userMenuAriaLabel="Menü für Johanna-Friederike Apfelbaum-Kieselbacher-Morgentau"
+               profileLabel="Einstellungen" logoutLabel="Abmelden" menuSize="md" />`;
+
+/** Household in the *Today (desktop)* frame, with nothing for the right column. */
+const householdTemplate = `
+  <div lang="de">
+    <lc-app-shell [horizon]="horizon">${frameHeader}
+      <lc-sidenav shell-nav mode="docked" [isOpen]="true" width="100%" [mobileBreakpoint]="0"
+                  variant="transparent" ariaLabel="Hauptnavigation" [items]="nav" activeRoute="/household" />
+      <lc-app-page [reserveAside]="reserveAside" [contentWidth]="contentWidth">
+        <h1 style="margin: 0; font-size: 32px; color: var(--color-text-primary);">Haushalt</h1>
+        ${placeholder('‹Der eine nächste Schritt›', 140)}
+        ${placeholder('‹Mitglieder, Einladung›', 480)}
+      </lc-app-page>
+      <lc-bottom-nav shell-bottom-nav variant="floating" ariaLabel="Hauptnavigation" [items]="nav" activeRoute="/household" />
+    </lc-app-shell>
+  </div>`;
+
+/** AS-35: Household has no right-column content, but keeps the column of Today. */
+export const ReservedRightColumn: PageWidthStory = {
+  name: 'Reserved right column (desktop, Household)',
+  args: { horizon: false, reserveAside: true, contentWidth: 'default' },
+  argTypes: pageWidthArgTypes,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'AS-35: `<lc-app-page [reserveAside]="true">` on a page with nothing for the right column. From 1280 px the column keeps its width (360 · 400 · 460 px), tint and hairline, also behind the header, so `main` and the content sit where they sit on *Today (desktop)*: content 296 / 568 px at 1280, 320 / 648 at 1440, 430 / 880 at 1920. The column is an empty `<div aria-hidden="true">`: no landmark, no role, nothing to focus. Below 1280 px nothing shows.',
+      },
+    },
+  },
+  render: (args) => ({ props: { ...args, nav }, template: householdTemplate }),
+};
+
+/** AS-35: `reserveAside` with a named aside: the named aside wins. */
+export const ReservedAndNamedRightColumn: PageWidthStory = {
+  name: 'Reserved and named right column',
+  args: { horizon: true, reserveAside: true, contentWidth: 'default' },
+  argTypes: pageWidthArgTypes,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '*Today (desktop)* with `reserveAside` as well as `asideLabelledby`: the named aside wins. One `complementary` landmark with its members list, and the same boxes as *Today (desktop)*.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: {
+      ...args,
+      nav,
+      members,
+      memberAvatars: members.map((m) => ({ name: m.label, color: m.avatarColor })),
+    },
+    template: today('', '', '', '', '', ' [reserveAside]="reserveAside" [contentWidth]="contentWidth"'),
+  }),
+};
+
+const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+
+/** The account page's table (AS-36), German, long headers; sortable headers are its keyboard stops. */
+const accountColumns: TableColumn[] = [
+  { key: 'holder', label: 'Kontoinhaberin oder Kontoinhaber', sortable: true },
+  { key: 'name', label: 'Kontobezeichnung', sortable: true },
+  { key: 'bank', label: 'Kreditinstitut', sortable: true },
+  { key: 'updated', label: 'Letzte Aktualisierung', sortable: true },
+  { key: 'balance', label: 'Kontostand', sortable: true, align: 'end', formatter: (value) => euro.format(value as number) },
+];
+
+const accounts = [
+  { holder: 'Johanna-Friederike Apfelbaum-Kieselbacher-Morgentau', name: 'Girokonto', bank: 'Sparkasse Rhein-Neckar-Nord', updated: '03.11.2026', balance: 2481.37 },
+  { holder: 'Tom Ek', name: 'Gemeinschaftskonto', bank: 'Volksbank Kraichgau', updated: '03.11.2026', balance: 5120 },
+  { holder: 'Johanna Apfelbaum', name: 'Tagesgeld', bank: 'DKB', updated: '02.11.2026', balance: 12300 },
+  { holder: 'Tom Ek', name: 'Kreditkarte', bank: 'Hanseatic Bank', updated: '01.11.2026', balance: -348.9 },
+  { holder: 'Johanna Apfelbaum', name: 'Depot', bank: 'comdirect', updated: '31.10.2026', balance: 18904.12 },
+  { holder: 'Mila Ek', name: 'Taschengeldkonto', bank: 'Sparkasse Rhein-Neckar-Nord', updated: '30.10.2026', balance: 86.5 },
+  { holder: 'Tom Ek', name: 'Bausparvertrag', bank: 'Schwäbisch Hall', updated: '28.10.2026', balance: 9750 },
+  { holder: 'Johanna Apfelbaum', name: 'Festgeld', bank: 'ING', updated: '27.10.2026', balance: 25000 },
+];
+
+/** The members column of Today, for the account page with a named aside. */
+const membersAside = `
+        <section page-aside>
+          <h2 id="story-members" style="margin: 0 0 16px; font-size: 22px; color: var(--color-text-primary);">Mitglieder</h2>
+          <lc-list [items]="members" size="lg" [showDividers]="true" />
+        </section>`;
+
+/**
+ * The account page (AS-36): page header and next step in the standard
+ * column, the table in a `[page-wide]` wrapper. `asideAttrs` goes onto
+ * `lc-app-page` and `aside` after the table (empty: no right column).
+ */
+const accountsTemplate = (asideAttrs = '', aside = '') => `
+  <div lang="de">
+    <lc-app-shell [horizon]="horizon">${frameHeader}
+      <lc-sidenav shell-nav mode="docked" [isOpen]="true" width="100%" [mobileBreakpoint]="0"
+                  variant="transparent" ariaLabel="Hauptnavigation" [items]="bar" activeRoute="/finances" />
+      <lc-app-page [reserveAside]="reserveAside" [contentWidth]="contentWidth"${asideAttrs}>
+        <lc-page-header [noPaddingX]="true" paddingTop="none" title="Konten" subtitle="Alle Konten des Haushalts" />
+        ${placeholder('‹Der eine nächste Schritt›', 140)}
+        <div page-wide>
+          <lc-table caption="Konten" [showCaption]="false" [columns]="accountColumns" [data]="accounts"
+                    sortedAscendingLabel="aufsteigend sortiert" sortedDescendingLabel="absteigend sortiert" />
+        </div>${aside}
+      </lc-app-page>
+      <lc-bottom-nav shell-bottom-nav variant="floating" ariaLabel="Hauptnavigation" [items]="bar" activeRoute="/finances" />
+    </lc-app-shell>
+  </div>`;
+
+/** AS-36: the account page, `contentWidth="wide"`: the table runs over the empty right column. */
+export const WidePage: PageWidthStory = {
+  name: 'Wide page (desktop, accounts table, German)',
+  args: { horizon: false, reserveAside: true, contentWidth: 'wide' },
+  argTypes: pageWidthArgTypes,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'AS-36: `<lc-app-page [reserveAside]="true" contentWidth="wide">` with the table in `<div page-wide>`. From 1280 px the page header and the next-step card keep the standard column (568 px at 1280, 648 at 1440, 880 at 1920), so the title sits where it sits on every page; the table starts at the same left edge and runs over the empty, untinted right column, up to 928 px. A table wider than that scrolls in its own region (the sortable headers are its keyboard stops), never the page. Below 1280 px the page is the default one.',
+      },
+    },
+  },
+  render: (args) => ({ props: { ...args, bar: barDE, accountColumns, accounts }, template: accountsTemplate() }),
+};
+
+/** AS-36 next to a named aside: `wide` yields. */
+export const WidePageWithRightColumn: PageWidthStory = {
+  name: 'Wide page with a right column',
+  args: { horizon: false, reserveAside: false, contentWidth: 'wide' },
+  argTypes: pageWidthArgTypes,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`contentWidth="wide"` on a page that also names its right column (`asideLabelledby`): `wide` has no effect. The table stays in the standard column (568 px at 1280) and scrolls inside it, and the aside keeps its members, tint and hairline. DOM and focus order stay `main`, then the aside.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: { ...args, bar: barDE, accountColumns, accounts, members },
+    template: accountsTemplate(' asideLabelledby="story-members"', membersAside),
   }),
 };

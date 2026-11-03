@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { moduleMetadata } from '@storybook/angular';
-import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, input, ChangeDetectionStrategy, type OnInit } from '@angular/core';
 import { ToastOutletComponent } from './toast-outlet.component';
 import { ToastService, type ToastPosition, type ToastVariant } from './toast.service';
 import { ButtonComponent } from '../button/button.component';
@@ -99,6 +99,48 @@ class ToastServiceCallDemoComponent {
   }
 }
 
+/**
+ * 3.28 (request 045, AS-34): the offset hooks without lc-app-shell. Dashed
+ * bands stand for an app's own 64 px header and 90 px bar; two sticky toasts
+ * show on init.
+ */
+@Component({
+  selector: 'lc-toast-outlet-offsets-demo',
+  standalone: true,
+  imports: [ToastOutletComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="band band--top" aria-hidden="true">--lc-toast-outlet-offset-top: 64px</div>
+    <div class="band band--bottom" aria-hidden="true">--lc-toast-outlet-offset-bottom: 90px</div>
+    <lc-toast-outlet style="--lc-toast-outlet-offset-top: 64px; --lc-toast-outlet-offset-bottom: 90px" />
+  `,
+  styles: `
+    .band {
+      position: fixed;
+      left: 0;
+      right: 0;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border: 1.5px dashed var(--color-border);
+      font-size: 13px;
+      color: var(--color-text-tertiary);
+      pointer-events: none;
+    }
+    .band--top { top: 0; height: 64px; }
+    .band--bottom { bottom: 0; height: 90px; }
+  `,
+})
+class ToastOutletOffsetsDemoComponent implements OnInit {
+  private readonly toastService = inject(ToastService);
+
+  ngOnInit(): void {
+    this.toastService.show({ message: MESSAGES.success, variant: 'success', position: 'top-right', duration: 0 });
+    this.toastService.show({ message: MESSAGES.info, variant: 'info', position: 'bottom-right', duration: 0 });
+  }
+}
+
 const SERVICE_CALL_SNIPPET = `// app.component.html (the shell): once
 <lc-toast-outlet closeAriaLabel="Benachrichtigung schließen" />
 
@@ -143,7 +185,7 @@ interface DemoArgs {
 const meta: Meta<DemoArgs> = {
   title: 'Feedback/Toast Outlet',
   component: ToastOutletComponent,
-  decorators: [moduleMetadata({ imports: [ToastOutletDemoComponent, ToastServiceCallDemoComponent] })],
+  decorators: [moduleMetadata({ imports: [ToastOutletDemoComponent, ToastServiceCallDemoComponent, ToastOutletOffsetsDemoComponent] })],
   parameters: {
     docs: {
       description: {
@@ -170,6 +212,15 @@ How a page shows a toast (3.17). Checked against \`toast.service.ts\`, \`toast-o
 **5. Announcement.** Each position has two live regions that exist from the start, before any toast: \`aria-live="polite"\` for success and info, \`aria-live="assertive"\` for warning and error, both \`aria-atomic="false"\`. A new toast is read **once**, when it is inserted: its message, then the action label and the close button's name (the icons are hidden). Closing a toast is not announced, and a new toast doesn't repeat the older ones. A standalone \`<lc-toast>\` (\`announce\` true, outside the outlet) is its own \`role="status"\` (success, info) or \`role="alert"\` (warning, error).
 
 **6. Guidance.** Use \`duration: 0\` for errors and for toasts with an action (WCAG 2.2.1: 3 s is too short to read and act). Keyboard users reach an action only by tabbing to the outlet, so offer the same action elsewhere on the page too. A lasting state (a failed load the user must fix) belongs in an \`lc-alert\` on the page, not in a toast.
+
+**7. Offsets (3.28, AS-34).** With \`lc-app-shell\` in the app (before or after the outlet), the \`top-*\` stacks start below the shell's header and the \`bottom-*\` stacks end 16 px above its bottom bar; from 1024 px, where the bar is hidden, above the safe-area inset. Without a shell both offsets are \`0px\`, as before. Two hooks override them; set them on \`lc-toast-outlet\` or any ancestor (\`:root\`), as lengths (\`0px\`, not \`0\`), per breakpoint in your own media queries:
+
+| Hook | Default | What |
+|---|---|---|
+| \`--lc-toast-outlet-offset-top\` | \`0px\`; in the shell: the header's bottom edge | the space kept free above the \`top-*\` stacks |
+| \`--lc-toast-outlet-offset-bottom\` | \`0px\`; in the shell: the shown bar's top edge from the viewport's bottom | the space kept free below the \`bottom-*\` stacks |
+
+Every stack is at most as high as the space between the two offsets and scrolls when its toasts need more (200 % text), so each one stays reachable. In the shell, prefer \`bottom-*\`: a top toast can still cover a page title right under the header. See *Layout/App Shell → Toasts in the shell* and the *Offsets* story.
         `,
       },
     },
@@ -223,5 +274,20 @@ export const ServiceCall: Story = {
   },
   render: () => ({
     template: `<lc-toast-service-call-demo />`,
+  }),
+};
+
+export const Offsets: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'AS-34 without `lc-app-shell`: the app keeps its own 64 px header and 90 px bar free with `<lc-toast-outlet style="--lc-toast-outlet-offset-top: 64px; --lc-toast-outlet-offset-bottom: 90px" />` (dashed bands). The `top-right` toast starts 16 px below the band (y 80), the `bottom-right` toast ends 16 px above the bottom band. The hooks win over the shell\'s values; write lengths (`0px`, not `0`).',
+      },
+      story: { inline: false, height: '480px' },
+    },
+  },
+  render: () => ({
+    template: `<lc-toast-outlet-offsets-demo />`,
   }),
 };

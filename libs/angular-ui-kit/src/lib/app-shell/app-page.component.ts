@@ -16,6 +16,15 @@ export type AppPagePaddingX = 'default' | 'header';
 export type AppPagePaddingTop = 'default' | 'none' | 'sm' | 'md';
 
 /**
+ * Width of `lc-app-page`'s content from 1280 px (3.28, AS-36).
+ * - `default`: the content column, centred, capped at `contentMaxWidth`.
+ * - `wide`: the standard column of a page with a right column, the right
+ *   column left empty, and `[page-wide]` children running over it, up to
+ *   928 px. Below 1280 px, and next to a named right column, as `default`.
+ */
+export type AppPageContentWidth = 'default' | 'wide';
+
+/**
  * A page inside `lc-app-shell`: the `<main>` landmark with the page's content
  * centred at a reading width, and an optional right column docked to the
  * window's right edge (LK-6).
@@ -32,6 +41,16 @@ export type AppPagePaddingTop = 'default' | 'none' | 'sm' | 'md';
  *   inside main instead (e.g. a member row). It renders only with an
  *   accessible name — `asideLabelledby` (the id of its heading) or
  *   `asideAriaLabel`.
+ * - `reserveAside` keeps that column from 1280 px — width, tint and hairline —
+ *   with no content and no landmark (`aria-hidden="true"`), so a page without
+ *   right-column content keeps the same column as a page with one (3.28,
+ *   AS-35). A named aside wins.
+ * - `contentWidth="wide"` (3.28, AS-36) lays the page out like a page with a
+ *   right column, leaves the column empty and untinted, and lets children
+ *   marked `[page-wide]` (e.g. a table's wrapper) run over it, up to 928 px;
+ *   the other children (the page header, the next-step card) keep the
+ *   standard column, so the title doesn't move between pages. Next to a named
+ *   aside, and below 1280 px, it renders like `'default'`.
  * - `busy` marks the page as loading: `aria-busy="true"` on `<main>` while a
  *   skeleton stands in for the content (AS-12). No visual change.
  * - `paddingX="header"` lines the content up with `lc-header` (3.15): its
@@ -116,12 +135,52 @@ export class AppPageComponent {
    */
   readonly paddingTop = input<AppPagePaddingTop>('default');
 
+  /**
+   * Keeps the right column from 1280 px (360 · 400 · 460 px,
+   * `--lc-app-page-aside-width`) with its tint and hairline but no content
+   * and no landmark (`aria-hidden="true"`, no role), so pages without
+   * right-column content share one column with pages that have one. A named
+   * aside (`asideLabelledby` / `asideAriaLabel`) wins; `contentWidth="wide"`
+   * leaves the column empty and untinted. Below 1280 px nothing shows.
+   * @default false
+   */
+  readonly reserveAside = input(false);
+
+  /**
+   * `'wide'`, from 1280 px: the page keeps the standard column of a page with
+   * a right column, the column stays empty and untinted, and `[page-wide]`
+   * children run over it, up to 928 px (or `contentMaxWidth` when it is not
+   * `880px`; `none` means the whole column). The other children keep the
+   * standard column. With a named aside, `'wide'` has no effect. Below
+   * 1280 px `'wide'` renders like `'default'`.
+   * @default 'default'
+   */
+  readonly contentWidth = input<AppPageContentWidth>('default');
+
   /** The right column renders only when it has an accessible name. */
   protected readonly hasAside = computed(() => !!(this.asideLabelledby() || this.asideAriaLabel()));
 
+  /** `contentWidth="wide"` takes effect only without a named aside, which it yields to. */
+  protected readonly wide = computed(() => this.contentWidth() === 'wide' && !this.hasAside());
+
+  /** The empty, unnamed column (`reserveAside`), unless a named aside or `wide` takes the space. */
+  protected readonly reserved = computed(() => this.reserveAside() && !this.hasAside() && !this.wide());
+
+  /**
+   * The cap of `[page-wide]` children: `null` keeps the CSS's 928 px (also
+   * for the default `contentMaxWidth`), `none` means the whole column.
+   */
+  protected readonly wideMax = computed(() => {
+    if (!this.wide()) return null;
+    const max = this.contentMaxWidth();
+    if (max === '880px') return null;
+    return max === 'none' ? '100vw' : max;
+  });
+
   protected readonly pageClasses = computed(() => {
     const classes = ['lc-app-page'];
-    if (this.hasAside()) classes.push('lc-app-page--aside');
+    if (this.hasAside() || this.reserveAside() || this.wide()) classes.push('lc-app-page--aside');
+    if (this.wide()) classes.push('lc-app-page--wide');
     if (this.paddingX() === 'header') classes.push('lc-app-page--pad-x-header');
     if (this.paddingTop() !== 'default') classes.push(`lc-app-page--pad-top-${this.paddingTop()}`);
     return classes.join(' ');

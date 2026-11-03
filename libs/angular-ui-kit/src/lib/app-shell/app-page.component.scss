@@ -136,3 +136,18 @@
     border-left-color: CanvasText;
   }
 }
+
+// contentWidth="wide" (3.28, AS-36): the page has the right column's grid
+// (`--aside`) but no element in it, so the column stays empty and untinted
+// (the shell paints the header row only for an `.lc-app-page__aside`). A
+// `[page-wide]` child runs over it, up to 928 px or the wide cap
+// (`--_lc-app-page-wide-max`, from `contentMaxWidth`); `100% + the column`
+// keeps the page's right padding. A definite width, so a child that sets
+// `width: 100%` still widens. The other children keep the standard column.
+@media (min-width: 1280px) {
+  :host ::ng-deep .lc-app-page--wide > .lc-app-page__main > .lc-app-page__content > [page-wide] {
+    box-sizing: border-box;
+    width: min(var(--_lc-app-page-wide-max, 928px), calc(100% + var(--_aside-width)));
+    max-width: none;
+  }
+}

@@ -440,6 +440,33 @@ const EXPECT_IN_HTML = [
       && modes.every((b) => /\stype="button"/.test(b))
       && /\stitle="Formatierter Text"/.test(modes[0]) && /\stitle="Geteilte Ansicht"/.test(modes[2]);
   }],
+  // 3.28 (request 045, AS-34, tt-shell.ts): the outlet after </lc-app-shell>
+  // is prerendered with its six stacks and no host style (the shell writes its
+  // offsets only in the browser), and its CSS holds the chain hook → the
+  // shell's value → 0px, so the stacks sit at 0px before JS, as before.
+  ['tt: toast outlet stacks at 0px before JS: no host style, hook → shell value → 0px (045 AC-6)', (html) =>
+    /<lc-toast-outlet(?![^>]*\sstyle=)[^>]*>/.test(html)
+      && (html.match(/\sclass="lc-toast-outlet__stack lc-toast-outlet__stack--(?:top|bottom)-(?:left|center|right)"/g) ?? []).length === 6
+      && /@property\s+--_lc-toast-outlet-top\s*\{[^}]*initial-value:\s*0px/.test(html)
+      && /--_lc-toast-outlet-top:\s*var\(\s*--lc-toast-outlet-offset-top\s*,\s*var\(\s*--_lc-toast-outlet-frame-top\s*,\s*0px\s*\)\s*\)/.test(html)
+      && /--_lc-toast-outlet-bottom:\s*var\(\s*--lc-toast-outlet-offset-bottom\s*,\s*var\(\s*--_lc-toast-outlet-frame-bottom\s*,\s*0px\s*\)\s*\)/.test(html),
+    'tt/index.html'],
+  // 3.28 (request 045, AS-35, AS-36, probe-328.ts): the reserved right column
+  // is an empty aria-hidden div with the aside's class (no aside, no role),
+  // and a wide page has the column's grid, its [page-wide] child and no
+  // column element; the [page-wide] rule is in the page's styles before JS.
+  ['app page: reserved column and wide page before JS (045 AC-7, AC-8, AC-13)', (html) => {
+    const page = (id) => html.match(new RegExp(`<lc-app-page(?=[^>]*\\sid="${id}")[^>]*>(?:(?!</lc-app-page>)[^])*</lc-app-page>`))?.[0] ?? '';
+    const reserved = page('compat-page-328-reserved');
+    const wide = page('compat-page-328-wide');
+    return /<div(?=[^>]*\sclass="lc-app-page lc-app-page--aside")[^>]*>/.test(reserved)
+      && /<div(?=[^>]*\sclass="lc-app-page__aside lc-app-page__aside--reserved")(?=[^>]*\saria-hidden="true")(?![^>]*\srole=)[^>]*><\/div>/.test(reserved)
+      && !/<aside\b/.test(reserved)
+      && /<div(?=[^>]*\sclass="lc-app-page lc-app-page--aside lc-app-page--wide")[^>]*>/.test(wide)
+      && !/lc-app-page__aside|<aside\b/.test(wide)
+      && /<div(?=[^>]*\sid="compat-wide-328")(?=[^>]*\spage-wide)[^>]*>/.test(wide)
+      && /@media\s*\(min-width:\s*1280px\)\s*\{\s*\[_nghost-[^\]]*\]\s+\.lc-app-page--wide\s*>\s*\.lc-app-page__main\s*>\s*\.lc-app-page__content\s*>\s*\[page-wide\]\s*\{[^}]*width:\s*min\(\s*var\(--_lc-app-page-wide-max,\s*928px\)\s*,\s*100%\s*\+\s*var\(--_aside-width\)\s*\)/.test(html);
+  }],
 ];
 
 /**

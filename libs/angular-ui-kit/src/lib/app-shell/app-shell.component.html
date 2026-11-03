@@ -1,5 +1,5 @@
 <div #shell [class]="shellClasses()">
-  <div class="lc-app-shell__header"><ng-content select="[shell-header]" /></div>
+  <div #headerSlot class="lc-app-shell__header"><ng-content select="[shell-header]" /></div>
   <div class="lc-app-shell__nav"><ng-content select="[shell-nav]" /></div>
   <div class="lc-app-shell__body"><ng-content /></div>
   @if (horizon()) {

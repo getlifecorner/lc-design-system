@@ -5,3 +5,4 @@
  * entry and without a semver guarantee.
  */
 export * from './overlay-stack.service';
+export * from './overlay-insets.service';

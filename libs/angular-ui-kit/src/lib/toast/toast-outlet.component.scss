@@ -4,9 +4,29 @@
   display: contents;
 }
 
+// The space kept free above the top stacks and below the bottom stacks (3.28,
+// AS-34). Registered, so a hook written as a bare `0` (or an invalid value)
+// still computes to a length inside the stack's calc().
+@property --_lc-toast-outlet-top {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --_lc-toast-outlet-bottom {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 0px;
+}
+
 // One fixed stack per position. Empty stacks must never block the page, so
 // only the toasts themselves (`.lc-toast { pointer-events: auto }`) are hit-testable.
 .lc-toast-outlet__stack {
+  // The public hook wins over the shell's measured value (bound on the host by
+  // OverlayInsetsService); without either, 0px as before.
+  --_lc-toast-outlet-top: var(--lc-toast-outlet-offset-top, var(--_lc-toast-outlet-frame-top, 0px));
+  --_lc-toast-outlet-bottom: var(--lc-toast-outlet-offset-bottom, var(--_lc-toast-outlet-frame-bottom, 0px));
+
   position: fixed;
   z-index: 1200; // above lc-modal (1000) and lc-drawer (1100)
   display: flex;
@@ -16,18 +36,26 @@
   padding: var(--spacing-4);
   box-sizing: border-box;
   pointer-events: none;
+  // A stack taller than the space between the offsets (200 % text, several
+  // toasts) scrolls instead of leaving the screen: wheel and touch over a
+  // toast scroll it, and focus on a toast's control scrolls it into view.
+  max-height: calc(100vh - var(--_lc-toast-outlet-top) - var(--_lc-toast-outlet-bottom));
+  max-height: calc(100dvh - var(--_lc-toast-outlet-top) - var(--_lc-toast-outlet-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
 
   &--top-left,
   &--top-center,
   &--top-right {
-    top: 0;
+    top: var(--_lc-toast-outlet-top);
   }
 
-  // Bottom stacks grow upwards: the newest toast sits nearest the edge
+  // Bottom stacks grow upwards: the newest toast sits nearest the edge (and a
+  // scrolling column-reverse stack starts at that end)
   &--bottom-left,
   &--bottom-center,
   &--bottom-right {
-    bottom: 0;
+    bottom: var(--_lc-toast-outlet-bottom);
     flex-direction: column-reverse;
   }
 
