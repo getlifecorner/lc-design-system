@@ -221,3 +221,24 @@ export const Compact: Story = {
     maxHeight: '300px',
   },
 };
+
+export const KeyboardFocus: Story = {
+  name: 'Keyboard Focus',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27 (request 042): the second filter chip is focused as Tab would focus it (in the story view). Filter chips and the header actions ("Mark all read") show the kit ring: 2 px `--color-primary-500`, 2 px outside (4.17:1 light, 7.57:1 dark on the panel), `Highlight` in forced colours; the pressed chip keeps its forced-colours outline unless focused. A mouse click shows none (`:focus-visible`).',
+      },
+    },
+  },
+  args: {
+    notifications: sampleNotifications,
+    title: 'Notifications',
+    maxHeight: '360px',
+  },
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    canvasElement.querySelectorAll<HTMLElement>('.lc-nc__filter')[1]?.focus({ preventScroll: true });
+  },
+};

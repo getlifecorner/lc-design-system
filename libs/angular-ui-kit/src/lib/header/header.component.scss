@@ -105,7 +105,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--color-primary-500);
+    outline: 2px solid var(--_lc-header-ring, var(--color-primary-500));
     outline-offset: 2px;
   }
 
@@ -181,6 +181,9 @@
   --lc-header-hover-bg: #f3f4f6;
   --lc-header-trigger-border: #e5e7eb;
   --lc-header-trigger-fg: #374151;
+  // The header's own rings keep the light primary on a dark page (request
+  // 042: the dark --color-primary-500 measured 1.89:1 on this white bar).
+  --_lc-header-ring: #208497;
 }
 
 // DS2.0: the default header tokens are already dark-first (semantic surface
@@ -265,7 +268,7 @@ $hamburger-glyph: 24px;
   flex-shrink: 0;
 
   &:focus-visible {
-    outline: 2px solid var(--color-primary-500);
+    outline: 2px solid var(--_lc-header-ring, var(--color-primary-500));
     outline-offset: 4px;
     border-radius: var(--border-radius-sm);
   }
@@ -392,7 +395,7 @@ $hamburger-glyph: 24px;
   }
 
   &:focus-visible {
-    outline: 2px solid var(--color-primary-500);
+    outline: 2px solid var(--_lc-header-ring, var(--color-primary-500));
     outline-offset: 2px;
   }
 
@@ -465,7 +468,7 @@ html.dark .lc-header:not(.lc-header--light),
   }
 
   &:focus-visible {
-    outline: 2px solid var(--color-primary-500);
+    outline: 2px solid var(--_lc-header-ring, var(--color-primary-500));
     outline-offset: 2px;
   }
 }

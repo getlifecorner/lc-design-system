@@ -52,6 +52,13 @@
       cursor: not-allowed;
     }
 
+    // Request 042 (F-18): only the field's ring showed, not which stepper.
+    // Inset, because the field clips (`overflow: hidden`, 0 px room).
+    &:focus-visible {
+      outline: 2px solid var(--color-primary-500);
+      outline-offset: -2px;
+    }
+
     &--decrement {
       border-right: 1px solid var(--color-border);
     }
@@ -116,7 +123,8 @@
 }
 
 @media (forced-colors: active) {
-  .number-input--error .number-input__control:focus-within {
+  .number-input--error .number-input__control:focus-within,
+  .number-input__button:focus-visible {
     outline-color: Highlight;
   }
 }

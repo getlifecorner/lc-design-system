@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/angular';
+import { FormsModule } from '@angular/forms';
 import { fn, expect, userEvent, within } from 'storybook/test';
 import { SelectComponent } from './select.component';
 
@@ -162,4 +163,27 @@ export const SelectInForm: Story = {
         <lc-button variant="primary" [fullWidth]="true">Continue</lc-button>
       </div>`,
   }),
+};
+
+export const KeyboardFocus: Story = {
+  name: 'Keyboard Focus',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27 (request 042): a select with a value shows its clear button; the story focuses it as Tab would (in the story view). It shows the kit ring: 2 px `--color-primary-500`, 2 px outside (4.17:1 light, 7.57:1 dark on the field), `Highlight` in forced colours. A mouse click shows none (`:focus-visible`). The field itself keeps its focus border under the pointer too (F-19).',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [SelectComponent, FormsModule] },
+    props: { options: countryOptions },
+    template: `<div style="max-width: 320px"><lc-select placeholder="Select a country" ariaLabel="Country" [options]="options" [ngModel]="'de'"></lc-select></div>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    // ngModel writes the value after a tick; the clear button follows it.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    canvasElement.querySelector<HTMLElement>('.lc-select__clear')?.focus({ preventScroll: true });
+  },
 };

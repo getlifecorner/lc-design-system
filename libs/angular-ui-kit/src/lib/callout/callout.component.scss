@@ -73,5 +73,20 @@ $callout-colors: (
       opacity: 1;
       background-color: var(--color-surface-hover);
     }
+
+    // Request 042 (F-18): it had no focus style. Full opacity on focus: the
+    // rest opacity 0.6 dims the ring (3.23:1 light on the error tint at 1).
+    &:focus-visible {
+      opacity: 1;
+      outline: 2px solid var(--color-primary-500);
+      outline-offset: 2px;
+    }
+  }
+}
+
+// Forced colours: the ring is Highlight (request 042).
+@media (forced-colors: active) {
+  .callout__dismiss:focus-visible {
+    outline-color: Highlight;
   }
 }

@@ -1,5 +1,6 @@
 // Import color tokens for dark mode overrides
 @use '../../styles/tokens/colors' as *;
+@use '../../styles/mixins' as mix;
 
 // Select Component Styles
 .lc-select-wrapper {
@@ -29,7 +30,9 @@
   cursor: pointer;
   user-select: none;
 
-  &:hover:not(.lc-select--disabled) {
+  // `:not(:focus)` (request 042, F-19): the hover rule is more specific than
+  // the focus rule, so a focused field under the pointer lost its ring colour.
+  &:hover:not(.lc-select--disabled):not(:focus) {
     border-color: var(--color-text-secondary);
   }
 
@@ -74,7 +77,7 @@
     background-color: var(--color-surface-sunken);
     border-color: transparent;
 
-    &:hover:not(.lc-select--disabled) {
+    &:hover:not(.lc-select--disabled):not(:focus) {
       background-color: var(--color-surface-hover);
       border-color: var(--color-border);
     }
@@ -167,6 +170,9 @@
     color: var(--lc-select-clear-hover-fg, var(--color-text-primary));
     background-color: var(--lc-select-clear-hover-bg, var(--color-surface-hover));
   }
+
+  // Request 042 (F-18): it had no focus style.
+  @include mix.focus-ring;
 
   svg {
     width: 1rem;
@@ -346,6 +352,10 @@
 // Forced colours keep the highlight ring in the system focus colour.
 @media (forced-colors: active) {
   .lc-select__option.lc-select__option--highlighted {
+    outline-color: Highlight;
+  }
+
+  .lc-select__clear:focus-visible {
     outline-color: Highlight;
   }
 }

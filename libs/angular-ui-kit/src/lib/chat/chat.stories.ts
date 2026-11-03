@@ -434,3 +434,33 @@ export const WithMarkdown: Story = {
     },
   },
 };
+
+export const KeyboardFocus: Story = {
+  name: 'Keyboard Focus',
+  render: () => ({
+    template: `
+      <div style="height: 600px;">
+        <lc-chat
+          title="AI Chat"
+          [messages]="messages"
+          [allowFileUpload]="true"
+          accept="image/*,.pdf,.docx,.txt"
+        ></lc-chat>
+      </div>
+    `,
+    props: { messages: fileUploadMessages },
+    moduleMetadata: { imports: [ChatComponent] },
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    canvasElement.querySelector<HTMLElement>('.lc-chat__attachment--file')?.focus({ preventScroll: true });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27 (request 042): the first file attachment link is focused as Tab would focus it (in the story view). Attachment links (image and file), the attach, send and pending-remove buttons show the kit ring: 2 px `--color-primary-500`, 2 px outside (3.70:1 light, 6.13:1 dark on a user bubble; 4.17:1 / 7.57:1 on the composer), `Highlight` in forced colours. A mouse click shows none (`:focus-visible`).',
+      },
+    },
+  },
+};

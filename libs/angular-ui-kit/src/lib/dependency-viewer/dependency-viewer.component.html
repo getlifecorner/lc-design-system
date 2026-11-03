@@ -12,18 +12,28 @@
   </div>
 }
 
-<!-- Canvas -->
-<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- background click clears the pointer selection; node selection is pointer-only in this component (known gap) -->
+<!-- Canvas. While it scrolls sideways (fit-width held at minNodeSize) it is a
+     named, focusable region, so the arrow keys can scroll it. -->
+<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events -- background click clears the pointer selection; node selection is pointer-only in this component (known gap) -->
 <div
   #canvas
   class="dep-viewer__canvas"
   [class.dep-viewer__canvas--static]="!interactive()"
   [class.dep-viewer__canvas--sized]="contentHeight() !== null"
+  [class.dep-viewer__canvas--scroll]="scrolling()"
   [style.height.px]="contentHeight()"
+  [style.--_lc-dep-scroll-width]="scrollWidth()"
+  [attr.tabindex]="scrolling() ? 0 : null"
+  [attr.role]="scrolling() ? 'region' : null"
+  [attr.aria-label]="scrolling() ? regionLabel() : null"
   (mousedown)="onMouseDown($event)"
   (wheel)="onWheel($event)"
   (click)="deselectNode()"
 >
+  <!-- The stage has no box (`display: contents`) unless the canvas scrolls
+       sideways: then it is the scroll extent and clips the svg's own, unscaled
+       box, which would otherwise widen the scroll range. -->
+  <div class="dep-viewer__stage">
   <svg
     [attr.width]="svgWidth()"
     [attr.height]="svgHeight()"
@@ -177,6 +187,7 @@
       }
     }
   </svg>
+  </div>
 </div>
 
 <!-- Legend -->

@@ -6,6 +6,7 @@
 // (with an optional avatar/monogram); assistant turns flow as full-width
 // document text (via lc-markdown) on a left timeline rail. A single compact
 // spacing scale — no roomy variant — tunable via the --lc-chat-* custom props.
+@use '../../styles/mixins' as mix;
 
 .lc-chat {
   // Width of the centered reading column for thread + composer.
@@ -482,6 +483,9 @@
 
   &:hover:not(:disabled) { background: var(--color-primary-fill-hover); }
   &:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  // Request 042 (F-18): it had no focus style.
+  @include mix.focus-ring;
 }
 
 // ── File upload ─────────────────────────────────────────────
@@ -508,6 +512,9 @@
     color: var(--color-text-primary);
   }
   &:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  // Request 042 (F-18): only the composer's ring showed, not which control.
+  @include mix.focus-ring;
 }
 
 .lc-chat__pending-attachments {
@@ -563,6 +570,9 @@
   flex-shrink: 0;
 
   &:hover { background: var(--color-surface-hover); color: var(--color-text-primary); }
+
+  // Request 042 (F-18): it had no focus style.
+  @include mix.focus-ring;
 }
 
 // ── Attachments inside messages ─────────────────────────────
@@ -597,6 +607,9 @@
     object-fit: cover;
     display: block;
   }
+
+  // Request 042 (F-18): the links showed only the browser ring.
+  @include mix.focus-ring;
 }
 
 .lc-chat__attachment-icon {
@@ -612,4 +625,14 @@
 .lc-chat__attachment-size {
   opacity: 0.7;
   font-variant-numeric: tabular-nums;
+}
+
+// Forced colours: the rings are Highlight (request 042).
+@media (forced-colors: active) {
+  .lc-chat__send-btn:focus-visible,
+  .lc-chat__attach-btn:focus-visible,
+  .lc-chat__pending-remove:focus-visible,
+  .lc-chat__attachment:focus-visible {
+    outline-color: Highlight;
+  }
 }

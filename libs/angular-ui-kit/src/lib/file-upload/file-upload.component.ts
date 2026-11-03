@@ -153,7 +153,12 @@ export class FileUploadComponent {
    */
   maxSizeLabel = input('Max:');
 
-  /** Accessible name of a selected file's remove button. */
+  /**
+   * Accessible name of a selected file's remove button, followed by the file
+   * name ("Remove file bericht.csv"), so each button in the list has its own
+   * name.
+   * @default 'Remove file'
+   */
   removeFileAriaLabel = input('Remove file');
 
   /**

@@ -120,3 +120,25 @@ export const LightboxDisabled: Story = {
     enableLightbox: false,
   },
 };
+
+export const KeyboardFocus: Story = {
+  name: 'Keyboard Focus',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27 (request 042): the second category filter is focused as Tab would focus it (in the story view). Filter buttons show the kit ring: 2 px `--color-primary-500`, 2 px outside (4.17:1 light, 9.95:1 dark on the page), `Highlight` in forced colours. A mouse click shows none (`:focus-visible`).',
+      },
+    },
+  },
+  args: {
+    items: generateItems(4, true),
+    layout: 'grid',
+    size: 'md',
+    showCaptions: true,
+  },
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    canvasElement.querySelectorAll<HTMLElement>('.gallery__filter-btn')[1]?.focus({ preventScroll: true });
+  },
+};

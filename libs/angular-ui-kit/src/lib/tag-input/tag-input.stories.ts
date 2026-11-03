@@ -102,3 +102,35 @@ export const Disabled: Story = {
     label: 'Disabled',
   },
 };
+
+export const KeyboardFocus: Story = {
+  name: 'Keyboard Focus',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27 (request 042): the story adds the tag "Kostenstellenverantwortung" as typing and Enter would, then focuses its × as Tab would (in the story view). The remove button shows the kit ring at full opacity: 2 px `--color-primary-500`, 2 px outside (3.43:1 light, 6.34:1 dark on the chip), `Highlight` in forced colours. A mouse click shows none (`:focus-visible`). The field keeps its focus border under the pointer too (F-19).',
+      },
+    },
+  },
+  args: {
+    placeholder: 'Schlagwort hinzufügen…',
+    label: 'Schlagwörter',
+    removeTagAriaLabel: 'Entfernen',
+  },
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    const input = canvasElement.querySelector<HTMLInputElement>('.lc-tag-input__input');
+    if (!input) return;
+    input.focus({ preventScroll: true });
+    input.value = 'Kostenstellenverantwortung';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    // Let change detection see the typed value first (as between real key presses):
+    // otherwise the OnPush `[value]` reset to '' after Enter writes nothing.
+    await new Promise((resolve) => setTimeout(resolve));
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    input.blur();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    canvasElement.querySelector<HTMLElement>('.lc-tag-input__tag-remove')?.focus({ preventScroll: true });
+  },
+};

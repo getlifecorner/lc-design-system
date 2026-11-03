@@ -255,6 +255,29 @@ export const WithSelection: Story = {
   },
 };
 
+export const KeyboardFocus: Story = {
+  name: 'Keyboard Focus',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27 (request 042): the first row\'s selection checkbox is focused as Tab would focus it (in the story view). The checkboxes show the kit ring instead of the browser default (2.29:1 in dark): 2 px `--color-primary-500`, 2 px outside (4.36:1 light, 9.12:1 dark on the table), `Highlight` in forced colours. A mouse click shows none (`:focus-visible`).',
+      },
+    },
+  },
+  args: {
+    columns: userColumns,
+    data: userData.slice(0, 3),
+    selectable: true,
+    hoverable: true,
+    variant: 'default',
+  },
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    canvasElement.querySelector<HTMLElement>('tbody .lc-table__checkbox')?.focus({ preventScroll: true });
+  },
+};
+
 export const WithRowActions: Story = {
   parameters: {
     docs: {

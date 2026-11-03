@@ -56,6 +56,14 @@
   }
 }
 
+// Forced colours: the ring stroke in the system focus colour (request 042;
+// SVG paint is not forced, and the text ink is no focus cue there).
+@media (forced-colors: active) {
+  .lc-scatter-plot__dot:focus-visible {
+    stroke: Highlight;
+  }
+}
+
 // Surface pair rather than inverted ink: `--color-text-primary` as a background
 // with white text disappears in the dark theme.
 .lc-scatter-plot__tooltip {

@@ -1,3 +1,3 @@
-- [Gates and measuring](reference_gates-and-measuring.md) — baselines (Jest/lint/build), story-shots quirks (--full baselines, CSS injection, in-browser pixel diff), Bash-tool filters
-- [Build pitfalls](feedback_build-pitfalls.md) — Jest fakes, compat/CSP fixtures, Storybook ::ng-deep text size, entry graph, SCSS specs, pixel-identical flex rows (lc-header), model() API break
+- [Gates and measuring](reference_gates-and-measuring.md) — baselines (Jest/lint/build), story-shots quirks, running designer measure scripts (eval), pixel diff, Bash filters
+- [Build pitfalls](feedback_build-pitfalls.md) — Jest fakes, compat fixtures, Storybook, entry graph, SCSS specs, flex rows, model() break, svg scroll box
 - [Kit gates and session quirks](kit-gates-and-session-quirks.md) — Jest --maxWorkers=4; what runs when the session is rooted outside the repo; partial-compiled fesm; axe label-in-name in jsdom

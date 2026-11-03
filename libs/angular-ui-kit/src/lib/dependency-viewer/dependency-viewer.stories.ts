@@ -9,7 +9,13 @@ const meta: Meta<DependencyViewerComponent> = {
     layout: { control: 'radio', options: ['tree', 'layered'] },
     direction: { control: 'radio', options: ['horizontal', 'vertical'] },
     fitMode: { control: 'radio', options: [null, 'none', 'contain', 'fit-width'] },
-    minNodeSize: { control: { type: 'number', min: 20, max: 160, step: 10 } },
+    minNodeSize: { control: { type: 'number', min: 20, max: 240, step: 10 } },
+    regionLabel: {
+      control: 'text',
+      description:
+        '3.27: accessible name of the canvas while it scrolls sideways (`fitMode="fit-width"` with a `minNodeSize` the frame can\'t hold). It is then a focusable `role="region"`, scrolled with the arrow keys. Set a short, localised name that is unique on the page. Not used otherwise.',
+      table: { defaultValue: { summary: "'Dependency graph'" } },
+    },
     showToolbar: { control: 'boolean' },
     showEdgeLabels: { control: 'boolean' },
     height: { control: 'text' },
@@ -603,8 +609,9 @@ export const LayeredFitWidth: Story = {
       description: {
         story:
           '`fitMode="fit-width"` scales to the frame\'s width and lets the height follow the ' +
-          'graph, so nodes keep a readable size and the *page* scrolls — the graph itself never ' +
-          'scrolls internally. `height` is not used in this mode. Compare with ' +
+          'graph, so nodes keep a readable size and the *page* scrolls; past `minNodeSize` a ' +
+          'graph wider than the frame scrolls sideways inside it (see *Phone Width*). `height` ' +
+          'is not used in this mode. Compare with ' +
           '`fitMode="contain"`, which fits both axes and therefore shrinks a large graph until ' +
           'it fits vertically too; past roughly 20 nodes that is usually too small to read.',
       },
@@ -629,8 +636,8 @@ export const LayeredMinNodeSize: Story = {
         story:
           '`minNodeSize` is a floor on how far fitting may shrink the nodes, in px of node width ' +
           '(160px unscaled). Below it the fit stops scaling down and lets the graph overflow — ' +
-          'which `fit-width` turns into page scroll, and `contain` (shown here) into clipping. ' +
-          'Pair it with `fit-width`.',
+          'which `fit-width` turns into sideways scrolling of the frame (see *Phone Width*), and ' +
+          '`contain` (shown here) into clipping. Pair it with `fit-width`.',
       },
     },
   },
@@ -714,6 +721,94 @@ export const AllRelationTypes: Story = {
           '`--color-text-tertiary` and `extends` `--color-on-primary-subtle` (edge, arrow, label and legend), so ' +
           'their labels reach 4.5:1 in both themes (light `uses` was 1.47, `extends` 1.89) and their lines 3:1. ' +
           'The dash style and the label still tell the relations apart, not the colour alone.',
+      },
+    },
+  },
+};
+
+// ── Phone width (3.27, request 042, F-20) ────────────────────────────────────
+
+/**
+ * An approval process of ten steps: a–c done, d–e running, h at risk.
+ * `relationLabel` names the links (the legend's text); without it the legend reads "depends on".
+ */
+function approvalProcess(labels: readonly string[], relationLabel?: string): DependencyNode[] {
+  const statuses: DependencyNode['status'][] = ['success', 'success', 'success', 'active', 'active', 'default', 'default', 'warning', 'default', 'default'];
+  const after: Record<string, string[]> = { d: ['a', 'b'], e: ['c'], f: ['d', 'e'], g: ['f'], h: ['f'], i: ['g', 'h'], j: ['i'] };
+  return 'abcdefghij'.split('').map((id, i) => ({
+    id,
+    label: labels[i],
+    status: statuses[i],
+    ...(after[id] ? { dependsOn: after[id].map((dep) => (relationLabel ? { id: dep, relationLabel } : { id: dep })) } : {}),
+  }));
+}
+
+const approvalEn = approvalProcess([
+  'Capture request', 'Upload receipts', 'Assign cost centre', 'Check documents', 'Budget check',
+  'Approval by the cost centre owner', 'Prepare booking', 'Release payment', 'Export to accounting', 'Archive',
+]);
+
+const approvalDe = approvalProcess([
+  'Antrag erfassen', 'Belege hochladen', 'Kostenstelle zuordnen', 'Unterlagen prüfen', 'Budgetprüfung',
+  'Freigabe durch Kostenstellenverantwortliche', 'Buchung vorbereiten', 'Zahlung freigeben', 'Export an die Finanzbuchhaltung', 'Archivieren',
+], 'hängt ab von');
+
+export const PhoneWidth: Story = {
+  name: 'Phone Width',
+  args: {
+    root: approvalEn,
+    layout: 'layered',
+    direction: 'vertical',
+    fitMode: 'fit-width',
+    minNodeSize: 200,
+    showEdgeLabels: false,
+    height: '480px',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27 (F-20): the phone recipe, `fitMode="fit-width"` with `minNodeSize` 200 (and ' +
+          '`direction="vertical"` for a process). At 360 px the frame can\'t hold the widest layer at ' +
+          'that size, so the fit stops there (223 px nodes drawn 200 px wide, scale 0.90: labels 10.8 px, ' +
+          'borders 1.35 px; `autoFit` alone drew 5.7 px labels and 0.7 px borders), pins the graph to ' +
+          'the start and lets the canvas scroll sideways: touch, Shift + wheel, or the arrow keys once ' +
+          'it is focused. While it scrolls, the canvas is a tab stop after the toolbar, a ' +
+          '`role="region"` named by `regionLabel`, with a 2 px inset ring. From 1024 px the same graph ' +
+          'fits at 100 %, centred, with no scrolling and no region. The page scrolls vertically as ' +
+          'before; `height` is not used.',
+      },
+    },
+  },
+};
+
+export const PhoneWidthDe: Story = {
+  name: 'Phone Width (German)',
+  args: {
+    root: approvalDe,
+    layout: 'layered',
+    direction: 'vertical',
+    fitMode: 'fit-width',
+    minNodeSize: 200,
+    showEdgeLabels: false,
+    height: '480px',
+    regionLabel: 'Freigabeprozess',
+    zoomInLabel: 'Vergrößern',
+    zoomOutLabel: 'Verkleinern',
+    resetZoomLabel: 'Zurücksetzen',
+    depthLabel: 'Tiefe:',
+    childrenLabel: 'Untergeordnet:',
+    dependsOnLabel: 'Hängt ab von:',
+    dependenciesLabel: 'Abhängigkeiten:',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27 (F-20): *Phone Width* in German, with `regionLabel` "Freigabeprozess" and every ' +
+          'built-in text set in German. The long labels wrap to two lines inside their nodes (no ' +
+          'ellipsis); the nodes are drawn 200 px wide at 360 px (scale 0.83: labels 10 px, borders ' +
+          '1.25 px) and the canvas scrolls sideways, as in *Phone Width*.',
       },
     },
   },

@@ -70,3 +70,11 @@
     }
   }
 }
+
+// Forced colours drop the tinted bar: draw an outline (request 042).
+@media (forced-colors: active) {
+  .lc-split-pane__separator:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}

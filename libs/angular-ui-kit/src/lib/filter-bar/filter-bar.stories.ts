@@ -120,3 +120,28 @@ export const AboveTable: Story = {
       </div>`,
   }),
 };
+
+export const KeyboardFocus: Story = {
+  name: 'Keyboard Focus',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27 (request 042): the active toggle is focused as Tab would focus it (in the story view). Toggle buttons show the kit ring inside their edge (2 px `--color-primary-500`, 2 px inset, because the group clips): 3.96:1 light, 9.04:1 dark on the group, 4.17:1 / 7.57:1 on the active button; `Highlight` in forced colours. A mouse click shows none (`:focus-visible`).',
+      },
+    },
+  },
+  args: {
+    size: 'md',
+    filters: [
+      { key: 'search', label: 'Search', type: 'search', placeholder: 'Filter by name...' },
+      { key: 'role', label: 'Role', type: 'select', options: [{ value: 'admin', label: 'Admin' }, { value: 'editor', label: 'Editor' }, { value: 'viewer', label: 'Viewer' }] },
+      { key: 'active', label: 'Active', type: 'toggle', options: [{ value: '', label: 'All' }, { value: 'true', label: 'Active only' }] },
+    ],
+    values: { role: 'editor', active: 'true' },
+  },
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    canvasElement.querySelector<HTMLElement>('.lc-filter-bar__toggle-btn--active')?.focus({ preventScroll: true });
+  },
+};

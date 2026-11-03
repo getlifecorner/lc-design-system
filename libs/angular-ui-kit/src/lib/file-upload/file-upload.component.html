@@ -48,7 +48,7 @@
           type="button"
           class="file-upload__file-remove"
           (click)="removeFile(i); $event.stopPropagation()"
-          [attr.aria-label]="removeFileAriaLabel()"
+          [attr.aria-label]="removeFileAriaLabel() + ' ' + f.name"
         >
           <lc-icon name="x-mark" [decorative]="true"></lc-icon>
         </button>

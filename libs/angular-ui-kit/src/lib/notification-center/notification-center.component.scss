@@ -78,6 +78,9 @@
     color: var(--color-error-default);
     &:hover { background: rgba(157, 14, 14, 0.16); }
   }
+
+  // Request 042 (F-18): it had no focus style.
+  @include mix.focus-ring;
 }
 
 // Search
@@ -125,6 +128,9 @@
     color: var(--color-on-primary);
     border-color: var(--color-primary-500);
   }
+
+  // Request 042 (F-18): it had no focus style.
+  @include mix.focus-ring;
 }
 
 // Forced colours drop the fill: an outline marks the pressed chip.
@@ -374,7 +380,9 @@
 @media (forced-colors: active) {
   .lc-nc__item-title:focus-visible,
   .lc-nc__item-action:focus-visible,
-  .lc-nc__item-dismiss:focus-visible {
+  .lc-nc__item-dismiss:focus-visible,
+  .lc-nc__action-btn:focus-visible,
+  .lc-nc__filter:focus-visible {
     outline-color: Highlight;
   }
 }

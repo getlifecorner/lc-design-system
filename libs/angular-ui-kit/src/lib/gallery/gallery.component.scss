@@ -1,3 +1,5 @@
+@use '../../styles/mixins' as mix;
+
 .gallery {
   width: 100%;
 
@@ -38,6 +40,8 @@
       }
     }
 
+    // Request 042 (F-18): it had no focus style.
+    @include mix.focus-ring;
   }
 
   // ── Grid / Masonry ─────────────────────────────────────────────────────
@@ -268,4 +272,11 @@
 @keyframes gallery-shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+// Forced colours: the ring is Highlight (request 042).
+@media (forced-colors: active) {
+  .gallery__filter-btn:focus-visible {
+    outline-color: Highlight;
+  }
 }

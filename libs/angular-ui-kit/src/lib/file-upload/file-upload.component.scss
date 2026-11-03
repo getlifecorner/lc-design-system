@@ -118,6 +118,7 @@
 
   &__file-remove {
     flex-shrink: 0;
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -131,9 +132,30 @@
     --icon-size: 0.75rem;
     color: var(--color-text-secondary);
 
+    // Hit area (WCAG 2.5.8, request 042 F-21): 44 × 44 px centred on the
+    // 20 px circle, without paint; the row keeps its 42 px height.
+    &::before {
+      content: '';
+      position: absolute;
+      inset: calc((1.25rem - var(--size-min-touch-height, 2.75rem)) / 2);
+    }
+
     &:hover {
       background: rgba(157, 14, 14, 0.18);
       color: var(--color-on-error-subtle);
     }
+
+    // Request 042 (F-21): it had no focus style.
+    &:focus-visible {
+      outline: 2px solid var(--color-primary-500);
+      outline-offset: 2px;
+    }
+  }
+}
+
+// Forced colours: the ring is Highlight (request 042).
+@media (forced-colors: active) {
+  .file-upload__file-remove:focus-visible {
+    outline-color: Highlight;
   }
 }

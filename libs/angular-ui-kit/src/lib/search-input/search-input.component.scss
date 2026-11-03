@@ -16,7 +16,9 @@
   border-radius: var(--border-radius-md);
   transition: border-color 150ms ease, box-shadow 150ms ease;
 
-  &:hover:not(.search-input--disabled) {
+  // `:not(:focus-within)` (request 042, F-19): the hover rule is more specific
+  // than the focus rule, so a focused field under the pointer lost its colour.
+  &:hover:not(.search-input--disabled):not(:focus-within) {
     border-color: var(--color-text-secondary);
   }
 

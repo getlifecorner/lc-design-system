@@ -1,3 +1,5 @@
+@use '../../styles/mixins' as mix;
+
 .doc-viewer {
   display: flex;
   flex-direction: column;
@@ -77,6 +79,8 @@
       color: var(--color-text-primary);
     }
 
+    // Request 042 (F-18): it had no focus style.
+    @include mix.focus-ring;
   }
 
   &__zoom {
@@ -231,6 +235,8 @@
       background: var(--color-primary-500);
       color: #fff;
     }
+
+    @include mix.focus-ring;
   }
 
   // ── Fullscreen ───────────────────────────────────────────────────────────
@@ -238,5 +244,13 @@
   &:fullscreen {
     height: 100vh !important;
     border-radius: 0;
+  }
+}
+
+// Forced colours: the rings are Highlight (request 042).
+@media (forced-colors: active) {
+  .doc-viewer__btn:focus-visible,
+  .doc-viewer__download-btn:focus-visible {
+    outline-color: Highlight;
   }
 }

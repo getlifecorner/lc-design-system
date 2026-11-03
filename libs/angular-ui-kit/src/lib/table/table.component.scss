@@ -312,6 +312,12 @@
   height: 16px;
   cursor: pointer;
   accent-color: var(--color-primary);
+
+  // Request 042 (F-18): only the browser ring showed (2.29:1 in dark).
+  &:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
 }
 
 .lc-table__row--selected {
@@ -582,3 +588,10 @@
 
 // DS2.0: filter/edit inputs and pagination buttons read from semantic surface
 // tokens (correct in both themes), so no per-theme override is needed here.
+
+// Forced colours: the selection checkbox ring is Highlight (request 042).
+@media (forced-colors: active) {
+  .lc-table__checkbox:focus-visible {
+    outline-color: Highlight;
+  }
+}

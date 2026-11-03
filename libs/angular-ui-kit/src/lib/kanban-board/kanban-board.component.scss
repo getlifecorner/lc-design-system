@@ -91,9 +91,13 @@
     box-shadow: var(--elevation-1);
   }
 
+  // A 2 px ring (request 042): the 20 % halo measured 1.28:1 and vanished in
+  // forced colours. The border change stays. Inset (review r1): an outside ring
+  // sat on the column tint (2.19:1 on an over-limit column, light); inside it
+  // always sits on the card surface (4.36:1 light, 9.12:1 dark).
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-500) 20%, transparent);
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: -2px;
     border-color: var(--color-primary-500);
   }
 
@@ -178,4 +182,11 @@
   border-radius: 6px;
   font-size: 0.75rem;
   color: var(--color-text-tertiary);
+}
+
+// Forced colours: the ring is Highlight (request 042).
+@media (forced-colors: active) {
+  .lc-kanban__card:focus-visible {
+    outline-color: Highlight;
+  }
 }

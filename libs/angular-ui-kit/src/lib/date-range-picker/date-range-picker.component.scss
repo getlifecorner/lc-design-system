@@ -23,7 +23,9 @@
     background: var(--color-surface-2);
     transition: border-color 0.15s, box-shadow 0.15s;
 
-    &:hover:not(&--disabled) { border-color: var(--color-text-secondary); }
+    // `:not(:focus-within)` (request 042, F-19): the hover rule is more
+    // specific than the focus rule, so a focused field lost its colour.
+    &:hover:not(&--disabled):not(:focus-within) { border-color: var(--color-text-secondary); }
 
     &:focus-within {
       border-color: var(--color-primary-500);

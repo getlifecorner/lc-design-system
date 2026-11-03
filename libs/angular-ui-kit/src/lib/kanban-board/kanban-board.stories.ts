@@ -139,3 +139,32 @@ export const Readonly: Story = {
     readonly: true,
   },
 };
+
+export const KeyboardFocus: Story = {
+  name: 'Keyboard Focus',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27 (request 042): the first card is focused as Tab would focus it (in the story view). Cards show the kit ring with the primary border: 2 px `--color-primary-500`, 2 px inside the card edge (4.36:1 light, 9.12:1 dark on the card, in any column; the 20 % halo it replaces measured 1.28:1), `Highlight` in forced colours. A mouse click shows none (`:focus-visible`).',
+      },
+    },
+  },
+  args: {
+    columns: [
+      {
+        id: 'todo', title: 'To Do',
+        cards: [
+          { id: '1', title: 'Buy groceries' },
+          { id: '2', title: 'Clean house' },
+        ],
+      },
+      { id: 'doing', title: 'Doing', cards: [{ id: '3', title: 'Exercise' }] },
+    ],
+    showWipLimit: false,
+  },
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    canvasElement.querySelector<HTMLElement>('.lc-kanban__card')?.focus({ preventScroll: true });
+  },
+};

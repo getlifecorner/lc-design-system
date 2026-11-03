@@ -1,4 +1,5 @@
 // Rich Text Editor Styles
+@use '../../styles/mixins' as mix;
 
 .lc-rich-text-editor {
   border: 1px solid var(--color-border);
@@ -6,6 +7,14 @@
   background-color: var(--color-surface);
   overflow: hidden;
   font-family: var(--typography-font-family);
+
+  // The editing surfaces keep `outline: none`; the frame shows the field ring
+  // instead, as lc-input does (request 042, D-9: the surface alone had none).
+  &:has(.lc-rich-text-editor__rich:focus-visible, .lc-rich-text-editor__textarea:focus-visible) {
+    border-color: var(--color-primary-500);
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 0px;
+  }
 
   &--disabled {
     opacity: 0.6;
@@ -56,6 +65,9 @@
       cursor: not-allowed;
       opacity: 0.4;
     }
+
+    // Request 042 (F-18): it had no focus style; 4.36:1 light, 9.12:1 dark.
+    @include mix.focus-ring;
   }
 
   &__toolbar-modes {
@@ -88,6 +100,8 @@
       background-color: var(--color-primary);
       color: white;
     }
+
+    @include mix.focus-ring;
   }
 
   // -- Content area --
@@ -280,5 +294,19 @@
     border-top: 1px solid var(--color-divider);
     font-size: var(--typography-font-size-xs);
     color: var(--color-text-secondary);
+  }
+}
+
+// Forced colours: every ring is Highlight (request 042). The frame ring is on
+// an ancestor of the focused surface, so it needs its own rule.
+@media (forced-colors: active) {
+  .lc-rich-text-editor__toolbar-btn:focus-visible,
+  .lc-rich-text-editor__mode-btn:focus-visible {
+    outline-color: Highlight;
+  }
+
+  .lc-rich-text-editor:has(.lc-rich-text-editor__rich:focus-visible, .lc-rich-text-editor__textarea:focus-visible) {
+    border-color: Highlight;
+    outline-color: Highlight;
   }
 }

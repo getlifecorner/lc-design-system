@@ -186,3 +186,25 @@ export const TallEditor: Story = {
     showWordCount: true,
   },
 };
+
+export const KeyboardFocus: Story = {
+  name: 'Keyboard Focus',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27 (request 042): the editing surface is focused as Tab would focus it (in the story view). The frame shows the field ring, as lc-input does: border and a 2 px outline in `--color-primary-500` (4.17:1 light, 9.95:1 dark on the page), `Highlight` in forced colours. The toolbar and mode buttons have the kit ring too (2 px, 2 px outside; 4.36:1 / 9.12:1 on the toolbar). A mouse click on a button shows none (`:focus-visible`).',
+      },
+    },
+  },
+  args: {
+    mode: 'rich',
+    placeholder: 'Start typing...',
+    minHeight: 300,
+    showWordCount: true,
+  },
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    canvasElement.querySelector<HTMLElement>('.lc-rich-text-editor__rich')?.focus({ preventScroll: true });
+  },
+};

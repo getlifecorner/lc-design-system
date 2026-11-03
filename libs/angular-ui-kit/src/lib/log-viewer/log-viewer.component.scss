@@ -118,6 +118,12 @@
     box-shadow: inset 0 0 0 1px currentColor;
   }
 
+  // Request 042 (F-18): it had no focus style. The pressed ring stays inside.
+  &:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+
   &--error {
     background-color: rgba(157, 14, 14, 0.18);
     color: var(--color-on-error-subtle);
@@ -394,6 +400,7 @@
 // Forced colours keep the rings and draw them in the system focus colour.
 @media (forced-colors: active) {
   .lc-log-viewer__tool-btn:focus-visible,
+  .lc-log-viewer__level-pill:focus-visible,
   .lc-log-viewer__line--clickable:focus-visible,
   .lc-log-viewer__jump-bottom:focus-visible {
     outline-color: Highlight;

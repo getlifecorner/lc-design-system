@@ -97,3 +97,23 @@ export const NamedIcon: Story = {
   }),
 };
 
+/** 3.27 (request 042): the dismiss button's ring, focused by the story. */
+export const KeyboardFocus: Story = {
+  name: 'Keyboard Focus',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27 (request 042): the dismiss button of an error callout is focused as Tab would focus it (in the story view). It shows the kit ring at full opacity: 2 px `--color-primary-500`, 2 px outside, 3.23:1 light and 9.54:1 dark on the error tint (the lowest of the tints; info 3.47 / 8.80), `Highlight` in forced colours. A mouse click shows none (`:focus-visible`).',
+      },
+    },
+  },
+  render: () => ({
+    template: `<lc-callout variant="error" title="Fehler" [dismissible]="true" dismissAriaLabel="Schließen">Verbindung zum Server konnte nicht hergestellt werden.</lc-callout>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    canvasElement.querySelector<HTMLElement>('.callout__dismiss')?.focus({ preventScroll: true });
+  },
+};
+

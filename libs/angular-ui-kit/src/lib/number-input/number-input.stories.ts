@@ -67,3 +67,20 @@ export const WithError: Story = {
 export const NoLabel: Story = {
   args: { min: 1, max: 10, step: 1, ariaLabel: 'Amount' },
 };
+
+export const KeyboardFocus: Story = {
+  name: 'Keyboard Focus',
+  args: { label: 'Quantity', min: 0, max: 99, step: 1 },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27 (request 042): the increment button is focused as Tab would focus it (in the story view). The steppers show the kit ring inside their edge, because the field clips: 2 px `--color-primary-500`, 2 px inset (4.17:1 light, 7.57:1 dark on the field), so it is clear which control has focus; the field keeps its own focus border. `Highlight` in forced colours. A mouse click shows none (`:focus-visible`).',
+      },
+    },
+  },
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    canvasElement.querySelector<HTMLElement>('.number-input__button--increment')?.focus({ preventScroll: true });
+  },
+};

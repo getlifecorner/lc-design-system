@@ -118,6 +118,9 @@ $_share: 1000000;
       color: var(--color-link-hover);
       text-decoration: underline;
     }
+
+    // Request 042 (F-18): only the browser ring showed (2.29:1 in dark).
+    @include mix.focus-ring;
   }
 
   // ── rows layout (default) ──────────────────────────────────────────────────
@@ -219,6 +222,13 @@ $_share: 1000000;
 // focus colour (system colours survive forcing).
 @media (forced-colors: active) {
   .lc-dl__action:focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+// The value links' ring too (request 042).
+@media (forced-colors: active) {
+  .lc-dl__link:focus-visible {
     outline-color: Highlight;
   }
 }

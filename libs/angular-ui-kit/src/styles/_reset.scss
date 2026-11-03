@@ -170,8 +170,10 @@ button {
   margin: 0;
   font: inherit;
   cursor: pointer;
-  
-  &:focus {
+
+  // Only mouse focus loses the ring (request 042, F-18): a keyboard-focused
+  // button with no `:focus-visible` rule of its own keeps the browser ring.
+  &:focus:not(:focus-visible) {
     outline: none;
   }
 }

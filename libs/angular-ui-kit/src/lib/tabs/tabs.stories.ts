@@ -227,3 +227,30 @@ export const WithDisabledTab: Story = {
       </lc-tabs>`,
   }),
 };
+
+export const KeyboardFocus: Story = {
+  name: 'Keyboard Focus',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27 (request 042): the active panel is a tab stop (`tabindex="0"`, after the tab list) and is focused here as Tab would focus it (in the story view). It shows the kit ring inside its edge, because panels often sit flush in a card: 2 px `--color-primary-500`, 2 px inset (4.36:1 light, 9.95:1 dark on the page), `Highlight` in forced colours. A mouse click shows none (`:focus-visible`).',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <lc-tabs>
+        <lc-tab label="Overview">
+          <p style="margin: 0; color: var(--color-text-secondary);">This project is in the development phase: 12 of 15 tasks of this sprint are done.</p>
+        </lc-tab>
+        <lc-tab label="Activity">
+          <p style="margin: 0; color: var(--color-text-secondary);">Alice pushed 3 commits to feature/auth.</p>
+        </lc-tab>
+      </lc-tabs>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    canvasElement.querySelector<HTMLElement>('.lc-tabs__panel--active')?.focus({ preventScroll: true });
+  },
+};

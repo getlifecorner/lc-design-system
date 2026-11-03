@@ -1574,20 +1574,32 @@ export class DependencyViewerComponent {
    * `contain` fits both axes, so everything is visible at once but a big graph
    * shrinks to get there. `fit-width` fits the width only and lets the viewer grow
    * as tall as the graph needs, so the nodes keep a readable size and the *page*
-   * scrolls; the graph itself never scrolls internally. Past roughly 20 nodes a
-   * process view generally wants `fit-width`.
+   * scrolls; past `minNodeSize`, a graph wider than the frame scrolls sideways
+   * inside it. Past roughly 20 nodes a process view generally wants `fit-width`.
    */
   readonly fitMode = input<DependencyFitMode | null>(null);
 
   /**
    * Smallest node width, in px, that fitting may shrink to. Below it the fit stops
    * scaling down and lets the graph overflow instead — which `fit-width` turns into
-   * page scroll, and `contain` into clipping. Pair it with `fit-width`.
+   * sideways scrolling of the frame (pinned to the start, see `regionLabel`), and
+   * `contain` into clipping. Pair it with `fit-width`.
    *
    * Nodes are 160px wide unscaled (wider — up to 240px — when the graph's labels
-   * need it), so e.g. `80` allows shrinking to half size.
+   * need it), so e.g. `80` allows shrinking to half size. `200` keeps the 12 px
+   * labels at 10 px or more whatever the node width (160–240 px): the phone
+   * recipe is `fitMode="fit-width"` with `minNodeSize` 200.
    */
   readonly minNodeSize = input<number | null>(null);
+
+  /**
+   * Accessible name of the canvas while it scrolls sideways (`fitMode="fit-width"`
+   * with a `minNodeSize` the frame can't hold). It is then a focusable
+   * `role="region"`, scrolled with the arrow keys. Set a short, localised name
+   * that is unique on the page. Not used otherwise.
+   * @default 'Dependency graph'
+   */
+  readonly regionLabel = input('Dependency graph');
 
   /**
    * Viewport navigation: drag-to-pan, wheel-zoom and the toolbar's zoom buttons.
@@ -1801,6 +1813,26 @@ export class DependencyViewerComponent {
   /** The host only gives up its configured height when the fit made it grow. */
   protected hostHeight = computed(() => (this.contentHeight() === null ? this.height() : 'auto'));
 
+  /**
+   * Horizontal extent of the graph, in layout units, while `fit-width` is held
+   * at `minNodeSize` and the graph is wider than the frame; `null` otherwise.
+   * The canvas then scrolls sideways instead of clipping both ends.
+   */
+  private scrollBox = signal<{ x: number; width: number } | null>(null);
+
+  /** Whether the canvas scrolls sideways (see `scrollBox`). */
+  protected scrolling = computed(() => this.scrollBox() !== null);
+
+  /**
+   * Scroll width of the canvas: the graph's right edge at the current pan and
+   * zoom. The svg's own box is unscaled, so it can't be the scroll extent.
+   */
+  protected scrollWidth = computed(() => {
+    const box = this.scrollBox();
+    if (!box) return null;
+    return `${Math.ceil(this.panX() + (box.x + box.width) * (this.zoom() / 100))}px`;
+  });
+
   /** `minNodeSize` expressed as the scale it forbids fitting to go below. */
   private minFitScale = computed(() => {
     const min = this.minNodeSize();
@@ -1853,7 +1885,10 @@ export class DependencyViewerComponent {
       if (this.effectiveFitMode() === 'none') {
         // Leaving fit-width behind: the grown height was this fit's doing, so it
         // goes with it, or the host keeps a size nothing is maintaining any more.
-        untracked(() => this.contentHeight.set(null));
+        untracked(() => {
+          this.contentHeight.set(null);
+          this.scrollBox.set(null);
+        });
         return;
       }
       if (!this.canvasRef()) return;
@@ -2031,20 +2066,29 @@ export class DependencyViewerComponent {
     const natural = mode === 'fit-width'
       ? viewW / box.width
       : Math.min(viewW / box.width, viewH / box.height);
-    const scale = Math.min(MAX_FIT_SCALE, Math.max(this.minFitScale(), natural));
+    const floor = this.minFitScale();
+    const scale = Math.min(MAX_FIT_SCALE, Math.max(floor, natural));
+    // `fit-width` held at its floor (`minNodeSize`): the graph is wider than the
+    // frame. Centring it would cut off both ends where no touch could reach them,
+    // so it is pinned to the start and the canvas scrolls sideways instead.
+    const scroll = mode === 'fit-width' && natural < floor;
 
     this.zoom.set(scale * 100);
     // Invert screen = pan + scale * layout for the box's top-left corner, so the
-    // box lands centred in the canvas.
-    this.panX.set((viewW - box.width * scale) / 2 - box.x * scale);
+    // box lands centred in the canvas (or at its start when it scrolls).
+    this.panX.set(scroll ? -box.x * scale : (viewW - box.width * scale) / 2 - box.x * scale);
+    this.scrollBox.set(scroll ? { x: box.x, width: box.width } : null);
 
     const scaledHeight = box.height * scale;
     if (mode === 'fit-width') {
       // The viewer takes the graph's height and pins it to the top. Past the frame
       // that means the page scrolls through a readable graph rather than the frame
-      // clipping one that was shrunk to fit.
-      this.contentHeight.set(Math.ceil(scaledHeight));
+      // clipping one that was shrunk to fit. A classic sideways scrollbar takes
+      // its height from the canvas, so it is added (0 for overlay scrollbars).
+      const bar = scroll && el ? el.offsetHeight - el.clientHeight : 0;
+      this.contentHeight.set(Math.ceil(scaledHeight) + Math.max(0, bar));
       this.panY.set(-box.y * scale);
+      if (el && scroll) el.scrollLeft = 0;
     } else {
       this.contentHeight.set(null);
       this.panY.set((viewH - scaledHeight) / 2 - box.y * scale);
@@ -2163,7 +2207,12 @@ export class DependencyViewerComponent {
   @HostListener('document:mousemove', ['$event'])
   protected onMouseMove(event: MouseEvent): void {
     if (!this.isPanning) return;
-    this.panX.update(x => x + event.clientX - this.lastMouseX);
+    const dx = event.clientX - this.lastMouseX;
+    // A canvas that scrolls sideways is dragged by its scroll position, so the
+    // graph can't be pulled past the scroll range.
+    const el = this.scrolling() ? this.canvasEl() : null;
+    if (el) el.scrollLeft -= dx;
+    else this.panX.update(x => x + dx);
     this.panY.update(y => y + event.clientY - this.lastMouseY);
     this.lastMouseX = event.clientX;
     this.lastMouseY = event.clientY;
@@ -2176,6 +2225,9 @@ export class DependencyViewerComponent {
     // Return *before* preventDefault: a static viewer must not swallow the wheel
     // event, or the page can't be scrolled past it.
     if (!this.interactive()) return;
+    // A sideways wheel (Shift + wheel, a trackpad swipe) scrolls a canvas that
+    // scrolls sideways; the vertical wheel zooms as before.
+    if (this.scrolling() && (event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY))) return;
     event.preventDefault();
     this.zoom.update(z => event.deltaY < 0 ? Math.min(z + 10, 300) : Math.max(z - 10, 25));
   }

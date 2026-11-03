@@ -322,13 +322,13 @@ export const InsideCard: Story = {
   },
   render: () => ({
     template: `
-      <div style="border:1px solid #e5e5e5;border-radius:.5rem;background:#fff;overflow:hidden;max-width:560px">
+      <div style="border:1px solid var(--color-border);border-radius:.5rem;background:var(--color-surface);overflow:hidden;max-width:560px">
         <lc-toolbar background="surface" border="bottom">
           <strong slot="start">Project settings</strong>
           <lc-button slot="end" variant="ghost" size="sm" iconOnly="true" ariaLabel="More">⋯</lc-button>
         </lc-toolbar>
         <div style="padding:1rem">
-          <p style="margin:0;color:#555">Card body content goes here.</p>
+          <p style="margin:0;color:var(--color-text-secondary)">Card body content goes here.</p>
         </div>
         <lc-toolbar background="muted" border="top">
           <lc-button slot="end" variant="secondary">Cancel</lc-button>

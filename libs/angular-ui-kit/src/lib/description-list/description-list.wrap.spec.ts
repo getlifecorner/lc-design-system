@@ -64,8 +64,14 @@ describe('DescriptionListComponent shared row width (3.26, request 041)', () => 
     expect(css.indexOf(LEADER)).toBeGreaterThan(css.indexOf('\n.lc-dl--leaders .lc-dl__leader {'));
   });
 
+  // 3.27 (request 042, F-18): the link ring and its forced-colours rule are the
+  // only other additions; the rest still compiles exactly as in 3.25.2.
+  const LINK_RING = '.lc-dl__link:focus-visible {\n  outline: 2px solid var(--color-primary-500);\n  outline-offset: 2px;\n}\n';
+  const LINK_FORCED = '\n@media (forced-colors: active) {\n  .lc-dl__link:focus-visible {\n    outline-color: Highlight;\n  }\n}';
+
   it('AC-10/11: every other rule compiles exactly as in 3.25.2', () => {
-    const rest = css.replace(SHARE, '').replace(TERM, '').replace(LEADER, '');
+    expect([count(LINK_RING), count(LINK_FORCED)]).toEqual([1, 1]);
+    const rest = css.replace(SHARE, '').replace(TERM, '').replace(LEADER, '').replace(LINK_RING, '').replace(LINK_FORCED, '');
     expect(rest.length).toBe(3081);
     expect(createHash('sha1').update(rest).digest('hex')).toBe('10ed437796904c83d6889fdb044524cf8981feb3');
   });

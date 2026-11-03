@@ -690,11 +690,11 @@ export const DestructiveAction: Story = {
     props: args,
     moduleMetadata: { imports: [IconComponent] },
     template: `
-      <div style="padding: 16px; border: 1px solid #fecaca; border-radius: 8px; background: #fef2f2;">
-        <p style="margin: 0 0 12px; font-weight: 600; color: #991b1b;">Danger Zone</p>
-        <p style="margin: 0 0 12px; font-size: 14px; color: #7f1d1d;">Once you delete your account, there is no going back.</p>
+      <div style="padding: 16px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-error-subtle);">
+        <p style="margin: 0 0 12px; font-weight: 600; color: var(--color-on-error-subtle);">Danger Zone</p>
+        <p style="margin: 0 0 12px; font-size: 14px; color: var(--color-on-error-subtle);">Once you delete your account, there is no going back.</p>
         <lc-button variant="danger" (clicked)="clicked($event)">
-          <lc-icon slot="icon-before" name="trash" size="sm"></lc-icon>
+          <lc-icon slot="icon-before" name="trash" size="sm" [decorative]="true"></lc-icon>
           Delete Account
         </lc-button>
       </div>`,

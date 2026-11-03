@@ -265,3 +265,28 @@ export const GermanLocale: Story = {
     dropOn(canvasElement, [fileOf('ist.csv', 9830, 'text/csv')]);
   },
 };
+
+export const RemoveTargets: Story = {
+  name: 'Remove Targets',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27 (request 042, F-21): each remove button keeps its 20 px circle but takes taps on a 44 × 44 px area centred on it (WCAG 2.5.8); the rows stay 42 px high and the areas of neighbouring rows don\'t overlap. Each button is named after its file: `removeFileAriaLabel` plus the file name ("Remove file bericht-2026.csv"). The story drops three files and focuses the second remove button as Tab would (in the story view): the kit ring, 2 px `--color-primary-500`, 2 px outside (4.17:1 light, 7.57:1 dark on the row), `Highlight` in forced colours.',
+      },
+    },
+  },
+  render: () => ({
+    template: `<div style="max-width: 480px;"><lc-file-upload [multiple]="true" /></div>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    dropOn(canvasElement, [
+      fileOf('bericht-2026.csv', 12698, 'text/csv'),
+      fileOf('Kostenstellen-Übersicht-2026-final.xlsx', 48230, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+      fileOf('a.txt', 120, 'text/plain'),
+    ]);
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    canvasElement.querySelectorAll<HTMLElement>('.file-upload__file-remove')[1]?.focus({ preventScroll: true });
+  },
+};

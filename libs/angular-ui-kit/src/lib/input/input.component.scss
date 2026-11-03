@@ -39,8 +39,9 @@
   transition: all var(--animation-duration-base) var(--animation-timing-ease);
 
   // Hover darkens the boundary (--color-border-strong is lighter than the
-  // field border since SI-8).
-  &:hover:not(.input-disabled):not(.input-readonly) {
+  // field border since SI-8). Not while focused (request 042, F-19): this rule
+  // is more specific than `:focus-within` and replaced the focus colour.
+  &:hover:not(.input-disabled):not(.input-readonly):not(:focus-within) {
     border-color: var(--color-text-secondary);
   }
 

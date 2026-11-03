@@ -183,3 +183,25 @@ export const ErrorState: Story = {
     height: '300px',
   },
 };
+
+export const KeyboardFocus: Story = {
+  name: 'Keyboard Focus',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27 (request 042): the first toolbar button is focused as Tab would focus it (in the story view). Toolbar buttons and the download button show the kit ring: 2 px `--color-primary-500`, 2 px outside (4.17:1 light, 7.57:1 dark on the toolbar), `Highlight` in forced colours. A mouse click shows none (`:focus-visible`).',
+      },
+    },
+  },
+  args: {
+    content: SAMPLE_MARKDOWN,
+    type: 'markdown',
+    filename: 'getting-started.md',
+    height: '400px',
+  },
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    canvasElement.querySelector<HTMLElement>('.doc-viewer__btn')?.focus({ preventScroll: true });
+  },
+};

@@ -82,14 +82,14 @@ export const Toolbar: Story = {
   name: 'Toolbar (Composition)',
   render: () => ({
     template: `
-      <div style="display: inline-flex; gap: 2px; padding: 40px; background: #f9f9f9; border-radius: 8px;">
-        <lc-button lcTooltip="Bold (Ctrl+B)" tooltipPosition="bottom" variant="text" size="sm" [iconOnly]="true" iconBefore="bold"></lc-button>
-        <lc-button lcTooltip="Italic (Ctrl+I)" tooltipPosition="bottom" variant="text" size="sm" [iconOnly]="true" iconBefore="italic"></lc-button>
-        <lc-button lcTooltip="Underline (Ctrl+U)" tooltipPosition="bottom" variant="text" size="sm" [iconOnly]="true" iconBefore="underline"></lc-button>
-        <div style="width: 1px; background: #ddd; margin: 4px 6px;"></div>
-        <lc-button lcTooltip="Align left" tooltipPosition="bottom" variant="text" size="sm" [iconOnly]="true" iconBefore="bars-3-bottom-left"></lc-button>
-        <lc-button lcTooltip="Align center" tooltipPosition="bottom" variant="text" size="sm" [iconOnly]="true" iconBefore="bars-3"></lc-button>
-        <lc-button lcTooltip="Align right" tooltipPosition="bottom" variant="text" size="sm" [iconOnly]="true" iconBefore="bars-3-bottom-right"></lc-button>
+      <div style="display: inline-flex; gap: 2px; padding: 40px; background: var(--color-surface-2); border-radius: 8px;">
+        <lc-button lcTooltip="Bold (Ctrl+B)" tooltipPosition="bottom" variant="ghost" size="sm" [iconOnly]="true" ariaLabel="Bold"><lc-icon slot="icon-before" name="bold" size="sm" [decorative]="true"></lc-icon></lc-button>
+        <lc-button lcTooltip="Italic (Ctrl+I)" tooltipPosition="bottom" variant="ghost" size="sm" [iconOnly]="true" ariaLabel="Italic"><lc-icon slot="icon-before" name="italic" size="sm" [decorative]="true"></lc-icon></lc-button>
+        <lc-button lcTooltip="Underline (Ctrl+U)" tooltipPosition="bottom" variant="ghost" size="sm" [iconOnly]="true" ariaLabel="Underline"><lc-icon slot="icon-before" name="underline" size="sm" [decorative]="true"></lc-icon></lc-button>
+        <div style="width: 1px; background: var(--color-border); margin: 4px 6px;"></div>
+        <lc-button lcTooltip="Align left" tooltipPosition="bottom" variant="ghost" size="sm" [iconOnly]="true" ariaLabel="Align left"><lc-icon slot="icon-before" name="align-left" size="sm" [decorative]="true"></lc-icon></lc-button>
+        <lc-button lcTooltip="Align center" tooltipPosition="bottom" variant="ghost" size="sm" [iconOnly]="true" ariaLabel="Align center"><lc-icon slot="icon-before" name="align-center" size="sm" [decorative]="true"></lc-icon></lc-button>
+        <lc-button lcTooltip="Align right" tooltipPosition="bottom" variant="ghost" size="sm" [iconOnly]="true" ariaLabel="Align right"><lc-icon slot="icon-before" name="align-right" size="sm" [decorative]="true"></lc-icon></lc-button>
       </div>`,
   }),
 };

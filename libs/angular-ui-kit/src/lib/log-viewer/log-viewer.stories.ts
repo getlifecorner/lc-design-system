@@ -326,3 +326,26 @@ export const AnsiGrayOnEveryLine: Story = {
     },
   },
 };
+
+export const KeyboardFocus: Story = {
+  name: 'Keyboard Focus',
+  args: {
+    lines: generateLogs(20),
+    variant: 'log',
+    height: '240px',
+    showTimestamps: false,
+    showLineNumbers: false,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27 (request 042): the error level pill is focused as Tab would focus it (in the story view). The level pills show the kit ring: 2 px `--color-primary-500`, 2 px outside (4.02:1 light, 9.12:1 dark on the toolbar), `Highlight` in forced colours; a pressed pill keeps its inset ring. A mouse click shows none (`:focus-visible`). No timestamps, so the shot is stable.',
+      },
+    },
+  },
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    canvasElement.querySelector<HTMLElement>('.lc-log-viewer__level-pill--error')?.focus({ preventScroll: true });
+  },
+};

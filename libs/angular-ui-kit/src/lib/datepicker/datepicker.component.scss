@@ -33,7 +33,10 @@
     color: var(--color-text-secondary);
   }
 
-  &:hover:not(:disabled):not([readonly]) {
+  // `:not(:focus)` (request 042, F-19): the hover rule is more specific than
+  // the focus rule, so a focused field under the pointer showed
+  // --color-primary-400 (1.89:1 light) instead of its focus colour.
+  &:hover:not(:disabled):not([readonly]):not(:focus) {
     border-color: var(--color-primary-400);
   }
 
@@ -100,7 +103,7 @@
     background-color: var(--color-surface-sunken);
     border-color: transparent;
 
-    &:hover:not(:disabled):not([readonly]) {
+    &:hover:not(:disabled):not([readonly]):not(:focus) {
       background-color: var(--color-surface-hover);
       border-color: var(--color-border);
     }

@@ -337,3 +337,24 @@ export const ClickableRowsEnglish: Story = {
   render: (args) => ({ props: args, template: clickableRowsTemplate }),
 };
 
+export const KeyboardFocus: Story = {
+  name: 'Keyboard Focus',
+  args: { items: sampleItems, layout: 'rows', leaders: false, size: 'md' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27 (request 042): the first link value is focused as Tab would focus it (in the story view). Link values show the kit ring instead of the browser default (2.29:1 in dark): 2 px `--color-primary-500`, 2 px outside (4.17:1 light, 9.95:1 dark on the page), `Highlight` in forced colours. A mouse click shows none (`:focus-visible`).',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `<div style="max-width: 420px;"><lc-description-list [items]="items" [layout]="layout" [leaders]="leaders" [size]="size" /></div>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    canvasElement.querySelector<HTMLElement>('.lc-dl__link')?.focus({ preventScroll: true });
+  },
+};
+
