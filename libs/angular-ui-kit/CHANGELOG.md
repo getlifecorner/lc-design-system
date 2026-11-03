@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.25.1] - 2026-11-03
+
+Two story texts from 3.25.0 that the MCP serves are corrected (review 039 nits 1 and 2). Docs only; no API breaks.
+
+### Fixed
+
+- **`lc-description-list`** `clickable` description and *Clickable rows* story: "each row holds a native button, named term + value" (the text said "per row" twice).
+- **`lc-log-viewer`** *Text Hierarchy* story: the focus ring reaches at least 3.49:1 light and 7.47:1 dark on the warn and error line tints, the measured values (the text quoted the design estimate 3.23:1).
+
+### Compatibility
+
+- No component source, style, markup, input or default changed.
+
 ## [3.25.0] - 2026-11-03
 
 Clickable `lc-description-list` rows keep their term and value pairs for assistive tech, and the open follow-ups of 3.23.1 close: the dark `lc-progress-bar` primary fill, solid focus rings instead of 20–40 % halos, and 3:1 borders in `lc-dependency-viewer` (036 F-14 to F-17). No API breaks.

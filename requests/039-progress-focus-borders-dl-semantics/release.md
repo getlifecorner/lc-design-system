@@ -1,41 +1,36 @@
-# Release 039: @lifecorner/angular-ui-kit 3.25.0
+# Release 039: @lifecorner/angular-ui-kit 3.25.1
 
-- **Version:** 3.25.0 (minor: the clickable-row DOM of `lc-description-list` changed; previous 3.24.1)
-- **Release commit:** see `git log -1` on `feat/3.25-progress-focus-borders-dl-semantics`, then fast-forwarded to `main`
+- **Version:** 3.25.1 (patch: story-docs wording, review 039 nits 1 and 2; previous 3.25.0)
+- **Release commit:** see `git log -1` on `fix/3.25.1-progress-focus-borders-dl-semantics`, then fast-forwarded to `main`
 
 ## Gates
 
-Code (`libs`, `tools`) is unchanged since the developer's gate commit 7daee89 (`git diff --stat 7daee89 -- libs tools` is empty), so tests, lint, tool tests and the Storybook build are taken from build.md.
+Code (`libs`, `tools`) is unchanged since the developer's gate commit 1e071d3 (`git diff --stat 1e071d3 -- libs tools` is empty), so tests, lint, tool tests, the Storybook build and compat are taken from build.md "Patch 3.25.1".
 
 | Gate | Result |
 |---|---|
-| Unit tests (`--ci`) | 219 suites, 5173 passed, 8 skipped (build.md, 7daee89) |
+| Unit tests | 219 suites, 5173 passed, 8 skipped (build.md) |
 | Lint | 0 errors, 162 warnings = baseline (build.md) |
-| Production build | green, 10 s; `dist/libs/angular-ui-kit/package.json` says 3.25.0 (`tmp/039/build.log`) |
-| Tool tests | 22 / 22 (build.md) |
-| Storybook build | green, 994 stories (build.md) |
-| Consumer check Angular 21 | PASS on Angular 21.2.26 with the clickable-dl check (`--only=21`, `tmp/039/compat21.log`); 22: 93 HTML checks ok incl. the clickable dl (build.md) |
-| Package contents (`npm pack --dry-run`) | 424 files, 1.2 MB packed / 6.2 MB unpacked (= 3.24.1); no component specs or stories; the 7 `src/styles/*.spec.ts` are the known ones; `icon-names.json`, styles and assets present |
+| Production build | green, 9 s; `dist/libs/angular-ui-kit/package.json` says 3.25.1 (`tmp/039/build-r.log`) |
+| Storybook build | green, 994 stories; 12/12 story shots identical (build.md) |
+| Tool tests, compat | not rerun: `tools/` and rendered output unchanged (stories are docs-page text only) |
+| Package contents (`npm pack --dry-run`) | 424 files, 1.2 MB packed / 6.2 MB unpacked (= 3.25.0); no component specs or stories; `icon-names.json`, styles and assets present (`tmp/039/pack.log`) |
 
-## Review nits (review.md round 1, approved)
+## Review nits closed
 
-| # | Nit | Handled |
+| # | Nit | Result |
 |---|---|---|
-| 1 | dl story wording "native button per row" repeats "row" (`description-list.stories.ts` l. 58, 268) | Not fixed here: a library edit would void the gates. Open for the next patch (web-developer) |
-| 2 | log-viewer *Text Hierarchy* docs say "3.23 / 7.47", the corrected bound is 3.49 / 7.47 (the changelog already uses the measured values) | Same: open for the next patch |
-| 3 | Changelog Compatibility: shot counts dropped, Safari Tab note added | Done in CHANGELOG.md 3.25.0 |
-| 4 | Angular 21 compat leg | Run in the release, see the gate table |
+| 1 | dl story wording "native button per row" | Fixed in `description-list.stories.ts` |
+| 2 | log-viewer *Text Hierarchy* docs "3.23 / 7.47" | Now 3.49 / 7.47 |
 
 Follow-ups F-18, F-19, F-20 stay open (design §6).
 
 ## For the requester
 
-- **Install:** `npm install @lifecorner/angular-ui-kit@3.25.0` (public after the owner's approval)
-- **Closes:** F-14, F-15, F-16, F-17 (036 follow-ups)
-- **Use it:** clickable rows now keep `dt`/`dd`; tests should select `button.lc-dl__action` instead of `role="button"`.
+- **Install:** `npm install @lifecorner/angular-ui-kit@3.25.1` (public after the owner's approval)
+- **Closes:** nothing new; corrects two story texts that the MCP serves. Gap IDs of 3.25.0 (F-14 to F-17) are unchanged.
+- **Use it:** nothing to change; the same API as 3.25.0.
 
 ```html
 <lc-description-list [items]="items" clickable (itemClick)="open($event)" />
 ```
-
-- **Stories:** `data-display-dependency-viewer--node-statuses` (new), `components-description-list--clickable-rows`, `feedback-progress-bar--colors`, `data-display-logviewer--text-hierarchy`
