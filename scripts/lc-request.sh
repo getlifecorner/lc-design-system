@@ -17,8 +17,11 @@
 # first served) and starts on its turn, so run it in the background (it can wait for hours).
 # A request that passes review and every gate is released without asking (its tag starts the
 # publish pipeline); the npm stage still needs the owner's 2FA approval to become public.
+# Findings that still need fixing come back as one follow-up request, which this script starts
+# after the run (it queues behind the calls already waiting; at most 3 follow-ups in a row).
 # The calling directory is readable for the run (--add-dir), so referenced files resolve.
-# Output: the pipeline's final message (released version and usage, or open questions).
+# Output: the pipeline's final message (released version and usage, or open questions),
+# then that of each follow-up.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -37,7 +40,7 @@ while [ $# -gt 0 ]; do
     --resume) resume="$2"; shift 2 ;;
     --budget) budget="$2"; shift 2 ;;
     --no-wait) no_wait=1; shift ;;
-    -h | --help) sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h | --help) sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) text+=("$1"); shift ;;
   esac
 done
@@ -72,16 +75,17 @@ flags=(-p "/lc-request $args" --permission-mode acceptEdits --allowedTools "${al
 [ -n "$budget" ] && flags+=(--max-budget-usd "$budget")
 
 # One run at a time: two runs in one working tree switch branches under each other and take the
-# same version. The running pipeline holds tmp/lc-request/lock with the id of its Claude process
-# (exec below keeps this script's id); an interactive /lc-request takes and frees the same lock.
-# A later call waits with a ticket in tmp/lc-request/queue/, oldest first.
+# same version. The running pipeline holds tmp/lc-request/lock with the id of this script, which
+# waits for its Claude process; an interactive /lc-request takes and frees the same lock with the
+# id of its Claude session. A later call waits with a ticket in tmp/lc-request/queue/, oldest first.
 STATE="$REPO/tmp/lc-request"
 LOCK="$STATE/lock"
 QUEUE="$STATE/queue"
-mkdir -p "$QUEUE"
+FOLLOW_UPS="$STATE/follow-ups"
+mkdir -p "$QUEUE" "$FOLLOW_UPS"
 
 # A process id counts only while it still runs the expected command: ids get reused.
-running() { [ -n "$1" ] && ps -p "$1" -o args= 2>/dev/null | grep -- "$2" >/dev/null; }
+running() { [ -n "$1" ] && ps -p "$1" -o args= 2>/dev/null | grep -E -- "$2" >/dev/null; }
 holder() { sed -n 's/^pid=\([0-9][0-9]*\).*/\1/p' "$LOCK" 2>/dev/null || true; }
 first_ticket() {
   local t
@@ -97,7 +101,7 @@ trap 'rm -f "$ticket"' EXIT
 trap 'exit 130' INT TERM HUP
 said=""
 while :; do
-  if ! running "$(holder)" claude && [ "$(first_ticket)" = "$$" ]; then
+  if ! running "$(holder)" 'claude|lc-request\.sh' && [ "$(first_ticket)" = "$$" ]; then
     rm -f "$LOCK"
     (set -C; echo "pid=$$ since=$(date '+%Y-%m-%d %H:%M') run=/lc-request $args" > "$LOCK") 2>/dev/null && break
   fi
@@ -121,8 +125,30 @@ cd "$REPO"
 # A caller's Claude Code session (another Nx workspace) exports its own root; Nx would look there for angular-ui-kit.
 unset NX_WORKSPACE_ROOT_PATH
 # The gates need Node 24, as in CI (.nvmrc); a caller's PATH may put an older Node first.
-# Only for the run, so the script itself keeps finding the caller's claude.
+# Only for the run: a follow-up re-runs this script, which must find the same claude.
 node24="$(ls -d "$HOME"/.nvm/versions/node/v24.*/bin 2>/dev/null | sort -V | tail -n 1 || true)"
 run_path="$PATH"
 [ -n "$node24" ] && run_path="$node24:$PATH"
-PATH="$run_path" exec "$claude_bin" "${flags[@]}"
+
+PATH="$run_path" "$claude_bin" "${flags[@]}" &
+child=$!
+trap 'kill "$child" 2>/dev/null; exit 130' INT TERM HUP
+status=0
+wait "$child" || status=$?
+trap - INT TERM HUP
+
+# A run that found findings to fix leaves one bundled follow-up in tmp/lc-request/follow-ups/<NNN>.md
+# (first line "from: <requester>", then the requirement). Start the oldest as a new call: free the
+# lock, so it queues behind the calls already waiting. LC_REQUEST_CHAIN stops after 3 in a row.
+next="$(ls "$FOLLOW_UPS"/*.md 2>/dev/null | head -n 1 || true)"
+[ -n "$next" ] || exit "$status"
+chain=$(( ${LC_REQUEST_CHAIN:-0} + 1 ))
+if [ "$chain" -gt 3 ]; then
+  echo "lc-request: 3 follow-ups ran in a row; the next ones wait in $FOLLOW_UPS/ for the owner" >&2
+  exit "$status"
+fi
+next_from="$(sed -n '1s/^from: *//p' "$next")"
+next_text="$(sed 1d "$next")"
+rm -f "$next" "$LOCK"
+echo "lc-request: starting follow-up $(basename "$next" .md) ($chain in a row)" >&2
+LC_REQUEST_CHAIN=$chain exec "$REPO/scripts/lc-request.sh" --from "${next_from:-owner}" "$next_text"

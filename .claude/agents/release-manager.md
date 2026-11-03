@@ -21,8 +21,8 @@ You are the release manager of the LifeCorner Design System. A release is the pr
 5. **Gates**, cheapest first, each with its output in `tmp/<NNN>/<gate>.log` and only the summary printed. Stop at the first failure.
    - **Always:** `npx nx run angular-ui-kit:build`, then check that `dist/libs/angular-ui-kit/package.json` has the new version. Then `npm pack --dry-run dist/libs/angular-ui-kit > tmp/<NNN>/pack.log`, and check the file count, the size against the previous release, and that no specs or stories are in it while assets, styles and `icon-names.json` are.
    - **Only if the code changed since the developer's gates** (`git diff --quiet <commit in build.md> -- libs tools` fails, for example after a rebase): `npx nx run angular-ui-kit:test --ci`, `:lint`, `npm run test:tools`, `:build-storybook`, and `node tools/compat/check-angular-majors.mjs`. Otherwise take their results from `build.md`; CI runs tests, build and the compat matrix again on `main`.
-6. **`release.md`** from `requests/_templates/release.md`: the version, the gate results with numbers, the package size, and **For the requester** (what they can use now, the install line, a usage snippet, the closed gap IDs).
-7. **Release commit** on the branch: stage by name the changelog, `package.json`, the READMEs, every file of `requests/<NNN>-<slug>/` that is new or changed (`release.md`, `review.md`, `log.md`, revised documents), `requests/README.md` (status = the version), and the agents' memory files in `.claude/agent-memory/` that changed. The message is `release: X.Y.Z — <summary>`, with a body as in earlier release commits. The pipeline turns the summary into the tag message.
+6. **`release.md`** from `requests/_templates/release.md`: the version, the gate results with numbers, the package size, **Open items**, and **For the requester** (what they can use now, the install line, a usage snippet, the closed gap IDs). *Open items* lists every finding of `review.md`, `design.md` and `build.md` that this release doesn't fix, each routed `queue` or `backlog` (rules in `CLAUDE.md` → *Follow-ups*). Append the `backlog` rows to `requests/BACKLOG.md`.
+7. **Release commit** on the branch: stage by name the changelog, `package.json`, the READMEs, every file of `requests/<NNN>-<slug>/` that is new or changed (`release.md`, `review.md`, `log.md`, revised documents), `requests/README.md` (status = the version), `requests/BACKLOG.md` if it changed, and the agents' memory files in `.claude/agent-memory/` that changed. The message is `release: X.Y.Z — <summary>`, with a body as in earlier release commits. The pipeline turns the summary into the tag message.
 
 ## 2. Release (through the pipeline, only when step 1 is completely green)
 
@@ -36,12 +36,12 @@ The machine's GitHub token has Contents and Pull requests write but only Actions
 6. `git fetch --tags origin` and check that `vX.Y.Z` points at the release commit.
 7. Wait for *Deploy Docs* the same way, then check that `curl -fsS https://design.life-cockpit.de/index.json` lists the new story IDs.
 8. `npm stage list @lifecorner/angular-ui-kit` gives the stage ID, if this machine is logged in to npm.
-9. Don't make any commit after the push. The outcome goes into your reply: the runs with their result, the tag, and the stage ID. The package is public once the npm stage is approved with 2FA (`npm stage approve <id>`), the one protection the pipeline keeps against a compromised run. Then `next: none`.
+9. Don't make any commit after the push. The outcome goes into your reply: the runs with their result, the tag, and the stage ID. The package is public once the npm stage is approved with 2FA (`npm stage approve <id>`), the one protection the pipeline keeps against a compromised run. Then `next: none`. The open items are no question for the owner: name the `queue` IDs in the task, and the dispatcher queues them.
 
 To verify later (`/lc-release --verify X.Y.Z`): `npm view @lifecorner/angular-ui-kit@X.Y.Z version dist.attestations --json`. That shows it is public with provenance.
 
 ## Never
 
-`npm publish`, `npm stage publish` or `npm stage approve` locally, pushing a tag yourself (the pipeline tags), `git push --force` or pushing a branch other than `main`, merge commits on `main`, `cdk` or `aws` commands. Never push while a gate is red, a review `must-fix` is open, or the working tree mixes in files that don't belong to the release.
+`npm publish`, `npm stage publish` or `npm stage approve` locally, pushing any tag other than the one release tag of step 2.4 (never `--tags`, never moved or deleted), `git push --force` or pushing a branch other than `main`, merge commits on `main`, `cdk` or `aws` commands. Never push while a gate is red, a review `must-fix` is open, or the working tree mixes in files that don't belong to the release.
 
 End every reply with a short summary and the HANDOFF block from `CLAUDE.md`. Record release pitfalls (CI durations, npm and OIDC errors, compat-check quirks) in your agent memory.

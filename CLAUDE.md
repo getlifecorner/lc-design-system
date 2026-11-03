@@ -92,3 +92,8 @@ A requirement, usually from a consuming project, goes through four agents (`.cla
 
   `next: owner` is only for decisions agents may not make: a breaking change (major version), a new runtime dependency, a scope or brand decision the requester's documents don't settle, and failures of the npm or GitHub infrastructure. Everything else the agents decide themselves and record as assumptions. `next: none` ends the request, either because it was released or because the kit already covers it and the requester has the answer.
 - **No release gate:** a request whose review is approved and whose gates are all green is released by the `release-manager` without asking anyone. The owner approves the npm stage with 2FA before the package is public.
+- **Follow-ups (owner rule, 2026-11-02):** findings that need fixing go back into the pipeline without asking the owner, and one version may bundle several requests or findings. A measured WCAG 2.2 AA failure is at least `should-fix`, also when it was there before. The `release-manager` routes every finding still open in `release.md` → *Open items*:
+  - `queue`: an open `must-fix` or `should-fix`. The dispatcher bundles these into one follow-up request (`.claude/skills/lc-request/SKILL.md` → *Finish*).
+  - `backlog`: nits, known limits, wording and consistency. They go into `requests/BACKLOG.md`, and the `spec-writer` folds the rows on the components a request touches into its spec.
+
+  As a brake, `scripts/lc-request.sh` runs at most 3 follow-ups in a row; the next ones wait in `tmp/lc-request/follow-ups/` for the owner.
