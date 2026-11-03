@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.27.1] - 2026-11-03
+
+44 px touch targets on the controls the 042 sweep found, field hover that keeps 3:1 and the error state, a 3:1 rich-text frame, a themed `lc-header` that keeps its palette inside a page of the other theme, and four contrast and one keyboard finding (042 follow-ups F-22 to F-27). No API breaks.
+
+### Fixed
+
+- **Touch targets (F-22, WCAG 2.5.8):** 44 × 44 px hit areas without a visible change on the `lc-notification-center` header actions (26 px high) and filter chips (26.5 px; filter row 45.5 px, was 43.5), the `lc-log-viewer` level pills (were 40 px high; toolbar 45 px, was 41), the `lc-callout` dismiss (24 px) and the `lc-chat` send and attach buttons (32 px). `lc-table`: the whole selection cell toggles its checkbox (column 44 px at every width, was 40 and 32 at 360 px; the box stays 16 px; a click in the cell never reaches a clickable row): 44 × 45.5 px in `md`; `size="sm"` rows are 37–38 px, so there the cell is 44 × 37 px (WCAG 2.5.8 by size; the row height is the density you chose). Real 44 px buttons where neighbours sit 2–4 px apart: `lc-rich-text-editor` toolbar (were 32) and mode buttons (26 high), `lc-document-viewer` tools (32). `lc-select` clear ×: a 24 × 24 px button (layout, hover fill and ring unchanged), so axe `target-size` passes too. `lc-tag-input` remove ×: a 24 × 24 px area inside the chip. Both meet 2.5.8 by size; 44 px would leave the field or cover the next chip row. Stories *Touch Targets* in 9 components.
+- **Field hover (F-23):** the textarea and datepicker hover border was `--color-primary-400` (1.89:1 light); it is `--color-text-secondary` as in input and select (7.55:1 light, 12.16:1 dark). Input, select, textarea and datepicker with an error keep the error border under the pointer (8.39 / 9.47:1; it was replaced by the hover colour). Story *Input / Error State on Hover*.
+- **`lc-rich-text-editor` frame (F-24):** `--color-field-border`, 4.83:1 light and 7.31:1 dark on the page (`--color-border` was 1.23 / 1.29).
+- **`lc-header theme="light"` / `"dark"` (F-25):** the header re-declares every colour token of its theme, so slot buttons, links, the theme toggle and the account menu use the header palette: a light header on a dark page now reads 6.21 / 17.12 / 6.21:1 (primary, outline, link; outline and link were 1.05 and 1.59), a dark header on a light page 6.21 / 16.32 / 12.13:1 (were 1.00 and 3.12). Story *Header / Theme Scope*.
+- **Contrast (F-26):** RTE pressed mode and gallery active filter: white on `--color-primary-fill`, 6.21:1 in both themes (was 4.36 light, 1.89 dark); gallery hover ink `--color-link` (6.21 / 11.78, was 4.36 light); `lc-tag-input` chip text 7.18:1 and `lc-chat` monogram 7.00:1 in light (were 3.43 and 3.34), dark unchanged.
+- **`lc-log-viewer` keyboard (F-26):** the scrolling output is the viewer's tab stop (`tabindex="0"`, `role="log"`, `outputAriaLabel`) with an inset ring (4.36 / 9.12:1, `Highlight` in forced colours), so arrow and page keys scroll it (axe `scrollable-region-focusable`); with `clickableLines` the lines are the stops. Story *Output Region Focus*.
+- **`lc-kanban-board` over-limit column (F-27):** `--color-error-subtle`; the column title reads 6.58:1 in light (was 3.80); dark unchanged.
+
+### Compatibility
+
+- No input, output, type, CSS hook or default value changed. Sizes grow: RTE toolbar +88 px at 360 px and +12 px from 1024 px (14 actions), document-viewer toolbar +12 px (two rows below about 470 px), NC filter row +2 px, log toolbar +4 px, table selection column 44 px. 276 of 522 at-rest shots of the touched stories are hash-identical (3 of them, tag-input keyboard focus in dark, differ by anti-aliasing only); 174 show the growth and colour fixes above, 72 only chat clock times.
+- `lc-log-viewer`: the tab stop moved from the whole viewer to its output (after toolbar, pills and search); `/`, `g`, `G` work from any control inside. A test that focuses `.lc-log-viewer` needs `.lc-log-viewer__content`.
+- `lc-table`: each selection checkbox sits in a `label.lc-table__select-hit`; a selector like `td > input` needs `td input`.
+- A themed header no longer sees token overrides set on `:root`; set them on `.lc-header--light` / `.lc-header--dark` too. Global CSS +0.2 kB gzip.
+- Checked on Angular 22 (AOT, strictTemplates, prerender).
+
+### Known
+
+- `lc-table` (F-30): the checkbox sits 2.25–3 px above the row middle (as before).
+- Filled `lc-input`, `lc-select`, `lc-textarea`, `lc-datepicker` (F-31): the border is transparent at rest and 1.23:1 (light) / 1.29:1 (dark) on hover; a 3:1 field boundary is open.
+- `lc-textarea` error message in light uses a darker ink than the other fields (both at least 4.5:1).
+- `lc-tag-input` (F-32): a long tag is cut with an ellipsis at 150 px, with no `title`.
+
 ## [3.27.0] - 2026-11-03
 
 Every kit control shows a focus ring on keyboard focus, a focused field keeps its focus colour under the pointer, `lc-dependency-viewer` stays readable at 360 px, and the `lc-file-upload` remove button takes 44 px taps (039/040 follow-ups F-18 to F-21). One new optional input; no API breaks.

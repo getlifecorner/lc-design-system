@@ -45,7 +45,7 @@ Hit-area CSS (all `position: relative` on the control, `::before { content: ''; 
 | log `__level-pill` | 57–86 × 15 (26 when the DE label wraps), 4 apart | `inset-inline: min(-0.125rem, calc((100% - 2.75rem) / 2)); top/bottom: calc(50% - 1.375rem)`; `.lc-log-viewer__toolbar { padding-block: 0.5rem }` (was 0.375) | toolbar 41 → 45; hit 44 high inside it, pills touch, line count not a target |
 | callout `__dismiss` | 24, padding 14 / 16 | `inset: calc((1.5rem - 2.75rem) / 2)` (−10) | 44, 4 px from the callout top, 6 px from its end |
 | select `__clear` | 20, chevron 4 px right | **r1:** no `::before`; the box itself is 24: `width/height: 1.5rem; margin: -0.125rem; padding: 0.125rem; background-clip: content-box; border-radius: calc(var(--border-radius-sm) + 0.125rem)`, `mix.focus-ring($offset: 0)` (axe reads the box; layout, hover fill and ring unchanged) | 24 × 24, 2 px clear of the chevron, inside xs–lg fields |
-| tag-input `__tag-remove` | 16 in a 25.6 chip (padding 8) | `inset: -0.25rem` | 24 × 24 inside the chip (0.8 px from its top, 4 px from its end) |
+| tag-input `__tag-remove` | 16 in a 25.6 chip (padding 8) | `inset: -0.25rem` | 24 × 24 inside the chip (0.8 px from its top, **r2:** 5 px from its outer end: padding 8 + border 1 − 4); input 13 px after the × (area 9) |
 | chat `__send-btn` / `__attach-btn` | 32, composer padding 8, input 8 above | `inset: -0.375rem` | 44, 2 px clear of the input |
 | table checkbox | 16 in a 40-px cell (32 at 360, squeezed) | `.lc-table__select-cell { position: relative; width: 2.75rem; padding: var(--spacing-2) calc((2.75rem - 1rem) / 2) !important }`; `.lc-table__select-hit { cursor: pointer; &::before { inset: 0 } }`, **inline** (r1; the cell is its containing block); `.lc-table__checkbox { position: relative }` (above the overlay) | 44 × row height: md 44 × 45.5 net, sm 44 × 37 (2.5.8 by size, §6); column 44 at every width |
 
@@ -142,7 +142,7 @@ All new stories: fixed local dates (`new Date(2026, 10, 3, 9, 15)`), no `Date.no
 | Log: Output Region Focus | `data-display-logviewer--output-region-focus` | play focuses `.lc-log-viewer__content` | inset ring, tab stop (AC-9) |
 | Callout: Touch Targets | `feedback-callout--touch-targets` | error with title + neutral without title, both dismissible | × hit 44 |
 | Select: Touch Targets | `form-select--touch-targets` | xs/sm/md/lg, clearable, value set, 16 px apart | × 24 inside each field |
-| Tag input: Touch Targets (DE) | `form-tag-input--touch-targets` | §7, 6 tags → 2 rows at 360 | × 24, no overlap with row 2 or the input |
+| Tag input: Touch Targets (DE) | `form-tag-input--touch-targets` | §7, 6 tags → **3 rows at 360 (r2; field 328 × 98.8)**, 1 row from 1024 | × 24, no overlap with the next row or the input |
 | RTE: Touch Targets (DE) | `editors-rich-text-editor--touch-targets` | §7 | 44 buttons, toolbar 201 (360) / 61, frame border |
 | Doc viewer: Touch Targets (DE) | `data-display-document-viewer--touch-targets` | `type: 'image'`, inline SVG `data:` src (stable), §7 | 44 tools, wrap at 360/320, name visible |
 | Chat: Touch Targets | `components-chat--touch-targets` | attachments on, 2 fixed-time messages with monogram | send/attach hit 44, monogram ink |
@@ -171,5 +171,7 @@ Baseline: `tmp/story-shots/043/baseline` = 87 stories (`baseline-ids.txt`, sweep
 | AC-15 | CHANGELOG 3.27.1: Fixed F-22 (per control, §3), F-23, F-24, F-25, F-26, F-27 with §5 values; Compatibility: RTE toolbar +88 px at 360 / +12 px from 1024 (14 actions), doc toolbar +12 (wraps at 360 with zoom), NC filters +2, log toolbar +4, table selection column 44; log tab stop moved (D-9); themed header re-declares the colour tokens (root-level token overrides don't reach inside a themed header; its account menu follows the header theme); +0.2 kB gzip global CSS; sm table checkbox area 44 × 37 (2.5.8 by size) | — |
 
 **Change notes (review r1, 2026-11-03):** §3 table: my `inline-flex; vertical-align: middle` was never in the prototype (no label there) and was wrong: it moves the box 4.3 px down, past the middle, and shrinks `sm` rows 38 → 35 (`flex` centring too, even with `min-block-size: 1lh`); the inline label keeps the 3.27.0 box position and row heights (Deviation 1 agreed). §3 select: 24 px box instead of the `::before` (Finding A; prototype `r1-select2`: rest and ring hash-identical, axe 0). §6: sm table exception (Finding B). D-7/AC-15: gzip cost corrected.
+
+**Change notes (review r2, 2026-11-03):** §8 tag story: my "2 rows at 360" ignored the chip's `max-width: 150px` and 1 px border; measured 3 rows (y 48 / 77.6 / 107.2, field 98.8 high), which tests two row boundaries instead of one, so accepted. §3 tag row: the area ends 5 px (not 4) before the chip's outer edge, and the input starts 13 px after the × (9 after its area).
 
 **Risks (my pitfalls):** `min-inline-size` on a nowrap flex chip removed its auto minimum and squeezed text (prototype; use the `min()` inset instead); `<input>` has no `::before`; story times must be fixed; prototype rules needed ×3 classes. **Follow-ups:** F-28 chat pending-remove 20 px; F-29 RTE mode buttons: `aria-pressed` and a forced-colours pressed mark.

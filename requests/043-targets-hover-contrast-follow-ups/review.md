@@ -48,3 +48,35 @@ Screenshots: developer `tmp/story-shots/043/new` (72) and `build` (522, vs `base
 **Round 2 checks:** select TT vs `new/` and select KF vs `baseline` (identical), `--axe` 0; tag TT shots + `hit.mjs` (6 chips, 0 fails, no overlap); table TT description; changelog text.
 
 **Verdict:** changes requested (F1–F4).
+
+## Round 2 — 2026-11-03, commit 7f38d09 (libs/tools = 25165b7)
+
+Since r1 only `select.component.scss`, 3 stories and 2 specs changed (`git diff --stat 682cade 25165b7`), so the r1 results of AC-2…AC-7, AC-9…AC-14 stand. My shots: `tmp/story-shots/043/r2r-*` (log `r2r-tag-tt.log`). 2 shots opened: tag TT 360 L, 1280 D.
+
+| AC | Result | Evidence |
+|---|---|---|
+| AC-1 | pass | Tag TT 360/1024/1280 L/D: 6 chips, 6 × 16 px, hit scan (`elementFromPoint`, 0.25 px steps) 24–25 px each way, area 0.8 px below the chip top and inside it vertically, 5 px before its outer end, 0 overlap with any other chip or the input (13 px after the last ×, 9 after its area), names "Entfernen <tag>", page and field `sw−cw` 0. Select TT: box 277,·,24,24 per size, 2 px clear of the chevron. Table `sm` exception now documented (story, changelog) |
+| AC-8 | pass | `--axe` 0 violations: select TT 6, select KF 6, tag TT 6 (tag: incomplete only, contrast ×6 and label-in-name ×6 for the six ×) |
+| AC-2 / AC-13 | pass (re-checked) | Select TT vs `new/` 6/6 identical; select KF vs `baseline` 6/6 identical (ring where it was: 24 px box, offset 0, `:focus-visible`); tag TT vs developer `r2-tag-tt` 6/6 identical |
+| AC-15 | pass | Draft: "9 components" (= `--list=touch-targets`, 9 ids), select × "24 × 24 px button … axe `target-size` passes", table `md` 44 × 45.5 / `sm` 44 × 37 |
+
+| r1 finding | Result |
+|---|---|
+| F1 | fixed: `seedTags` (Storybook copied a story prop named `tags` onto the component) |
+| F2 | fixed: table TT description and changelog state the `sm` 44 × 37 exception |
+| F3 | fixed: computed padding 2 / margin −2 / `content-box` / radius 12 (fill = 20 px circle) / offset 0; spec row with reason, no `::before` |
+| F4 | fixed |
+
+**Three chip rows at 360 px: accepted.** My §8 estimate ignored the chip's `max-width: 150px` and border; 3 rows (y 48 / 77.6 / 107.2, field 98.8) test two row boundaries instead of one. design.md §3/§8 corrected (change note r2).
+
+### Findings
+
+| # | Severity | Where | Expected | Actual |
+|---|---|---|---|---|
+| 8 | nit | `form-tag-input--touch-targets` description | "5 px from its end", "the text input 13 px after the last ×" (measured; design §3 was wrong) | "4 px", "12 px" |
+| 9 | nit | changelog Compatibility | "276 of 522 … identical (3 of them, tag-input keyboard-focus dark, differ by anti-aliasing only; r1 re-shot identical); 174 show …" | "273 … identical; 177 show the growth and colour fixes" |
+| 10 | nit | tag chip text (pre-existing) | a long tag readable in full (follow-up **F-32**: `title` or wrap) | `max-width: 150px` + ellipsis: "Kostenstellenverantw…" even at 1280 |
+
+r1 nits 5–7 (F-30, F-31, textarea error ink) stay open.
+
+**Verdict:** approved. No must-fix; nits 5–10 go to the release.
