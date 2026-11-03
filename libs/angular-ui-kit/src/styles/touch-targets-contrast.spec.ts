@@ -181,7 +181,10 @@ describe('Touch targets, hover borders and contrast (request 043)', () => {
         .filter((r) => r.selectors.some((s) => field.test(s) && s.includes(':hover')))
         .map((r) => decls(r.body)['border-color'])
         .filter(Boolean);
-      expect(borders.every((b) => b === 'var(--color-text-secondary)' || b === 'var(--color-border)')).toBe(true);
+      // Request 044 (F-31): --color-border (1.23:1 light) left the allow-list;
+      // the filled hovers moved to --color-text-secondary as well.
+      expect(borders.length).toBeGreaterThan(0);
+      expect(borders.every((b) => b === 'var(--color-text-secondary)')).toBe(true);
     });
 
     it('AC-3: the outline hover border (--color-text-secondary) is ≥ 3:1 on the page, the surface and surface-2', () => {

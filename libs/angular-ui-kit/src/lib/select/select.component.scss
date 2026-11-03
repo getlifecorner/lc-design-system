@@ -75,13 +75,17 @@
   }
 
   // Variant styles
+  // Request 044 (F-31): the filled field keeps the 3:1 field boundary of the
+  // outline variant (it was transparent at rest and --color-border on hover,
+  // 1.23:1 light, 1.29:1 dark). Rest 4.39:1 light, 7.02:1 dark on the sunken
+  // fill; hover 6.86:1 light, 8.17:1 dark on the hover fill.
   &.lc-select--filled {
     background-color: var(--color-surface-sunken);
-    border-color: transparent;
+    border-color: var(--color-field-border);
 
     &:hover:not(.lc-select--disabled):not(.lc-select--error):not(:focus) {
       background-color: var(--color-surface-hover);
-      border-color: var(--color-border);
+      border-color: var(--color-text-secondary);
     }
 
     &:focus,

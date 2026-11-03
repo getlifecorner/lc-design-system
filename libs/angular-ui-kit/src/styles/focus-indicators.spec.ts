@@ -177,14 +177,17 @@ describe('Focus indicators (request 042)', () => {
     // they also exclude the error class (an error field kept no error border
     // under the pointer), and the textarea/datepicker outline hover moved from
     // --color-primary-400 (1.89:1 light) to --color-text-secondary (7.55:1).
+    // Request 044 (F-31, design D-3) changed the three filled rows on purpose:
+    // their hover border is --color-text-secondary too (it was --color-border,
+    // 1.23:1 light, or none in the textarea), the 3:1 boundary of the outline.
     const hovers: [string, string, Record<string, string>][] = [
       ['textarea/textarea.component.scss', '.lc-textarea--outline:hover:not(:disabled):not(:read-only):not(.lc-textarea--error):not(:focus)', { 'border-color': 'var(--color-text-secondary)' }],
-      ['textarea/textarea.component.scss', '.lc-textarea--filled:hover:not(:disabled):not(:read-only):not(.lc-textarea--error):not(:focus)', { 'background-color': 'var(--color-surface-hover)' }],
+      ['textarea/textarea.component.scss', '.lc-textarea--filled:hover:not(:disabled):not(:read-only):not(.lc-textarea--error):not(:focus)', { 'background-color': 'var(--color-surface-hover)', 'border-color': 'var(--color-text-secondary)' }],
       ['datepicker/datepicker.component.scss', '.lc-datepicker:hover:not(:disabled):not([readonly]):not(.lc-datepicker--error):not(:focus)', { 'border-color': 'var(--color-text-secondary)' }],
-      ['datepicker/datepicker.component.scss', '.lc-datepicker.lc-datepicker--filled:hover:not(:disabled):not([readonly]):not(.lc-datepicker--error):not(:focus)', { 'background-color': 'var(--color-surface-hover)', 'border-color': 'var(--color-border)' }],
+      ['datepicker/datepicker.component.scss', '.lc-datepicker.lc-datepicker--filled:hover:not(:disabled):not([readonly]):not(.lc-datepicker--error):not(:focus)', { 'background-color': 'var(--color-surface-hover)', 'border-color': 'var(--color-text-secondary)' }],
       ['input/input.component.scss', '.input-container:hover:not(.input-disabled):not(.input-readonly):not(.input-invalid):not(:focus-within)', { 'border-color': 'var(--color-text-secondary)' }],
       ['select/select.component.scss', '.lc-select:hover:not(.lc-select--disabled):not(.lc-select--error):not(:focus)', { 'border-color': 'var(--color-text-secondary)' }],
-      ['select/select.component.scss', '.lc-select.lc-select--filled:hover:not(.lc-select--disabled):not(.lc-select--error):not(:focus)', { 'background-color': 'var(--color-surface-hover)', 'border-color': 'var(--color-border)' }],
+      ['select/select.component.scss', '.lc-select.lc-select--filled:hover:not(.lc-select--disabled):not(.lc-select--error):not(:focus)', { 'background-color': 'var(--color-surface-hover)', 'border-color': 'var(--color-text-secondary)' }],
       ['search-input/search-input.component.scss', '.search-input:hover:not(.search-input--disabled):not(:focus-within)', { 'border-color': 'var(--color-text-secondary)' }],
       ['tag-input/tag-input.component.scss', '.lc-tag-input__container:hover:not(.lc-tag-input__container--focused)', { 'border-color': 'var(--color-text-secondary)' }],
       ['date-range-picker/date-range-picker.component.scss', '.lc-drp__field:hover:not(.lc-drp__field--disabled):not(:focus-within)', { 'border-color': 'var(--color-text-secondary)' }],

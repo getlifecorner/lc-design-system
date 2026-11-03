@@ -314,6 +314,16 @@
     outline-color: Highlight;
   }
 
+  // The pressed mode (request 044 F-29): the fill is removed in forced colours,
+  // so a Highlight underline marks it. A different shape from the focus ring,
+  // so both read apart when the focus sits on another mode; no layout change.
+  .lc-rich-text-editor__mode-btn[aria-pressed='true'] {
+    text-decoration-line: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+    text-decoration-color: Highlight;
+  }
+
   .lc-rich-text-editor:has(.lc-rich-text-editor__rich:focus-visible, .lc-rich-text-editor__textarea:focus-visible) {
     border-color: Highlight;
     outline-color: Highlight;

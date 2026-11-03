@@ -85,12 +85,17 @@
     }
   }
   
+  // Request 044 (F-31): the filled field keeps the 3:1 field boundary of the
+  // outline variant (it was transparent at rest and on hover). Rest 4.39:1
+  // light, 7.02:1 dark on the sunken fill; hover 6.86:1 light, 8.17:1 dark on
+  // the hover fill. Read-only and disabled keep it (disabled under its 0.6).
   &--filled {
     background-color: var(--color-surface-sunken);
-    border-color: transparent;
-    
+    border-color: var(--color-field-border);
+
     &:hover:not(:disabled):not(:read-only):not(.lc-textarea--error):not(:focus) {
       background-color: var(--color-surface-hover);
+      border-color: var(--color-text-secondary);
     }
     
     &:focus {

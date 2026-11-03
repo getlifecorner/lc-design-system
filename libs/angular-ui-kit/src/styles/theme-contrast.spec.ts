@@ -1790,3 +1790,105 @@ describe('Component pairings of 3.25.0 (request 039)', () => {
     });
   });
 });
+
+/**
+ * Request 044 (3.27.2, F-31, design 044 §5): the filled select, textarea and
+ * datepicker draw the field boundary of the outline variant, --color-field-border
+ * at rest and --color-text-secondary on hover (it was transparent at rest and
+ * --color-border, 1.23 / 1.29, or nothing on hover). Pages are the background,
+ * surface and surface-2; the field's own fill (--color-surface-sunken at rest,
+ * --color-surface-hover on hover) is composited over each page.
+ */
+describe('Component pairings of 3.27.2 (request 044)', () => {
+  const lib = (path: string) => resolve(__dirname, '../lib', path);
+  const fields = {
+    select: {
+      css: compile(lib('select/select.component.scss')).css,
+      rest: '.lc-select.lc-select--filled',
+      hover: '.lc-select.lc-select--filled:hover:not(.lc-select--disabled):not(.lc-select--error):not(:focus)',
+      error: '.lc-select.lc-select--error',
+    },
+    textarea: {
+      css: compile(lib('textarea/textarea.component.scss')).css,
+      rest: '.lc-textarea--filled',
+      hover: '.lc-textarea--filled:hover:not(:disabled):not(:read-only):not(.lc-textarea--error):not(:focus)',
+      error: '.lc-textarea--error',
+    },
+    datepicker: {
+      css: compile(lib('datepicker/datepicker.component.scss')).css,
+      rest: '.lc-datepicker.lc-datepicker--filled',
+      hover: '.lc-datepicker.lc-datepicker--filled:hover:not(:disabled):not([readonly]):not(.lc-datepicker--error):not(:focus)',
+      error: '.lc-datepicker.lc-datepicker--filled.lc-datepicker--error',
+    },
+  };
+  type Field = keyof typeof fields;
+  const names = Object.keys(fields) as Field[];
+
+  const forcedBlock = /@media \(forced-colors: active\) \{((?:[^{}]*\{[^{}]*\})*)\s*\}/g;
+  const rulesOf = (css: string) =>
+    [...css.replace(forcedBlock, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({
+      selectors: m[1].split(/,(?![^(]*\))/).map((s) => s.trim()),
+      body: m[2],
+    }));
+  const decls = (body: string): Record<string, string> =>
+    Object.fromEntries([...body.matchAll(/([\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].replace(/\s+/g, ' ').trim()]));
+  /** Every rule naming `selector`, merged in source order, forced-colours blocks left out. */
+  const fills = (field: Field, selector: string): Record<string, string> => {
+    const found = rulesOf(fields[field].css).filter((r) => r.selectors.includes(selector));
+    expect([field, selector, found.length > 0]).toEqual([field, selector, true]);
+    return Object.assign({}, ...found.map((r) => decls(r.body)));
+  };
+  const token = (value: string) => value.match(/^var\((--[\w-]+)\)$/)?.[1] ?? `not a token: ${value}`;
+  const floor = (n: number) => Math.floor(n * 100) / 100;
+
+  it.each(names)('AC-8, AC-9: filled %s: field border on the sunken fill at rest, text-secondary on the hover fill', (field) => {
+    const rest = fills(field, fields[field].rest);
+    const hover = fills(field, fields[field].hover);
+    expect([rest['background-color'], rest['border-color']]).toEqual(['var(--color-surface-sunken)', 'var(--color-field-border)']);
+    expect([hover['background-color'], hover['border-color']]).toEqual(['var(--color-surface-hover)', 'var(--color-text-secondary)']);
+    expect(fills(field, fields[field].error)['border-color']).toBe('var(--color-error-600)');
+  });
+
+  // [light, dark] per page (background, surface, surface-2), design 044 §5.
+  const expected = {
+    restOnPage: [[4.83, 4.83, 4.62], [7.31, 6.7, 5.56]],
+    restOnFill: [[4.39, 4.39, 4.39], [7.02, 7.02, 7.02]],
+    hoverOnPage: [[7.55, 7.55, 7.23], [12.16, 11.15, 9.25]],
+    hoverOnFill: [[6.86, 6.86, 6.86], [11.05, 9.97, 8.17]],
+    // §5 quotes the page (background) only: 8.39 light, 9.47 dark.
+    errorOnPage: [[8.39, 8.39, 8.02], [9.47, 8.68, 7.21]],
+    errorOnFill: [[7.62, 7.62, 7.62], [9.09, 9.09, 9.09]],
+  };
+
+  describe.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('%s palette', (_palette, tokens, i) => {
+    const c = (name: string) => color(tokens, name);
+
+    function measure(field: Field) {
+      const pages = ['--color-background', '--color-surface', '--color-surface-2'].map(c);
+      const rest = fills(field, fields[field].rest);
+      const hover = fills(field, fields[field].hover);
+      const error = fills(field, fields[field].error);
+      const on = (ink: string, bases: Rgba[]) => bases.map((b) => floor(ratio(over(c(token(ink)), b), b)));
+      const restFill = pages.map((p) => over(c(token(rest['background-color'])), p));
+      const hoverFill = pages.map((p) => over(c(token(hover['background-color'])), p));
+      return {
+        restOnPage: on(rest['border-color'], pages),
+        restOnFill: on(rest['border-color'], restFill),
+        hoverOnPage: on(hover['border-color'], pages),
+        hoverOnFill: on(hover['border-color'], hoverFill),
+        errorOnPage: on(error['border-color'], pages),
+        errorOnFill: on(error['border-color'], restFill),
+      };
+    }
+
+    it.each(names)('AC-8, AC-9: filled %s: the design 044 §5 ratios, all ≥ 3:1, hover ≥ rest', (field) => {
+      const m = measure(field);
+      for (const key of Object.keys(expected) as (keyof typeof expected)[]) {
+        expect([key, m[key]]).toEqual([key, expected[key][i]]);
+        expect(Math.min(...m[key])).toBeGreaterThanOrEqual(3);
+      }
+      m.hoverOnPage.forEach((r, page) => expect(r).toBeGreaterThanOrEqual(m.restOnPage[page]));
+      m.hoverOnFill.forEach((r, page) => expect(r).toBeGreaterThanOrEqual(m.restOnFill[page]));
+    });
+  });
+});

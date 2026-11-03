@@ -276,3 +276,31 @@ export const ErrorWithoutAlertRole: Story = {
     rows: 4,
   },
 };
+
+/** 3.27.2 (request 044, F-31): the filled field's boundary in every size and state, in German. */
+export const FilledStates: Story = {
+  name: 'Filled States (DE)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27.2 (request 044, F-31): `variant="filled"` in every size (2 rows), with an error, disabled and read-only. The filled field now draws the field boundary of the outline variant (its border was transparent at rest and under the pointer): `--color-field-border` at rest, 4.83:1 light and 7.31:1 dark on the page, 4.39:1 / 7.02:1 on its own sunken fill; `--color-text-secondary` on hover, 6.86:1 light and at least 8.17:1 dark on the hover fill (WCAG 1.4.11). The border was already 1 px, so the heights do not change. Read-only keeps the boundary (it is focusable) with no hover change; disabled shows it under its 0.6 opacity; error keeps `--color-error-600`, also under the pointer.',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      sizes: ['xs', 'sm', 'md', 'lg'],
+      readonlyText: 'Die Reisekosten wurden am 3. November geprüft und freigegeben.',
+    },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 16px; max-width: 400px;">
+        @for (size of sizes; track size) {
+          <lc-textarea variant="filled" [size]="size" [rows]="2" [label]="'Kommentar (' + size + ')'" placeholder="Kommentar schreiben …"></lc-textarea>
+        }
+        <lc-textarea variant="filled" [rows]="2" label="Kommentar (Fehler)" placeholder="Kommentar schreiben …" [error]="true" errorMessage="Bitte mindestens 20 Zeichen schreiben"></lc-textarea>
+        <lc-textarea variant="filled" [rows]="2" label="Kommentar (deaktiviert)" placeholder="Kommentar schreiben …" [disabled]="true"></lc-textarea>
+        <lc-textarea variant="filled" [rows]="2" label="Kommentar (schreibgeschützt)" [readonly]="true" [value]="readonlyText"></lc-textarea>
+      </div>`,
+  }),
+};

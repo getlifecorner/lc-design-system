@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/angular';
+import { expect, userEvent, waitFor } from 'storybook/test';
 import { RichTextEditorComponent } from './rich-text-editor.component';
 
 const meta: Meta<RichTextEditorComponent> = {
@@ -250,5 +251,78 @@ export const TouchTargets: Story = {
       link: 'Link',
       hr: 'Trennlinie',
     },
+  },
+};
+
+/** 3.27.2 (request 044, F-29): the pressed mode button in each mode, in German. */
+export const PressedMode: Story = {
+  name: 'Pressed Mode (DE)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27.2 (request 044, F-29), German labels. Three editors start in the rich mode; in the story view Space presses "Markdown" in the second and Enter presses "Geteilt" in the third, as a keyboard user would (focus stays on "Geteilt"). Each mode button has `aria-pressed`: "true" on the active mode, "false" on the other two, so a screen reader announces which mode is on. The look is unchanged (the fill pair, 6.21:1 in both themes). In forced colours, where the fill is removed, the pressed mode is underlined in `Highlight` (2 px, 4 px below the text): a different shape from the 2 px focus ring, so both read apart, and no layout change.',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      editors: ['a', 'b', 'c'],
+      compactToolbar: { actions: ['bold', 'italic', 'link'] },
+      de: {
+        placeholder: 'Notiz schreiben …',
+        richModeLabel: 'Formatiert',
+        richModeTitle: 'Formatierter Text',
+        markdownModeLabel: 'Markdown',
+        markdownModeTitle: 'Markdown',
+        splitModeLabel: 'Geteilt',
+        splitModeTitle: 'Geteilte Ansicht',
+        markdownEditorAriaLabel: 'Markdown-Editor',
+        wordsLabel: 'Wörter',
+        charactersLabel: 'Zeichen',
+        actionTitles: { bold: 'Fett', italic: 'Kursiv', link: 'Link' },
+      },
+    },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        @for (editor of editors; track editor) {
+          <lc-rich-text-editor
+            mode="rich"
+            [toolbar]="compactToolbar"
+            [minHeight]="80"
+            [placeholder]="de.placeholder"
+            [richModeLabel]="de.richModeLabel"
+            [richModeTitle]="de.richModeTitle"
+            [markdownModeLabel]="de.markdownModeLabel"
+            [markdownModeTitle]="de.markdownModeTitle"
+            [splitModeLabel]="de.splitModeLabel"
+            [splitModeTitle]="de.splitModeTitle"
+            [markdownEditorAriaLabel]="de.markdownEditorAriaLabel"
+            [wordsLabel]="de.wordsLabel"
+            [charactersLabel]="de.charactersLabel"
+            [actionTitles]="de.actionTitles"
+          ></lc-rich-text-editor>
+        }
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    const editors = [...canvasElement.querySelectorAll('lc-rich-text-editor')];
+    const modes = (editor: Element) => [...editor.querySelectorAll<HTMLButtonElement>('.lc-rich-text-editor__mode-btn')];
+    const pressed = () => editors.map((editor) => modes(editor).map((button) => button.getAttribute('aria-pressed')));
+
+    modes(editors[1])[1].focus({ preventScroll: true });
+    await userEvent.keyboard(' ');
+    modes(editors[2])[2].focus({ preventScroll: true });
+    await userEvent.keyboard('{Enter}');
+
+    await waitFor(() =>
+      expect(pressed()).toEqual([
+        ['true', 'false', 'false'],
+        ['false', 'true', 'false'],
+        ['false', 'false', 'true'],
+      ]),
+    );
   },
 };

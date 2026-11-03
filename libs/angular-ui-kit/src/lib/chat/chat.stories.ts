@@ -491,3 +491,101 @@ export const TouchTargets: Story = {
     },
   },
 };
+
+/**
+ * Selects four files through the hidden file input, as the attach button's
+ * file dialog would: three PDFs with long names and a 56 × 56 PNG (request 044).
+ */
+async function addPendingFiles(root: HTMLElement): Promise<void> {
+  const input = root.querySelector<HTMLInputElement>('.lc-chat__file-input');
+  if (!input) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = 56;
+  canvas.height = 56;
+  const paint = canvas.getContext('2d');
+  if (paint) {
+    // The picture's content (a teal square), not a kit colour.
+    paint.fillStyle = '#208497';
+    paint.fillRect(0, 0, 56, 56);
+  }
+  const png = await new Promise<Blob | null>((done) => canvas.toBlob(done, 'image/png'));
+  const files = new DataTransfer();
+  files.items.add(new File(['x'.repeat(1_258_291)], 'Quarterly-travel-expense-report-2026-final.pdf', { type: 'application/pdf' }));
+  files.items.add(new File(['x'.repeat(5_120)], 'Kostenstellen-Übersicht-Oktober-2026.pdf', { type: 'application/pdf' }));
+  files.items.add(new File(['x'.repeat(245_760)], 'Reisekostenabrechnung-Q3-2026-Entwurf.pdf', { type: 'application/pdf' }));
+  if (png) files.items.add(new File([png], 'beleg.png', { type: 'image/png' }));
+  input.files = files.files;
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+/** 3.27.2 (request 044, F-28): the remove buttons of pending attachments, in German. */
+export const PendingAttachments: Story = {
+  name: 'Pending Attachments (DE)',
+  render: () => ({
+    template: `
+      <div style="height: 560px;">
+        <lc-chat title="Assistent" [messages]="messages" [allowFileUpload]="true" accept="image/*,.pdf"></lc-chat>
+      </div>
+    `,
+    props: {
+      messages: [
+        { id: 't1', role: 'user', content: 'Kannst du die Reisekosten für das dritte Quartal zusammenfassen?', name: 'Alex Example', timestamp: new Date(2026, 10, 3, 9, 15) },
+        { id: 't2', role: 'agent', content: 'Gern. Die Reisekosten liegen 4 % unter dem Budget.', name: 'Assistent', timestamp: new Date(2026, 10, 3, 9, 16) },
+      ] as ChatMessage[],
+    },
+    moduleMetadata: { imports: [ChatComponent] },
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await addPendingFiles(canvasElement);
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27.2 (request 044, F-28). Four files are selected in the story view: three PDFs with long names and an image. Each remove button stays 20 × 20 px but has a 44 × 44 px hit area (WCAG 2.5.8), centred and without paint, so its hover fill shows anywhere in it; the focus ring stays round the 20 px button (`Highlight` in forced colours). Chips whose remove buttons line up in wrapped rows are now 14 px apart (were 6): the two hit areas meet in the middle of the gap instead of overlapping by 8 px, where the lower button won a click on the upper chip. Chip sizes and the 144 px names (ellipsis) are as before; at 1280 px all four chips share one row and nothing moves.',
+      },
+    },
+  },
+};
+
+/** 3.27.2 (request 044, F-28): the same pending attachments with English texts. */
+export const PendingAttachmentsEnglish: Story = {
+  name: 'Pending Attachments (EN)',
+  render: () => ({
+    template: `
+      <div style="height: 560px;">
+        <lc-chat
+          title="Assistant"
+          placeholder="Type a message…"
+          inputLabel="Message"
+          attachAriaLabel="Attach file"
+          sendAriaLabel="Send"
+          removeAttachmentAriaLabel="Remove:"
+          [messages]="messages"
+          [allowFileUpload]="true"
+          accept="image/*,.pdf"
+        ></lc-chat>
+      </div>
+    `,
+    props: {
+      messages: [
+        { id: 't1', role: 'user', content: 'Can you sum up the travel expenses for the third quarter?', name: 'Alex Example', timestamp: new Date(2026, 10, 3, 9, 15) },
+        { id: 't2', role: 'agent', content: 'Sure. Travel expenses are 4 % below budget.', name: 'Assistant', timestamp: new Date(2026, 10, 3, 9, 16) },
+      ] as ChatMessage[],
+    },
+    moduleMetadata: { imports: [ChatComponent] },
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await addPendingFiles(canvasElement);
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27.2 (request 044, F-28): *Pending Attachments (DE)* with English texts. Each remove button is named "Remove: <file name>" and has a 44 × 44 px hit area round its 20 px button; wrapped chip rows are 14 px apart, so the areas never overlap.',
+      },
+    },
+  },
+};

@@ -211,3 +211,38 @@ export const TouchTargets: Story = {
     `,
   }),
 };
+
+/** 3.27.2 (request 044, F-31): the filled field's boundary in every size and state, in German. */
+export const FilledStates: Story = {
+  name: 'Filled States (DE)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27.2 (request 044, F-31): `variant="filled"` in every size, with an error and disabled. The filled field now draws the field boundary of the outline variant (its border was transparent at rest and `--color-border` under the pointer, 1.23:1 light, 1.29:1 dark): `--color-field-border` at rest, 4.83:1 light and 7.31:1 dark on the page, 4.39:1 / 7.02:1 on its own sunken fill; `--color-text-secondary` on hover, 6.86:1 light and at least 8.17:1 dark on the hover fill (WCAG 1.4.11). The border was already 1 px, so the heights (xs to lg 24/32/40/44) do not change. Error keeps `--color-error-600` (also under the pointer), disabled keeps its muted look, and forced colours draw the border in the system colour.',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      options: [
+        { value: 'de', label: 'Deutschland' },
+        { value: 'at', label: 'Österreich' },
+        { value: 'ch', label: 'Schweiz' },
+        { value: 'fr', label: 'Frankreich' },
+        { value: 'it', label: 'Italien' },
+        { value: 'es', label: 'Spanien' },
+      ],
+      sizes: ['xs', 'sm', 'md', 'lg'],
+    },
+    template: `
+      <div style="max-width: 320px; display: flex; flex-direction: column; gap: 16px;">
+        @for (size of sizes; track size) {
+          <lc-select variant="filled" [size]="size" placeholder="Land wählen" [ariaLabel]="'Land (' + size + ')'" [options]="options"></lc-select>
+        }
+        <lc-select variant="filled" placeholder="Land wählen" ariaLabel="Land (Fehler)" [options]="options" [error]="true" errorMessage="Bitte ein Land wählen"></lc-select>
+        <lc-select variant="filled" placeholder="Land wählen" ariaLabel="Land (deaktiviert)" [options]="options" [disabled]="true"></lc-select>
+      </div>
+    `,
+  }),
+};

@@ -539,7 +539,10 @@
 .lc-chat__pending-attachments {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.375rem;
+  // Rows 14 px apart (request 044 D-1): the 44 px hit areas of two remove
+  // buttons stacked in wrapped rows meet at the gap's middle instead of
+  // overlapping by 8 px. Columns stay 6 px (an area ends before the next chip).
+  gap: 0.875rem 0.375rem;
 }
 
 .lc-chat__pending-attachment {
@@ -576,6 +579,7 @@
 }
 
 .lc-chat__pending-remove {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -587,6 +591,14 @@
   color: var(--color-text-tertiary);
   cursor: pointer;
   flex-shrink: 0;
+
+  // Hit area (WCAG 2.5.8, request 044 F-28): 44 × 44 px centred on the 20 px
+  // button, without paint, as on the send button.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: calc((1.25rem - var(--size-min-touch-height, 2.75rem)) / 2);
+  }
 
   &:hover { background: var(--color-surface-hover); color: var(--color-text-primary); }
 

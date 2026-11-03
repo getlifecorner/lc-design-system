@@ -427,6 +427,19 @@ const EXPECT_IN_HTML = [
       && /\.file-upload__input\[_ngcontent-[^\]]*\]\s*\{(?:[^}]*[;\s])?visibility:\s*hidden/.test(html)
       && /\.file-upload__content\[_ngcontent-[^\]]*\]\s*\{(?:[^}]*[;\s])?pointer-events:\s*none/.test(html);
   }],
+  // 3.27.2 (request 044, F-29, probe-3272.ts): the mode buttons tell the
+  // pressed mode before JS, aria-pressed "true" on the active (default rich)
+  // mode and "false" on markdown and split; native buttons, titles kept.
+  ['rich-text editor: aria-pressed on the three mode buttons (F-29, 044 AC-15)', (html) => {
+    const rte = html.match(/<lc-rich-text-editor(?=[^>]*\sid="compat-rte-3272")[^>]*>(?:(?!<\/lc-rich-text-editor>)[^])*<\/lc-rich-text-editor>/)?.[0] ?? '';
+    const modes = [...rte.matchAll(/<button(?=[^>]*\sclass="lc-rich-text-editor__mode-btn[\s"])[^>]*>/g)].map((m) => m[0]);
+    const pressed = modes.map((b) => b.match(/\saria-pressed="(true|false)"/)?.[1]);
+    return modes.length === 3
+      && pressed.join(' ') === 'true false false'
+      && /\sclass="lc-rich-text-editor__mode-btn active"/.test(modes[0])
+      && modes.every((b) => /\stype="button"/.test(b))
+      && /\stitle="Formatierter Text"/.test(modes[0]) && /\stitle="Geteilte Ansicht"/.test(modes[2]);
+  }],
 ];
 
 /**

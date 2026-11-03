@@ -108,6 +108,31 @@ export const Sizes: Story = {
   }),
 };
 
+/** 3.27.2 (request 044, F-31): the filled field's boundary in every size and state, in German. */
+export const FilledStates: Story = {
+  name: 'Filled States (DE)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.27.2 (request 044, F-31): `variant="filled"` in every size, with an error, disabled and read-only. The filled field now draws the field boundary of the outline variant (its border was transparent at rest and `--color-border` under the pointer, 1.23:1 light, 1.29:1 dark): `--color-field-border` at rest, 4.83:1 light and 7.31:1 dark on the page, 4.39:1 / 7.02:1 on its own sunken fill; `--color-text-secondary` on hover, 6.86:1 light and at least 8.17:1 dark on the hover fill (WCAG 1.4.11). The border was already 1 px, so the heights (xs to lg 24/32/40/44) do not change. A filled error field now shows its `--color-error-600` border (it was transparent: the filled rule came after the error rule), also on focus; disabled shows the muted `--color-border` of the outline variant; read-only keeps the boundary with no hover change.',
+      },
+    },
+  },
+  render: () => ({
+    props: { sizes: ['xs', 'sm', 'md', 'lg'] },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 16px; max-width: 300px;">
+        @for (size of sizes; track size) {
+          <lc-datepicker variant="filled" [size]="size" placeholder="Datum wählen" [ariaLabel]="'Datum (' + size + ')'"></lc-datepicker>
+        }
+        <lc-datepicker variant="filled" placeholder="Datum wählen" ariaLabel="Datum (Fehler)" [error]="true" errorMessage="Bitte ein gültiges Datum wählen"></lc-datepicker>
+        <lc-datepicker variant="filled" placeholder="Datum wählen" ariaLabel="Datum (deaktiviert)" [disabled]="true"></lc-datepicker>
+        <lc-datepicker variant="filled" placeholder="Datum wählen" ariaLabel="Datum (schreibgeschützt)" [readonly]="true"></lc-datepicker>
+      </div>`,
+  }),
+};
+
 export const BookingForm: Story = {
   name: 'Booking Form (Composition)',
   render: () => ({

@@ -20,6 +20,7 @@
         type="button"
         class="lc-rich-text-editor__mode-btn"
         [class.active]="activeMode() === 'rich'"
+        [attr.aria-pressed]="activeMode() === 'rich'"
         (click)="switchMode('rich')"
         [attr.title]="richModeTitle()"
       >{{ richModeLabel() }}</button>
@@ -27,6 +28,7 @@
         type="button"
         class="lc-rich-text-editor__mode-btn"
         [class.active]="activeMode() === 'markdown'"
+        [attr.aria-pressed]="activeMode() === 'markdown'"
         (click)="switchMode('markdown')"
         [attr.title]="markdownModeTitle()"
       >{{ markdownModeLabel() }}</button>
@@ -34,6 +36,7 @@
         type="button"
         class="lc-rich-text-editor__mode-btn"
         [class.active]="activeMode() === 'split'"
+        [attr.aria-pressed]="activeMode() === 'split'"
         (click)="switchMode('split')"
         [attr.title]="splitModeTitle()"
       >{{ splitModeLabel() }}</button>
