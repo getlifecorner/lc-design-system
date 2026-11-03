@@ -8,3 +8,6 @@ Open findings that don't need a request of their own: nits, known limits, wordin
 | F-32 | tag-input | A long tag chip is cut with an ellipsis at 150 px, with no `title` and no wrap, so its full text can't be read. | 043 review r2, nit 10 |
 | 043-n7 | textarea | The error message ink in light differs from the other fields: `rgb(107, 9, 9)` vs `rgb(157, 14, 14)` (both at least 4.5:1). | 043 review r2, nit 7 |
 | 043-n8 | tag-input | The `form-tag-input--touch-targets` story description says 4 px and 12 px; measured 5 px and 13 px. | 043 review r2, nit 8 |
+| 044-n1 | textarea | Focus is a border hue change plus a 20 % halo, while select and datepicker add a 2 px solid ring (not an AA failure: focused border 3.96:1 L / 9.55:1 D on the fill). | 044 review r1, N1 |
+| 044-n2 | chat | The pending chip size label "240.0 KB" is not localised and wraps in the 256 px chip (pre-existing). | 044 review r1, N2 |
+| 044-n3 | notification-center, log-viewer | The pressed mark in forced colours (filters, level pills) is a 2 px `Highlight` outline, the same shape as the focus ring; the rich-text-editor has a different one. | 044 review r1, N3 |

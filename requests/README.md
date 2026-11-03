@@ -80,3 +80,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [041](041-button-describedby-dl-value-wrap/) lc-button ariaDescribedBy; lc-description-list short values never break inside | finance-intelligence | gap file row 7 (quellen-2026-11-03); description-list bug | 3.26.0 | 3.26.0 |
 | [042](042-focus-hover-targets-follow-ups/) Focus indicators kit-wide, focus over hover in fields, dependency-viewer at 360 px, file-upload remove target | owner | 039/040 F-18 to F-21 | 3.27.0 | 3.27.0 |
 | [043](043-targets-hover-contrast-follow-ups/) Targets, hover borders and contrast follow-ups (notification-center, log-viewer, callout, select, tag, rich-text-editor, document-viewer, chat, table, fields, header, gallery, kanban) | owner | 042 F-22 to F-27 | 3.27.1 | 3.27.1 |
+| [044](044-chat-editor-filled-field-follow-ups/) Chat remove target, rich-text-editor mode state, filled-field boundary | owner | 043 F-28, F-29, F-31 | 3.27.2 | 3.27.2 |

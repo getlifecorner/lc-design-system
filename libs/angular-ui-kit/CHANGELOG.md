@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.27.2] - 2026-11-03
+
+A 44 px remove target on pending chat attachments, a pressed state the rich-text editor's mode buttons announce, and a 3:1 boundary on filled select, textarea and datepicker fields (043 follow-ups F-28, F-29, F-31). No API breaks.
+
+### Fixed
+
+- **`lc-chat` pending attachments (F-28, WCAG 2.5.8):** each remove × keeps its 20 px look but takes taps in a 44 × 44 px area, centred and without paint (hover fill anywhere in it; the focus ring stays round the 20 px button, `Highlight` in forced colours). Wrapped chip rows are 14 px apart (were 6), so two stacked areas meet instead of overlapping by 8 px, where the lower × took a tap on the upper chip. Chips, names and sizes are unchanged. Stories *Pending Attachments (DE)* and *(EN)*.
+- **`lc-rich-text-editor` mode buttons (F-29, WCAG 4.1.2, 1.4.1):** each has `aria-pressed` ("true" on the active mode, "false" on the others, also in prerendered HTML), so screen readers announce which mode is on. In forced colours, which remove the pressed fill, the pressed mode is underlined in `Highlight` (2 px, 4 px below the text), a different shape from the focus ring. The normal look is unchanged. Story *Pressed Mode (DE)*.
+- **Filled `lc-select`, `lc-textarea`, `lc-datepicker` (F-31, WCAG 1.4.11):** the border was transparent at rest and `--color-border` on hover (1.23:1 light, 1.29:1 dark; the textarea none). It is now the outline variant's boundary: `--color-field-border` at rest, 4.83 / 4.83 / 4.62:1 light and 7.31 / 6.70 / 5.56:1 dark on the page, surface and surface-2, 4.39:1 / 7.02:1 on the field's own fill; `--color-text-secondary` on hover, at least 6.86:1 light and 8.17:1 dark on the hover fill. Read-only fields keep it (no hover change). A filled datepicker with an error now shows its `--color-error-600` border, also on focus (it was transparent: the filled rule came after the error rule). Stories *Filled States (DE)* in the three components.
+
+### Compatibility
+
+- No input, output, type, CSS hook or default value changed. Filled fields now draw a 1 px border that was already there transparent: no size changes (select and datepicker xs to lg 24/32/40/44 px). Disabled filled datepicker uses `--color-border` and disabled filled textarea `--color-field-border`, as their outline variants (both under the 0.6 opacity). Pending chat chips that wrap sit 8 px further apart per row; on one row nothing moves. Of the 252 at-rest shots of the touched components' stories, 240 are hash-identical; the 12 others are the three *Filled* stories.
+- Checked on Angular 22 (AOT, strictTemplates, prerender).
+
 ## [3.27.1] - 2026-11-03
 
 44 px touch targets on the controls the 042 sweep found, field hover that keeps 3:1 and the error state, a 3:1 rich-text frame, a themed `lc-header` that keeps its palette inside a page of the other theme, and four contrast and one keyboard finding (042 follow-ups F-22 to F-27). No API breaks.
