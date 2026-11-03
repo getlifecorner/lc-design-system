@@ -268,6 +268,17 @@ export class FileUploadComponent {
     }
   }
 
+  /**
+   * Enter or Space on the zone (3.25.2): no page scroll on Space, one open per
+   * press (auto-repeat ignored).
+   */
+  protected onKeyActivate(event: Event): void {
+    event.preventDefault();
+    if (!(event as KeyboardEvent).repeat) {
+      this.openFilePicker();
+    }
+  }
+
   protected removeFile(index: number): void {
     this.selectedFiles.update((files) => files.filter((_, i) => i !== index));
     this.filesSelected.emit(this.selectedFiles());

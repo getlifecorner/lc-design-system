@@ -1,3 +1,15 @@
+<!-- The native input sits beside the zone, not inside it (3.25.2, axe
+     nested-interactive): visibility: hidden keeps it out of the tab order and
+     the accessibility tree, and the zone opens it with click(). -->
+<input
+  #fileInput
+  type="file"
+  class="file-upload__input"
+  [accept]="accept()"
+  [multiple]="multiple()"
+  [disabled]="disabled()"
+  (change)="onFileChange($event)"
+/>
 <div
   [class]="dropzoneClasses()"
   (dragover)="onDragOver($event)"
@@ -5,23 +17,12 @@
   (drop)="onDrop($event)"
   (click)="openFilePicker()"
   role="button"
-  tabindex="0"
-  (keydown.enter)="openFilePicker()"
-  (keydown.space)="openFilePicker()"
+  [attr.tabindex]="disabled() ? null : 0"
+  (keydown.enter)="onKeyActivate($event)"
+  (keydown.space)="onKeyActivate($event)"
   [attr.aria-label]="dropzoneAriaLabel()"
   [attr.aria-disabled]="disabled()"
 >
-  <input
-    #fileInput
-    type="file"
-    class="file-upload__input"
-    [accept]="accept()"
-    [multiple]="multiple()"
-    [disabled]="disabled()"
-    (change)="onFileChange($event)"
-    tabindex="-1"
-    aria-hidden="true"
-  />
   <div class="file-upload__content">
     <lc-icon name="cloud-arrow-up" class="file-upload__icon" [decorative]="true"></lc-icon>
     <!-- Real spaces between the lines, so the visible text reads as words

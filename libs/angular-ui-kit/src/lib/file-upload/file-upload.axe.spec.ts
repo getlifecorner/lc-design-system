@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient, withXhr } from '@angular/common/http';
+import { resolve } from 'path';
+import { compile } from 'sass';
 import { FileUploadComponent } from './file-upload.component';
 import { LABEL_IN_NAME as RULE, audit, computedName, installFakeCanvas, outcome, outcomeFor, violations } from '../../testing/axe-jsdom';
 
@@ -8,22 +10,28 @@ import { LABEL_IN_NAME as RULE, audit, computedName, installFakeCanvas, outcome,
  * (`role="button"`) under axe-core 4.14, named `hint`, then the accepted and
  * max lines it shows.
  *
- * `nested-interactive` (the hidden file input inside the drop zone) existed at
- * 3.11.4 (3 stories in the 1280 px sweep, design.md §9 AC-4) and is out of
- * scope: it is the only violation these audits leave out.
+ * Request 040 (3.25.2, AC-1): the hidden file input sits beside the zone, so
+ * `nested-interactive` (pre-existing since 3.11.4) is gone and the audits
+ * leave out no rule. Jest loads no component styles, so the component's
+ * compiled SCSS goes into the document: its `visibility: hidden` keeps the
+ * input out of the accessibility tree here as in the browser.
  */
-const PRE_EXISTING = ['nested-interactive'];
+const COMPONENT_CSS = compile(resolve(__dirname, 'file-upload.component.scss')).css;
 
 describe('FileUploadComponent — axe-core 4.14 (AS-33)', () => {
   let fixture: ComponentFixture<FileUploadComponent>;
   let restoreCanvas: () => void;
+  let style: HTMLStyleElement;
 
   beforeAll(() => {
     restoreCanvas = installFakeCanvas();
+    style = document.head.appendChild(document.createElement('style'));
+    style.textContent = COMPONENT_CSS;
   });
 
   afterAll(() => {
     restoreCanvas();
+    style.remove();
   });
 
   beforeEach(async () => {
@@ -70,7 +78,7 @@ describe('FileUploadComponent — axe-core 4.14 (AS-33)', () => {
       // AC-5: the hint stays the prefix.
       expect(zone(root).getAttribute('aria-label')?.startsWith(String(row.inputs['hint'] ?? 'Drag & drop'))).toBe(true);
       const results = await audit(root);
-      expect(violations(results, PRE_EXISTING)).toEqual([]);
+      expect(violations(results)).toEqual([]);
       expect(outcomeFor(results, RULE, zone(root))).toBe('pass');
     });
   });
@@ -94,7 +102,15 @@ describe('FileUploadComponent — axe-core 4.14 (AS-33)', () => {
     zone(root).setAttribute('aria-label', DE.hint);
     const results = await audit(root);
     expect(outcome(results, RULE)).toBe('violation');
-    expect(results.violations.map((v) => v.id).filter((id) => !PRE_EXISTING.includes(id))).toEqual([RULE]);
+    expect(results.violations.map((v) => v.id)).toEqual([RULE]);
     expect(outcomeFor(results, RULE, zone(root))).toBe('violation');
+  });
+
+  it('reports nested-interactive for a control inside the zone (negative control, request 040 AC-1)', async () => {
+    const root = await render({});
+    zone(root).appendChild(document.createElement('button')).textContent = 'Inner';
+    const results = await audit(root);
+    expect(outcome(results, 'nested-interactive')).toBe('violation');
+    expect(outcomeFor(results, 'nested-interactive', zone(root))).toBe('violation');
   });
 });

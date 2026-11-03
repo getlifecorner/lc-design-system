@@ -405,6 +405,28 @@ const EXPECT_IN_HTML = [
       && new RegExp(`<button(?=[^>]*\\stype="button")(?=[^>]*\\sclass="lc-dl__action")(?=[^>]*\\saria-labelledby="${uid}-t0 ${uid}-v0")[^>]*></button>(?:<!--[^]*?-->|\\s)*</dd>`).test(dl)
       && !/\s(?:role|tabindex)=/.test(dl);
   }],
+  // 3.25.2 (request 040, probe-3252.ts, 037 review finding 5): the native file
+  // input comes before the drop zone, without tabindex or aria-hidden; the zone
+  // (role=button, one tab stop, its name) holds no input, and its hint and
+  // lines are text before JS. The inlined CSS hides the input (visibility) and
+  // lets pointer events through the content to the zone.
+  ['file upload: input beside the named zone, hint and lines before JS (037-5, 040 AC-15)', (html) => {
+    const upload = html.match(/<lc-file-upload(?=[^>]*\sid="compat-upload-3252")[^>]*>(?:(?!<\/lc-file-upload>)[^])*<\/lc-file-upload>/)?.[0] ?? '';
+    const input = upload.match(/<input\b[^>]*>/)?.[0] ?? '';
+    const zoneAt = upload.search(/<div(?=[^>]*\srole="button")/);
+    const zone = zoneAt < 0 ? '' : upload.slice(zoneAt);
+    const c = '(?:<!--[^]*?-->)*';
+    return /\stype="file"/.test(input) && /\sclass="file-upload__input"/.test(input)
+      && !/\s(?:tabindex|aria-hidden)=/.test(input)
+      && upload.indexOf('<input') < zoneAt
+      && /^<div(?=[^>]*\sclass="file-upload")(?=[^>]*\stabindex="0")(?=[^>]*\saria-disabled="false")(?=[^>]*\saria-label="CSV-Datei hierher ziehen oder zum Auswählen klicken, Erlaubt: \.csv, Höchstens: 20,0 MB")[^>]*>/.test(zone)
+      && !/<input\b/.test(zone)
+      && new RegExp(`<p[^>]*\\sclass="file-upload__hint"[^>]*>${c}CSV-Datei hierher ziehen oder zum Auswählen klicken${c}</p>`).test(zone)
+      && new RegExp(`<p[^>]*\\sclass="file-upload__accept"[^>]*>${c}Erlaubt: \\.csv${c}</p>`).test(zone)
+      && new RegExp(`<p[^>]*\\sclass="file-upload__accept"[^>]*>${c}Höchstens: 20,0 MB${c}</p>`).test(zone)
+      && /\.file-upload__input\[_ngcontent-[^\]]*\]\s*\{(?:[^}]*[;\s])?visibility:\s*hidden/.test(html)
+      && /\.file-upload__content\[_ngcontent-[^\]]*\]\s*\{(?:[^}]*[;\s])?pointer-events:\s*none/.test(html);
+  }],
 ];
 
 /**

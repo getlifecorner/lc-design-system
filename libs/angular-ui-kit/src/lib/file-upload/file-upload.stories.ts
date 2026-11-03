@@ -18,7 +18,7 @@ Drag & drop file upload component.
 - Max file size validation
 - Multiple file support
 - File list with remove buttons
-- Keyboard accessible
+- One control: Tab reaches the zone (one tab stop); Enter or Space opens the file picker, so does a click anywhere in the zone, or drop files on it. The native file input sits hidden beside the zone, not inside it (3.25.2).
 - Sizes in the page's notation with \`locale\` (3.24: \`locale="de-DE"\` → "20,0 MB")
 
 **Checks and \`fileRejected\` (3.24):** each picked or dropped file is checked for its
@@ -54,7 +54,11 @@ cleared and \`filesSelected\` emits \`[]\`.
       description: 'Max file size (bytes), 0 = unlimited. A larger file is rejected with `code: \'size\'`.',
       table: { defaultValue: { summary: '0' } },
     },
-    disabled: { control: 'boolean', description: 'Disables the drop zone', table: { defaultValue: { summary: 'false' } } },
+    disabled: {
+      control: 'boolean',
+      description: 'Disables the drop zone: dimmed, out of the tab order, aria-disabled="true"',
+      table: { defaultValue: { summary: 'false' } },
+    },
     hint: {
       control: 'text',
       description: 'Hint text shown in the drop zone; starts its accessible name',
@@ -120,7 +124,7 @@ export const Disabled: Story = {
   parameters: {
     docs: {
       description: {
-        story: '`disabled`: the zone is dimmed, ignores clicks and drops, and reports `aria-disabled="true"`.',
+        story: '`disabled`: the zone is dimmed, leaves the tab order, ignores clicks, keys and drops, and reports `aria-disabled="true"`.',
       },
     },
   },

@@ -81,11 +81,15 @@ describe('FileUploadComponent', () => {
     expect(accept.nativeElement.textContent).toContain('.pdf,.jpg');
   });
 
+  // Request 040 (AC-3): the input sits beside the zone, hidden by its CSS
+  // (`visibility: hidden`, file-upload.structure.spec.ts), not by aria-hidden.
   it('should have hidden file input', () => {
     fixture.detectChanges();
     const input = fixture.debugElement.query(By.css('input[type="file"]'));
     expect(input).toBeTruthy();
-    expect(input.nativeElement.getAttribute('aria-hidden')).toBe('true');
+    expect(input.nativeElement.closest('.file-upload')).toBeNull();
+    expect(input.nativeElement.hasAttribute('aria-hidden')).toBe(false);
+    expect(input.nativeElement.hasAttribute('tabindex')).toBe(false);
   });
 
   it('should emit filesSelected when files are chosen', () => {
