@@ -42,7 +42,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-command -v claude >/dev/null || { echo "lc-request: Claude Code (claude) is not installed" >&2; exit 1; }
+claude_bin="$(command -v claude)" || { echo "lc-request: Claude Code (claude) is not installed" >&2; exit 1; }
 
 if [ -z "$from" ]; then
   if [ "$CALLER" = "$REPO" ] || [[ "$CALLER" == "$REPO"/* ]]; then from="owner"; else from="$(basename "$CALLER")"; fi
@@ -120,4 +120,9 @@ trap - EXIT INT TERM HUP
 cd "$REPO"
 # A caller's Claude Code session (another Nx workspace) exports its own root; Nx would look there for angular-ui-kit.
 unset NX_WORKSPACE_ROOT_PATH
-exec claude "${flags[@]}"
+# The gates need Node 24, as in CI (.nvmrc); a caller's PATH may put an older Node first.
+# Only for the run, so the script itself keeps finding the caller's claude.
+node24="$(ls -d "$HOME"/.nvm/versions/node/v24.*/bin 2>/dev/null | sort -V | tail -n 1 || true)"
+run_path="$PATH"
+[ -n "$node24" ] && run_path="$node24:$PATH"
+PATH="$run_path" exec "$claude_bin" "${flags[@]}"
