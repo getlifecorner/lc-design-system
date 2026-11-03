@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.28.0] - 2026-11-03
+
+Toasts clear the app shell's header and floating bar, every page can keep the same right column, and one page can run a table over it (life-os app shell round 11: AS-34, AS-35, AS-36). New optional inputs and CSS hooks; no API breaks.
+
+### Added
+
+- **Toasts in `lc-app-shell`** (AS-34, life-os shell; WCAG 2.4.11, 1.4.4): the shell tells `lc-toast-outlet` where its header ends and where the shown bar starts, also when the outlet sits after `</lc-app-shell>`. At 360 × 640 with the German floating bar: a top toast starts at y 72 (header 56 + 16), a bottom toast ends at y 522, 16 px above the bar (538); from 1024 px, with the bar hidden, 16 px above the bottom inset. At 200 % text the stack stays between header (177) and bar (442) and scrolls (814 px of toasts in 265 px); Tab to a close button scrolls it into view. In the shell, prefer `bottom-*`: a top toast can still cover a title right under the header (at 360 px it covers the last letter of an h1 at y 80). Stories *Toasts in the shell*, *… large text*.
+- **`--lc-toast-outlet-offset-top` / `-bottom`** (default `0px`): the space kept free above the top and below the bottom stacks; on `lc-toast-outlet` or any ancestor, they win over the shell's values. Write lengths (`0px`). Story *Offsets* (64 / 90 px: toasts at y 80 and ending at vh − 106).
+- **`lc-app-page` `reserveAside`** (AS-35, life-os "one frame for every page"): keeps the right column from 1280 px on a page with nothing for it: width (360 · 400 · 460 px), tint and hairline, also behind the header, as an empty `<div aria-hidden="true">` with no role and no landmark. Content sits where a page with a named aside has it: 296 / 568 px at 1280, 320 / 648 at 1440, 430 / 880 at 1920. A named aside wins. Story *Reserved right column*.
+- **`lc-app-page` `contentWidth="wide"` and `[page-wide]`** (AS-36, life-os account page; type `AppPageContentWidth`): from 1280 px the page keeps the standard column of a page with a right column, leaves the column empty and untinted, and lets `[page-wide]` children run over it, up to 928 px: 296 → 1224 px at 1280, 320 → 1248 at 1440, 430 → 1358 at 1920, while the page header and the next-step card stay at 568 / 648 / 880. No page scroll; a wider table scrolls in its own region. `contentMaxWidth` other than `880px` caps it instead. Next to a named aside, and below 1280 px, it renders like `'default'`. Stories *Wide page*, *Wide page with a right column*.
+
+### Compatibility
+
+- New optional inputs, type, slot attribute and CSS hooks only. Defaults render as in 3.27.2: an outlet outside a shell has no style attribute and its stacks sit at `0px`; a page without the new inputs has 3.27.2's DOM. A page with a named aside gains two comment nodes (Angular's control-flow anchors), nothing else. At rest, the app-shell, header and toast stories are hash-identical to 3.27.2 except the *Full-height nav* story, whose screenshots differ by 21 px of sidenav icon noise in a different set of 4 to 6 shots on every run; opened toasts sit at the same positions.
+- Every toast stack is now a scroll container (`max-height: 100dvh` minus the offsets, `overflow-y: auto`): a stack that fits never scrolls, but its toasts' pixels rasterise slightly differently (≤ 8 RGB levels) and the dark shadow ends at the stack's 16 px padding.
+- The shell measures in the browser only; prerendered HTML keeps the `0px` offsets until it hydrates. Checked on Angular 22 (AOT, strictTemplates, prerender).
+
 ## [3.27.2] - 2026-11-03
 
 A 44 px remove target on pending chat attachments, a pressed state the rich-text editor's mode buttons announce, and a 3:1 boundary on filled select, textarea and datepicker fields (043 follow-ups F-28, F-29, F-31). No API breaks.

@@ -88,3 +88,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [042](042-focus-hover-targets-follow-ups/) Focus indicators kit-wide, focus over hover in fields, dependency-viewer at 360 px, file-upload remove target | owner | 039/040 F-18 to F-21 | 3.27.0 | 3.27.0 |
 | [043](043-targets-hover-contrast-follow-ups/) Targets, hover borders and contrast follow-ups (notification-center, log-viewer, callout, select, tag, rich-text-editor, document-viewer, chat, table, fields, header, gallery, kanban) | owner | 042 F-22 to F-27 | 3.27.1 | 3.27.1 |
 | [044](044-chat-editor-filled-field-follow-ups/) Chat remove target, rich-text-editor mode state, filled-field boundary | owner | 043 F-28, F-29, F-31 | 3.27.2 | 3.27.2 |
+| [045](045-toast-offsets-page-aside-width/) lc-toast-outlet offsets in the app shell; lc-app-page reserved aside column and wide content | bundle (life-os) | AS-34, AS-35, AS-36 | 3.28.0 | 3.28.0 |

@@ -2,6 +2,7 @@
 
 - **Status:** ready
 - **Spec:** [spec.md](spec.md), AC-1 … AC-20 · measured on main 7d0bd2b (3.27.2), logs in `tmp/story-shots/045/`
+- **Change note (review r1, 2026-11-03):** my error in §2/§3: every branch of `@if … @else if` has its own comment anchor, so the chain adds one to every page. The template nests instead (build.md deviation 1, agreed). §4 overflow and the §3 phone sketch are corrected to the measured order and sizes.
 
 ## 1. Approach
 
@@ -29,7 +30,7 @@ All three extend existing parts. Nothing is new except one internal service.
 
 **Default rendering unchanged:**
 - **Outlet:** without a shell the service is `null`, so the host gets no style attribute and the stacks compute `top: 0px` / `bottom: 0px`. `max-height: 100dvh` changes nothing unless a stack is taller than the screen.
-- **lc-app-page:** without the new inputs, the classes, the inline style and the DOM are as in 3.27.2. Use a single `@if … @else if` chain, which keeps one comment anchor, and bind `[style.--_lc-app-page-wide-max]` to `null`.
+- **lc-app-page:** without the new inputs, the classes, the inline style and the DOM are as in 3.27.2. Nest the blocks (`@if (hasAside() || reserved()) { @if (hasAside()) {…} @else {…} }`): a page without a named aside keeps 3.27.2's single anchor, and a named aside gains two comment nodes and nothing else. Bind `[style.--_lc-app-page-wide-max]` to `null`.
 - **lc-app-shell:** no DOM change; it only writes the service.
 
 ## 3. Anatomy and layout
@@ -48,7 +49,8 @@ y 538 │ ╭ floating bar 328 × 86 (DE, 2 lines) ╮│  offset-bottom = 16 + 
 y 624 │ ╰─────────────────────────────────────╯│  16 + env(safe-area-inset-bottom)
 y 640 └──────────────────────────────────────┘
 200 % text: header 177, bar 182 at y 442 → offset-bottom 198; stack box 177…442 = 265 px,
-toast area 233; one DE toast at 200 % is 152–488 px (measured) → the stack scrolls.
+toast area 201 (padding 1rem = 32); one DE toast at 200 % is 152–488 px (measured) → the stack scrolls.
+r1: centred toasts are content-wide (152 / 237 px at 100 %), not 328.
 ```
 
 ### From 1280 px (page frame; 1024 px unchanged: one column, content x 288, w 688)
@@ -75,7 +77,7 @@ Measured on main (`probe.log`) and in the prototype (`proto-wide.log`: aside rem
 | Element | Rule (developer sketch) |
 |---|---|
 | page classes | column = `hasAside \|\| reserveAside \|\| wide` → `lc-app-page--aside`; `wide && !hasAside` → `lc-app-page--wide`; reserved div only if `reserveAside && !hasAside && !wide` |
-| template | `@if (hasAside()) { <aside …> } @else if (reserved()) { <div class="lc-app-page__aside lc-app-page__aside--reserved" aria-hidden="true"></div> }` with no whitespace inside |
+| template | `@if (hasAside() \|\| reserved()) { @if (hasAside()) { <aside …> } @else {<div class="lc-app-page__aside lc-app-page__aside--reserved" aria-hidden="true"></div>} }` with no whitespace inside (r1: nested, see the change note) |
 | wide max | `wideMax()`: not wide → `null`; `contentMaxWidth() === '880px'` → `null` (CSS 928); `'none'` → `'100vw'`; else the value. Bound as `[style.--_lc-app-page-wide-max]` |
 | `[page-wide]` (after the existing blocks) | `@media (min-width: 1280px) { :host ::ng-deep .lc-app-page--wide > .lc-app-page__main > .lc-app-page__content > [page-wide] { box-sizing: border-box; width: min(var(--_lc-app-page-wide-max, 928px), calc(100% + var(--_aside-width))); max-width: none; } }`. A definite width, so a host with `width: 100%` still widens; the clamp `100% + column` keeps the right padding |
 | outlet stack | `@property --_lc-toast-outlet-top` / `-bottom` (`<length-percentage>`, `inherits: false`, `initial-value: 0px`; 038 pattern, so a bare `0` hook works). On the stack: `--_lc-toast-outlet-top: var(--lc-toast-outlet-offset-top, var(--_lc-toast-outlet-frame-top, 0px))`, the same for bottom; `top` / `bottom` read them; `max-height: calc(100vh − both)` then `calc(100dvh − both)`; `overflow-y: auto; overscroll-behavior: contain` |
@@ -89,7 +91,7 @@ Measured on main (`probe.log`) and in the prototype (`proto-wide.log`: aside rem
 | default | as 3.27.2 | as 3.27.2 outside a shell; inside: 16 px below the header and 16 px above the bar |
 | empty | reserved column: tint and hairline only, no text | empty stacks: invisible, `pointer-events: none` |
 | loading / busy | `busy` unchanged; a wide page shows its skeleton in the standard column (concept: no jump when data arrives) | — |
-| overflow | `[page-wide]` table: horizontal scroll inside its own region, never on the page; long DE headers wrap or scroll inside the table | stack taller than the room: scrolls; the newest toast stays at the edge (`column-reverse` scrolls from the end); Tab to an older toast's control scrolls it into view |
+| overflow | `[page-wide]` table: horizontal scroll inside its own region, never on the page; long DE headers wrap or scroll inside the table | stack taller than the room: scrolls from the edge end (`column-reverse`). The toast at the edge is the oldest of the assertive level (live-level order, then append order, as in 3.27.2; r1); Tab to a toast's control scrolls it into view |
 | named aside + wide | wide yields: standard column, aside with tint | — |
 | hover, focus, active, disabled, error | no new interactive parts | toasts unchanged |
 
