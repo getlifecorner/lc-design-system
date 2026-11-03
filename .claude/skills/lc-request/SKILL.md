@@ -1,7 +1,7 @@
 ---
 name: lc-request
-description: Runs a requirement for the LifeCorner Design System through the agent pipeline (spec-writer → ui-ux-designer → web-developer → design review → release-manager) until the new version is released through the publish pipeline. The agents route among themselves through their handoffs, and nobody has to approve the release. Use when a consuming project (life-os, lc-apps, …) or the owner asks for a component, input, slot, token, fix or gap (G-xx) in @lifecorner/angular-ui-kit. Resume an open request with --resume <NNN>.
-argument-hint: <requirement text | path to a file> [--from <project>] [--headless] | --resume <NNN> [answers]
+description: Runs a requirement for the LifeCorner Design System through the agent pipeline (spec-writer → ui-ux-designer → web-developer → design review → release-manager) until the new version is released through the publish pipeline. The agents route among themselves through their handoffs, and nobody has to approve the release. Use when a consuming project (life-os, lc-apps, …) or the owner asks for a component, input, slot, token, fix or gap (G-xx) in @lifecorner/angular-ui-kit. A requirement is collected in the inbox first; --batch runs everything collected as one request and one version, --now runs one at once. Resume an open request with --resume <NNN>.
+argument-hint: <requirement text | path to a file> [--from <project>] [--now] [--headless] | --batch | --resume <NNN> [answers]
 ---
 
 # Running a request through the pipeline
@@ -15,7 +15,13 @@ Arguments: `$ARGUMENTS`
 - `--from <project>`: the requester. Without it: the name of the directory a file path points into, else `owner`.
 - `--headless`: nobody can answer questions (started by `scripts/lc-request.sh`). An owner question ends the run instead of asking.
 - `--resume <NNN>`: continue `requests/<NNN>-*/` from the last handoff in its `log.md`. Skip step 1 (not step 0); switch to the request's branch (named in `build.md`) if it already has one. Any text after the number is the owner's answer to the open questions: record it under *Owner decisions* in `log.md` and pass it on.
-- Everything else is the requirement. If it starts with a path to a readable file, the file is the requirement, and the path is recorded; text after the path narrows it (for example "G-13 only" for a concept with many gaps).
+- `--now`: run this requirement at once instead of collecting it (urgent: a consumer is blocked).
+- `--batch`: start the bundle: run `scripts/lc-request.sh --batch` with `run_in_background`, tell the owner how many items it takes, and stop. The script runs the bundle headless in a fresh session.
+- Everything else is the requirement. If it starts with a path to a readable file, the file is the requirement, and the path is recorded; text after the path narrows it (for example "G-13 only" for a concept with many gaps). A **bundle** is such a file from `tmp/lc-request/bundles/` with `--from bundle`: one request for all its items.
+
+## Collect, don't run (the default)
+
+The owner collects requirements and releases them together, as one request and one version per bundle (owner decision 2026-11-03). Interactive, a requirement without `--now` or `--resume` is therefore not run: write it to `tmp/lc-request/inbox/<YYYYMMDD-HHMMSS>-<slug>.md`, tell the owner how many items the inbox holds (`scripts/lc-request.sh --list`), and stop without taking the lock. The item format: the header lines `from: <requester>`, `dir: <the requester's directory>`, `date: <date '+%Y-%m-%d %H:%M'>` and, for a file, `file: <absolute path>`; then a blank line and the requirement verbatim. Headless, `scripts/lc-request.sh` has already collected everything else, so a headless run always goes on.
 
 ## 0. One run at a time
 
@@ -27,7 +33,7 @@ Two runs in one working tree switch branches under each other and take the same 
 ## 1. Start
 
 1. **Working tree:** run `git status --short --branch`. Uncommitted changes in `libs/` or `tools/` are someone's work in progress: stop and ask (headless: stop with status `blocked`). The exception is `tools/infra/cdk-outputs.json`, a deploy artefact. Leave alone the folders of other open requests in `requests/` (they wait for the owner) and other local files such as drafts in the root. Switch to `main`, `git fetch origin`, and if `main` is behind, `git merge --ff-only origin/main`.
-2. **Folder:** the next number is the highest `requests/NNN-*` plus 1, three digits. The slug is two to five kebab-case words from the requirement. Create `requests/<NNN>-<slug>/request.md` from `requests/_templates/request.md`: the requirement **verbatim**, the requester, the date, referenced files as absolute paths, and the gap IDs.
+2. **Folder:** the next number is the highest `requests/NNN-*` plus 1, three digits. The slug is two to five kebab-case words from the requirement. Create `requests/<NNN>-<slug>/request.md` from `requests/_templates/request.md`: the requirement **verbatim**, the requester, the date, referenced files as absolute paths, and the gap IDs. For a bundle, `request.md` holds every item verbatim with its requester, the slug names the main topics, and the README row's requester is `bundle (<requesters>)`.
 3. **Register it:** add a row to `requests/README.md` (status `new`), and start `log.md` from `requests/_templates/log.md`.
 
 ## 2. Dispatch loop
@@ -56,18 +62,13 @@ Start with `next: spec-writer`, task "Write the spec for this request". Then rep
 
 ## 3. Finish
 
-**Follow-ups first** (released, or stopped after a review). Findings that need fixing go back into the pipeline without asking the owner (`CLAUDE.md` → *Follow-ups*). Take the rows routed `queue` in *Open items* of `release.md` (in a stopped run, the open `should-fix` findings in `review.md`) and skip those an open request already covers. Bundle the rest into one requirement on one line: `Follow-ups <IDs> of request <NNN> (queued by the dispatcher): <one clause each>; details in requests/<NNN>-<slug>/<document> <section>.`
-
-- **Headless:** write it to `tmp/lc-request/follow-ups/<NNN>.md`, first line `from: owner`, then the requirement. `scripts/lc-request.sh` starts it after this run, behind the calls already waiting (at most 3 follow-ups in a row).
-- **Interactive:** queue it: `scripts/lc-request.sh "<requirement>" --from owner` with `run_in_background`.
-
-Name the queued IDs in your final message. The `backlog` rows are already in `requests/BACKLOG.md`.
+**Follow-ups first** (released, or stopped after a review). Findings that need fixing go back into the pipeline without asking the owner (`CLAUDE.md` → *Follow-ups*). Take the rows routed `queue` in *Open items* of `release.md` (in a stopped run, the open `should-fix` findings in `review.md`) and skip those an open request or the inbox already covers. Write the rest as one item into the inbox (format in *Collect*, `from: owner`, `dir:` this repository), with the requirement on one line: `Follow-ups <IDs> of request <NNN>: <one clause each>; details in requests/<NNN>-<slug>/<document> <section>.` It runs with the next bundle. Name the IDs in your final message; the `backlog` rows are already in `requests/BACKLOG.md`.
 
 Free the lock in every outcome (released, answered, stopped): interactive, `rm tmp/lc-request/lock` if it names your pid; headless, it is free once the process ends. The next queued call then starts by itself.
 
 Your final message is what the requester receives. In headless runs it is all the calling project gets, so it must stand on its own:
 
-- **Released:** the version and its tag, the closed gap IDs, what the requester can use now (from *For the requester* in `release.md`: the install line, a snippet, the story IDs), the pipeline results, and the queued follow-ups. Say that the package is public once the npm stage is approved with 2FA, and give the stage ID.
+- **Released:** the version and its tag, the closed gap IDs, what the requester can use now (from *For the requester* in `release.md`: the install line, a snippet, the story IDs), the pipeline results, and the follow-ups put into the inbox. For a bundle, group what each requester gets under its name. Say that the package is public once the npm stage is approved with 2FA, and give the stage ID.
 - **Already in the kit** (`next: none` from the spec): the resolution from `spec.md`, with a snippet.
 - **Stopped** (`needs-owner`, `blocked`): the reason, the open questions with options, and the exact continuation: `/lc-request --resume <NNN> <answers>` in this repository, or `scripts/lc-request.sh --resume <NNN> "<answers>"` from outside.
 

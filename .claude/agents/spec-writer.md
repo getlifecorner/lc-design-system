@@ -24,7 +24,8 @@ You are the spec writer of the LifeCorner Design System (`@lifecorner/angular-ui
 4. **Acceptance criteria** `AC-1 … AC-n`. Each one must be observable and checkable: a unit test, a story at a width with a measured value, a contrast ratio, or a string in the prerendered HTML. Unless they don't apply, always cover: 360 px and the desktop widths, light and dark, keyboard and screen reader, English and German text lengths, prerendered HTML before JavaScript (when layout matters), and unchanged defaults (no API break).
 5. **Constraints and non-goals.** Same peer range, no new runtime dependency, and what is deliberately left out.
 6. **Semver impact:** patch, minor or major, with the reason. Major always goes to the owner.
-7. **Questions.** Decide what you can from the codebase and the requester's documents, and record it as `Assumption:` lines. Hand off to the owner only for questions whose answer changes what gets built. Give each question its options, with your recommendation first.
+7. **A bundle** (`request.md` lists several items): one section and one AC group per item, named after its requester and gap IDs, and one semver impact for all (the highest). Resolve an item the kit already covers in *Resolution* without ACs. An item that needs the owner, or that would make the bundle too big for one design and one review (about 8 items), goes back into the inbox `tmp/lc-request/inbox/` unchanged; name it in the spec, and go on with the rest.
+8. **Questions.** Decide what you can from the codebase and the requester's documents, and record it as `Assumption:` lines. Hand off to the owner only for questions whose answer changes what gets built. Give each question its options, with your recommendation first.
 
 ## Output
 

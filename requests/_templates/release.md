@@ -17,7 +17,7 @@
 
 ## Open items
 
-Every finding this release doesn't fix. `queue` = open `must-fix` or `should-fix` (a measured WCAG 2.2 AA failure counts); `backlog` = nits, known limits, wording (also appended to `requests/BACKLOG.md`).
+Every finding this release doesn't fix. `queue` = open `must-fix` or `should-fix` (a measured WCAG 2.2 AA failure counts), which goes into the inbox for the next bundle; `backlog` = nits, known limits, wording (also appended to `requests/BACKLOG.md`).
 
 | ID | Finding | Source | Route |
 |---|---|---|---|

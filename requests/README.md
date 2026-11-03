@@ -9,29 +9,36 @@ Every requirement for the kit that goes through the agent pipeline gets a folder
 From the consuming project's directory, or from its Claude Code session through Bash:
 
 ```sh
-# The requirement as text (the calling directory is readable for the run, so relative paths work)
+# Collect a requirement as text (the calling directory is readable for the run, so relative paths work)
 ../lc-design-system/scripts/lc-request.sh "lc-hero needs a media slot beside the text from 1024 px (G-13, see docs/ux/concepts/website-v0.md)"
 
-# The requirement in a file, narrowed to one gap
+# Collect a requirement in a file, narrowed to one gap
 ../lc-design-system/scripts/lc-request.sh --file docs/ux/concepts/website-v0.md "G-13 only"
+
+# Show the inbox; start the bundle (owner)
+../lc-design-system/scripts/lc-request.sh --list
+../lc-design-system/scripts/lc-request.sh --batch
+
+# Urgent, because a consumer is blocked: run one requirement at once
+../lc-design-system/scripts/lc-request.sh --now "lc-select loses its value on submit (BA-14)"
 
 # Continue a request that stopped for the owner's answers
 ../lc-design-system/scripts/lc-request.sh --resume 004 "1: option A. 2: yes, as a major release."
 ```
 
-The script runs Claude Code headless in this repository (`claude -p "/lc-request …"`). Its output is the pipeline's final message: the released version and how to use it, or the questions the owner has to answer. The requester is the name of the calling directory; `--from <name>` overrides it.
+**Collect, then bundle.** A requirement goes into the inbox (`tmp/lc-request/inbox/`, one file per item), and the call returns at once with the number of items waiting. Nothing runs until the owner starts the bundle with `--batch`. All items then go through the pipeline as one request and one version: one spec, one design, one build, one review, one release. The script runs Claude Code headless in this repository (`claude -p "/lc-request <bundle file>"`). Its output is the pipeline's final message, grouped by requester: the released version and how to use it, or the questions the owner has to answer. The spec-writer may send an item back to the inbox: one that needs an owner decision, or one that makes the bundle too big for one review. `--now` and `--resume` run at once. The requester is the name of the calling directory; `--from <name>` overrides it.
 
-**One request at a time.** Two runs in one working tree would switch branches under each other, so while another request runs, the script waits in a queue (`tmp/lc-request/queue/`, first come, first served) and starts on its turn. Run it in the background (in Claude Code: `run_in_background`), since it can wait for hours; it prints what it waits for. `--no-wait` only reports the running request and exits with 75. If a run died without freeing `tmp/lc-request/lock` while its Claude session lives on, delete the file.
+**One request at a time.** Two runs in one working tree would switch branches under each other, so while another request runs, a run (`--batch`, `--now`, `--resume`) waits in a queue (`tmp/lc-request/queue/`, first come, first served) and starts on its turn. Run it in the background (in Claude Code: `run_in_background`), since it can wait for hours; it prints what it waits for. `--no-wait` only reports the running request and exits with 75. If a run died without freeing `tmp/lc-request/lock` while its Claude session lives on, delete the file.
 
-**Follow-ups.** Findings that still need fixing (`should-fix`, a measured WCAG AA failure) come back as one bundled follow-up request without anyone asking: the run leaves it in `tmp/lc-request/follow-ups/<NNN>.md`, and the script starts it after the run, behind the calls already waiting. The script's output then goes on with the follow-up's final message. At most 3 follow-ups run in a row; the next ones wait in that folder for the owner. Nits and known limits go to [`BACKLOG.md`](BACKLOG.md) instead. The script runs the pipeline with the newest Node 24 from `~/.nvm` first on `PATH`, as CI does.
+**Follow-ups.** Findings that still need fixing (`should-fix`, a measured WCAG AA failure) go back into the inbox on their own as one item, and run with the next bundle. Nits and known limits go to [`BACKLOG.md`](BACKLOG.md) instead. The script runs the pipeline with the newest Node 24 from `~/.nvm` first on `PATH`, as CI does.
 
 Nobody has to approve the release: once the review is approved and every gate is green, the release manager pushes `main`, waits for CI and pushes the release tag `vX.Y.Z`, which starts `publish-npm.yml` (the agents' GitHub token can't dispatch workflows). The release manager watches that run, which stages the package on npm. The package is public once the owner approves the npm stage with 2FA. The pipeline stops for the owner only for decisions agents may not make (a breaking change, a new runtime dependency, an npm or GitHub failure).
 
-Interactively, in this repository: `/lc-request <requirement or path> [--from <project>]`.
+Interactively, in this repository: `/lc-request <requirement or path> [--from <project>]` collects, `/lc-request --batch` starts the bundle, `/lc-request --now <requirement>` runs at once.
 
 ### For a consuming project's CLAUDE.md
 
-> **Design-system gaps** are closed in the kit, never rebuilt locally: run `../lc-design-system/scripts/lc-request.sh --file <concept file> "<gap ID>: <what is missing>"` in the background (it waits while another request runs). The pipeline answers with the kit version that closes it, or with questions for the owner.
+> **Design-system gaps** are closed in the kit, never rebuilt locally: run `../lc-design-system/scripts/lc-request.sh --file <concept file> "<gap ID>: <what is missing>"`. It returns at once: the gap is collected for the kit's next bundle, which its owner starts, and the release's changelog names the gap ID (the design-system MCP's `get_changelog`). Only when the gap blocks your work, add `--now` and run it in the background (it can wait hours while another request runs); it then answers with the kit version that closes the gap, or with questions for the owner.
 
 ## Index
 
