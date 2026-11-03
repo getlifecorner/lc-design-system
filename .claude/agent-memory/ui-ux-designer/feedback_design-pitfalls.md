@@ -92,6 +92,8 @@ metadata:
 
 - **041.** Flex "equal share" for two texts plus a filler: both `flex: 1000000 1 0%; max-width: max-content` (huge factor, or the filler takes fractions of a px). Rows that fit stay hash-identical. Grid `auto 1fr auto` only shares above min-content, and "term first" breaks "E-Mail" at its hyphen. Check the AC's container premise by rebuilding the requester's nesting: the 312 px row fit in a plain card and wrapped only inside card + accordion lg (− 78). Specs that read `css.indexOf('.x {')` pin the first block, so new rules go after it. **041 r1 (my design errors):** row heights must use the container's inherited line-height (accordion body 1.6, not the dl's 1.5), and sketch texts must come from the same prototype run as the numbers beside them.
 
+- **042.** Spec "must remain" premises can be false: file-upload remove had no ring, no FC rule and one shared name; grep before promising "stays". A transformed SVG still adds its *unscaled* box to `scrollWidth` (1200 vs 978): a scroll design must say what sizes the overflow. Ring contrast from colour alone misses `opacity` on the target (callout × .6, tag × .7): add `opacity: 1` on focus. Gradient backdrops read as the page colour in sweeps (hero inverse c=1 is an artefact). **042 r1 (my design error):** an outside ring on a card inside a *tinted* container (kanban over-limit `#f7a1a1`, drop target) took the tint's contrast (2.19); measure every container state, or use an inset ring that sits on the card. Play functions that dispatch `input` + Enter in one task leave text in OnPush `[value]` fields: await a macrotask between them.
+
 **Why:** each of these cost a round trip or would have broken the build.
 
 **How to apply:** name the relevant ones in the design's risk list.

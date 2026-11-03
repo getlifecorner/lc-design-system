@@ -173,7 +173,7 @@ New `KeyboardFocus` stories (360-ready, `play`: if `viewMode === 'story'`, focus
 | File upload: remove targets | `form-file-upload--remove-targets` (`multiple: true`; play drops 3 files: bericht-2026.csv, Kostenstellen-Übersicht-2026-final.xlsx, a.txt) | 2nd remove |
 | Dependency viewer: phone width | `data-display-dependency-viewer--phone-width` / `--phone-width-de` (§7, `height: '480px'`, `showEdgeLabels: false`) | — |
 
-D-5 story edits: `button.stories.ts:693` panel `background: var(--color-error-subtle); border-color: var(--color-border)`; `tooltip.stories.ts:85/89` `var(--color-surface-2)` / `var(--color-border)`; `toolbar.stories.ts:325` `var(--color-border)` / `var(--color-surface)`. F-19, D-3 and D-4 are verified on existing stories with forced focus/hover in `--measure` (hover can't be forced by a story; forced colours by flag) — the AC-15 exception.
+D-5 story edits: `button.stories.ts:693` panel `background: var(--color-error-subtle); border-color: var(--color-border)`; `tooltip.stories.ts:85/89` `var(--color-surface-2)` / `var(--color-border)`; `toolbar.stories.ts:325` `var(--color-border)` / `var(--color-surface)`. **Change r2 (build Deviation 9, review r1 finding 2):** the tooltip *Toolbar* buttons become `variant="ghost"` (`text` is no `ButtonVariant`; its glyphs drew in the browser's black, 1.46:1 dark) with an `ariaLabel` each and a projected decorative Tabler `lc-icon` (glyphs 7.23 L / 9.25 D on the panel); the trash icon in *Destructive Action* is `[decorative]="true"`. F-19, D-3 and D-4 are verified on existing stories with forced focus/hover in `--measure` (hover can't be forced by a story; forced colours by flag) — the AC-15 exception.
 
 ## 9. Verification
 

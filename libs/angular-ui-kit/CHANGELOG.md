@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.27.0] - 2026-11-03
+
+Every kit control shows a focus ring on keyboard focus, a focused field keeps its focus colour under the pointer, `lc-dependency-viewer` stays readable at 360 px, and the `lc-file-upload` remove button takes 44 px taps (039/040 follow-ups F-18 to F-21). One new optional input; no API breaks.
+
+### Added
+
+- **`lc-dependency-viewer` `regionLabel`** (F-20): with `fitMode="fit-width"` and a `minNodeSize` the frame can't hold, the graph is pinned to the start and the canvas scrolls sideways (touch, Shift + wheel, arrow keys once focused) instead of cutting off both ends. While it scrolls it is a focusable `role="region"` named by `regionLabel` (default `'Dependency graph'`) with a 2 px inset ring. Phone recipe `fitMode="fit-width"` + `minNodeSize` 200 (+ `direction="vertical"`): at 360 px nodes draw 200 px wide, labels ≥ 10 px, borders ≥ 1.25 px (`autoFit` alone: 5.7 px and 0.7 px). From 1024 px the same graph fits at 100 %, centred. Stories *Phone Width*, *Phone Width (German)*.
+
+### Fixed
+
+- **Focus rings (F-18):** 21 controls had no indicator, only the browser's (2.29:1 in dark) or only their field's: rich-text editor toolbar and mode buttons and its editing surface (frame ring), document-viewer toolbar and download buttons, filter-bar toggles, select clear, gallery filters, log-viewer level pills, callout dismiss, notification-center actions and filter chips, tab panels, chat attachments and attach, send and pending-remove buttons, description-list links, colour-picker input, table selection checkboxes, number-input steppers, tag-input ×, file-upload remove. Each draws the kit ring (2 px `--color-primary-500`; 3.23–4.36:1 light, 6.13–9.95:1 dark against its surface) on keyboard focus only, `Highlight` in forced colours. Toggle-group buttons, gantt bars, the split-pane separator and scatter dots keep their look and now show `Highlight` in forced colours; kanban cards swap the 20 % halo (1.28:1) for an inset ring (4.36:1 light, 9.12:1 dark on the card, in any column). `lc-header theme="light"` on a dark page: its own rings 4.36:1 (were 1.89). Stories *Keyboard Focus* in 16 components.
+- **Focus over hover (F-19):** a focused textarea or datepicker under the pointer showed the hover border `--color-primary-400` (1.89:1 light) instead of its focus ring; input, select, search-input, tag-input and date-range-picker showed the hover grey. All keep the focus colour now (4.36:1 light, 9.95:1 dark; error fields 8.39 / 9.47). Hover on an unfocused field is unchanged.
+- **`lc-file-upload` remove button (F-21):** a 44 × 44 px hit area around the 20 px circle (rows stay 42 px, neighbouring areas 6 px apart), a focus ring, and a name per file: "Remove file bericht-2026.csv" (`removeFileAriaLabel` + file name). Story *Remove Targets*.
+
+### Changed
+
+- The global reset `button:focus { outline: none }` is now `button:focus:not(:focus-visible)`: mouse focus stays ring-free; a keyboard-focused button with no focus style of its own shows the browser ring instead of nothing.
+
+### Compatibility
+
+- One new optional input (`regionLabel`); no other input, output, type, CSS hook or default changed. At rest every touched component renders as in 3.26.0: 1,068 of 1,090 shots hash-identical (the rest: three story panels moved to tokens, and timestamp, random-data and anti-aliasing noise).
+- Your own `<button>`s without a focus style now show the browser's ring on keyboard focus (not on click). Give them a `:focus-visible` style if it doesn't fit.
+- A test matching the remove button's old name exactly ("Remove file") needs the file name appended.
+- `fitMode="fit-width"` held at `minNodeSize` used to centre the graph and cut off both ends; it now scrolls sideways from the start, inside a new box-less `div.dep-viewer__stage`. `contain`, `autoFit` and a fit-width graph that fits render as before.
+- Checked on Angular 22 (AOT, strictTemplates, prerender).
+
 ## [3.26.0] - 2026-11-03
 
 `lc-button` can point at a visible description (`ariaDescribedBy`, gap row 7), and a short `lc-description-list` value no longer breaks inside next to a long term (Pixel 7, iPhone 15). No API breaks.

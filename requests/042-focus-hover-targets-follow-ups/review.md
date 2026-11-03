@@ -39,3 +39,31 @@ Screenshots: `tmp/story-shots/042/` — `r1/` at-rest compare (1,090 shots vs `b
 | 5 | should-fix | tag-input *Keyboard Focus*, all widths | field empty after the tag is added, as after real typing: let change detection run between the `input` event and Enter (`await new Promise((r) => setTimeout(r))`) | field still shows "Kostenstellenverar…" (OnPush `[value]` never saw the typed value, so the reset to `''` writes nothing) |
 
 **Verdict:** changes requested (finding 1; findings 2–5 are story-only and ride along).
+
+## Round 2 — 2026-11-03, commit e56f61a (libs = gate commit bc2de05; Storybook build 05:17, current)
+
+Screenshots: `tmp/story-shots/042/r2/` (the 7 touched stories × 360 · 1024 · 1280 × L · D, `--axe`, own measure, log `r2.log`), `r2-rest/` (4 kanban stories at rest vs `baseline`, 16 shots, `r2-rest.log`). Since r1 only `kanban-board.component.scss` changed in library code (`git diff c13101d bc2de05`); the rest are stories and the guard spec. 6 shots opened.
+
+| Finding | Result | Evidence |
+|---|---|---|
+| 1 | fixed | *With WIP Overflow* over-limit card and *Keyboard Focus* card, all widths: `:focus-visible`, 2 px solid, offset −2 px, ring vs card **4.36 L / 9.12 D**, no shadow, opacity 1, border primary-500; shot 360 L: 2 px edge inside the card on the `#f7a1a1` column. Kanban at rest: **16 / 16 identical** to baseline. Guard spec row and assertion `-2px` with reason; story text and changelog say "inset" |
+| 2 | fixed | button *Destructive Action*: trash svg `aria-hidden="true"`, texts 10.97 L / 9.01 D, ring on the panel 3.80 L / 9.46 D, axe 0 (6 shots). Tooltip *Toolbar*: 6 buttons named Bold … Align right, `btn-ghost`, 30 × 30, glyph svg 20 px `aria-hidden`, ink **7.23 L / 9.25 D** on the panel, hover (text-primary on surface-hover) 16.11 / 11.62, ring 4.17 / 7.57, axe 0 (6 shots) |
+| 3 | fixed | *Phone Width* text "223 px nodes drawn 200 px wide, scale 0.90: labels 10.8 px, borders 1.35 px"; measured 360: scale .897, node 200.0, label 10.76, stroke 1.35, region "Dependency graph", scrollWidth 687, pageX 0 |
+| 4 | fixed | *Phone Width (German)* legend `["hängt ab von"]`, 0 × "depends on" in the story DOM (all widths); 360: scale .833, label 10.00, stroke 1.25, region "Freigabeprozess", scrollWidth 681; 1024 / 1280: scale 1, node 240, no region |
+| 5 | fixed | tag-input *Keyboard Focus*, all widths: field value "", tags `["Kostenstellenverantwortung×"]`, × focused "Entfernen Kostenstellenverantwortung", ring 2 px, 3.43 L / 6.34 D, opacity 1 |
+
+| AC | Result | Evidence |
+|---|---|---|
+| AC-2 | pass | kanban 4.36 / 9.12 in any column (above); every other row as in round 1 |
+| AC-14 | pass | 42 shots: 6 violations, all pre-existing and accepted: kanban over-limit title `color-contrast` (F-27, 3 L) and tag chip text (F-26, 3 L). 0 caused by this change, 0 story-level |
+| AC-1, 3–13, 15 | pass | as in round 1; library code unchanged except the kanban offset |
+
+### Decisions
+
+- **Deviation 9 accepted.** `variant="text"` is not a `ButtonVariant`, so the buttons had no variant styles. `ghost` is the kit's text-only button: transparent at rest, `--color-text-secondary` glyphs (7.23 / 9.25), a hover fill. design.md §8 updated (change r2).
+
+### Findings
+
+None. Open follow-ups for the release notes: F-22 to F-27 (design.md §9).
+
+**Verdict:** approved.
