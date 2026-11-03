@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.25.2] - 2026-11-03
+
+`lc-file-upload` no longer nests its file input inside the drop zone (axe `nested-interactive`, 037 review finding 5). Look, name and behaviour are unchanged; no API breaks.
+
+### Fixed
+
+- **`lc-file-upload` drop zone** (037 review finding 5): the native `<input type="file">` sat inside the `role="button"` zone with `tabindex="-1"` and `aria-hidden="true"`, so axe reported `nested-interactive` in every File Upload story but *Disabled* (since 3.11.4). The input now sits hidden beside the zone (`visibility: hidden`, no `tabindex`, no `aria-hidden`), and the zone opens it on a click anywhere in it, Enter or Space, as before. axe-core 4.14 reports no violation in any File Upload story (360, 1024 and 1280 px, light and dark); the zone looks exactly as in 3.25.1: same name (`hint`, then the shown accepted and max lines), same 2 px focus ring, same size (328 × 121 px at 360).
+- Space on the zone no longer scrolls the page, and a held Enter or Space opens the picker once (auto-repeat is ignored).
+- A `disabled` zone leaves the tab order (it was focusable but did nothing); it stays a dimmed button with `aria-disabled="true"`.
+- Dragging over the icon or the text no longer fires `dragleave` on the zone (the content takes no pointer events), so the drag-over look holds.
+
+### Compatibility
+
+- No input, output, selector, type, CSS hook or default changed. Internal DOM: `input.file-upload__input` is now the zone's preceding sibling in the host, not its child. A test that looks for the input inside `.file-upload` should query the host; one that expected `aria-hidden="true"` on it should expect none.
+- The zone's text can no longer be selected with the mouse, as on a native button.
+- The input stays inside a wrapping `<form>`, without a `name`, so it adds no form entry, as before; `fileRejected`, the type check on drop and `locale` sizes (3.24) are unchanged.
+- Checked on Angular 21 and 22 (AOT, strictTemplates, prerender), including the zone and its input in the server HTML.
+
 ## [3.25.1] - 2026-11-03
 
 Two story texts from 3.25.0 that the MCP serves are corrected (review 039 nits 1 and 2). Docs only; no API breaks.
