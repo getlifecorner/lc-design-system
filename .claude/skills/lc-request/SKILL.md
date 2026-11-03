@@ -47,7 +47,7 @@ Start with `next: spec-writer`, task "Write the spec for this request". Then rep
 
    The mode for `ui-ux-designer` is `review` once `build.md` exists and the handoff comes from `web-developer`; otherwise it is `design`.
 2. **Read the HANDOFF.** If it is missing or incomplete, ask the same agent for it with SendMessage instead of guessing.
-3. **Log it:** append a row to `log.md` (time, from → to, status, reason, task) and update the status in `requests/README.md` (`spec`, `design`, `build`, `review`, `release`, `needs-owner`, the version, `answered`).
+3. **Log it:** append a row to `log.md` (time, from → to, status, reason, task) and update the status in `requests/README.md` (`spec`, `design`, `build`, `review`, `release`, `needs-owner`, the version, `answered`). Take the time from `date '+%Y-%m-%d %H:%M'` right before you write the row (also for *Owner decisions*); never estimate it or write the date alone.
 4. **Route:**
    - `next: <agent>` → the next iteration.
    - `next: owner`: only for decisions agents may not make (a breaking change, a new runtime dependency, an infrastructure or npm failure in the pipeline). Ask them with AskUserQuestion (the agent's options, recommended first), write the answers under *Owner decisions* in `log.md`, and give them to the agent that asked, as its next task. In headless mode, stop with status `needs-owner`.
