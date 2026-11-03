@@ -23,7 +23,9 @@ links to social profiles.
 **How it differs from \`lc-button\`**
 - The host *is* the \`<a>\`: there is no wrapper and no inner \`<button>\`. Every native
   link attribute — \`href\`, \`hreflang\`, \`lang\`, \`rel\`, \`target\`, \`download\`,
-  \`title\`, \`aria-*\` — passes through untouched (they are not inputs).
+  \`title\`, \`aria-*\` — passes through untouched (they are not inputs). For a
+  description, set \`aria-describedby\` on the anchor itself; unlike \`lc-button\` there
+  is no \`ariaDescribedBy\` input (3.26).
 - No event listeners: navigation is the browser's. After SSR or prerendering the
   markup is a plain \`<a class="btn btn-primary btn-lg" href="…">\`, so it works with
   JavaScript disabled. \`routerLink\` may sit on the same anchor for in-app navigation.

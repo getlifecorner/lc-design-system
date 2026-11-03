@@ -4,6 +4,7 @@
   [disabled]="disabled()"
   [attr.title]="effectiveTitle()"
   [attr.aria-label]="ariaLabel() || null"
+  [attr.aria-describedby]="ariaDescribedBy() || null"
   [attr.aria-disabled]="isDisabled() ? 'true' : 'false'"
   [attr.aria-busy]="loading() ? 'true' : 'false'"
   [ngClass]="{

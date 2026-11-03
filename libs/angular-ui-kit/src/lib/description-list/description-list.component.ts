@@ -65,6 +65,10 @@ let nextUniqueId = 0;
  * Features:
  * - `rows` layout: term on the left, value on the right, with an optional
  *   dotted leader line connecting them (the DS2.0 "spec sheet" look).
+ * - `rows`: a row that is too narrow is shared — term and value each keep
+ *   their width up to half of the free width (row − 32 px); the longer one
+ *   wraps in the rest: the term at spaces, the value at spaces or inside an
+ *   unbroken string (3.26).
  * - `stacked` layout: term above value, for narrow columns.
  * - Per-row value emphasis and optional links.
  * - Semantic markup (`<dl>`/`<dt>`/`<dd>`) for accessibility; `clickable`

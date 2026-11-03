@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/angular';
 import { moduleMetadata } from '@storybook/angular';
 import { DescriptionListComponent } from './description-list.component';
 import { CardComponent } from '../card/card.component';
+import { AccordionComponent } from '../accordion/accordion.component';
 
 const meta: Meta<DescriptionListComponent> = {
   title: 'Components/Description List',
@@ -25,6 +26,10 @@ Description list for key/value metadata (a styled \`<dl>\`).
   at least 44 px tall and show a 2 px focus outline (\`Highlight\` in forced colours)
 - 3.25 (F-17): a clickable row holds a native button named by its term and value; the row
   keeps \`dl > div > dt + dd\` with no \`role\`, so assistive tech still reads the pairs
+- 3.26 (041): \`rows\`: a row that is too narrow is shared — term and value each keep their
+  width up to half of the free width (row − 32 px); the longer one wraps in the rest: the term
+  at spaces, the value at spaces or inside an unbroken string. With \`leaders\` the dots sit on
+  the first line, next to the value
 `,
       },
     },
@@ -155,6 +160,50 @@ export const LongValuesAndTimes: Story = {
     template: `
       <div style="max-width: 312px;">
         <lc-description-list [items]="items" [layout]="layout" [size]="size" />
+      </div>
+    `,
+  }),
+};
+
+const rejectionCardTemplate = `
+  <lc-card>
+    <lc-accordion title="Abgewiesene Zeilen" variant="flat" size="lg" [expanded]="true">
+      <lc-description-list [items]="items" [leaders]="true" separator="none" size="md" />
+    </lc-accordion>
+  </lc-card>
+`;
+
+/** 3.26 (request 041): a short value next to a long term stays on one line; the term wraps. */
+export const LongTermsShortValues: Story = {
+  name: 'Long terms, short values (3.26)',
+  decorators: [moduleMetadata({ imports: [CardComponent, AccordionComponent] })],
+  args: {
+    items: [
+      { term: 'Sekundäre Kostenart (Umlage)', value: '10' },
+      { term: 'Periode nach dem Monat des Ladens', value: '3' },
+      { term: '„Gültig bis“ liegt vor „Gültig ab“', value: '2' },
+      // U+00A0 before the euro sign, as Intl.NumberFormat('de-DE', { style: 'currency' }) writes it.
+      { term: 'Abgewiesener Betrag (Umlage)', value: '1.234,56 €' },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Request 041 (finance-intelligence sources page, Pixel 7 and iPhone 15): rejection reasons with leaders in an `lc-card` → flat `lc-accordion` (lg) at 280 px and 312 px (lists 202 and 234 px). ' +
+          'Until 3.25 the term kept its width and the value took all the missing width, so "10" broke into "1" and "0" and the row overflowed (42 px at 202). ' +
+          'Since 3.26 a row that is too narrow is shared: term and value each keep their width up to half of the free width F = row − 32 px (two 8 px gaps and the 16 px leader; F/2 = 85 px at 202, 101 px at 234), and the longer one wraps in the rest. ' +
+          'So "10", "3", "2" and "1.234,56 €" (74 px) stay on one line and the terms wrap at spaces; the dots sit on the first line, next to the value. ' +
+          'Write amounts with a no-break space before the currency sign (U+00A0, as `Intl.NumberFormat` does), or the sign can wrap on its own. Rows that fit look as before.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div lang="de" style="display: grid; gap: 16px;">
+        <div style="max-width: 280px;">${rejectionCardTemplate}</div>
+        <div style="max-width: 312px;">${rejectionCardTemplate}</div>
       </div>
     `,
   }),

@@ -16,6 +16,8 @@ import type { ButtonSize, ButtonTone, ButtonVariant } from './button.component';
  * `title`, `aria-*`) passes through untouched, and the component adds no event
  * listeners: after server-side rendering or prerendering the markup is a plain
  * `<a class="btn btn-primary btn-md" href="…">` that works without JavaScript.
+ * For a description, set `aria-describedby` on the anchor itself; unlike
+ * `lc-button` there is no `ariaDescribedBy` input (3.26).
  * `routerLink` can sit on the same anchor for in-app navigation.
  *
  * Same variants, sizes and modifiers as `lc-button` (it shares its stylesheet).

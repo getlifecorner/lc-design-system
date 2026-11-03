@@ -68,6 +68,12 @@ same variants and sizes and works without JavaScript (see **Components / Button 
         '3.17: shows a spinner and ignores clicks, Enter and Space (no `clicked`, no form submit) while keeping focus: `aria-disabled="true"` and `aria-busy="true"` instead of the native `disabled`. Same look (50 % opacity, no hover). The page announces the outcome (a live region); with `disabled` too, the native `disabled` wins',
       table: { defaultValue: { summary: 'false' } },
     },
+    ariaDescribedBy: {
+      control: 'text',
+      description:
+        '3.26 (gap row 7): id, or space-separated ids, of elements that describe the button, set as `aria-describedby` on the inner `<button>`. A screen reader reads the name and then their text, also while `disabled` or `loading`: tie a visible reason line to a disabled button. `disabledReason` stays a tooltip for pointers. Empty renders no attribute; the kit does not check the ids',
+      table: { defaultValue: { summary: "''" } },
+    },
     fullWidth: { control: 'boolean', description: 'Stretches the button to full container width' },
     iconOnly: { control: 'boolean', description: 'Renders as a square icon-only button' },
     flush: {
@@ -414,6 +420,78 @@ export const DisabledWithReason: Story = {
     const button = canvas.getByRole('button');
     await expect(button).toBeDisabled();
     await expect(button).toHaveAttribute('title', 'Erst alle Pflichtfelder ausfüllen');
+  },
+};
+
+/** 3.26 (request 041, gap row 7): the upload dialog's disabled button tied to its visible reason line. */
+export const DisabledWithVisibleReason: Story = {
+  name: 'Disabled with a visible reason (3.26)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The upload dialog of the Finance Intelligence sources page (gap row 7): „Hochladen“ stays disabled until a file is chosen, and the reason is a visible line below the buttons, so it also helps on a phone. ' +
+          '`ariaDescribedBy="upload-reason"` sets `aria-describedby` on the inner `<button>`: a screen reader reads „Hochladen“ and then „Wählen Sie zuerst eine Datei.“ (in browse mode, since a natively disabled button leaves the Tab order). ' +
+          '`disabledReason` with the same text stays the tooltip for pointers; the description comes from the line, so it is not read twice.',
+      },
+    },
+  },
+  args: { variant: 'primary', disabled: true, ariaDescribedBy: 'upload-reason' },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px;">
+          <lc-button variant="outline">Abbrechen</lc-button>
+          <lc-button [variant]="variant" [disabled]="disabled" [ariaDescribedBy]="ariaDescribedBy" disabledReason="Wählen Sie zuerst eine Datei." (clicked)="clicked($event)">Hochladen</lc-button>
+        </div>
+        <p id="upload-reason" style="margin: 0; font-size: var(--font-size-sm); color: var(--color-text-secondary); text-align: end;">Wählen Sie zuerst eine Datei.</p>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: 'Hochladen' });
+    await expect(button).toBeDisabled();
+    await expect(button).toHaveAttribute('aria-describedby', 'upload-reason');
+    await expect(button).toHaveAccessibleName('Hochladen');
+    await expect(button).toHaveAccessibleDescription('Wählen Sie zuerst eine Datei.');
+  },
+};
+
+/** 3.26 (request 041, gap row 7): a loading button described by the page's status line. */
+export const LoadingWithDescription: Story = {
+  name: 'Loading with a description (3.26)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same dialog while the file uploads. The loading button keeps focus (`aria-disabled`, `aria-busy`, not natively `disabled`), and `ariaDescribedBy="upload-status"` ties it to the page\'s `role="status"` line: on focus a screen reader reads „Hochladen“ and then „Die Datei wird hochgeladen …“. ' +
+          'Announcing the result stays the page\'s job (the status line).',
+      },
+    },
+  },
+  args: { variant: 'primary', loading: true, ariaDescribedBy: 'upload-status' },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px;">
+          <lc-button variant="outline">Abbrechen</lc-button>
+          <lc-button [variant]="variant" [loading]="loading" [ariaDescribedBy]="ariaDescribedBy" (clicked)="clicked($event)">Hochladen</lc-button>
+        </div>
+        <p id="upload-status" role="status" style="margin: 0; font-size: var(--font-size-sm); color: var(--color-text-secondary); text-align: end;">Die Datei wird hochgeladen …</p>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: 'Hochladen' });
+    await expect(button).not.toBeDisabled();
+    await expect(button).toHaveAttribute('aria-disabled', 'true');
+    await expect(button).toHaveAttribute('aria-busy', 'true');
+    await expect(button).toHaveAttribute('aria-describedby', 'upload-status');
+    await expect(button).toHaveAccessibleDescription('Die Datei wird hochgeladen …');
   },
 };
 

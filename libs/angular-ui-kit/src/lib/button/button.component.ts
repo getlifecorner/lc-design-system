@@ -114,6 +114,20 @@ export class ButtonComponent {
   readonly iconOnly = input(false);
   readonly fullWidth = input(false);
   readonly ariaLabel = input('');
+
+  /**
+   * Id, or space-separated ids, of elements that describe the button, set as
+   * `aria-describedby` on the inner `<button>`: a screen reader reads the
+   * button's name and then their text, also while `disabled` or `loading`.
+   * Use it to tie a visible reason line ("Wählen Sie zuerst eine Datei.") to a
+   * disabled button; `disabledReason` stays a tooltip for pointers (with both
+   * set, the description comes from the ids, so the tooltip is not read
+   * twice). Empty renders no attribute. The kit does not check that the ids
+   * exist. Don't put `aria-describedby` on `<lc-button>` itself: it would stay
+   * on the host. (3.26)
+   * @default ''
+   */
+  readonly ariaDescribedBy = input('');
   readonly type = input<ButtonType>('button');
 
   /**

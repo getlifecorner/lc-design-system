@@ -1,5 +1,10 @@
 @use '../../styles/mixins' as mix;
 
+// Grow factor of term and value in the rows layout (3.26): it outweighs the
+// leader's 1, so the leader only takes what is left once both are full. Below
+// ~1e5 the leader takes a fraction of a pixel from the value (rounding).
+$_share: 1000000;
+
 :host {
   display: block;
 }
@@ -61,8 +66,8 @@
   }
 
   // The value may shrink and wraps long unbroken values (an e-mail address,
-  // an IBAN) instead of overflowing the row (3.3, AC-10); the term keeps its
-  // width.
+  // an IBAN) instead of overflowing the row (3.3, AC-10). In the rows layout
+  // term and value share a row that is too narrow (3.26, see below).
   &__value {
     // No browser dd margin (40 px inline start): the row gap is the only space (BA-8).
     margin: 0;
@@ -120,6 +125,24 @@
     padding-block: var(--spacing-2);
   }
 
+  // A row that is too narrow is shared (3.26, request 041): term and value
+  // both grow from 0 to their max-content with equal weight, so each keeps its
+  // width up to half of the free width (row − 2 gaps − 16 px leader) and the
+  // longer one wraps in the rest. A short value ("10", "1.234,56 €") no longer
+  // breaks inside next to a long term; a row that fits keeps its boxes.
+  &--rows &__term,
+  &--rows &__value {
+    flex: $_share 1 0%;
+    max-width: max-content;
+  }
+
+  // Terms wrap at spaces (no `hyphens`); a single word wider than the term's
+  // share breaks inside instead of overflowing.
+  &--rows &__term {
+    min-width: 0;
+    overflow-wrap: break-word;
+  }
+
   // Per-row separator style (rows layout only). `line` is the default and
   // matches the historic look; `divider` is a subtle dashed line; `none` off.
   &--rows.lc-dl--sep-line &__row,
@@ -138,6 +161,14 @@
   &--leaders &__leader {
     border-bottom: 1px dotted var(--color-border-strong);
     transform: translateY(-0.15em);
+
+    // The dots sit in the middle of the first line, where the value is (rows
+    // align on the first baseline): (1lh − 1 px border) / 2 is the old centre
+    // of a one-line row. Without `lh` support they stay centred (3.26).
+    @supports (margin-block-start: 1lh) {
+      align-self: flex-start;
+      margin-block-start: calc(0.5lh - 0.5px);
+    }
   }
 
   // ── stacked layout ─────────────────────────────────────────────────────────
