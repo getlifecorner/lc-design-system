@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.25.0] - 2026-11-03
+
+Clickable `lc-description-list` rows keep their term and value pairs for assistive tech, and the open follow-ups of 3.23.1 close: the dark `lc-progress-bar` primary fill, solid focus rings instead of 20–40 % halos, and 3:1 borders in `lc-dependency-viewer` (036 F-14 to F-17). No API breaks.
+
+### Changed
+
+- **`lc-description-list` `clickable` rows** (F-17): a row is no longer a `role="button"` div with `tabindex="0"`, which turned its `dt` and `dd` into presentational children (axe `definition-list` and `dlitem` failed). It keeps `dl > div > dt + dd`, and the last child of each `dd` is a native `<button type="button" class="lc-dl__action">`, named by the term and the value (`aria-labelledby`, e.g. „Bank Sparkasse KölnBonn“). Tab reaches one button per row; Enter and Space emit `itemClick` once; a click anywhere on the row emits as before (the button covers the row and takes no pointer events, so text stays selectable). Look, 44 px rows and the 2 px ring (4.17:1 light, 7.57:1 dark, `Highlight` in forced colours) are unchanged; the markup is in the prerendered HTML.
+
+### Fixed
+
+- **`lc-progress-bar` primary in dark** (F-14): the fill reads `--color-primary-500`, as `lc-progress-ring` does: 6.69:1 against the surface-2 track (was 2.89:1); light keeps #208497 (3.96:1). Linear and circular.
+- **Focus rings instead of halos** (F-15): a 2 px `--color-primary-500` outline (4.17:1 light, 7.57:1 dark on the page; ≥ 3.28 / 5.77 on hovered, unread, tinted and terminal rows) replaces the 20–40 % halos (1.28–1.66:1) on the `lc-notification-center` title and dismiss buttons, the `lc-log-viewer` jump-to-bottom pill and clickable lines (inset), the `lc-code-block` copy button (inset), `lc-tree-view` tool buttons and items (inset; primary-400 was 1.62:1), the `lc-slider` thumb (a solid ring), the `lc-select` highlighted option (inset, 3.96 / 6.69 on its fill) and `lc-verification-code-input` digits. Error fields (`lc-password-input`, `lc-textarea`, `lc-number-input`, `lc-combobox`, digits) draw a 2 px outline in the error colour (8.02:1 / 7.21:1) instead of a 20 % error halo. Every ring is `Highlight` in forced colours; the slider outlines its input there.
+- **Buttons without a focus style**: the notification action, the log-viewer tool buttons (now at full opacity while focused; 0.7 gave 2.66:1) and the dependency-viewer toolbar buttons lost their focus to the global `button:focus { outline: none }`; they get the same ring.
+- **`lc-dependency-viewer` borders** (F-16): default and muted nodes and the collapse toggle use `--color-field-border`, 4.83:1 light and 6.70:1 dark on the surface (neutral-300 was 1.47 / 2.28, neutral-200 1.23); active nodes `--color-primary-600`, 5.77 / 10.80 (primary-400 was 1.89 / 3.95). Muted nodes stay apart by their fill and tertiary label; typed nodes keep your colours.
+- Stories: Dependency Viewer *Node statuses (F-16)*; Log Viewer *Text Hierarchy* sets every built-in string in German.
+
+### Compatibility
+
+- No input, output, CSS hook, token or default changed; the shared status colours stay. The clickable-row DOM changed: a test that finds a clickable row by `role="button"` or focuses it should use `.lc-dl__row` or `button.lc-dl__action`; a `keydown` dispatched on the row still emits. Non-clickable lists render as before. With an `href` inside a clickable row (discouraged), Tab now reaches the link, then the row button (was row, then link).
+- Safari with default settings skips native buttons on Tab (Option-Tab reaches them), as it does for every button; the old `tabindex="0"` row was in its plain Tab order.
+- Fields whose border turns `--color-primary-500` on focus (≥ 4.17:1) keep their halo next to that border.
+- Checked on Angular 21 and 22 (AOT, strictTemplates, prerender), including the clickable-row HTML.
+
 ## [3.24.1] - 2026-11-02
 
 `--lc-accordion-header-bleed: 0` (unitless) keeps the focus ring and hover fill of `lc-accordion` `variant="plain"`, and the docs name scroll containers (life-os BA-9, review 035 findings 1 and 2). No API breaks.

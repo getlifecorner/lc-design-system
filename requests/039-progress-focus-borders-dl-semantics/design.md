@@ -3,6 +3,7 @@
 - **Status:** ready
 - **Spec:** [spec.md](spec.md) — AC-1 … AC-12
 - **Semver:** **minor (3.25.0)**: the spec's exception applies. F-17 changes the clickable-row DOM: the row loses `role="button"` and `tabindex`, and a native button is added. There is no input, output, default or hook change.
+- **Change notes (review r1, 2026-11-03):** §5 log-tint ring light 3.23 → 3.49; §4 dependency nodes in forced colours keep their SVG colours; §4 select option ring also follows the pointer; §6 F-20. No code change follows from them.
 - **Measured on:** main 31a3d7d (3.24.1), Storybook rebuilt 2026-11-03. Contrast comes from the WCAG formula on resolved tokens (`tmp/story-shots/039/grid-measure.js`), floored to 2 decimals, given as light / dark.
 
 ## 1. Approach
@@ -68,7 +69,8 @@ Dependency viewer: the node rect keeps stroke-width 1.5 and the selected node 2.
 | Fix-row buttons | unchanged | unchanged | ring per §3 | no ring (`:focus-visible`) | Highlight | none added |
 | Error fields | 1 px error border | unchanged | 1 + 2 px error edge (3 px) | text fields always match focus | border and outline Highlight | `transition: all` (password, textarea, digits) also eases the outline over 200 ms; the global rule makes it 0.01 ms |
 | Progress primary | dark #84c7d4 | — | — | — | Highlight (unchanged) | stripes (unchanged) |
-| Dependency nodes | default, muted: field-border; active: primary-600 | brightness filter (unchanged) | n/a | selected: 2.5 px primary-500 + detail panel | system colours | — |
+| Dependency nodes | default, muted: field-border; active: primary-600 | brightness filter (unchanged) | n/a | selected: 2.5 px primary-500 + detail panel | authored SVG colours (fill and stroke are not forced; *r1 change note*); toolbar ring Highlight | — |
+| Select option (`--highlighted`) | unchanged | `mouseenter` sets the highlight, so the inset ring follows the pointer too (*r1 change note*: accepted, one highlight at a time, the option Enter picks) | ring on the active descendant | — | Highlight | — |
 
 Muted nodes now share the default border; muted stays recognisable by `--color-text-tertiary` on the `--color-neutral-100` fill. Selected stays apart from active through the 2.5 px stroke (active vs selected colour 1.42 / 1.18, as close as today in dark). Typed nodes (`typeColors`) carry the consumer's colours and are out of scope. Overflow: no box changes size; German NC titles ellipsize as today (ring outside the title box), and "Zum Ende springen" fits the jump pill at 360 (§7).
 
@@ -80,7 +82,7 @@ Muted nodes now share the default border; muted stays recognisable by `--color-t
 | Ring on the page (bg, surface, surface-2) | `--color-primary-500` | halo 20 % 1.28 / 1.50; 25 % 1.36 / 1.73; 30 % 1.46 / 1.95 | 4.17 / 7.57 |
 | Ring on hovered rows / select highlighted option (`surface-hover`) | same | 40 % inset 1.65 / 2.49 | 3.96 / 6.69 |
 | Ring on NC unread rows (`surface-selected` over surface / -2) | same | 1.28 / 1.50 | 3.75 / 5.77 |
-| Ring on the log tints (warn, error, hover) / terminal #1e1e2e incl. tints | same | 60 % line 2.17 / 4.00 | 3.23 / 7.47 · 3.28 / 7.58 |
+| Ring on the log tints (warn, error, hover) / terminal #1e1e2e incl. tints | same | 60 % line 2.17 / 4.00 | **3.49** / 7.47 · 3.28 / 7.58 (*r1 change note*: was 3.23 L, which composited the hover over a tint; the tint rule wins over `:hover`, measured in review r1) |
 | Ring on the log toolbar: surface / terminal #181825 | same | none | 4.36 / 9.12 · 4.02 / 9.28 |
 | Ring on the code-block header (rgba(0,0,0,.25) over #0c1722, + hover) | same | 40 % 1.66 / 2.55 | 3.78 / 8.74 |
 | Tree item ring on rows (surface, hover, primary-50/-100) | was `--color-primary-400` | 1.62 / 3.01 | 3.75 / 6.96 |
@@ -100,7 +102,7 @@ No new tokens; the shared status colours are untouched. Edge lines, labels and l
 - **Targets:** 44 px rows unchanged. NC dismiss 24, log/dep tool buttons 28: 2.5.8 by size, unchanged.
 - **Forced colours:** each fix rule gets `outline-color: Highlight`; the slider gets an input outline, because the thumb shadow is dropped. No indicator relies on `box-shadow` alone (the slider thumb shadow has the forced-colours outline).
 - **Reduced motion:** no transition is added (see §4).
-- **Follow-ups (not here):** **F-18** a kit-wide element sweep for buttons with no focus style of their own under the global `button:focus { outline: none }` (e.g. the tag-input remove ×; three were fixed here, D-4). **F-19** `.lc-textarea--outline:hover:not(…)` (0,4,0) beats `:focus`, so a hovered focused field shows `--color-primary-400` (1.89 L); derived from specificity, not measured yet.
+- **Follow-ups (not here):** **F-18** a kit-wide element sweep for buttons with no focus style of their own under the global `button:focus { outline: none }` (e.g. the tag-input remove ×; three were fixed here, D-4). **F-19** `.lc-textarea--outline:hover:not(…)` (0,4,0) beats `:focus`, so a hovered focused field shows `--color-primary-400` (1.89 L); derived from specificity, not measured yet. **F-20** (review r1): `autoFit` at 360 scales the dependency viewer to 47 % (*Node statuses*), so the 1.5 node stroke renders 0.71 px and the labels about 5.6 px; consider `vector-effect: non-scaling-stroke` and a minimum scale. Pre-existing, not caused by F-16.
 
 ## 7. Texts
 
