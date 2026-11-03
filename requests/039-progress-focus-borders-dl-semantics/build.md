@@ -1,5 +1,40 @@
 # Build 039: Progress-bar dark fill, focus halos, dependency-viewer borders, description-list row semantics
 
+## Patch 3.25.1 (2026-11-03): review nits 1–2 (story wording)
+
+- **Branch:** `fix/3.25.1-progress-focus-borders-dl-semantics` from `main` 43fddbf (= `origin/main`, v3.25.0). Commit `fix(description-list,log-viewer): story docs wording (039 review nits 1-2)`.
+- **Files:** `description-list/description-list.stories.ts` l. 58 (`clickable` argType) and l. 268 (*Clickable rows* docs): "a native button per row, named …" → "a native button, named …". `log-viewer/log-viewer.stories.ts` l. 250 (*Text Hierarchy* docs): "at least 3.23 / 7.47" → "3.49 / 7.47", the value `theme-contrast.spec.ts` pins (`ringLogLines`). No other file in `libs/` or `tools/`; root README l. 29 ("a native button per row instead of `role="button"`") does not repeat "row" and stays.
+
+| Gate (all on `1e071d3`; skip while `git diff --quiet 1e071d3 -- libs tools` holds) | Result |
+|---|---|
+| `npx nx run angular-ui-kit:test` | 219 suites, 5173 passed, 8 skipped (`--runInBand`, 59 s), as 3.25.0 |
+| `npx nx run angular-ui-kit:lint` | 0 errors, 162 warnings (baseline 162) |
+| `npx nx run angular-ui-kit:build` | green, 122 "Built" lines |
+| `npx nx run angular-ui-kit:build-storybook` | green, 994 stories; the new strings are in the story bundles, the old ones in none |
+| Story screenshots | `--full --compare` with the 3.25.0 build shots (`build-a` dl, `build-c` log): `components-description-list--clickable-rows`, `--clickable-rows-english`, `data-display-logviewer--text-hierarchy` × 360/1280 × L/D → `tmp/story-shots/039/p1/`: **12 identical, 0 differ** (the text is docs-page only). None opened |
+| `npm run test:tools`, compat 22 | not run: `tools/` and server-rendered output unchanged |
+
+Logs: `tmp/039/p1/*.log`. Deviations: none.
+
+### Changelog draft (3.25.1)
+
+```markdown
+## [3.25.1] - 2026-11-03
+
+Two story texts from 3.25.0 that the MCP serves are corrected (review 039 nits 1 and 2). Docs only; no API breaks.
+
+### Fixed
+
+- **`lc-description-list`** `clickable` description and *Clickable rows* story: "each row holds a native button, named term + value" (the text said "per row" twice).
+- **`lc-log-viewer`** *Text Hierarchy* story: the focus ring reaches at least 3.49:1 light and 7.47:1 dark on the warn and error line tints, the measured values (the text quoted the design estimate 3.23:1).
+
+### Compatibility
+
+- No component source, style, markup, input or default changed.
+```
+
+## Release 3.25.0 build
+
 - **Branch:** `feat/3.25-progress-focus-borders-dl-semantics`
 - **Commit:** see `git log -1` on the branch, `feat(description-list): clickable rows keep their dt/dd pairs; fix: progress-bar dark fill, solid focus rings, dependency-viewer borders (F-14 to F-17)`
 
