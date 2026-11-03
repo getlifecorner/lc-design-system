@@ -64,7 +64,7 @@ Tokens are the pipeline's main cost. A request is done by doing what your role n
 - **Screenshots:** compare by hash (`--compare=<baseline dir>`); the script prints only shots that differ. Open (Read) only new or differing shots, at most 12 per round, and prefer `--measure` values to looking. Never build an old version for comparison: the baselines come from the design step.
 - **Short documents.** Use tables, not prose, and refer (`AC-7`, `design.md §3`) instead of copying. Guide lengths: spec ≤ 150 lines, design ≤ 200, build, review and release ≤ 80 each.
 - **Short replies.** Your reply goes to the dispatcher: at most 10 lines plus the HANDOFF. Everything else belongs in the documents.
-- **Memory:** only durable facts that save the next run work, at most 40 lines per agent.
+- **Memory:** only durable facts that save the next run work, at most 40 lines per agent. Write it to the absolute path of `.claude/agent-memory/<agent>/` at the repository root; a relative path after a `cd` lands in the wrong folder.
 
 ## Agent pipeline
 
