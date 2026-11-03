@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.26.0] - 2026-11-03
+
+`lc-button` can point at a visible description (`ariaDescribedBy`, gap row 7), and a short `lc-description-list` value no longer breaks inside next to a long term (Pixel 7, iPhone 15). No API breaks.
+
+### Added
+
+- **`lc-button` `ariaDescribedBy`** (finance-intelligence sources page, gap row 7): id, or space-separated ids, set as `aria-describedby` on the inner `<button>`, also while `disabled` or `loading`. Tie a visible reason line to a disabled button: a screen reader reads „Hochladen“, then „Wählen Sie zuerst eine Datei.“. `disabledReason` stays the pointer tooltip and is not read twice. Default `''` renders no attribute; the button's HTML is byte-identical to 3.25.2 without it. Stories *Disabled with a visible reason* and *Loading with a description* (axe: 0 violations at 360 and 1280 px, light and dark). `a[lcButton]` needs no input: put `aria-describedby` on the anchor.
+
+### Fixed
+
+- **`lc-description-list` rows** (finance-intelligence, Pixel 7 and iPhone 15): with a long term the value took all the missing width, so „Sekundäre Kostenart (Umlage)“ showed „10“ as „1“ / „0“ and the row overflowed (42 px in a 202 px list). A row that is too narrow is now shared: term and value each keep their width up to half of the free width (row − 32 px), and the longer one wraps in the rest. In an `lc-card` with a flat accordion at 280 / 312 px (lists 202 / 234): „10“ stays on one line and the term wraps at spaces (152 / 184 px, 2 lines); „1.234,56 €“ (74 px) stays on one line; no row overflows. Long unbroken values still wrap: the *Long values and times (3.3)* story measures as before (e-mail value 174 / 206 / 238 px at lists 248 / 280 / 312, no overflow). New story *Long terms, short values*.
+- With `leaders`, the dots sit in the middle of the first line, next to the value, instead of between two lines of a wrapped row.
+
+### Compatibility
+
+- New optional input only; no selector, output, CSS hook or default changed. Rows that fit look as before: the 10 existing description-list stories are hash-identical at 360, 1024 and 1280 px, light and dark (60 shots), and the 5 existing button stories too (20 shots).
+- Only rows that did not fit change: the term now wraps (at spaces; a single word wider than its half breaks inside, where 3.25 overflowed: add U+00AD soft hyphens to long compounds). Write amounts with a no-break space before the currency sign, as `Intl.NumberFormat` does. A one-line `mono` row with leaders draws its dots 0.5 px higher.
+- Checked on Angular 21 and 22 (AOT, strictTemplates, prerender); the rule is CSS only and holds in prerendered HTML. Without `lh` support (Safari < 16.4) the dots stay centred.
+
 ## [3.25.2] - 2026-11-03
 
 `lc-file-upload` no longer nests its file input inside the drop zone (axe `nested-interactive`, 037 review finding 5). Look, name and behaviour are unchanged; no API breaks.

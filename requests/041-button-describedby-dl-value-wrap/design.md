@@ -2,6 +2,7 @@
 
 - **Status:** ready
 - **Spec:** [spec.md](spec.md) — AC-1 … AC-12 · target 3.26.0 (minor) · measured on main 3c6a42b (3.25.2), Chromium, Storybook system font (SF)
+- **Change note (review r1, 2026-11-03):** §3.2/§9 corrected to the story's container, no rule change: the accordion body sets `line-height: 1.6` (22.4 px lines), so rows are 60.78 / 83.17 px, not 58, and `leaderTop` is 16.59, not 15.9 (same y as a centred one-line leader there). Row 4's term is „Abgewiesener Betrag (Umlage)“ (the prototype term that produced 95.67 / 127.67), not "Betrag der Zeilen mit Umlage".
 
 ## 1. Approach
 
@@ -70,13 +71,13 @@ x16 ┌ lc-card 280 ────────────────────
     │ Abgewiesene Zeilen               ˅   │  accordion header (lg, 17/600)
     │ x55 ┌ dl 202 ─────────────────┐ x257 │
     │     │Sekundäre Kostenart  ··· 10│     │  term 152.28 · 8 · leader 16 · 8 · value 17.72
-    │     │(Umlage)                   │     │  row 8 + 2×21 + 8 = 58 (separator none)
+    │     │(Umlage)                   │     │  row 8 + 2×22.4 + 8 = 60.78 (accordion body line-height 1.6; separator none)
     │     │Periode nach dem      ··· 3│     │  term 161.14 (2 lines), value 8.86
     │     │Monat des Ladens           │     │
     │     │„Gültig bis“ liegt vor ··· 2│    │  term 161.14 (2 lines), value 8.86
     │     │„Gültig ab“                │     │
-    │     │Betrag der  ··· 1.234,56 € │     │  term 95.67 (3 lines), value 74.33 (1 line)
-    │     │Zeilen mit / Umlage        │     │
+    │     │Abgewiesener ··· 1.234,56 €│     │  term 95.67 (3 lines), value 74.33 (1 line); row 83.17
+    │     │Betrag / (Umlage)          │     │
     └─────┴───────────────────────────┴─────┘
       gap 16
 x16 ┌ lc-card 312, list 234 (x55–289) ─────┐ x328  terms 184.28 / 193.14 / 193.14 (2 lines), 127.67 (2 lines)
@@ -148,8 +149,8 @@ Measure for the dl stories: `tmp/story-shots/041/story-measure.js` (paste inline
 | AC-4 | unit: ids resolve to the `<p>`; story play `toHaveAccessibleDescription`; review: AX description via `--measure` | "Wählen Sie zuerst eine Datei.", name "Hochladen" |
 | AC-5 | 2 button stories + argType at 360/1280 L/D | reason one line, row one line, no overflow at 360 |
 | AC-6 | read JSDoc + button-link story text | sentence of §2 present |
-| AC-7 | new dl story, 360/1024/1280 L/D | lists 202 / 234; row 1 value 17.72, vLines 1, vInside 0; term 152.28 / 184.28, tLines 2, tInside 0; leaderTop 15.9; overflow 0 |
-| AC-8 | same story, row 4 | value 74.33, 1 line, 0 inside; term 95.67 (3 lines) / 127.67 (2 lines), tInside 0 |
+| AC-7 | new dl story, 360/1024/1280 L/D | lists 202 / 234; row 1 value 17.72, vLines 1, vInside 0; term 152.28 / 184.28, tLines 2, tInside 0; leaderTop 16.59; overflow 0 |
+| AC-8 | same story, row 4 („Abgewiesener Betrag (Umlage)“) | value 74.33, 1 line, 0 inside; term 95.67 (3 lines) / 127.67 (2 lines), tInside 0 |
 | AC-9 | 3.3 story at 280/312/360 L/D | lists 248/280/312, overflow 0, rows equal to `041/ac9-before.log` (E-Mail value 174.09 / 206.09 / 238.09) |
 | AC-10 | 10 dl stories `--full --compare=tmp/story-shots/041/baseline` (60 shots); 5 button stories `--compare=tmp/story-shots/041/baseline-button` (360/1280 L/D, not `--full`, 20 shots) | 60/60 and 20/20 identical |
 | AC-11 | markup untouched: semantics spec (pinned HTML) passes; compat prerender unchanged | pass |

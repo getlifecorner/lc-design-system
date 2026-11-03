@@ -90,6 +90,8 @@ metadata:
 
 - **040.** Nested control in a `role="button"` (file input): move it beside the zone and hide it with `visibility: hidden` (stays rendered for `click()`, leaves focus and AX tree; no `tabindex=-1` + `aria-hidden`); `pointer-events: none` on the zone's content ends child `dragleave` flicker (prove with `elementFromPoint`). A `(keydown.space)` handler without `preventDefault` scrolls the page (measured `defaultPrevented: false`). Proto by DOM move + injected style in `--measure` gave 42/42 identical. `mkdir -p tmp/story-shots/<NNN>` before `> log`, or the background run fails at once.
 
+- **041.** Flex "equal share" for two texts plus a filler: both `flex: 1000000 1 0%; max-width: max-content` (huge factor, or the filler takes fractions of a px). Rows that fit stay hash-identical. Grid `auto 1fr auto` only shares above min-content, and "term first" breaks "E-Mail" at its hyphen. Check the AC's container premise by rebuilding the requester's nesting: the 312 px row fit in a plain card and wrapped only inside card + accordion lg (− 78). Specs that read `css.indexOf('.x {')` pin the first block, so new rules go after it. **041 r1 (my design errors):** row heights must use the container's inherited line-height (accordion body 1.6, not the dl's 1.5), and sketch texts must come from the same prototype run as the numbers beside them.
+
 **Why:** each of these cost a round trip or would have broken the build.
 
 **How to apply:** name the relevant ones in the design's risk list.

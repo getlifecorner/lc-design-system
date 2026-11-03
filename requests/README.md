@@ -75,3 +75,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [038](038-accordion-bleed-hook-follow-ups/) lc-accordion bleed hook robust to a unitless 0, scroll-container note | owner | 035 review findings 1–2 (BA-9) | 3.24.1 | 3.24.1 |
 | [039](039-progress-focus-borders-dl-semantics/) Progress-bar dark fill, focus halos (≥ 3:1, Highlight), dependency-viewer borders, description-list row semantics | owner | 036 F-14 to F-17 | 3.25.1 | 3.25.0, 3.25.1 |
 | [040](040-file-upload-nested-interactive/) lc-file-upload without nested interactive elements | owner | 037 review finding 5 | 3.25.2 | 3.25.2 |
+| [041](041-button-describedby-dl-value-wrap/) lc-button ariaDescribedBy; lc-description-list short values never break inside | finance-intelligence | gap file row 7 (quellen-2026-11-03); description-list bug | 3.26.0 | 3.26.0 |
