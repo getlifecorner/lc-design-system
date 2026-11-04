@@ -481,6 +481,21 @@ const EXPECT_IN_HTML = [
       && new RegExp(`${chain}\\s*\\{[^}]*display:\\s*grid`).test(html)
       && new RegExp(`@container\\s+lc-card\\s*\\(\\s*width\\s*>=\\s*30rem\\s*\\)\\s*\\{\\s*${chain}\\s*\\{[^}]*grid-auto-flow:\\s*column`).test(html);
   }],
+  // 3.30 (request 047, regeln rows 6 and 7, probe-330.ts): the datepicker's
+  // label is a <label for> of its field, which then has no aria-label (the
+  // label wins over ariaLabel), and the lg combobox renders its frame and
+  // label with the 44 px input rule in the page's CSS before JS (047 AC-12).
+  ['datepicker label and lg combobox frame before JS (regeln rows 6, 7; 047 AC-12)', (html) => {
+    const dp = html.match(/<lc-datepicker(?=[^>]*\sid="compat-dp-330")[^>]*>(?:(?!<\/lc-datepicker>)[^])*<\/lc-datepicker>/)?.[0] ?? '';
+    const cb = html.match(/<lc-combobox(?=[^>]*\sid="compat-cb-330")[^>]*>(?:(?!<\/lc-combobox>)[^])*<\/lc-combobox>/)?.[0] ?? '';
+    const id = dp.match(/<label(?=[^>]*\sclass="lc-datepicker__label")[^>]*\sfor="(lc-datepicker-[0-9]+)"[^>]*>\s*Gilt ab\s*<\/label>/)?.[1];
+    return !!id
+      && new RegExp(`<input(?=[^>]*\\sid="${id}")(?![^>]*\\saria-label=)[^>]*>`).test(dp)
+      && /class="lc-combobox lc-combobox--lg/.test(cb)
+      && /class="lc-combobox__input-wrapper"/.test(cb)
+      && /<label[^>]*\sfor="lc-combobox-[0-9]+"[^>]*>\s*Konto\s*<\/label>/.test(cb)
+      && /\.lc-combobox--lg\[_ngcontent-[^\]]*\]\s+\.lc-combobox__input\[_ngcontent-[^\]]*\]\s*\{[^}]*height:\s*2\.75rem;\s*margin-block:\s*-0?\.25rem/.test(html);
+  }],
 ];
 
 /**

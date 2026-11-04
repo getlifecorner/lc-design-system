@@ -1,4 +1,7 @@
 <div class="lc-datepicker-wrapper">
+  @if (label()) {
+    <label class="lc-datepicker__label" [for]="inputId">{{ label() }}</label>
+  }
   <div class="lc-datepicker-input-wrapper">
     <input
       #datepickerInput
@@ -10,7 +13,7 @@
       autocomplete="off"
       [attr.aria-expanded]="isOpen() ? 'true' : 'false'"
       [attr.aria-controls]="isOpen() ? inputId + '-calendar' : null"
-      [attr.aria-label]="ariaLabel() || null"
+      [attr.aria-label]="label() ? null : (ariaLabel() || null)"
       [attr.aria-required]="required() ? 'true' : null"
       [attr.aria-disabled]="isDisabled() ? 'true' : null"
       [attr.aria-invalid]="error() ? 'true' : null"
@@ -29,7 +32,7 @@
         <button
           type="button"
           class="lc-datepicker-clear"
-          (click)="clear(); $event.stopPropagation()"
+          (click)="onClearClick($event)"
           [attr.aria-label]="clearAriaLabel()"
         >
           <svg
@@ -68,6 +71,8 @@
     cdkConnectedOverlay
     [cdkConnectedOverlayOrigin]="datepickerInput"
     [cdkConnectedOverlayOpen]="isOpen()"
+    [cdkConnectedOverlayPush]="true"
+    [cdkConnectedOverlayViewportMargin]="8"
     [cdkConnectedOverlayHasBackdrop]="true"
     [cdkConnectedOverlayBackdropClass]="'cdk-overlay-transparent-backdrop'"
     (backdropClick)="onClickOutside()"

@@ -1892,3 +1892,61 @@ describe('Component pairings of 3.27.2 (request 044)', () => {
     });
   });
 });
+
+/**
+ * Request 047 (3.30, 046-f2, design 047 §5): the selected day carries the
+ * month cell's inset --color-primary-500 ring, since its fill alone is
+ * 2.78:1 on the dark panel (WCAG 1.4.11); the new combobox clear ring sits
+ * on the field fill (--color-surface-2).
+ */
+describe('Component pairings of 3.30 (request 047)', () => {
+  const lib = (path: string) => resolve(__dirname, '../lib', path);
+  const sheets = {
+    datepicker: compile(lib('datepicker/datepicker.component.scss')).css,
+    combobox: compile(lib('combobox/combobox.component.scss')).css,
+  };
+  const body = (sheet: keyof typeof sheets, selector: string) => {
+    const css = sheets[sheet];
+    const at = css.indexOf(`\n${selector} {`);
+    expect([selector, at > -1]).toEqual([selector, true]);
+    return css.slice(at, css.indexOf('}', at));
+  };
+  const floor = (n: number) => Math.floor(n * 100) / 100;
+
+  it('AC-2, AC-3: the rules pair these tokens', () => {
+    expect(body('datepicker', '.lc-datepicker-calendar')).toContain('background-color: var(--color-surface)');
+    const selected = body('datepicker', '.lc-datepicker-day.lc-datepicker-day--selected');
+    expect(selected).toContain('box-shadow: inset 0 0 0 2px var(--color-primary-500)');
+    expect(selected).toContain('background-color: var(--color-primary-fill)');
+    expect(selected).toContain('color: var(--color-on-primary)');
+    expect(body('combobox', '.lc-combobox__input-wrapper')).toContain('background-color: var(--color-surface-2)');
+    expect(body('combobox', '.lc-combobox__clear:focus-visible')).toContain('outline: 2px solid var(--color-primary-500)');
+  });
+
+  // [light, dark], floored; design 047 §5 quotes the browser's rounded
+  // values (ring 4.37 / 9.13, clear ring 4.18 / 7.58).
+  const expected = {
+    ringOnPanel: [4.36, 9.12],
+    textOnFill: [6.21, 6.21],
+    textOnHoverFill: [9.13, 9.13],
+    fillOnPanel: [6.21, 2.78],
+    clearRingOnField: [4.17, 7.57],
+  };
+
+  it.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('AC-2, AC-3: %s palette: the design 047 §5 ratios', (_palette, tokens, i) => {
+    const c = (name: string) => color(tokens, name);
+    const on = (ink: string, base: string) => floor(ratio(over(c(ink), c(base)), c(base)));
+    const got = {
+      ringOnPanel: on('--color-primary-500', '--color-surface'),
+      textOnFill: on('--color-on-primary', '--color-primary-fill'),
+      textOnHoverFill: on('--color-on-primary', '--color-primary-fill-hover'),
+      fillOnPanel: on('--color-primary-fill', '--color-surface'),
+      clearRingOnField: on('--color-primary-500', '--color-surface-2'),
+    };
+    expect(got).toEqual(Object.fromEntries(Object.entries(expected).map(([key, pair]) => [key, pair[i]])));
+    // The state is carried by the ring in both themes (the dark fill is not).
+    expect(got.ringOnPanel).toBeGreaterThanOrEqual(3);
+    expect(got.clearRingOnField).toBeGreaterThanOrEqual(3);
+    expect(Math.min(got.textOnFill, got.textOnHoverFill)).toBeGreaterThanOrEqual(4.5);
+  });
+});

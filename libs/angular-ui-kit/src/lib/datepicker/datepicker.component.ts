@@ -127,9 +127,17 @@ export class DatepickerComponent implements ControlValueAccessor {
   readonly errorMessage = input<string>('');
 
   /**
-   * ARIA label for accessibility
+   * ARIA label for accessibility. Ignored while `label` is set.
    */
   readonly ariaLabel = input<string | undefined>(undefined);
+
+  /**
+   * Visible label above the field (3.30, regeln row 7): a `<label for>` in
+   * day and month mode that names the field, so `ariaLabel` is not used
+   * while it is set. Empty: no label element, as before.
+   * @default ''
+   */
+  readonly label = input<string>('');
 
   /**
    * Date format string (e.g., 'YYYY-MM-DD', 'MM/DD/YYYY')
@@ -461,6 +469,16 @@ export class DatepickerComponent implements ControlValueAccessor {
     this.inputValue.set('');
     this.onChange(null);
     this.dateChange.emit(null);
+  }
+
+  /**
+   * The clear button (3.30, request 047): clears and moves focus to the
+   * field, since the button leaves the DOM (focus dropped to `<body>`).
+   */
+  protected onClearClick(event: Event): void {
+    event.stopPropagation();
+    this.clear();
+    this.datepickerInput()?.nativeElement.focus();
   }
 
   /**
@@ -830,7 +848,8 @@ export class DatepickerComponent implements ControlValueAccessor {
 
   /**
    * Keys in the field while the month panel is open: ArrowDown moves focus
-   * into the grid, Escape closes, Enter closes when a month is selected;
+   * into the grid, Escape closes, Enter closes when a month is selected and
+   * shows its text again over half-typed text (3.30, 046-n4, as day mode);
    * the other keys stay with the text (caret, typing „2026-07“).
    */
   private onMonthFieldKeyDown(event: KeyboardEvent): void {
@@ -848,6 +867,7 @@ export class DatepickerComponent implements ControlValueAccessor {
       case 'Enter':
         event.preventDefault();
         if (this.selectedDate()) {
+          this.inputValue.set(this.formattedDate());
           this.close();
         }
         break;

@@ -198,3 +198,47 @@ export const StartsWithAChoice: Story = {
       </div>`,
   }),
 };
+
+/** One option with a long German label (request 047). */
+const longKeyOptions: ComboboxOption[] = [
+  { value: 'ks-4711', label: 'Leistungsverrechnungsschlüssel Kostenstelle 4711 Verwaltung' },
+];
+
+/** 3.30 (request 047, regeln rows 5 and 6): clear targets in every size, the 44 px lg input. */
+export const ClearTargetsDe: Story = {
+  name: 'Clear Targets (DE)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.30 (request 047, finance-intelligence rules page, rows 5 and 6): the clear button „Auswahl löschen“ is a 24 × 24 px box in every size (it was 20 × 20 and out of the tab order; now Tab reaches it, Enter or Space clears and focus returns to the input). At `size="lg"` a transparent hit area makes it 44 × 44 px, from the end of the input to the inner border edge; the input ends 12 px earlier for it. The lg input is 44 px high inside the unchanged 46 px frame (it was 36), and a click anywhere on the frame of any size focuses the input. Focus ring round the 24 px box: 4.18:1 light, 7.58:1 dark on the field. A long selected value ends before the hit area.',
+      },
+    },
+  },
+  render: () => ({
+    props: { monthOptions, longKeyOptions, sizes: ['xs', 'sm', 'md', 'lg'] },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 1rem; max-width: 400px;">
+        @for (size of sizes; track size) {
+          <lc-combobox
+            [options]="monthOptions"
+            [size]="size"
+            [label]="'Gilt ab (' + size + ')'"
+            placeholder="Monat suchen …"
+            emptyMessage="Keine Treffer"
+            clearAriaLabel="Auswahl löschen"
+            [selectedValue]="'2026-07'"
+          />
+        }
+        <lc-combobox
+          [options]="longKeyOptions"
+          size="lg"
+          label="Schlüssel (langer Wert)"
+          placeholder="Schlüssel suchen …"
+          emptyMessage="Keine Treffer"
+          clearAriaLabel="Auswahl löschen"
+          [selectedValue]="'ks-4711'"
+        />
+      </div>`,
+  }),
+};

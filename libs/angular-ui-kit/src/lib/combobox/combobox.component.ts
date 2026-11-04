@@ -413,6 +413,28 @@ export class ComboboxComponent implements ControlValueAccessor {
     this.inputEl()?.nativeElement.focus();
   }
 
+  /** Whether a pointer event on the frame hit the input or a button in it (chip ×, clear). */
+  private hitsFrameControl(event: MouseEvent): boolean {
+    const target = event.target as Element | null;
+    if (!target || target === this.inputEl()?.nativeElement) return true;
+    const button = target.closest('button');
+    return !!button && (event.currentTarget as Element).contains(button);
+  }
+
+  /**
+   * 3.30 (request 047, regeln row 6): a press on the frame beside the input
+   * and its buttons keeps focus where it is (no blur, so the list stays open).
+   */
+  protected onFrameMousedown(event: MouseEvent): void {
+    if (!this.hitsFrameControl(event)) event.preventDefault();
+  }
+
+  /** A click on the frame beside the input and its buttons focuses the input. */
+  protected onFrameClick(event: MouseEvent): void {
+    if (this.isDisabled() || this.hitsFrameControl(event)) return;
+    this.inputEl()?.nativeElement.focus();
+  }
+
   protected onInputChange(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
     this.query.set(value);

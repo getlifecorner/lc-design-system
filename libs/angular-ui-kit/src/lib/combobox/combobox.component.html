@@ -3,7 +3,13 @@
     <label class="lc-combobox__label" [for]="inputId">{{ label() }}</label>
   }
 
-  <div #inputWrapper class="lc-combobox__input-wrapper">
+  <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- pointer shortcut; the input is the keyboard target -->
+  <div
+    #inputWrapper
+    class="lc-combobox__input-wrapper"
+    (mousedown)="onFrameMousedown($event)"
+    (click)="onFrameClick($event)"
+  >
     <!-- Selected chips (multiple mode) -->
     @if (multiple()) {
       @for (sel of selectedMultiple(); track sel.value) {
@@ -47,7 +53,6 @@
         [disabled]="isDisabled()"
         (mousedown)="$event.preventDefault()"
         (click)="onClearClick()"
-        tabindex="-1"
         [attr.aria-label]="clearAriaLabel()"
       >
         <lc-icon name="x-mark" size="xs" [decorative]="true" />

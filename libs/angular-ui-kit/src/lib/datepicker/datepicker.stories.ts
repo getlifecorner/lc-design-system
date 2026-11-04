@@ -66,6 +66,12 @@ const meta: Meta<DatepickerComponent> = {
       description: '3.29: label of the quick action that shows the current year (month mode; day mode keeps `todayLabel`)',
       table: { defaultValue: { summary: 'This month' } },
     },
+    label: {
+      control: 'text',
+      description:
+        '3.30 (regeln row 7): visible label above the field: a `<label for>` in day and month mode that names the field, so `ariaLabel` is not used while it is set. Empty: no label element, as before.',
+      table: { defaultValue: { summary: "''" } },
+    },
   },
   parameters: {
     docs: {
@@ -219,6 +225,112 @@ export const MonthDe: Story = {
           [maxDate]="monthMax"
           [ngModel]="'2026-07'"
         ></lc-datepicker>
+      </div>`,
+  }),
+  play: openByClick,
+};
+
+/** 3.30 (request 047, regeln row 7): a visible label. */
+export const WithLabel: Story = {
+  name: 'With Label',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.30 (request 047, finance-intelligence rules page, row 7): `label="Start date"` renders a visible `<label for>` above the field, styled like the labels of lc-combobox and lc-number-input (14 px, medium, `--color-text-primary`: 17.74:1 light, 17.29:1 dark; 6 px above the field). It names the field in day and month mode, so `ariaLabel` is not used while it is set. A click on it focuses the field and opens the calendar. With the default `\'\'` there is no label element and the field renders as before.',
+      },
+    },
+  },
+  args: {
+    variant: 'outline',
+    size: 'md',
+    label: 'Start date',
+    placeholder: 'Select a date',
+    helperText: 'The first day of the booking',
+  },
+};
+
+/** 3.30 (request 047, regeln row 7): German labels, month and day mode, a long compound in a narrow column. */
+export const LabelDe: Story = {
+  name: 'Label (DE)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.30 (request 047, finance-intelligence rules page, row 7): the field „Gilt ab“ (`granularity="month"`) and „Buchungsdatum“ (day mode) with visible German labels; at 360 px „Gilt ab“ is one 21 px line over a 328 px field. In the two-column row of `size="sm"` fields (158 px each at 360 px), „Leistungsverrechnungsschlüssel ab“ breaks with a hyphen over three lines (63 px) instead of overflowing. The clear buttons are named „Monat löschen“ and „Datum löschen“.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [DatepickerComponent, FormsModule] },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px; max-width: 400px;">
+        <lc-datepicker
+          label="Gilt ab"
+          granularity="month"
+          format="YYYY-MM"
+          locale="de-DE"
+          placeholder="Monat wählen"
+          clearAriaLabel="Monat löschen"
+          [ngModel]="'2026-07'"
+        ></lc-datepicker>
+        <lc-datepicker
+          label="Buchungsdatum"
+          locale="de-DE"
+          placeholder="Datum wählen"
+          clearAriaLabel="Datum löschen"
+          helperText="Nur Werktage"
+          [ngModel]="'2026-11-04'"
+        ></lc-datepicker>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <lc-datepicker size="sm" label="Leistungsverrechnungsschlüssel ab" locale="de-DE" placeholder="Datum wählen" clearAriaLabel="Datum löschen"></lc-datepicker>
+          <lc-datepicker size="sm" label="Leistungsverrechnungsschlüssel bis" locale="de-DE" placeholder="Datum wählen" clearAriaLabel="Datum löschen"></lc-datepicker>
+        </div>
+      </div>`,
+  }),
+};
+
+/** 3.30 (request 047, 046-f1): the clear button's hit area in every size, day and month mode. */
+export const ClearTargets: Story = {
+  name: 'Clear Targets',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.30 (request 047, follow-up 046-f1, WCAG 2.5.8): the clear button is a 24 × 24 px box in every size (it was 20 × 20); the glyph (16 px), the 20 px hover fill and the focus ring stay where they were, and the field heights stay 24/32/40/44 px. In md and lg a transparent hit area makes it 44 × 44 px: it reaches 18 px towards the text and ends at the calendar icon (at md 2 px past the 40 px frame). After a clear, focus returns to the field. Day fields xs to lg, month fields md and lg.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [DatepickerComponent, FormsModule] },
+    props: { sizes: ['xs', 'sm', 'md', 'lg'] },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 16px; max-width: 300px;">
+        @for (size of sizes; track size) {
+          <lc-datepicker [size]="size" [label]="'Day ' + size" [ngModel]="'2026-07-15'"></lc-datepicker>
+        }
+        <lc-datepicker size="md" label="Month md" granularity="month" format="YYYY-MM" placeholder="Select a month" [ngModel]="'2026-07'"></lc-datepicker>
+        <lc-datepicker size="lg" label="Month lg" granularity="month" format="YYYY-MM" placeholder="Select a month" [ngModel]="'2026-07'"></lc-datepicker>
+      </div>`,
+  }),
+};
+
+/** 3.30 (request 047, 046-f2, 046-n3): the open day panel: selected-day ring, 44 px targets below 1024 px. */
+export const DayPanel: Story = {
+  name: 'Day Panel',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.30 (request 047): the selected day has the inset 2 px `--color-primary-500` ring of the month cells (follow-up 046-f2): 4.37:1 on the light panel, 9.13:1 on the dark one, where the fill alone is 2.78:1; its text stays 6.21:1 on the fill. Below 1024 px (follow-up 046-n3) every target is 44 px: the month buttons 44 × 44, "Today" 44 high and the days 44 × 44 without gaps, so the panel is 342 × 448 px at 360 px and is pushed into the viewport, 8 px from its left edge here (at 320 px the days are 38.56 px). From 1024 px the panel keeps its 310 × 395 px. The wrapper puts the field at x 24, as in lc-app-page.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [DatepickerComponent, FormsModule] },
+    template: `
+      <div style="max-width: 400px; padding-inline: 8px;">
+        <lc-datepicker ariaLabel="Booking date" [ngModel]="'2026-07-15'"></lc-datepicker>
       </div>`,
   }),
   play: openByClick,

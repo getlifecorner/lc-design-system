@@ -10,6 +10,19 @@
   position: relative;
 }
 
+// 3.30 (request 047, regeln row 7): the visible label, as lc-combobox's.
+.lc-datepicker__label {
+  display: block;
+  margin-bottom: 0.125rem;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  overflow-wrap: break-word;
+  hyphens: auto;
+  hyphenate-limit-chars: 12 4 3;
+}
+
 .lc-datepicker-input-wrapper {
   position: relative;
   width: 100%;
@@ -153,17 +166,24 @@
   color: var(--color-text-secondary);
 }
 
+// 3.30 (request 047, 046-f1): a 24 × 24 box (WCAG 2.5.8; axe reads the box,
+// not a pseudo-element) that lays out and paints like the 20 px one: the
+// -2 px margin keeps its 20 px footprint, the hover fill stays in the 20 px
+// content box and the ring at the old place (offset -1 on the 24 box).
 .lc-datepicker-clear {
+  position: relative;
   pointer-events: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
-  padding: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: -0.125rem;
+  padding: 0.125rem;
   background: none;
+  background-clip: content-box;
   border: none;
-  border-radius: var(--border-radius-sm);
+  border-radius: calc(var(--border-radius-sm) + 0.125rem);
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: all var(--animation-duration-fast) var(--animation-timing-ease);
@@ -175,7 +195,7 @@
 
   &:focus-visible {
     outline: 2px solid var(--color-primary-500);
-    outline-offset: 1px;
+    outline-offset: -1px;
   }
 
   svg {
@@ -184,9 +204,21 @@
   }
 }
 
-// Calendar Panel
-.lc-datepicker-calendar {
+// md and lg: a 44 × 44 hit area, 2 px past the 40 px frame at md; it ends at
+// the calendar icon (decorative, a click there still opens the panel).
+.lc-datepicker--md ~ .lc-datepicker-icons .lc-datepicker-clear::before,
+.lc-datepicker--lg ~ .lc-datepicker-icons .lc-datepicker-clear::before {
+  content: '';
   position: absolute;
+  inset: -0.625rem -0.125rem -0.625rem -1.125rem;
+}
+
+// Calendar Panel
+// 3.30 (request 047): in the flow of the CDK overlay pane (it was absolute,
+// so the pane measured 0 × 0 and the overlay could never push the panel
+// into the viewport; same place where it fits).
+.lc-datepicker-calendar {
+  position: relative;
   z-index: 1000;
   margin-top: var(--spacing-1);
   padding: var(--lc-density-padding-md, var(--spacing-4));
@@ -341,10 +373,14 @@
     background-color: var(--color-primary-50);
   }
 
+  // 3.30 (request 047, 046-f2): the fill is 2.78:1 on the dark surface
+  // (WCAG 1.4.11): the month cell's inset --color-primary-500 ring marks the
+  // state (4.37:1 light, 9.13:1 dark).
   &.lc-datepicker-day--selected {
     font-weight: var(--font-weight-semibold);
     color: var(--color-on-primary);
     background-color: var(--color-primary-fill);
+    box-shadow: inset 0 0 0 2px var(--color-primary-500);
 
     &:hover {
       background-color: var(--color-primary-fill-hover);
@@ -364,6 +400,36 @@
   &:focus-visible {
     outline: 2px solid var(--color-primary-500);
     outline-offset: 2px;
+  }
+}
+
+// Day panel below 1024 px (3.30, request 047, 046-n3; the app shell's touch
+// breakpoint): 44 px targets as in month mode. Nav 44 square, quick action
+// 44 high, a 7 × 44 px grid without gaps (308 px; panel 342 at 360 px) that
+// narrows with the viewport (320 px: 38.56 px squares). From 1024 px the
+// panel keeps its 3.29 sizes.
+@media (max-width: 1023.98px) {
+  .lc-datepicker-nav-button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .lc-datepicker-today-button {
+    min-height: 2.75rem;
+  }
+
+  .lc-datepicker-weekdays,
+  .lc-datepicker-days {
+    gap: 0;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    inline-size: 19.25rem;
+    max-inline-size: calc(100vw - 3.125rem);
+  }
+
+  .lc-datepicker-day {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
   }
 }
 
@@ -459,6 +525,27 @@
   }
 
   .lc-datepicker-month.lc-datepicker-month--disabled {
+    color: GrayText;
+  }
+
+  // 3.30 (request 047): the clear button and the day cells as the month cells.
+  .lc-datepicker-clear:focus-visible,
+  .lc-datepicker-day:focus-visible {
+    outline-color: Highlight;
+  }
+
+  .lc-datepicker-day.lc-datepicker-day--selected,
+  .lc-datepicker-day.lc-datepicker-day--selected:hover {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+  }
+
+  .lc-datepicker-day.lc-datepicker-day--today {
+    text-decoration: underline;
+  }
+
+  .lc-datepicker-day.lc-datepicker-day--disabled {
     color: GrayText;
   }
 }
