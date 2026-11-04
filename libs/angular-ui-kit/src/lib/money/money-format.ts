@@ -28,6 +28,16 @@ export interface MoneyFormatOptions {
   showCurrency?: boolean;
 }
 
+/** Options of {@link formatMoneyRange}: those of {@link formatMoney}, for both amounts, and the joining word. */
+export interface MoneyRangeFormatOptions extends MoneyFormatOptions {
+  /**
+   * Word between the two amounts, in `text` and in `spoken`. Empty: from
+   * `locale`, „bis“ for German (`de`), "to" for every other locale.
+   * @default ''
+   */
+  separatorLabel?: string;
+}
+
 /** A formatted amount: the visible text and the words a screen reader speaks. */
 export interface MoneyText {
   /**
@@ -136,4 +146,54 @@ export function formatMoney(amountMinor: number, currency: string, options: Mone
     .replace(/\s+/g, ' ')
     .trim();
   return { text, spoken };
+}
+
+/** U+00A0: glues the joining word of a range to the second amount. */
+export const MONEY_RANGE_GLUE = String.fromCharCode(0xa0);
+
+/** The word between the amounts of a range: „bis“ for a German locale (`de`), "to" otherwise. */
+export function moneyRangeSeparator(locale: string): string {
+  return locale.split(/[-_]/)[0].toLowerCase() === 'de' ? 'bis' : 'to';
+}
+
+/** Both amounts of a range and the joining word; `null` if either amount fails {@link formatMoney}. */
+export function moneyRangeParts(
+  fromMinor: number,
+  toMinor: number,
+  currency: string,
+  options: MoneyRangeFormatOptions = {},
+): { from: MoneyText; to: MoneyText; word: string } | null {
+  const { separatorLabel = '', ...single } = options;
+  const from = formatMoney(fromMinor, currency, single);
+  const to = formatMoney(toMinor, currency, single);
+  if (!from || !to) return null;
+  return { from, to, word: separatorLabel || moneyRangeSeparator(single.locale || 'en-US') };
+}
+
+/**
+ * Formats a range of two amounts in minor units with the same currency and
+ * options („9,99 € bis 12,99 €“), for table `formatter`s and texts. The
+ * joining word is glued to the second amount with a no-break space (U+00A0),
+ * so a line breaks only before it. The amounts are kept as given (no
+ * sorting; equal amounts give a range). Returns `null` if either amount fails
+ * {@link formatMoney}. `lc-money` shows the same with `rangeToMinor`.
+ *
+ * @example
+ * ```ts
+ * formatMoneyRange(999, 1299, 'EUR', { locale: 'de-DE' });
+ * // { text: '9,99 € bis 12,99 €', spoken: '9,99 Euro bis 12,99 Euro' }
+ * formatMoneyRange(999, 1299, 'EUR', { locale: 'en-US' });
+ * // { text: '€9.99 to €12.99', spoken: '9.99 euros to 12.99 euros' }
+ * ```
+ */
+export function formatMoneyRange(
+  fromMinor: number,
+  toMinor: number,
+  currency: string,
+  options: MoneyRangeFormatOptions = {},
+): MoneyText | null {
+  const parts = moneyRangeParts(fromMinor, toMinor, currency, options);
+  if (!parts) return null;
+  const { from, to, word } = parts;
+  return { text: `${from.text} ${word}${MONEY_RANGE_GLUE}${to.text}`, spoken: `${from.spoken} ${word} ${to.spoken}` };
 }

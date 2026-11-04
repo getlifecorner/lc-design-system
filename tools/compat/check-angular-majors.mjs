@@ -467,6 +467,20 @@ const EXPECT_IN_HTML = [
       && /<div(?=[^>]*\sid="compat-wide-328")(?=[^>]*\spage-wide)[^>]*>/.test(wide)
       && /@media\s*\(min-width:\s*1280px\)\s*\{\s*\[_nghost-[^\]]*\]\s+\.lc-app-page--wide\s*>\s*\.lc-app-page__main\s*>\s*\.lc-app-page__content\s*>\s*\[page-wide\]\s*\{[^}]*width:\s*min\(\s*var\(--_lc-app-page-wide-max,\s*928px\)\s*,\s*100%\s*\+\s*var\(--_aside-width\)\s*\)/.test(html);
   }],
+  // 3.29 (request 046, life-os CC-2, probe-329.ts): an equal-footer card has
+  // its host class, its footer and both answers in the server HTML, and the
+  // page's inlined CSS holds the size container and the 30rem container
+  // query, so the answers share the row at equal width before JS (046 AC-31).
+  ['card: equal footer class, footer and container query before JS (CC-2, 046 AC-31)', (html) => {
+    const card = html.match(/<lc-card(?=[^>]*\sid="compat-card-329-equal")[^>]*>(?:(?!<\/lc-card>)[^])*<\/lc-card>/)?.[0] ?? '';
+    const chain = String.raw`\.lc-card--footer-equal\[_nghost-[^\]]*\]\s*>\s*\.card\[_ngcontent-[^\]]*\]\s*>\s*:is\(\s*\[card-footer\]\s*,\s*\.card-footer\s*\)`;
+    return /^<lc-card(?=[^>]*\sclass="[^"]*\blc-card--footer-equal\b)/.test(card)
+      && /<div(?=[^>]*\scard-footer)[^>]*>/.test(card)
+      && (card.match(/<lc-button\b/g) ?? []).length === 2
+      && /\.lc-card--footer-equal\[_nghost-[^\]]*\]\s*\{[^}]*container:\s*lc-card\s*\/\s*inline-size/.test(html)
+      && new RegExp(`${chain}\\s*\\{[^}]*display:\\s*grid`).test(html)
+      && new RegExp(`@container\\s+lc-card\\s*\\(\\s*width\\s*>=\\s*30rem\\s*\\)\\s*\\{\\s*${chain}\\s*\\{[^}]*grid-auto-flow:\\s*column`).test(html);
+  }],
 ];
 
 /**

@@ -351,6 +351,37 @@
   color: var(--color-text-secondary);
 }
 
+// Equal footer (3.29, CC-2, `footerLayout="equal"`): two answers of equal
+// weight. The host is a size container, so the layout follows the card's own
+// width, not the viewport (lc-next-step-card TD-1); a size container has no
+// intrinsic width, so the host takes its parent's full width. Below 30rem the
+// children stack full width, from 30rem they share the row at equal width.
+// Gap, margins, padding and divider stay those of the default footer rule.
+// `> .card >` keeps the footers of nested cards out.
+:host(.lc-card--footer-equal) {
+  container: lc-card / inline-size;
+  inline-size: 100%;
+}
+
+:host(.lc-card--footer-equal) > .card > ::ng-deep :is([card-footer], .card-footer) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+}
+
+@container lc-card (width >= 30rem) {
+  :host(.lc-card--footer-equal) > .card > ::ng-deep :is([card-footer], .card-footer) {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+  }
+}
+
+// Side by side, a label that wraps makes one button taller: both take the row's height.
+:host(.lc-card--footer-equal) > .card > ::ng-deep :is([card-footer], .card-footer) > lc-button > .btn {
+  block-size: 100%;
+}
+
 // Links and controls projected into a link card (3.24) stay clickable above
 // the card's link overlay (z-index 1). `:where()` keeps it at (0,1,0), so a
 // control's own `position: absolute` (password toggle, hidden native input) wins.

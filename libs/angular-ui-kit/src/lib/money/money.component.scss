@@ -9,6 +9,16 @@
   white-space: nowrap;
 }
 
+// A range (3.29, CC-1, `rangeToMinor`) may wrap between its amounts, before
+// the joining word (glued to the second amount by U+00A0), never inside one.
+:host(.lc-money--range) {
+  white-space: normal;
+}
+
+.lc-money__amount {
+  white-space: nowrap;
+}
+
 // The words a screen reader speaks („minus 42,17 Euro“): visually hidden,
 // and not copied with the visible amount.
 .lc-money__spoken {

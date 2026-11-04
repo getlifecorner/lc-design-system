@@ -6,11 +6,14 @@ import {
   signal,
   computed,
   afterRenderEffect,
+  effect,
   forwardRef,
   ElementRef,
   viewChild,
   HostListener,
   inject,
+  isDevMode,
+  model,
   untracked,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -43,12 +46,16 @@ export type ComboboxSize = 'xs' | 'sm' | 'md' | 'lg';
  * The suggestion list is rendered in a CDK overlay so it is never clipped
  * by `overflow: hidden` ancestors (cards, modals, table cells).
  *
+ * The selection is two-way bindable by an option's `value` string
+ * (`[(selectedValue)]`, single mode), next to the `valueChange` output with
+ * the option object and the forms binding.
+ *
  * @example
  * ```html
  * <lc-combobox
  *   label="Assign to user"
  *   [loadOptions]="searchUsers"
- *   [(value)]="assignee"
+ *   [(selectedValue)]="assigneeId"
  *   allowCreate
  * />
  * ```
@@ -131,6 +138,20 @@ export class ComboboxComponent implements ControlValueAccessor {
   /** Size */
   readonly size = input<ComboboxSize>('md');
 
+  /**
+   * The `value` of the selected option, two-way (3.29, regeln row 2):
+   * `[(selectedValue)]="month"`. Shows the matching option's label (from
+   * `options`, or the current selection); an unknown value shows an empty
+   * field and is filled in when `options` with it arrive. Page writes
+   * (including back to `null`) select or clear silently: no
+   * `selectedValueChange`, no `valueChange`, no forms `onChange`. Every user
+   * choice or clear emits `selectedValueChange`, next to the unchanged
+   * `valueChange` (the option object). Single mode only: ignored with
+   * `multiple` (a dev warning). Use it or a forms binding, not both.
+   * @default null
+   */
+  readonly selectedValue = model<string | null>(null);
+
   /** Value change event */
   readonly valueChange = output<ComboboxValue>();
 
@@ -159,6 +180,12 @@ export class ComboboxComponent implements ControlValueAccessor {
   /** Selected values */
   protected selectedSingle = signal<ComboboxOption | null>(null);
   protected selectedMultiple = signal<ComboboxOption[]>([]);
+
+  /** The last `selectedValue` the component applied or emitted: a different one is a page write. */
+  private seenSelectedValue: string | null = null;
+
+  /** A page-written `selectedValue` no option matched yet: selected silently once `options` hold it. */
+  private pendingSelectedValue: string | null = null;
 
   /** Resolved visible options */
   protected visibleOptions = computed(() => {
@@ -292,6 +319,49 @@ export class ComboboxComponent implements ControlValueAccessor {
           ?.scrollIntoView?.({ block: 'nearest' });
       });
     });
+
+    // `selectedValue` (3.29): a page write selects or clears silently; an
+    // unknown value waits for `options` that hold it. The component's own
+    // writes (user choice, clear) are already applied, so they are skipped.
+    effect(() => {
+      const value = this.selectedValue();
+      const options = this.options();
+      untracked(() => {
+        if (value !== this.seenSelectedValue) {
+          this.seenSelectedValue = value;
+          if (!this.multiple()) {
+            this.applySelectedValue(value, options);
+          } else if (value !== null && isDevMode()) {
+            console.warn('[lc-combobox] selectedValue is ignored with multiple');
+          }
+        } else if (this.pendingSelectedValue !== null && !this.multiple()) {
+          this.applySelectedValue(this.pendingSelectedValue, options);
+        }
+      });
+    });
+  }
+
+  /** Shows the option with `value` (or clears for `null`) without emitting anything. */
+  private applySelectedValue(value: string | null, options: ComboboxOption[]): void {
+    this.pendingSelectedValue = null;
+    if (value === null) {
+      this.selectedSingle.set(null);
+      this.query.set('');
+      return;
+    }
+    if (this.selectedSingle()?.value === value) return;
+    const match = options.find((o) => o.value === value) ?? null;
+    if (!match) this.pendingSelectedValue = value;
+    this.selectedSingle.set(match);
+    this.query.set(match ? match.label : '');
+  }
+
+  /** Emits a user's single choice or clear through `selectedValueChange` (not in `multiple` mode). */
+  private emitSelectedValue(value: string | null): void {
+    if (this.multiple()) return;
+    this.pendingSelectedValue = null;
+    this.seenSelectedValue = value;
+    this.selectedValue.set(value);
   }
 
   writeValue(value: ComboboxValue): void {
@@ -299,6 +369,7 @@ export class ComboboxComponent implements ControlValueAccessor {
       this.selectedMultiple.set(Array.isArray(value) ? value : []);
     } else {
       const single = value && !Array.isArray(value) ? value : null;
+      this.pendingSelectedValue = null;
       this.selectedSingle.set(single);
       this.query.set(single ? single.label : '');
     }
@@ -333,6 +404,7 @@ export class ComboboxComponent implements ControlValueAccessor {
     }
     this.onChange(value);
     this.valueChange.emit(value);
+    this.emitSelectedValue(null);
   }
 
   protected onClearClick(): void {
@@ -434,6 +506,7 @@ export class ComboboxComponent implements ControlValueAccessor {
       this.query.set(option.label);
       this.onChange(option);
       this.valueChange.emit(option);
+      this.emitSelectedValue(option.value);
     }
     this.optionSelected.emit(option);
     this.isOpen.set(false);

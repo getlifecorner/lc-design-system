@@ -22,11 +22,12 @@ function decimalsOf(n: number): number {
 }
 
 /**
- * Reduces raw text to something `Number()` can parse: digits, one leading
- * minus and one decimal point. A comma is taken as a decimal separator so a
- * German keyboard layout does not silently lose the fraction.
+ * Reduces raw text to digits, one leading minus and one decimal separator.
+ * A comma and a point are both taken as the decimal separator, so a German
+ * keyboard layout does not silently lose the fraction; the separator is
+ * written as `separator` (the locale's, a point by default).
  */
-function sanitizeNumericText(raw: string): string {
+function sanitizeNumericText(raw: string, separator: '.' | ','): string {
   let out = '';
   let seenPoint = false;
   for (const ch of raw) {
@@ -36,11 +37,25 @@ function sanitizeNumericText(raw: string): string {
       out += ch;
     } else if ((ch === '.' || ch === ',') && !seenPoint) {
       seenPoint = true;
-      out += '.';
+      out += separator;
     }
   }
   return out;
 }
+
+/** The decimal separator of `locale`: `,` or `.`; any other separator, `''` and an invalid locale give `.`. */
+function decimalSeparatorOf(locale: string): '.' | ',' {
+  if (!locale) return '.';
+  try {
+    const part = new Intl.NumberFormat(locale).formatToParts(1.5).find((p) => p.type === 'decimal')?.value;
+    return part === ',' ? ',' : '.';
+  } catch {
+    return '.';
+  }
+}
+
+/** Height of `lc-number-input`'s field and steppers: `xs` 24, `sm` 32, `md` 40 (the default), `lg` 44 px. */
+export type NumberInputSize = 'xs' | 'sm' | 'md' | 'lg';
 
 @Component({
   selector: 'lc-number-input',
@@ -65,13 +80,20 @@ function sanitizeNumericText(raw: string): string {
  * - Increment and decrement buttons (also ArrowUp / ArrowDown)
  * - Configurable min, max, and step values
  * - Value clamping within bounds; stepping is rounded to the step's precision
- * - Non-numeric characters are rejected as they are typed
+ * - Non-numeric characters are rejected as they are typed; a comma and a
+ *   point are both accepted as the decimal separator, in every locale
+ * - The value is shown in `locale` („7,5“ in `de-DE`), with an optional unit
+ *   after it (`suffix`, „7,5 %“), read once (`suffixAriaLabel`)
+ * - Sizes `xs`, `sm`, `md` (default), `lg` (44 px touch targets)
  * - Disabled state support
- * - ControlValueAccessor integration for reactive forms
+ * - ControlValueAccessor integration for reactive forms; the model is
+ *   always a `number`, clamped to `min`/`max` on blur
  *
  * @example
  * ```html
  * <lc-number-input label="Quantity" [min]="0" [max]="100" [step]="1" />
+ * <lc-number-input label="Anteil" locale="de-DE" suffix="%" suffixAriaLabel="Prozent"
+ *                  size="lg" [step]="0.5" [(ngModel)]="share" />
  * ```
  */
 export class NumberInputComponent implements ControlValueAccessor {
@@ -110,6 +132,40 @@ export class NumberInputComponent implements ControlValueAccessor {
   /** Accessible name of the plus button. */
   incrementAriaLabel = input('Increase value');
 
+  /**
+   * BCP 47 locale of the shown number (3.29, regeln row 3). Only the decimal
+   * separator follows it: `de-DE` shows „7,5“, `en-US` "7.5"; a locale whose
+   * separator is neither `,` nor `.` shows a point. No grouping. `''`: a
+   * point, as before. Typing accepts `,` and `.` in every locale and shows
+   * the locale's separator; the model stays a `number`; blur clamps to
+   * `min`/`max`.
+   * @default ''
+   */
+  locale = input<string>('');
+
+  /**
+   * Unit shown after the value inside the field („7,5 %“, 3.29). Not typed
+   * and not part of the model; with a suffix the value aligns to the end.
+   * Screen readers read `suffixAriaLabel` (or the suffix) once after the value.
+   * @default ''
+   */
+  suffix = input<string>('');
+
+  /**
+   * Spoken unit („Prozent“), read once after the value as the field's
+   * description (before the helper or error text). `''`: the `suffix`.
+   * @default ''
+   */
+  suffixAriaLabel = input<string>('');
+
+  /**
+   * Height of the field and the steppers (3.29, regeln row 4): `xs` 24,
+   * `sm` 32, `md` 40 (as before), `lg` 44 px (touch: field and both
+   * steppers at least 44 × 44 px).
+   * @default 'md'
+   */
+  size = input<NumberInputSize>('md');
+
   /** Emits value on change */
   valueChange = output<number>();
 
@@ -139,8 +195,18 @@ export class NumberInputComponent implements ControlValueAccessor {
   /** Fractions need a decimal key on touch keyboards; integers do not. */
   protected readonly inputMode = computed(() => (this.stepPrecision() > 0 ? 'decimal' : 'numeric'));
 
+  /** The decimal separator shown in the field: the `locale`'s `,` or `.`. */
+  private readonly separator = computed(() => decimalSeparatorOf(this.locale()));
+
+  /** The spoken unit: `suffixAriaLabel`, else the `suffix`; `''` = none. */
+  protected readonly spokenSuffix = computed(() => this.suffixAriaLabel() || this.suffix());
+
+  /** Icon size of the steppers: `xs` (16 px) for the `xs`/`sm` fields, `sm` (20 px) as before. */
+  protected readonly iconSize = computed(() => (this.size() === 'xs' || this.size() === 'sm' ? 'xs' : 'sm'));
+
   protected readonly describedBy = computed(() => {
     const ids: string[] = [];
+    if (this.spokenSuffix()) ids.push(`${this.inputId}-suffix`);
     if (this.error()) ids.push(`${this.inputId}-error`);
     else if (this.helperText()) ids.push(`${this.inputId}-helper`);
     return ids.length ? ids.join(' ') : null;
@@ -148,6 +214,9 @@ export class NumberInputComponent implements ControlValueAccessor {
 
   protected containerClasses = computed(() => {
     const classes = ['number-input'];
+    // `md` (the default) keeps the base rules: no class.
+    const size = this.size();
+    if (size === 'xs' || size === 'sm' || size === 'lg') classes.push(`number-input--${size}`);
     if (this.isDisabled()) classes.push('number-input--disabled');
     if (this.error()) classes.push('number-input--error');
     return classes.join(' ');
@@ -203,7 +272,7 @@ export class NumberInputComponent implements ControlValueAccessor {
   onInput(event: Event): void {
     const target = event.target as HTMLInputElement;
     const raw = target.value;
-    const text = sanitizeNumericText(raw);
+    const text = sanitizeNumericText(raw, this.separator());
     // Property binding alone would not repaint the field when the model does
     // not change (typing "a" after "12" leaves 12 as-is), so the stripped
     // text is written straight back to the element.
@@ -215,7 +284,7 @@ export class NumberInputComponent implements ControlValueAccessor {
     this.text.set(text);
     // "" would parse as 0; it and the other in-progress entries ("-", ".")
     // mean the model has no number yet.
-    const parsed = text === '' ? NaN : Number(text);
+    const parsed = text === '' ? NaN : Number(text.replace(',', '.'));
     if (Number.isNaN(parsed)) {
       if (this.value() !== null) {
         this.value.set(null);
@@ -243,8 +312,17 @@ export class NumberInputComponent implements ControlValueAccessor {
     if (el) el.value = canonical;
   }
 
+  /** The model as text: `String(val)` with the locale's decimal separator, no grouping. */
   private format(val: number | null): string {
-    return val === null ? '' : String(val);
+    if (val === null) return '';
+    const text = String(val);
+    return this.separator() === ',' ? text.replace('.', ',') : text;
+  }
+
+  /** A press on the visible unit puts the caret in the field, as a click on the field would. */
+  protected focusField(event: MouseEvent): void {
+    event.preventDefault();
+    if (!this.isDisabled()) this.inputEl()?.nativeElement.focus();
   }
 
   private clamp(val: number): number {

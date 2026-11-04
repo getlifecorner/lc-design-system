@@ -11,17 +11,37 @@ import {
   viewChild,
   inject,
   DOCUMENT,
+  Injector,
+  afterNextRender,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { OverlayModule } from '@angular/cdk/overlay';
 
 export type DateValue = Date | string | null;
 
+/** What `lc-datepicker` picks: a day (`'day'`) or a month (`'month'`). */
+export type DatepickerGranularity = 'day' | 'month';
+
+/** One cell of the month grid (`granularity="month"`). */
+interface MonthCell {
+  /** 0–11. */
+  month: number;
+  /** Visible name („Juli“). */
+  name: string;
+  /** Accessible name with the year („Juli 2026“). */
+  label: string;
+  selected: boolean;
+  current: boolean;
+  disabled: boolean;
+}
+
 /**
  * Datepicker component for date selection with calendar overlay.
  *
  * Features:
  * - Calendar popup with month and year navigation
+ * - Month granularity (3.29): `granularity="month"` picks a month in a
+ *   12-month grid with year navigation and emits its first day
  * - Manual date entry in the configured format
  * - Min/max date constraints
  * - Disabled specific dates and weekends
@@ -34,6 +54,7 @@ export type DateValue = Date | string | null;
  * @example
  * ```html
  * <lc-datepicker placeholder="Select date" [(ngModel)]="selectedDate" />
+ * <lc-datepicker granularity="month" format="YYYY-MM" placeholder="Select a month" [(ngModel)]="validFrom" />
  * ```
  */
 @Component({
@@ -160,6 +181,47 @@ export class DatepickerComponent implements ControlValueAccessor {
   readonly selectedAriaLabel = input('selected');
 
   /**
+   * Pick a day (`'day'`) or a month (`'month'`, 3.29, regeln row 1). Month:
+   * a 12-month grid with year navigation; `dateChange` and the forms value
+   * are the 1st of the month (local midnight, as day mode); `format` should
+   * be a month format (`'YYYY-MM'`; a `DD` token shows `01`), and typing
+   * „2026-07“ commits like a day. `minDate`/`maxDate` keep a month
+   * selectable when any of its days is in range; a `disabledDates` entry
+   * disables its whole month; `disableWeekends` is ignored. Set
+   * `placeholder` (e.g. "Select a month"). Keys in the grid: arrows move by
+   * month and row, PageUp/PageDown by year, Home/End to the first/last month
+   * of the year, Enter/Space select, Escape closes.
+   * @default 'day'
+   */
+  readonly granularity = input<DatepickerGranularity>('day');
+
+  /**
+   * Accessible name of the previous-year button (month mode).
+   * @default 'Previous year'
+   */
+  readonly previousYearAriaLabel = input('Previous year');
+
+  /**
+   * Accessible name of the next-year button (month mode).
+   * @default 'Next year'
+   */
+  readonly nextYearAriaLabel = input('Next year');
+
+  /**
+   * Accessible name of the month dialog (month mode; `dialogAriaLabel`
+   * stays the day dialog's).
+   * @default 'Choose month'
+   */
+  readonly monthDialogAriaLabel = input('Choose month');
+
+  /**
+   * Label of the quick action that shows the current year (month mode; day
+   * mode keeps `todayLabel`).
+   * @default 'This month'
+   */
+  readonly currentMonthLabel = input('This month');
+
+  /**
    * Emitted when date selection changes
    */
   readonly dateChange = output<Date | null>();
@@ -186,11 +248,16 @@ export class DatepickerComponent implements ControlValueAccessor {
   /** Effective disabled state: the `disabled` input OR the form control's disabled state. */
   readonly isDisabled = computed(() => this.disabled() || this.formDisabled());
 
+  /** Month granularity (3.29). */
+  protected readonly isMonthMode = computed(() => this.granularity() === 'month');
+
   // Computed values
   readonly formattedDate = computed(() => {
     const date = this.selectedDate();
     if (!date) return '';
-    return this.formatDate(date, this.format());
+    // Month mode shows the month: a `DD` token is the 1st.
+    const shown = this.isMonthMode() ? new Date(date.getFullYear(), date.getMonth(), 1) : date;
+    return this.formatDate(shown, this.format());
   });
 
   /**
@@ -237,6 +304,40 @@ export class DatepickerComponent implements ControlValueAccessor {
     return Array.from({ length: 7 }, (_, i) => names[(first + i) % 7]);
   });
 
+  /** Header title: „July 2026“ (day mode) or the year „2026“ (month mode). */
+  protected readonly headerTitle = computed(() =>
+    this.isMonthMode() ? String(this.currentYear()) : `${this.currentMonthName()} ${this.currentYear()}`,
+  );
+
+  /** The twelve months of the shown year (month mode). */
+  protected readonly monthCells = computed<MonthCell[]>(() => {
+    const year = this.currentYear();
+    const locale = this.locale();
+    const selected = this.selectedDate();
+    const today = new Date();
+    return Array.from({ length: 12 }, (_, month) => {
+      const first = new Date(year, month, 1);
+      return {
+        month,
+        name: locale ? first.toLocaleDateString(locale, { month: 'long' }) : this.monthNames[month],
+        label: first.toLocaleDateString(locale || 'en-US', { month: 'long', year: 'numeric' }),
+        selected: !!selected && selected.getFullYear() === year && selected.getMonth() === month,
+        current: today.getFullYear() === year && today.getMonth() === month,
+        disabled: this.isMonthDisabled(year, month),
+      };
+    });
+  });
+
+  /** The month grid's four rows of three. */
+  protected readonly monthRows = computed(() => [0, 3, 6, 9].map((i) => this.monthCells().slice(i, i + 3)));
+
+  /**
+   * The month cell that is the grid's one tab stop (roving `tabindex`): the
+   * selected month in the shown year, else the current month, else the first
+   * enabled one; `-1` when the whole year is disabled. Keys move it.
+   */
+  protected readonly monthTabStop = linkedSignal(() => this.defaultMonthTabStop());
+
   /** `firstDayOfWeek` clamped to 0–6. */
   private readonly gridStart = computed(() => {
     const day = Math.trunc(Number(this.firstDayOfWeek()));
@@ -282,6 +383,7 @@ export class DatepickerComponent implements ControlValueAccessor {
 
   // Private properties
   private readonly document = inject(DOCUMENT);
+  private readonly injector = inject(Injector);
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   private onChange: (value: Date | null) => void = () => {};
   // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -315,6 +417,10 @@ export class DatepickerComponent implements ControlValueAccessor {
     const date = this.selectedDate();
     if (date) {
       this.showMonthOf(date);
+    }
+    // Month mode: the grid's tab stop starts on the selected (or current) month again.
+    if (this.isMonthMode()) {
+      this.monthTabStop.set(this.defaultMonthTabStop());
     }
 
     this.opened.emit();
@@ -480,6 +586,87 @@ export class DatepickerComponent implements ControlValueAccessor {
     this.showMonthOf(new Date());
   }
 
+  /** Month mode: show the previous year. */
+  protected previousYear(): void {
+    this.currentYear.update((year) => year - 1);
+  }
+
+  /** Month mode: show the next year. */
+  protected nextYear(): void {
+    this.currentYear.update((year) => year + 1);
+  }
+
+  /** Month mode's quick action: show the current year. */
+  protected showCurrentYear(): void {
+    this.currentYear.set(new Date().getFullYear());
+  }
+
+  /** Month mode: select `month` of the shown year (its 1st), emit, close and focus the field. */
+  protected selectMonth(month: number): void {
+    const year = this.currentYear();
+    if (this.isDisabled() || this.readonly() || this.isMonthDisabled(year, month)) {
+      return;
+    }
+    this.commitDate(new Date(year, month, 1));
+    this.close();
+  }
+
+  /**
+   * Keys on a month cell (APG date grid): arrows ±1 month and ±3 (a row),
+   * PageUp/PageDown ±1 year (the nearest enabled month of that year),
+   * Home/End the first/last enabled month of the year; disabled months are
+   * skipped, and with none left focus stays. Enter/Space select, Escape
+   * closes. Arrows only move focus.
+   */
+  protected onMonthKeydown(event: KeyboardEvent, month: number): void {
+    const year = this.currentYear();
+    const at = year * 12 + month;
+    let target: number | null;
+    switch (event.key) {
+      case 'ArrowLeft':
+        target = this.nextEnabledMonth(at, -1);
+        break;
+      case 'ArrowRight':
+        target = this.nextEnabledMonth(at, 1);
+        break;
+      case 'ArrowUp':
+        target = this.nextEnabledMonth(at, -3);
+        break;
+      case 'ArrowDown':
+        target = this.nextEnabledMonth(at, 3);
+        break;
+      case 'PageUp':
+        target = this.nearestEnabledMonth(year - 1, month);
+        break;
+      case 'PageDown':
+        target = this.nearestEnabledMonth(year + 1, month);
+        break;
+      case 'Home':
+        target = this.edgeEnabledMonth(year, 1);
+        break;
+      case 'End':
+        target = this.edgeEnabledMonth(year, -1);
+        break;
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectMonth(month);
+        return;
+      case 'Escape':
+        event.preventDefault();
+        // Only this datepicker should react; keep the key from reaching enclosing overlays.
+        event.stopPropagation();
+        this.close();
+        return;
+      default:
+        return;
+    }
+    event.preventDefault();
+    if (target !== null) {
+      this.moveMonthFocus(target);
+    }
+  }
+
   /**
    * Handle input change (manual date entry). Partial input is kept as text
    * only; the model changes once the text is a complete, valid, selectable date.
@@ -495,7 +682,7 @@ export class DatepickerComponent implements ControlValueAccessor {
     }
 
     const date = this.parseDate(value, this.format());
-    if (date && !this.isDateDisabled(date) && !this.isSelectedDate(date)) {
+    if (date && !this.isUnavailable(date) && !this.isSameSelection(date)) {
       this.commitDate(date);
       this.showMonthOf(date);
     }
@@ -515,10 +702,19 @@ export class DatepickerComponent implements ControlValueAccessor {
     ) {
       this.open();
       event.preventDefault();
+      // Month mode: the keys work in the grid, so focus moves there once it is rendered.
+      if (this.isMonthMode()) {
+        afterNextRender(() => this.focusMonthCell(this.monthTabStop()), { injector: this.injector });
+      }
       return;
     }
 
     if (!this.isOpen()) return;
+
+    if (this.isMonthMode()) {
+      this.onMonthFieldKeyDown(event);
+      return;
+    }
 
     // While the text differs from the model the user is mid-edit: arrows must
     // move the caret, not the calendar selection.
@@ -625,6 +821,119 @@ export class DatepickerComponent implements ControlValueAccessor {
   }
 
   // Private helper methods
+
+  /** The selected month of the shown year, else the current month, else the first enabled one; `-1` if none. */
+  private defaultMonthTabStop(): number {
+    const cells = this.monthCells().filter((c) => !c.disabled);
+    return (cells.find((c) => c.selected) ?? cells.find((c) => c.current) ?? cells[0])?.month ?? -1;
+  }
+
+  /**
+   * Keys in the field while the month panel is open: ArrowDown moves focus
+   * into the grid, Escape closes, Enter closes when a month is selected;
+   * the other keys stay with the text (caret, typing „2026-07“).
+   */
+  private onMonthFieldKeyDown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusMonthCell(this.monthTabStop());
+        break;
+      case 'Escape':
+        this.close();
+        event.preventDefault();
+        // Only this datepicker should react; keep the key from reaching enclosing overlays.
+        event.stopPropagation();
+        break;
+      case 'Enter':
+        event.preventDefault();
+        if (this.selectedDate()) {
+          this.close();
+        }
+        break;
+    }
+  }
+
+  /**
+   * Month mode: a month is disabled when all its days are before `minDate`
+   * or after `maxDate` (compared by day), or when `disabledDates` holds one
+   * of its days. `disableWeekends` does not apply.
+   */
+  private isMonthDisabled(year: number, month: number): boolean {
+    const min = this.minDate();
+    if (min && new Date(year, month + 1, 0).getTime() < this.startOfDay(min)) {
+      return true;
+    }
+    const max = this.maxDate();
+    if (max && new Date(year, month, 1).getTime() > this.startOfDay(max)) {
+      return true;
+    }
+    return this.disabledDates().some((d) => d.getFullYear() === year && d.getMonth() === month);
+  }
+
+  /** A typed date that cannot be committed: its day (day mode) or its month (month mode) is disabled. */
+  private isUnavailable(date: Date): boolean {
+    return this.isMonthMode() ? this.isMonthDisabled(date.getFullYear(), date.getMonth()) : this.isDateDisabled(date);
+  }
+
+  /** Whether `date` is the current selection: the same day, or in month mode the same month. */
+  private isSameSelection(date: Date): boolean {
+    if (!this.isMonthMode()) return this.isSelectedDate(date);
+    const selected = this.selectedDate();
+    return !!selected && selected.getFullYear() === date.getFullYear() && selected.getMonth() === date.getMonth();
+  }
+
+  /** Year and month (0–11) of a month index `year * 12 + month`. */
+  private monthAt(index: number): { year: number; month: number } {
+    return { year: Math.floor(index / 12), month: ((index % 12) + 12) % 12 };
+  }
+
+  /** The next enabled month from `index` in steps of `step` (up to ten years), or `null`. */
+  private nextEnabledMonth(index: number, step: number): number | null {
+    for (let i = 1; i * Math.abs(step) <= 120; i++) {
+      const { year, month } = this.monthAt(index + step * i);
+      if (!this.isMonthDisabled(year, month)) return index + step * i;
+    }
+    return null;
+  }
+
+  /** `month` of `year` if enabled, else the enabled month of that year nearest to it, or `null`. */
+  private nearestEnabledMonth(year: number, month: number): number | null {
+    for (let d = 0; d < 12; d++) {
+      for (const m of d === 0 ? [month] : [month - d, month + d]) {
+        if (m >= 0 && m < 12 && !this.isMonthDisabled(year, m)) return year * 12 + m;
+      }
+    }
+    return null;
+  }
+
+  /** The first (`dir` 1) or last (`dir` -1) enabled month of `year`, or `null`. */
+  private edgeEnabledMonth(year: number, dir: 1 | -1): number | null {
+    for (let i = 0; i < 12; i++) {
+      const month = dir === 1 ? i : 11 - i;
+      if (!this.isMonthDisabled(year, month)) return year * 12 + month;
+    }
+    return null;
+  }
+
+  /** Moves the grid's tab stop and focus to the month `index`; the shown year follows. */
+  private moveMonthFocus(index: number): void {
+    const { year, month } = this.monthAt(index);
+    if (year !== this.currentYear()) {
+      this.currentYear.set(year);
+    }
+    this.monthTabStop.set(month);
+    this.focusMonthCell(month);
+  }
+
+  /** Focuses the month cell `month` (0–11) of the open panel; the cells are kept across years. */
+  private focusMonthCell(month: number): void {
+    if (month < 0) return;
+    this.calendarPanel()
+      ?.nativeElement.querySelectorAll<HTMLElement>('.lc-datepicker-month')
+      [month]?.focus();
+  }
+
   private commitDate(date: Date): void {
     this.selectedDate.set(date);
     this.inputValue.set(this.formatDate(date, this.format()));
@@ -672,29 +981,34 @@ export class DatepickerComponent implements ControlValueAccessor {
    * Strict parse: the text must match the format's length, carry digits at the
    * YYYY/MM/DD positions and round-trip through formatDate (which rejects
    * things like month 13 or Feb 31 that `new Date` would silently roll over).
-   * Returns null for partial or invalid input.
+   * Returns null for partial or invalid input. Month mode also takes a format
+   * without `DD` (`YYYY-MM`) and returns the 1st of the month.
    */
   private parseDate(value: string, format: string): Date | null {
     if (value.length !== format.length) {
       return null;
     }
 
+    const monthMode = this.isMonthMode();
     const yearIndex = format.indexOf('YYYY');
     const monthIndex = format.indexOf('MM');
     const dayIndex = format.indexOf('DD');
-    if (yearIndex < 0 || monthIndex < 0 || dayIndex < 0) {
+    if (yearIndex < 0 || monthIndex < 0 || (dayIndex < 0 && !monthMode)) {
       return null;
     }
 
     const yearText = value.substring(yearIndex, yearIndex + 4);
     const monthText = value.substring(monthIndex, monthIndex + 2);
-    const dayText = value.substring(dayIndex, dayIndex + 2);
+    const dayText = dayIndex < 0 ? '01' : value.substring(dayIndex, dayIndex + 2);
     if (!/^\d{4}$/.test(yearText) || !/^\d{2}$/.test(monthText) || !/^\d{2}$/.test(dayText)) {
       return null;
     }
 
     const date = new Date(Number(yearText), Number(monthText) - 1, Number(dayText));
-    return this.formatDate(date, format) === value ? date : null;
+    if (this.formatDate(date, format) !== value) {
+      return null;
+    }
+    return monthMode ? new Date(date.getFullYear(), date.getMonth(), 1) : date;
   }
 
   protected getInputValue(event: Event): string {

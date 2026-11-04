@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import type { Meta, StoryObj } from '@storybook/angular';
 import { ComboboxComponent, ComboboxOption } from './combobox.component';
 
@@ -23,6 +24,12 @@ selection, create-new entries, grouped options, and keyboard navigation.
     multiple: { control: 'boolean' },
     allowCreate: { control: 'boolean' },
     disabled: { control: 'boolean' },
+    selectedValue: {
+      control: 'text',
+      description:
+        "3.29: the `value` of the selected option, two-way: `[(selectedValue)]=\"month\"`. Shows that option's label (also when `options` arrive later; unknown = empty). Page writes, also back to `null`, select or clear silently; every user choice or clear emits `selectedValueChange`, next to the unchanged `valueChange` (the option object). Single mode only; use it or a forms binding, not both.",
+      table: { defaultValue: { summary: 'null' } },
+    },
   },
 };
 
@@ -147,4 +154,47 @@ export const Sizes: Story = {
   parameters: {
     docs: { description: { story: 'Four size presets.' } },
   },
+};
+
+const GERMAN_MONTHS = [
+  'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+  'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember',
+];
+
+/** The months of 2026: value „2026-07“, label „Juli 2026“. */
+const monthOptions: ComboboxOption[] = GERMAN_MONTHS.map((name, i) => ({
+  value: `2026-${String(i + 1).padStart(2, '0')}`,
+  label: `${name} 2026`,
+}));
+
+/** 3.29 (request 046, regeln row 2): the page sets and resets the choice by value. */
+export const StartsWithAChoice: Story = {
+  name: 'Starts with a choice',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.29 (request 046, finance-intelligence rules page): `[(selectedValue)]="month"` binds the `value` of the chosen option, so the field starts with „Juli 2026“ for `\'2026-07\'`, also when the options arrive later. The page sets it again (Auf September setzen) or back to `null` (Zurücksetzen) without an event; every choice or clear by the user writes the new value back (the line below follows it), next to the unchanged `valueChange` with the option object.',
+      },
+    },
+  },
+  render: () => ({
+    props: { monthOptions, month: signal<string | null>('2026-07') },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 12px; max-width: 400px;">
+        <lc-combobox
+          [options]="monthOptions"
+          label="Gilt ab"
+          placeholder="Monat suchen …"
+          emptyMessage="Keine Treffer"
+          clearAriaLabel="Auswahl löschen"
+          [(selectedValue)]="month"
+        />
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <lc-button variant="outline" (click)="month.set(null)">Zurücksetzen</lc-button>
+          <lc-button variant="outline" (click)="month.set('2026-09')">Auf September setzen</lc-button>
+        </div>
+        <p style="margin: 0; font-size: 14px; color: var(--color-text-secondary);">Wert: {{ month() ?? '–' }}</p>
+      </div>`,
+  }),
 };

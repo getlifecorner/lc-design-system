@@ -12,6 +12,9 @@
   &__control {
     display: inline-flex;
     align-items: center;
+    // 3.29 (request 046, D-5): content-wide under a label wider than the
+    // control, instead of stretching past the + button.
+    align-self: flex-start;
     // 3.3 (SI-8): the field boundary needs 3:1 against the page (WCAG 1.4.11).
     border: 1px solid var(--color-field-border);
     border-radius: var(--border-radius-md);
@@ -85,6 +88,89 @@
 
     &:disabled {
       cursor: not-allowed;
+    }
+  }
+
+  // 3.29 (request 046, AC-15, D-4): the unit after the value, in the field's
+  // font; not read (the field's description says it). With a unit the value
+  // aligns to the end, next to it.
+  &__suffix {
+    flex-shrink: 0;
+    padding-inline: 0.25em var(--spacing-2);
+    font-size: var(--typography-font-size-base, 1rem);
+    color: var(--color-text-secondary);
+  }
+
+  &__control:has(.number-input__suffix) .number-input__input {
+    text-align: end;
+    padding-inline-end: 0;
+  }
+
+  // 3.29 (request 046, AC-16): sizes as lc-input; `md` keeps the rules above
+  // (no class). Square steppers of the field's height, the field stretched to it.
+  &--xs,
+  &--sm,
+  &--lg {
+    .number-input__input,
+    .number-input__suffix {
+      align-self: stretch;
+    }
+
+    .number-input__input {
+      padding-block: 0;
+    }
+
+    .number-input__suffix {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  &--xs {
+    .number-input__button {
+      width: var(--size-interactive-xs-height);
+      height: var(--size-interactive-xs-height);
+    }
+
+    .number-input__input {
+      width: 3rem;
+    }
+
+    .number-input__input,
+    .number-input__suffix {
+      font-size: var(--size-interactive-xs-font-size);
+    }
+  }
+
+  &--sm {
+    .number-input__button {
+      width: var(--size-interactive-sm-height);
+      height: var(--size-interactive-sm-height);
+    }
+
+    .number-input__input {
+      width: 3.5rem;
+    }
+
+    .number-input__input,
+    .number-input__suffix {
+      font-size: var(--size-interactive-sm-font-size);
+    }
+  }
+
+  &--lg {
+    .number-input__button {
+      width: var(--size-interactive-lg-height);
+      height: var(--size-interactive-lg-height);
+    }
+
+    .number-input__input {
+      width: 4.5rem;
+    }
+
+    .number-input__input,
+    .number-input__suffix {
+      font-size: var(--size-interactive-lg-font-size);
     }
   }
 

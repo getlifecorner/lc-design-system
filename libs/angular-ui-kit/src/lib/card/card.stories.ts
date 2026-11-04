@@ -113,6 +113,13 @@ Use it for content sections, dashboard widgets, and list items.
       description: "3.24: query parameters of `route`, as `RouterLink`'s `queryParams` (`{ ansicht: 'laeufe' }`). Ignored with `href`.",
       table: { defaultValue: { summary: 'undefined' } },
     },
+    footerLayout: {
+      control: 'inline-radio',
+      options: ['default', 'equal'],
+      description:
+        '3.29: layout of the `[card-footer]` slot. `equal`: its children share the row at equal width once the card is at least 480 px (30rem) wide, and stack full width, 8 px apart, below that (the card\'s own width, at any viewport). Put `<lc-button variant="outline" size="lg" [fullWidth]="true">` in it, primary answer first; the card adds layout only. The card becomes a size container and takes its parent\'s full width.',
+      table: { defaultValue: { summary: 'default' } },
+    },
   },
 };
 
@@ -598,6 +605,98 @@ export const LinkAndClickable: Story = {
         </lc-card>
         <lc-card variant="elevated" [selected]="true" href="#/parity" title="Link">
           <p style="margin: 0; font-size: 14px; color: var(--color-text-secondary);">Opens the details.</p>
+        </lc-card>
+      </div>`,
+  }),
+};
+
+// ── 3.29: equal footer (request 046, life-os CC-2) ─────────────────────────
+
+/** Two answers of equal weight: stacked on a phone, side by side from a 480 px card. */
+export const EqualFooter: Story = {
+  name: 'Equal Footer',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.29 (request 046, life-os contract discovery, CC-2): `footerLayout="equal"` gives the two answers in the `[card-footer]` slot the same width: stacked full width, 8 px apart, while the card is narrower than 480 px (30rem; a phone), side by side from 480 px. The card measures its own width (a size container), not the viewport, so it works in a page column, a dialog or a grid. The buttons are the app\'s: `lc-button variant="outline" size="lg" [fullWidth]="true"`, primary answer first, 48 px high; the card adds layout only, with the divider and spacing of the default footer.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <lc-card variant="outlined" borderRadius="xl" title="Streaming subscription" subtitle="Monthly since March 2024" footerLayout="equal">
+        <p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--color-text-secondary);">
+          We found 14 monthly payments to the same recipient. Is this a contract?
+        </p>
+        <div card-footer>
+          <lc-button variant="outline" size="lg" [fullWidth]="true">Looks right</lc-button>
+          <lc-button variant="outline" size="lg" [fullWidth]="true">Not a contract</lc-button>
+        </div>
+      </lc-card>`,
+  }),
+};
+
+/** German answers: the short pair full width, and a long pair in a 480 px card. */
+export const EqualFooterGerman: Story = {
+  name: 'Equal Footer (German)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.29 (request 046): the German answers „Stimmt“ / „Kein Vertrag“ in a full-width card (stacked at 360 px, side by side from 480 px), and „Ja, das stimmt“ / „Das ist kein Vertrag für mich“ in a card of exactly 480 px: side by side at equal width (219 px each); the long label wraps inside its button, and both buttons take the row\'s height.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px;">
+        <lc-card variant="outlined" borderRadius="xl" title="Streaming-Abo" subtitle="Monatlich seit März 2024" footerLayout="equal">
+          <p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--color-text-secondary);">
+            Wir haben 14 monatliche Zahlungen an denselben Empfänger gefunden. Ist das ein Vertrag?
+          </p>
+          <div card-footer>
+            <lc-button variant="outline" size="lg" [fullWidth]="true">Stimmt</lc-button>
+            <lc-button variant="outline" size="lg" [fullWidth]="true">Kein Vertrag</lc-button>
+          </div>
+        </lc-card>
+        <div style="max-width: 480px;">
+          <lc-card variant="outlined" borderRadius="xl" title="Fitnessstudio" subtitle="Monatlich seit Januar 2025" footerLayout="equal">
+            <p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--color-text-secondary);">
+              Zehn Lastschriften mit wechselnden Beträgen. Ist das ein Vertrag?
+            </p>
+            <div card-footer>
+              <lc-button variant="outline" size="lg" [fullWidth]="true">Ja, das stimmt</lc-button>
+              <lc-button variant="outline" size="lg" [fullWidth]="true">Das ist kein Vertrag für mich</lc-button>
+            </div>
+          </lc-card>
+        </div>
+      </div>`,
+  }),
+};
+
+/** The equal footer in a link card: the buttons stay clickable above the card's link. */
+export const EqualFooterLinkCard: Story = {
+  name: 'Equal Footer (link card)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.29 (request 046): an `href` card with `footerLayout="equal"`. The card is a link (the title, and a click anywhere else on it), while the two answers stay buttons above the link: a click on „Stimmt“ answers, it does not open the candidate. Divider and spacing as in the default footer.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div lang="de">
+        <lc-card variant="outlined" borderRadius="xl" title="Streaming-Abo" subtitle="Monatlich seit März 2024" href="#/vertraege/kandidat-1" footerLayout="equal">
+          <p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--color-text-secondary);">
+            Wir haben 14 monatliche Zahlungen an denselben Empfänger gefunden. Ist das ein Vertrag?
+          </p>
+          <div card-footer>
+            <lc-button variant="outline" size="lg" [fullWidth]="true">Stimmt</lc-button>
+            <lc-button variant="outline" size="lg" [fullWidth]="true">Kein Vertrag</lc-button>
+          </div>
         </lc-card>
       </div>`,
   }),

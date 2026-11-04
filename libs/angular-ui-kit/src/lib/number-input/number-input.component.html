@@ -10,7 +10,7 @@
       (click)="decrement()"
       [attr.aria-label]="decrementAriaLabel()"
     >
-      <lc-icon name="minus" size="sm" [decorative]="true" />
+      <lc-icon name="minus" [size]="iconSize()" [decorative]="true" />
     </button>
     <input
       #inputEl
@@ -30,6 +30,10 @@
       (keydown)="onKeydown($event)"
       (blur)="onBlur()"
     />
+    @if (suffix()) {
+      <!-- The visible unit (3.29): not read; the field's description says it once. A press focuses the field. -->
+      <span class="number-input__suffix" aria-hidden="true" (mousedown)="focusField($event)">{{ suffix() }}</span>
+    }
     <button
       type="button"
       class="number-input__button number-input__button--increment"
@@ -37,9 +41,12 @@
       (click)="increment()"
       [attr.aria-label]="incrementAriaLabel()"
     >
-      <lc-icon name="plus" size="sm" [decorative]="true" />
+      <lc-icon name="plus" [size]="iconSize()" [decorative]="true" />
     </button>
   </div>
+  @if (spokenSuffix()) {
+    <span hidden [id]="inputId + '-suffix'">{{ spokenSuffix() }}</span>
+  }
   @if (error()) {
     <p [id]="inputId + '-error'" class="number-input__error" role="alert">{{ error() }}</p>
   } @else if (helperText()) {

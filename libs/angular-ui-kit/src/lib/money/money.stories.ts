@@ -34,6 +34,8 @@ formatMoney(-4217, 'EUR', { locale: 'de-DE' });
 // { text: '−42,17 €', spoken: 'minus 42,17 Euro' }
 formatMoney(-4217, 'EUR', { locale: 'de-DE', showCurrency: false });
 // { text: '−42,17', spoken: 'minus 42,17 Euro' }
+formatMoneyRange(999, 1299, 'EUR', { locale: 'de-DE' }); // 3.29
+// { text: '9,99 € bis 12,99 €', spoken: '9,99 Euro bis 12,99 Euro' }
 \`\`\`
         `,
       },
@@ -75,6 +77,17 @@ formatMoney(-4217, 'EUR', { locale: 'de-DE', showCurrency: false });
       control: 'boolean',
       description: 'Show the currency symbol; false leaves it out (the spoken text keeps the currency)',
       table: { defaultValue: { summary: 'true' } },
+    },
+    rangeToMinor: {
+      control: 'number',
+      description:
+        '3.29: upper amount of a range in minor units of the same currency, with the same locale, signDisplay and showCurrency: „9,99 € bis 12,99 €“, read once. Rendered as given (no sorting); not a safe integer: the single amount and a dev warning',
+      table: { defaultValue: { summary: 'undefined' } },
+    },
+    rangeSeparatorLabel: {
+      control: 'text',
+      description: "3.29: word between the amounts of a range, shown and spoken; empty: „bis“ for German (de), 'to' for every other locale",
+      table: { defaultValue: { summary: "''" } },
     },
   },
 };
@@ -209,6 +222,32 @@ export const InTextAndRtl: Story = {
         <p dir="rtl" lang="he" style="margin: 0;">
           היתרה היום היא <lc-money [amountMinor]="-4217" currency="EUR" locale="de-DE" /> לאחר חשבון החשמל.
         </p>
+      </div>`,
+  }),
+};
+
+/** 3.29 (request 046, life-os CC-1): an amount range in one element, read once. */
+export const Range: Story = {
+  name: 'Range',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.29 (request 046, life-os contract candidates, CC-1): `rangeToMinor` adds the upper amount of a varying series amount, with the same currency, locale, `signDisplay` and `showCurrency`. One element, one spoken reading („9,99 Euro bis 12,99 Euro“; the visible text stays `aria-hidden`), tabular figures on both amounts. The joining word comes from the locale („bis“ for German, "to" for every other locale, here fr-FR) or from `rangeSeparatorLabel`, the same word shown and spoken. It is glued to the second amount, so a narrow column (the 160 px box) wraps only before it, never inside an amount. In RTL text each amount stays a `dir` isolate. Amounts are shown as given. For a table `formatter` use `formatMoneyRange(999, 1299, \'EUR\', { locale: \'de-DE\' }).text`.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 12px; font-size: 16px; line-height: 1.5; color: var(--color-text-primary);">
+        <p lang="en" style="margin: 0;"><code>en-US</code> <lc-money [amountMinor]="999" [rangeToMinor]="1299" currency="EUR" locale="en-US" /></p>
+        <p lang="de" style="margin: 0;"><code>de-DE</code> <lc-money [amountMinor]="999" [rangeToMinor]="1299" currency="EUR" locale="de-DE" /></p>
+        <p lang="fr" style="margin: 0;"><code>fr-FR</code> <lc-money [amountMinor]="999" [rangeToMinor]="1299" currency="EUR" locale="fr-FR" /></p>
+        <p lang="de" style="margin: 0;"><code>de-DE</code> <lc-money [amountMinor]="-1299" [rangeToMinor]="-999" currency="EUR" locale="de-DE" /></p>
+        <p dir="rtl" lang="he" style="margin: 0;"><code>he-IL</code> <lc-money [amountMinor]="999" [rangeToMinor]="1299" currency="ILS" locale="he-IL" /></p>
+        <div lang="de" style="width: 160px;">
+          <lc-money [amountMinor]="123456" [rangeToMinor]="1234567" currency="EUR" locale="de-DE" />
+        </div>
       </div>`,
   }),
 };

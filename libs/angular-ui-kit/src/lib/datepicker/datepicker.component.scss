@@ -367,6 +367,102 @@
   }
 }
 
+// Month mode (3.29, request 046, regeln row 1): the same 276 px content box
+// as the day grid; 3 × 4 months, 44 px targets (the year buttons and the
+// quick action too). Day mode keeps its sizes.
+.lc-datepicker-calendar--month {
+  .lc-datepicker-nav-button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .lc-datepicker-today-button {
+    min-height: 2.75rem;
+  }
+}
+
+.lc-datepicker-months {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  inline-size: 17.25rem;
+  // 200 % text or a narrow phone: the grid narrows with the viewport.
+  max-inline-size: calc(100vw - 4.125rem);
+}
+
+.lc-datepicker-month-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-2);
+}
+
+.lc-datepicker-month {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0 var(--spacing-1);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  text-align: center;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  color: var(--color-text-primary);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+
+  &:hover:not(.lc-datepicker-month--disabled):not(.lc-datepicker-month--selected) {
+    background-color: var(--color-surface-hover);
+  }
+
+  &.lc-datepicker-month--current {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary-600);
+    background-color: var(--color-primary-50);
+  }
+
+  // The fill is 2.78:1 on the dark surface (WCAG 1.4.11): an inset
+  // --color-primary-500 ring marks the state (4.37:1 light, 9.13:1 dark).
+  &.lc-datepicker-month--selected {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-on-primary);
+    background-color: var(--color-primary-fill);
+    box-shadow: inset 0 0 0 2px var(--color-primary-500);
+  }
+
+  &.lc-datepicker-month--disabled {
+    color: var(--color-text-disabled);
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+}
+
+@media (forced-colors: active) {
+  .lc-datepicker-month:focus-visible {
+    outline-color: Highlight;
+  }
+
+  .lc-datepicker-month.lc-datepicker-month--selected {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+  }
+
+  .lc-datepicker-month.lc-datepicker-month--current {
+    text-decoration: underline;
+  }
+
+  .lc-datepicker-month.lc-datepicker-month--disabled {
+    color: GrayText;
+  }
+}
+
 // Error and Helper Text
 .lc-datepicker__error {
   font-size: var(--font-size-xs);

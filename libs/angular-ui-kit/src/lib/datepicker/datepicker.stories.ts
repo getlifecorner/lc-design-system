@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/angular';
+import { FormsModule } from '@angular/forms';
 import { fn, expect, userEvent, within } from 'storybook/test';
 import { DatepickerComponent } from './datepicker.component';
 
@@ -38,6 +39,33 @@ const meta: Meta<DatepickerComponent> = {
     readonly: { description: 'Shows value but prevents editing' },
     required: { description: 'Marks the field as required' },
     disableWeekends: { description: 'Prevents selecting Saturday/Sunday' },
+    granularity: {
+      control: 'inline-radio',
+      options: ['day', 'month'],
+      description:
+        "3.29: pick a day or a month. `month`: a 12-month grid with year navigation; `dateChange` and the forms value are the 1st of the month (local midnight); use a month `format` (`'YYYY-MM'`). `minDate`/`maxDate` keep a month selectable when any of its days is in range, a `disabledDates` entry disables its whole month, `disableWeekends` is ignored.",
+      table: { defaultValue: { summary: 'day' } },
+    },
+    previousYearAriaLabel: {
+      control: 'text',
+      description: '3.29: accessible name of the previous-year button (month mode)',
+      table: { defaultValue: { summary: 'Previous year' } },
+    },
+    nextYearAriaLabel: {
+      control: 'text',
+      description: '3.29: accessible name of the next-year button (month mode)',
+      table: { defaultValue: { summary: 'Next year' } },
+    },
+    monthDialogAriaLabel: {
+      control: 'text',
+      description: "3.29: accessible name of the month dialog (month mode; `dialogAriaLabel` stays the day dialog's)",
+      table: { defaultValue: { summary: 'Choose month' } },
+    },
+    currentMonthLabel: {
+      control: 'text',
+      description: '3.29: label of the quick action that shows the current year (month mode; day mode keeps `todayLabel`)',
+      table: { defaultValue: { summary: 'This month' } },
+    },
   },
   parameters: {
     docs: {
@@ -131,6 +159,69 @@ export const FilledStates: Story = {
         <lc-datepicker variant="filled" placeholder="Datum wählen" ariaLabel="Datum (schreibgeschützt)" [readonly]="true"></lc-datepicker>
       </div>`,
   }),
+};
+
+/** Opens the panel of the story's datepicker with a click (focus stays in the field), after ngModel wrote its value. */
+const openByClick: Story['play'] = async ({ canvasElement, viewMode }) => {
+  if (viewMode !== 'story') return;
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  canvasElement.querySelector<HTMLInputElement>('lc-datepicker input')?.click();
+};
+
+/** 3.29 (request 046, regeln row 1): month granularity. */
+export const Month: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.29 (request 046, finance-intelligence rules page, "Gilt ab"): `granularity="month" format="YYYY-MM"` picks a month, so the day does not seem to matter. The panel (opened here) has the same 310 px width as the day calendar: the year with previous/next-year buttons, a "This month" quick action that shows the current year, and twelve months in a 3 × 4 grid, every target at least 44 px high. Choosing July 2026 emits `dateChange` with 1 July 2026 (local midnight); the field shows "2026-07"; typing "2026-07" commits too. Keyboard: ArrowDown, Enter or Space on the closed field open the panel with focus in the grid (ArrowDown also from the open field); arrows move by month and row, PageUp/PageDown by year, Home/End to the first/last month, Enter/Space select, Escape closes, focus returns to the field. Each month is named with its year ("July 2026"); the selected one is `aria-selected` and has an inset ring (its fill alone is 2.78:1 on the dark surface), the current month is `aria-current="date"`.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [DatepickerComponent, FormsModule] },
+    template: `
+      <div style="max-width: 400px;">
+        <lc-datepicker granularity="month" format="YYYY-MM" placeholder="Select a month" ariaLabel="Valid from" [ngModel]="'2026-07'"></lc-datepicker>
+      </div>`,
+  }),
+  play: openByClick,
+};
+
+/** 3.29 (request 046, regeln row 1): month granularity in German, with a range. */
+export const MonthDe: Story = {
+  name: 'Month DE',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.29 (request 046): `locale="de-DE"` names the months („Juli“, read „Juli 2026“), and the story sets every built-in string in German: `previousYearAriaLabel` „Vorheriges Jahr“, `nextYearAriaLabel` „Nächstes Jahr“, `monthDialogAriaLabel` „Monat wählen“, `currentMonthLabel` „Dieser Monat“, `clearAriaLabel` and `placeholder`. `minDate` 1 March 2026 and `maxDate` 28 February 2027 keep a month selectable when any of its days is in range: January and February 2026 are disabled (`aria-disabled`, skipped by the keys), and so is every month after February 2027 behind the next-year button.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [DatepickerComponent, FormsModule] },
+    props: { monthMin: new Date(2026, 2, 1), monthMax: new Date(2027, 1, 28) },
+    template: `
+      <div lang="de" style="max-width: 400px;">
+        <lc-datepicker
+          granularity="month"
+          format="YYYY-MM"
+          locale="de-DE"
+          placeholder="Monat wählen"
+          ariaLabel="Gilt ab"
+          clearAriaLabel="Monat löschen"
+          previousYearAriaLabel="Vorheriges Jahr"
+          nextYearAriaLabel="Nächstes Jahr"
+          monthDialogAriaLabel="Monat wählen"
+          currentMonthLabel="Dieser Monat"
+          [minDate]="monthMin"
+          [maxDate]="monthMax"
+          [ngModel]="'2026-07'"
+        ></lc-datepicker>
+      </div>`,
+  }),
+  play: openByClick,
 };
 
 export const BookingForm: Story = {

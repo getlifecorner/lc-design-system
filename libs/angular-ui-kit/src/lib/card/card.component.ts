@@ -18,6 +18,9 @@ export type CardVariant = 'elevated' | 'outlined' | 'flat' | 'raised' | 'dashed'
 /** Heading level of `lc-card`'s built-in title. */
 export type CardHeadingLevel = 2 | 3 | 4 | 5 | 6;
 
+/** Layout of `lc-card`'s `[card-footer]` slot: `default` (a flex row, end-aligned) or `equal` (children at equal width). */
+export type CardFooterLayout = 'default' | 'equal';
+
 /** Whether a `route` value is a link: `''`, `null` and `undefined` are not. */
 function hasRoute(route: string | readonly unknown[] | null | undefined): boolean {
   return route !== '' && route !== null && route !== undefined;
@@ -34,6 +37,8 @@ function hasRoute(route: string | readonly unknown[] | null | undefined): boolea
  * - Content projection for flexible body content
  * - Link mode (3.24): `href` or `route` make the whole card a real link,
  *   the title stays a heading
+ * - Equal footer (3.29): `footerLayout="equal"` gives two answers of equal
+ *   weight in the `[card-footer]` slot the same width
  *
  * @example
  * ```html
@@ -51,6 +56,15 @@ function hasRoute(route: string | readonly unknown[] | null | undefined): boolea
  *          [route]="['/quellen', 'sap-ist']" [queryParams]="{ ansicht: 'laeufe' }">
  *   ...
  * </lc-card>
+ *
+ * <!-- Two answers of equal weight (3.29): primary answer first -->
+ * <lc-card title="Netflix" variant="outlined" footerLayout="equal">
+ *   ...
+ *   <div card-footer>
+ *     <lc-button variant="outline" size="lg" [fullWidth]="true">Stimmt</lc-button>
+ *     <lc-button variant="outline" size="lg" [fullWidth]="true">Kein Vertrag</lc-button>
+ *   </div>
+ * </lc-card>
  * ```
  */
 @Component({
@@ -60,6 +74,7 @@ function hasRoute(route: string | readonly unknown[] | null | undefined): boolea
   templateUrl: './card.component.html',
   styleUrls: ['./card.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '[class.lc-card--footer-equal]': "footerLayout() === 'equal'" },
 })
 export class CardComponent {
   /**
@@ -195,6 +210,23 @@ export class CardComponent {
    * @default undefined
    */
   queryParams = input<Params | null | undefined>(undefined);
+
+  /**
+   * Layout of the `[card-footer]` slot (3.29, CC-2). `equal`: its children
+   * share the row at equal width once the card is at least 480 px (30rem)
+   * wide, and stack full width, 8 px apart, below that (the card's own width,
+   * at any viewport; long labels wrap inside the buttons, which get the
+   * row's height). For two answers of equal weight, put
+   * `<lc-button variant="outline" size="lg" [fullWidth]="true">` in it,
+   * primary answer first; the card adds layout only (gap, divider and
+   * spacing as `default`) and never restyles the buttons. The card becomes a
+   * size container and takes its parent's full width. Keep the default
+   * `padding` (with `none` the buttons' focus ring is clipped). Works in link
+   * cards (the buttons stay clickable above the link) and in prerendered
+   * HTML (CSS only).
+   * @default 'default'
+   */
+  footerLayout = input<CardFooterLayout>('default');
 
   /**
    * Emitted when a `clickable` card is clicked or activated with Enter or

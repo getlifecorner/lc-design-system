@@ -77,17 +77,18 @@
       #calendarPanel
       class="lc-datepicker-calendar"
       [class.lc-datepicker-calendar--open]="isOpen()"
+      [class.lc-datepicker-calendar--month]="isMonthMode()"
       [id]="inputId + '-calendar'"
       role="dialog"
-      [attr.aria-label]="dialogAriaLabel()"
+      [attr.aria-label]="isMonthMode() ? monthDialogAriaLabel() : dialogAriaLabel()"
     >
-      <!-- Calendar Header -->
+      <!-- Calendar Header (month mode, 3.29: the year and year buttons) -->
       <div class="lc-datepicker-header">
         <button
           type="button"
           class="lc-datepicker-nav-button"
-          (click)="previousMonth()"
-          [attr.aria-label]="previousMonthAriaLabel()"
+          (click)="isMonthMode() ? previousYear() : previousMonth()"
+          [attr.aria-label]="isMonthMode() ? previousYearAriaLabel() : previousMonthAriaLabel()"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path
@@ -98,15 +99,15 @@
           </svg>
         </button>
         
-        <div class="lc-datepicker-month-year" aria-live="polite">
-          {{ currentMonthName() }} {{ currentYear() }}
+        <div class="lc-datepicker-month-year" aria-live="polite" [attr.id]="isMonthMode() ? inputId + '-year' : null">
+          {{ headerTitle() }}
         </div>
-        
+
         <button
           type="button"
           class="lc-datepicker-nav-button"
-          (click)="nextMonth()"
-          [attr.aria-label]="nextMonthAriaLabel()"
+          (click)="isMonthMode() ? nextYear() : nextMonth()"
+          [attr.aria-label]="isMonthMode() ? nextYearAriaLabel() : nextMonthAriaLabel()"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path
@@ -123,38 +124,64 @@
         <button
           type="button"
           class="lc-datepicker-today-button"
-          (click)="goToToday()"
+          (click)="isMonthMode() ? showCurrentYear() : goToToday()"
         >
-          {{ todayLabel() }}
+          {{ isMonthMode() ? currentMonthLabel() : todayLabel() }}
         </button>
       </div>
 
-      <!-- Weekday Headers -->
-      <div class="lc-datepicker-weekdays" aria-hidden="true">
-        @for (day of weekdayLabels(); track $index) {
-          <div class="lc-datepicker-weekday">{{ day }}</div>
-        }
-      </div>
+      @if (isMonthMode()) {
+        <!-- Month grid (3.29): APG grid, one roving tab stop, named by the year title -->
+        <div class="lc-datepicker-months" role="grid" [attr.aria-labelledby]="inputId + '-year'">
+          @for (row of monthRows(); track $index) {
+            <div class="lc-datepicker-month-row" role="row">
+              @for (cell of row; track cell.month) {
+                <div
+                  role="gridcell"
+                  class="lc-datepicker-month"
+                  [class.lc-datepicker-month--current]="cell.current"
+                  [class.lc-datepicker-month--selected]="cell.selected"
+                  [class.lc-datepicker-month--disabled]="cell.disabled"
+                  [attr.tabindex]="cell.month === monthTabStop() ? 0 : -1"
+                  [attr.aria-selected]="cell.selected ? 'true' : null"
+                  [attr.aria-current]="cell.current ? 'date' : null"
+                  [attr.aria-disabled]="cell.disabled ? 'true' : null"
+                  [attr.aria-label]="cell.label"
+                  (click)="selectMonth(cell.month)"
+                  (keydown)="onMonthKeydown($event, cell.month)"
+                >{{ cell.name }}</div>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <!-- Weekday Headers -->
+        <div class="lc-datepicker-weekdays" aria-hidden="true">
+          @for (day of weekdayLabels(); track $index) {
+            <div class="lc-datepicker-weekday">{{ day }}</div>
+          }
+        </div>
 
-      <!-- Calendar Days -->
-      <div class="lc-datepicker-days">
-        @for (date of generateCalendarDays(); track date.getTime()) {
-          <button
-            type="button"
-            class="lc-datepicker-day"
-            [class.lc-datepicker-day--other-month]="!isCurrentMonth(date)"
-            [class.lc-datepicker-day--today]="isToday(date)"
-            [class.lc-datepicker-day--selected]="isSelectedDate(date)"
-            [class.lc-datepicker-day--disabled]="isDateDisabled(date)"
-            [disabled]="isDateDisabled(date)"
-            [attr.aria-current]="isToday(date) ? 'date' : null"
-            [attr.aria-label]="dayAriaLabel(date)"
-            (click)="selectDate(date)"
-          >
-            {{ date.getDate() }}
-          </button>
-        }
-      </div>
+        <!-- Calendar Days -->
+        <div class="lc-datepicker-days">
+          @for (date of generateCalendarDays(); track date.getTime()) {
+            <button
+              type="button"
+              class="lc-datepicker-day"
+              [class.lc-datepicker-day--other-month]="!isCurrentMonth(date)"
+              [class.lc-datepicker-day--today]="isToday(date)"
+              [class.lc-datepicker-day--selected]="isSelectedDate(date)"
+              [class.lc-datepicker-day--disabled]="isDateDisabled(date)"
+              [disabled]="isDateDisabled(date)"
+              [attr.aria-current]="isToday(date) ? 'date' : null"
+              [attr.aria-label]="dayAriaLabel(date)"
+              (click)="selectDate(date)"
+            >
+              {{ date.getDate() }}
+            </button>
+          }
+        </div>
+      }
     </div>
   </ng-template>
 
