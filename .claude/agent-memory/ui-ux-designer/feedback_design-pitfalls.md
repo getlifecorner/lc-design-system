@@ -100,6 +100,8 @@ metadata:
 
 - **045.** Values for an overlay outside the shell (a sibling) can't come from inheritance: use a root DI service (one per Storybook story app), not writes to `<html>` (they leak between docs-page stories). `overflow-y: auto` on a toast stack changes the raster of opened shots (7/8, visually identical; control 8/8 identical) and clips the dark `0 14px 44px` shadow at the padding box. A "wide" mode that widens the whole column makes the header's width unreachable for consumers (CSS can't get 568 inside 928): opt children in with a slot attribute (`[page-wide]`). **Every `@if` / `@else` branch has its own comment anchor (045 r1, my design error):** to keep a default DOM, nest the new branch inside one outer `@if` whose condition covers both (`@if (a || b) { @if (a) {…} @else {…} }`: default pages identical, `a` pages +2 comments). Toast stack padding is rem (32 px at 200 %); bottom stacks order by live level, then append order, so the *oldest* assertive toast sits at the edge. Background story-shots runs die when the reply ends: wait for them inside the turn; two parallel runs can crash on the shared temp dir after the last shot (log complete, exit 1).
 
+- **046.** Four parallel story-shots runs crawl (≈ 50 shots in 30 min each, then killed): run at most 2 at once, one long background run with `timeout: 7200000`, and re-shoot "not rendered within 20 s" stories. `aria-selected` is not allowed on `<button>`: a selectable grid needs focusable `role="gridcell"` elements. Every nested arrow that holds an `await` must itself be `async`, or the measure prints nothing.
+
 **Why:** each of these cost a round trip or would have broken the build.
 
 **How to apply:** name the relevant ones in the design's risk list.

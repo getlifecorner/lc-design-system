@@ -39,6 +39,7 @@ All five are **extensions**; every new input is optional and its default keeps t
 | host class | card | `lc-card--footer-equal` | — | absent | Only with `equal`; in the prerendered HTML (AC-31). |
 
 No new CSS hooks and no new tokens. **Default rendering unchanged:** card, number-input and datepicker add classes only for non-default values (`lc-card--footer-equal`, `number-input--xs|sm|lg`, `lc-datepicker-calendar--month`); new attributes are `[attr.*]` bindings that are `null` by default; the stepper icons bind `[size]` to the same `'sm'`. New `@if` blocks add invisible `<!---->` anchors only: money 1 (`@if (range()) {…} @else if (formatted()) {…}`; the compat regex already allows comments, check-angular-majors l. 321), number-input 2 (visible suffix, spoken unit), the datepicker panel 2 (`@if month {grid} @else {weekdays + days}`). Elements, attributes and text stay equal. Combobox: no template change.
+**Change note (review r1, 2026-11-04, build deviation 1 accepted):** the bound `[size]` drops the static `size="sm"` host attribute of the two stepper `lc-icon`s (Angular sets no attribute for a property binding). No kit selector reads `lc-icon[size]` (grep), icons and the 216 baseline shots are identical; the changelog names it under Compatibility.
 
 ## 3. Anatomy and layout
 
@@ -124,6 +125,7 @@ Forced colours: month focus ring → `Highlight` (own outline); selected `forced
 - **Money:** one `.lc-money__range` (`aria-hidden`, `dir` = locale) with two `.lc-money__amount` (`dir` isolates) and the joint text; one spoken span. Separate the element from adjacent text with a space (as today).
 - **Card:** buttons keep their semantics and order (primary first = DOM first); link cards: the existing `:where(.card-linked … button …)` lift keeps them above the overlay.
 - Reduced motion: no new transition (the panel's existing one).
+- **Change note (review r1, 2026-11-04, build deviation 2 accepted):** month mode, Enter in the open field closes the panel when a month is selected and emits nothing (the month is already committed by the grid or by typing; day mode's re-commit would emit a duplicate); no selection → nothing. §6 had left this key open.
 
 ## 7. Texts
 

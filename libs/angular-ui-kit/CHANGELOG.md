@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.29.0] - 2026-11-04
+
+A month picker, a combobox you can start and reset, a number field with a locale, a unit and a 44 px size, a money range in one element, and equal-width card footer buttons (finance-intelligence rules page, rows 1 to 4; life-os contract discovery, CC-1 and CC-2). New optional inputs, a model, types and a function; no API breaks.
+
+### Added
+
+- **`lc-datepicker` `granularity="month"`** (finance-intelligence rules page "Gilt ab", row 1; type `DatepickerGranularity`): picks a month, so the day no longer seems to matter. A 3 × 4 month grid in the same 310 × 350 px panel as the day calendar (fits 360 px), with the year, previous/next-year buttons and a "This month" quick action, all 44 px; months 86.67 × 44 px, named with their year („Juli 2026“, `locale`). `dateChange` and the forms value are the 1st of the month at local midnight; `format="YYYY-MM"` shows „2026-07“, and typing „2026-07“ commits. Keyboard: arrows by month and row, PageUp/PageDown by year, Home/End, Enter/Space select, Escape closes; one tab stop. `minDate`/`maxDate` keep a month with any day in range; a `disabledDates` entry disables its month. The selected month has a 2 px inset ring besides the fill (the fill is 2.78:1 on the dark surface). New labels `previousYearAriaLabel`, `nextYearAriaLabel`, `monthDialogAriaLabel`, `currentMonthLabel`. Stories *Month*, *Month DE*.
+- **`lc-combobox` `[(selectedValue)]`** (rules page, row 2): the `value` string of the chosen option, two-way. The field starts with that option's label, also when `options` arrive later; the page sets or resets it (also to `null`) without events; each user choice or clear emits `selectedValueChange`, next to the unchanged `valueChange`. Single mode. Story *Starts with a choice*.
+- **`lc-number-input` `locale`, `suffix`, `suffixAriaLabel`, `size`** (rules page, rows 3 and 4; type `NumberInputSize`): `locale="de-DE"` shows „7,5“ (typing accepts `,` and `.` in every locale; the model stays a number; blur clamps to `min`/`max`). `suffix="%"` shows „7,5 %“ (not typed, not in the model), read once as „Prozent“ with `suffixAriaLabel`. `size`: xs 24, sm 32, md 40 (default, unchanged), lg 44 px: field 72 × 44 and both steppers 44 × 44. Stories *Locale DE with suffix %*, *Sizes*.
+- **`lc-money` `rangeToMinor`, `rangeSeparatorLabel` and `formatMoneyRange()`** (life-os contract discovery, CC-1; type `MoneyRangeFormatOptions`): „9,99 € bis 12,99 €“ / "€9.99 to €12.99" in one element, read once („9,99 Euro bis 12,99 Euro“); the word comes from the locale („bis“ for German, "to" otherwise) or the input. The range wraps only before the word, never inside an amount (160 px: two lines, no overflow); each amount stays a `dir` isolate. Shown as given; an invalid `rangeToMinor` shows the single amount with a dev warning. Story *Range*.
+- **`lc-card` `footerLayout="equal"`** (life-os contract discovery, CC-2; type `CardFooterLayout`): two answers of equal weight in `[card-footer]` get the same width: stacked full width 8 px apart below a 480 px card, side by side from 480 px (the card's width, any viewport: 347/475/603 px columns in 768/1024/1280 px pages). With `lc-button variant="outline" size="lg" [fullWidth]="true"` they are 48.5 px high; a long German label wraps inside its button and both take the row's height. Buttons stay clickable in link cards; CSS only, also in prerendered HTML. Stories *Equal Footer*, *(German)*, *(link card)*.
+
+### Compatibility
+
+- New optional inputs, a model, types and a function only; no API breaks. Defaults render as in 3.28: 216/216 at-rest shots of the five components' stories and the open day calendar are hash-identical. DOM: comment anchors only (money, number-input, datepicker panel); the number-input stepper icons lose a static `size="sm"` host attribute (same icons).
+- A number-input control under a label wider than itself now stays content-wide (was stretched to the label's width).
+- `footerLayout="equal"` makes the card a size container that takes its parent's full width.
+- Checked on Angular 22 (AOT, strictTemplates, prerender).
+
+### Known
+
+- The datepicker clear button is 20 × 20 px (axe `target-size`, WCAG 2.5.8), in day and month mode, and the selected day's fill is 2.78:1 on the dark surface in day mode (month mode adds a ring). Both are not new and are queued for the next release. Day-mode panel targets (nav 32, today 31, days 36 px) stay below 44 px.
+
 ## [3.28.0] - 2026-11-03
 
 Toasts clear the app shell's header and floating bar, every page can keep the same right column, and one page can run a table over it (life-os app shell round 11: AS-34, AS-35, AS-36). New optional inputs and CSS hooks; no API breaks.
