@@ -2,6 +2,7 @@
 
 - **Status:** ready
 - **Spec:** [spec.md](spec.md) — AC-1 … AC-12. Built on main `bbd1b74` (3.29.0); every value below was measured on a CSS prototype in that build (`tmp/story-shots/047/proto-*`).
+- **Change note (review r1, 2026-11-04):** three values were wrong and are corrected from the build (`review.md` deviations 1–3): `.lc-datepicker-calendar` is `position: relative` (in the CDK pane's flow; push needs the pane's size), so a panel without room below opens above the field; the pushed panel is at x 8 (*Day Panel*) or end-aligned at x 2 (*Default*, field ending at 344), not x 10, because CDK 22.2 checks the fit against `[0, vw − 16]`; the 158 px compound label takes 2 lines (42), not 3 (63). 200 % text: 360 × 626 at x 8.
 
 ## 1. Approach
 
@@ -48,7 +49,7 @@ Datepicker md (40 high), value set              Combobox lg (frame 46, inner 44)
  past the frame), right edge = icon left edge     = input end … inner border edge
 ```
 
-Day panel below 1024 px (Day Panel story, field at x 24): 342 × 448 (measured), pushed to x 10, 8 px from the right edge (computed from CDK push with an 8 px viewport margin; push was not prototyped). Without push it would end at 366 (lc-app-page x 24) or 383 (field in a card, x 41).
+Day panel below 1024 px (Day Panel story, field at x 24): 342 × 448 (measured), pushed to x 8, 10 px from the right edge (r1: measured; the design's x 10 was computed). A field ending at 344 (16 px page padding) gets it end-aligned at x 2 without push. Without push it would end at 366 (lc-app-page x 24) or 383 (field in a card, x 41).
 
 ```
 ┌ pad 16 ───────────────────────────────────┐
@@ -88,7 +89,7 @@ The new `.lc-combobox__input-wrapper` rules go into the existing block or after 
 | disabled / read-only | not rendered (unchanged) | rendered disabled (unchanged), not focusable | GrayText look, `opacity .5` (unchanged) | colour unchanged |
 | error | unchanged | unchanged | — | unchanged |
 | selected / today | — | — | fill + inset ring; today tint `--color-primary-50` | — |
-| overflow | text runs under the 20 px (md) / 12 px (lg) left of the × only in fields narrower than ≈ 180 px (a `YYYY-MM-DD` value is ≈ 90 px) | a long value ends 12 px before the hit area (lg) | 320 px: cells 38.56 | 30-char compound breaks with a hyphen in a 158 px column (3 lines, 63 high) |
+| overflow | text runs under the 20 px (md) / 12 px (lg) left of the × only in fields narrower than ≈ 180 px (a `YYYY-MM-DD` value is ≈ 90 px) | a long value ends 12 px before the hit area (lg) | 320 px: cells 38.56; no room below: the panel opens above (gap 0, as lc-combobox) | 30-char compound breaks with a hyphen in a 158 px column (2 lines, 42 high; r1) |
 | loading | — | spinner replaces the × (no hit area, no margin) | — | — |
 
 ## 5. Theming
@@ -148,15 +149,16 @@ Measures: `tmp/story-shots/047/proto-hit-measure.js` (values + 4-way `elementFro
 | AC-4 | measure + unit test | lg input 44 high (y 287–331), frame 46; xs–md inputs 24/28/32, frames 34/38/42; spec: `mousedown` (defaultPrevented) + `click` on the wrapper focuses the input for xs/sm/md/lg; not when disabled; clicking the input unchanged |
 | AC-5 | unit test + With Label | `<label for>` = input `id`, text, no `aria-label` while `label` is set (ariaLabel also set), accessible name = label; month mode too |
 | AC-6 | unit test + compare | `label` `''` → no `label` element (count 0); 84/84 identical vs `047/baseline` |
-| AC-7 | Label (DE), Clear Targets (DE) at 360 | „Gilt ab“ 1 line, label width ≤ field; compound 3 lines with hyphen in the 158 column; `scrollWidth − clientWidth` 0 on every label |
+| AC-7 | Label (DE), Clear Targets (DE) at 360 | „Gilt ab“ 1 line, label width ≤ field; compound 2 lines with hyphen in the 158 column (r1); `scrollWidth − clientWidth` 0 on every label |
 | AC-8 | unit tests | Tab: field → × (both); Enter/Space on × → value `null`, focus = field; names = `clearAriaLabel`; existing specs unedited |
-| AC-9 | Day Panel 320/360/1024/1280 | 360: panel 342 × 448 at x 10 (right 352), cells/nav 44, today 65.6 × 44; 320: 304 wide, cells 38.56; 1024/1280: 310 × 395, `baseline-open` 4/4 identical, 360 2/2 differ (intended) |
+| AC-9 | Day Panel 320/360/1024/1280 | 360: panel 342 × 448 at x 8 (right 350; r1), cells/nav 44, today 65.6 × 44; 320: 304 wide, cells 38.56; 1024/1280: 310 × 395, `baseline-open` 4/4 identical, 360 2/2 differ (intended) |
 | AC-10 | unit test (month spec) | type „2026-1“ in the open month field with July 2026 selected, Enter → text „2026-07“, panel closed; with no selection Enter keeps the text (as day mode) |
 | AC-11 | `--compare=tmp/story-shots/047/baseline` (21 stories, 360/1280 L/D, 800 ms wait) + `baseline-open` (`open-day-measure.js`) | 84/84 identical; open 1024/1280 identical |
 | AC-12 | compat probe: `<lc-datepicker label="Gilt ab" granularity="month" format="YYYY-MM">` and `<lc-combobox size="lg" label="Konto">` | `/<label[^>]*for="lc-datepicker-[0-9]+"[^>]*>\s*Gilt ab\s*<\/label>/`, `/class="lc-combobox lc-combobox--lg/` and `/class="lc-combobox__input-wrapper"/` in the prerendered HTML |
 
 **Known limits** (for the changelog, backlog rows):
-- 200 % text at 360: the day panel is 403 px wide (3.29: 618) because the header holds two 88 px buttons and the title; it still overflows narrow phones.
+- 200 % text at 360: the day panel is 360 × 626 at x 8 (r1; 3.29: 618 wide), 8 px past the right edge inside its padding; the title wraps and the day cells are 37 px.
+- The panel can sit 2 px from the left edge where an end-aligned position fits by the CDK's `[0, vw − 16]` check (field ending 8–16 px from the right edge).
 - The md datepicker hit area reaches 2 px above and below the 40 px frame; an `overflow: hidden` ancestor flush with the field cuts it to 44 × 40.
 - With push, a panel that fits neither below nor above now covers the field instead of being cut off.
 

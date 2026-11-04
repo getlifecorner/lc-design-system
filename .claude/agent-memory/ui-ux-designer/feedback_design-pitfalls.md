@@ -102,6 +102,8 @@ metadata:
 
 - **046.** Four parallel story-shots runs crawl (≈ 50 shots in 30 min each, then killed): run at most 2 at once, one long background run with `timeout: 7200000`, and re-shoot "not rendered within 20 s" stories. `aria-selected` is not allowed on `<button>`: a selectable grid needs focusable `role="gridcell"` elements. Every nested arrow that holds an `await` must itself be `async`, or the measure prints nothing.
 
+- **047.** A CDK connected overlay without `cdkConnectedOverlayPush` is clipped when neither start nor end alignment fits: growing a panel (310 → 342 at 360) breaks fields at x 24 (app-page) and x 41 (cards), so a wider panel needs push + `viewportMargin`. A hit area must not cover a neighbour: stop it at the decorative icon (it still opens the field) and shift the control instead of overlapping the input (combobox lg `margin-inline-start`). **047 r1 (my design errors):** push does nothing on an `position: absolute` panel (the CDK pane measures 0 × 0): the panel must be in the pane's flow, which also turns on flip-above (gap 0 there, since a `margin-top` gap sits inside the pane). CDK 22.2 checks the fit against `[0, vw − 2 × margin]` and pushes only when nothing fits, so a pushed x can't be computed from the margin: prototype push in the browser. With the pane `max-width: 100%`, an over-wide panel shrinks to the viewport (200 %: 360, title wraps).
+
 **Why:** each of these cost a round trip or would have broken the build.
 
 **How to apply:** name the relevant ones in the design's risk list.

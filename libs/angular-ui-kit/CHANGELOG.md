@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.30.0] - 2026-11-04
+
+Clear buttons you can hit, a 44 px large combobox, a visible datepicker label, a selected day you can see in dark, and touch-sized day panels (finance-intelligence rules page, rows 5 to 7; follow-ups 046-f1, 046-f2, 046-n3, 046-n4). One new optional input; no API breaks.
+
+### Added
+
+- **`lc-datepicker` `label`** (rules page „Gilt ab“, row 7): a visible label above the field, a `<label for>` in day and month mode, styled like lc-combobox's and lc-number-input's (14 px, medium, 6 px above the field). It names the field, so `ariaLabel` is ignored while it is set; a click on it focuses the field and opens the calendar. Default `''`: no label element, as before. Long German compounds hyphenate instead of overflowing (2 lines, 42 px, in a 158 px column). Stories *With Label*, *Label (DE)*.
+
+### Fixed
+
+- **`lc-datepicker` clear button** (046-f1, WCAG 2.5.8): 24 × 24 px in every size (was 20 × 20), with a 44 × 44 px hit area in md and lg that ends at the calendar icon; glyph, hover fill, focus ring and field heights (24/32/40/44 px) unchanged. After a clear, focus returns to the field (it fell to the page). Story *Clear Targets*.
+- **`lc-datepicker` selected day** (046-f2, WCAG 1.4.11): the inset 2 px ring of the month cells, in both themes: 4.37:1 on the light panel, 9.13:1 on the dark one (the dark fill alone is 2.78:1); text 6.21:1. Forced colours: selected `Highlight`, today underlined, disabled `GrayText`.
+- **`lc-datepicker` day panel below 1024 px** (046-n3): month buttons 44 × 44, "Today" 44 high, days 44 × 44 without gaps: 342 × 448 px at 360 px (304 px with 38.56 px days at 320). The panel is pushed into the viewport instead of running past it. From 1024 px unchanged (310 × 395). Story *Day Panel*.
+- **`lc-datepicker` month mode, Enter** (046-n4): Enter in the open field after half-typed text („2026-1“) shows the selected month again („2026-07“) and closes, as in day mode.
+- **`lc-combobox` clear button** (rules page, row 5): 24 × 24 px in every size (was 20 × 20), 44 × 44 px hit area at `size="lg"`; now in the tab order (Enter or Space clears, focus returns to the input), with a 2 px focus ring (4.18:1 light, 7.58:1 dark). Story *Clear Targets (DE)*.
+- **`lc-combobox` `size="lg"` input** (rules page, row 6): 44 px high (was 36) inside the unchanged 46 px frame; a click anywhere on the frame focuses the input, in every size.
+
+### Compatibility
+
+- One new optional input; no API breaks. Defaults render as in 3.29: 84/84 at-rest shots of both components' stories and the open day panel at 1024 and 1280 px are hash-identical. DOM: one comment anchor in lc-datepicker; the combobox clear button lost `tabindex="-1"`.
+- lc-combobox: the clear button is one more tab stop while a value is selected (as lc-select and lc-datepicker); at `lg` the input is 12 px narrower while a value is selected.
+- lc-datepicker: the panel now takes its size in the overlay, so where it does not fit below the field it opens above it, and it is pushed into the viewport; a panel that fits neither covers the field.
+- Checked on Angular 22 (AOT, strictTemplates, prerender).
+
+### Known
+
+- At 200 % text and 360 px the day panel is 360 × 626 px (3.29: 618 wide) at x 8 and still runs 8 px past the right edge inside its padding; the title wraps to 2 lines and the days are 37.14 px.
+- A field whose end lies 8 to 16 px from the right edge (a 328 px field at x 16 on a 360 px page) fits by the overlay's own check, so the panel is end-aligned at x 2 and not pushed to 8. Fields in `lc-app-page` (x 24) get x 8.
+- The md datepicker hit area reaches 2 px above and below the 40 px field; a flush `overflow: hidden` ancestor cuts it to 44 × 40.
+- Day buttons 1 to 9 have names like "Wed Jul 01 2026" that do not contain the visible "1" (axe `label-content-name-mismatch`, WCAG 2.5.3); not new, queued.
+- The *Label (DE)* story description says three lines; the compound label takes two.
+
 ## [3.29.0] - 2026-11-04
 
 A month picker, a combobox you can start and reset, a number field with a locale, a unit and a 44 px size, a money range in one element, and equal-width card footer buttons (finance-intelligence rules page, rows 1 to 4; life-os contract discovery, CC-1 and CC-2). New optional inputs, a model, types and a function; no API breaks.
