@@ -16,5 +16,4 @@ Open findings that don't need a request of their own: nits, known limits, wordin
 | 047-n1 | datepicker | A day panel opened above the field has gap 0 instead of 4 px: the 4 px `margin-top` sits inside the pane (lc-combobox's list does the same). | 047 review r1, nit 3 |
 | 047-n2 | datepicker | *Default* open at 360 (field 16–344): the panel is end-aligned at x 2, not pushed to 8, because the CDK fit check ignores the left margin; fields at x 24 get x 8. | 047 review r1, nit 4 |
 | 047-n3 | datepicker | At 200 % text and 360 px the day panel is 360 × 626 at x 8, 8 px past the right edge inside its padding (3.29: 618 wide). | 047 review r1, nit 5 |
-| 047-n4 | datepicker | The `ariaLabel` JSDoc has no `@default` (pre-existing; CLAUDE.md asks for one on every input). | 047 review r1, nit 6 |
 | 045-n4 | app-shell, toast-outlet | Known limit: at 360 px a `top-*` toast (y 72) covers a title placed right under the header (h1 at y 80); documented, `bottom-*` recommended. | 045 review r1, nit 4 |

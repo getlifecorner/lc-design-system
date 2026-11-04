@@ -250,7 +250,8 @@ describe('Translatable labels (i18n)', () => {
         'Next month',
       ]);
       expect(text(overlay(), '.lc-datepicker-today-button')).toBe('Today');
-      expect(attr(overlay(), '.lc-datepicker-day--selected')).toBe(`${new Date(2026, 9, 10).toDateString()}, selected`);
+      // 3.30.1 (047-f2): the long en-US date, which contains the visible day number (was `toDateString()`).
+      expect(attr(overlay(), '.lc-datepicker-day--selected')).toBe('Saturday, October 10, 2026, selected');
       // October 2026 starts on a Thursday: four days of September lead the grid.
       expect((overlay().querySelector('.lc-datepicker-day') as HTMLElement).textContent?.trim()).toBe('27');
       f.componentInstance.close();

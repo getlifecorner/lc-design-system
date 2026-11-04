@@ -128,6 +128,7 @@ export class DatepickerComponent implements ControlValueAccessor {
 
   /**
    * ARIA label for accessibility. Ignored while `label` is set.
+   * @default undefined
    */
   readonly ariaLabel = input<string | undefined>(undefined);
 
@@ -164,7 +165,12 @@ export class DatepickerComponent implements ControlValueAccessor {
    */
   readonly disableWeekends = input<boolean>(false);
 
-  /** BCP 47 locale for month and weekday names and the day buttons' accessible names (e.g. `'de-DE'`). Empty keeps the built-in English names. */
+  /**
+   * BCP 47 locale for month and weekday names and the day buttons' accessible
+   * names (e.g. `'de-DE'`). Empty keeps the built-in English names; the days
+   * are then named in `en-US` ("Wednesday, July 1, 2026").
+   * @default ''
+   */
   readonly locale = input('');
 
   /** First column of the grid: 0 Sunday (default) … 6 Saturday — 1 for Monday. */
@@ -523,12 +529,18 @@ export class DatepickerComponent implements ControlValueAccessor {
     return this.isSameDate(date, today);
   }
 
-  /** Accessible name of a day button: the full date, plus `selectedAriaLabel` when selected. */
+  /**
+   * Accessible name of a day button: the long `Intl` date in `locale`, else
+   * `en-US` (3.30.1, 047-f2: contains the visible day number, WCAG 2.5.3),
+   * plus `selectedAriaLabel` when selected.
+   */
   protected dayAriaLabel(date: Date): string {
-    const locale = this.locale();
-    const name = locale
-      ? date.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-      : date.toDateString();
+    const name = date.toLocaleDateString(this.locale() || 'en-US', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
     return this.isSelectedDate(date) ? `${name}, ${this.selectedAriaLabel()}` : name;
   }
 

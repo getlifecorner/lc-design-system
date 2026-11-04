@@ -257,7 +257,7 @@ export const LabelDe: Story = {
     docs: {
       description: {
         story:
-          '3.30 (request 047, finance-intelligence rules page, row 7): the field „Gilt ab“ (`granularity="month"`) and „Buchungsdatum“ (day mode) with visible German labels; at 360 px „Gilt ab“ is one 21 px line over a 328 px field. In the two-column row of `size="sm"` fields (158 px each at 360 px), „Leistungsverrechnungsschlüssel ab“ breaks with a hyphen over three lines (63 px) instead of overflowing. The clear buttons are named „Monat löschen“ and „Datum löschen“.',
+          '3.30 (request 047, finance-intelligence rules page, row 7): the field „Gilt ab“ (`granularity="month"`) and „Buchungsdatum“ (day mode) with visible German labels; at 360 px „Gilt ab“ is one 21 px line over a 328 px field. In the two-column row of `size="sm"` fields (158 px each at 360 px), „Leistungsverrechnungsschlüssel ab“ breaks with a hyphen over two lines (42 px) instead of overflowing. The clear buttons are named „Monat löschen“ and „Datum löschen“. The open panel of „Buchungsdatum“ has German texts only (3.30.1): „Heute“, the dialog „Datum wählen“, „Vorheriger Monat“ and „Nächster Monat“, and the selected day is named „Mittwoch, 4. November 2026, ausgewählt“.',
       },
     },
   },
@@ -279,6 +279,11 @@ export const LabelDe: Story = {
           locale="de-DE"
           placeholder="Datum wählen"
           clearAriaLabel="Datum löschen"
+          todayLabel="Heute"
+          selectedAriaLabel="ausgewählt"
+          dialogAriaLabel="Datum wählen"
+          previousMonthAriaLabel="Vorheriger Monat"
+          nextMonthAriaLabel="Nächster Monat"
           helperText="Nur Werktage"
           [ngModel]="'2026-11-04'"
         ></lc-datepicker>
@@ -322,7 +327,7 @@ export const DayPanel: Story = {
     docs: {
       description: {
         story:
-          '3.30 (request 047): the selected day has the inset 2 px `--color-primary-500` ring of the month cells (follow-up 046-f2): 4.37:1 on the light panel, 9.13:1 on the dark one, where the fill alone is 2.78:1; its text stays 6.21:1 on the fill. Below 1024 px (follow-up 046-n3) every target is 44 px: the month buttons 44 × 44, "Today" 44 high and the days 44 × 44 without gaps, so the panel is 342 × 448 px at 360 px and is pushed into the viewport, 8 px from its left edge here (at 320 px the days are 38.56 px). From 1024 px the panel keeps its 310 × 395 px. The wrapper puts the field at x 24, as in lc-app-page.',
+          '3.30 (request 047): the selected day has the inset 2 px `--color-primary-500` ring of the month cells (follow-up 046-f2): 4.37:1 on the light panel, 9.13:1 on the dark one, where the fill alone is 2.78:1; its text stays 6.21:1 on the fill. Below 1024 px (follow-up 046-n3) every target is 44 px: the month buttons 44 × 44, "Today" 44 high and the days 44 × 44 without gaps, so the panel is 342 × 448 px at 360 px and is pushed into the viewport, 8 px from its left edge here (at 320 px the days are 38.56 px). From 1024 px the panel keeps its 310 × 395 px. The wrapper puts the field at x 24, as in lc-app-page. Without `locale`, each day is named with its long English date ("Wednesday, July 15, 2026, selected"), so the visible number is part of the name (WCAG 2.5.3, 3.30.1).',
       },
     },
   },
