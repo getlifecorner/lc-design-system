@@ -3,6 +3,7 @@
 - **Status:** ready
 - **Spec:** [spec.md](spec.md) — AC-1 … AC-9
 - **Measured on:** main `d259b30` (3.30.0), Storybook rebuilt 2026-11-04, Chromium headless, axe 4.14.0
+- **Change note (review r1, 2026-11-04):** §9 AC-8 said no existing assertion pins `toDateString()`; the grep covered only `datepicker.component.spec.ts` and missed `i18n-labels.spec.ts` l.253. Corrected; the developer's change there is within AC-8.
 
 ## 1. Approach
 
@@ -118,6 +119,6 @@ Baselines: `tmp/story-shots/048/baseline` (all 16 datepicker stories, 360/1280 L
 | AC-5 | Same run with `--compare=tmp/story-shots/048/baseline-open`, plus the rects in its measure | *Default* and *Day Panel*: 8/8 identical; *Label (DE)*: 4 differ only by „Heute“ in the today button; panel/grid/cell rects as in §3 (360: 342 × 448, cells 44; 1280: 310 × 395, cells 36) |
 | AC-6 | Jest (existing focus/tabindex/`aria-current` cases) | unchanged and green |
 | AC-7 | grep the story; `label-measure.js` on `form-datepicker--label-de` at 360 light | text says "two lines (42 px)"; measured 158 × 42, 21 px lines |
-| AC-8 | `git diff` of `datepicker.component.spec.ts`; full suite. No existing assertion pins `toDateString()` (grep: l.491 only checks truthy names) | no existing assertion changed; no input added or removed |
+| AC-8 | `git diff` of `datepicker.component.spec.ts`; full suite. One existing assertion pins `toDateString()`: `i18n-labels.spec.ts` l.253 (`…toDateString()}, selected`); it changes to "Saturday, October 10, 2026, selected", as AC-8 allows. `datepicker.component.spec.ts` l.491 only checks truthy names | `datepicker.component.spec.ts` unchanged; one pinned assertion changed and named in `build.md`; no input added or removed |
 | AC-9 | grep `@default undefined` above `ariaLabel`; `npm run test:tools`; the manifest's `ariaLabel` default | JSDoc tag present; manifest default `undefined` |
 | all at rest | `story-shots … --compare=tmp/story-shots/048/baseline` (16 stories, 360/1280 L/D, same measure) | 64/64 identical (descriptions are docs-only; the new DE strings render only in the overlay). *Month* / *Month DE* mark the current month: compare in November 2026 |

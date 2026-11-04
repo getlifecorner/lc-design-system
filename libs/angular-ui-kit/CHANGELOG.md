@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.30.1] - 2026-11-04
+
+Day buttons whose names contain the number you see, and a corrected story text (follow-ups 047-f1, 047-f2). No API breaks.
+
+### Fixed
+
+- **`lc-datepicker` day names** (047-f2, WCAG 2.5.3): without `locale`, each day button is named with its long English date, "Wednesday, July 1, 2026" (was "Wed Jul 01 2026", read as abbreviations, and for days 1 to 9 not containing the visible "1"), plus ", selected" on the selected day. The same `Intl` long form as with `locale` (`de-DE`: „Mittwoch, 1. Juli 2026“, unchanged), with `en-US` as the fallback, as the month cells already use. axe `label-content-name-mismatch`: 0 on the open panel (3.30.0: 17 day buttons per July 2026 panel). Story *Day Panel*.
+- **`lc-datepicker` *Label (DE)* story** (047-f1, also served by the MCP): „Leistungsverrechnungsschlüssel ab“ takes two lines (42 px) in the 158 px field at 360 px, not three (63 px). The „Buchungsdatum“ field's open panel is German too („Heute“, „Datum wählen“, „Vorheriger Monat“, „Nächster Monat“, „ausgewählt“).
+- `lc-datepicker` `ariaLabel`: its JSDoc (and the MCP) now states the default, `undefined`.
+
+### Compatibility
+
+- No API breaks. Only the day buttons' `aria-label` text changed; if a test of yours pins "Wed Jul 01 2026", expect "Wednesday, July 1, 2026". Layout unchanged: the open panel keeps 342 × 448 px at 360 px and 310 × 395 px at 1280 px, and all 64 at-rest shots of the datepicker stories are hash-identical to 3.30.0.
+
+### Known
+
+- The overlay panels of `lc-datepicker` (and other overlay components with `locale`) sit under `<body>`, outside the host's language context, so a German panel is announced with the page's `lang` (WCAG 3.1.2). Not fixed in this patch.
+
 ## [3.30.0] - 2026-11-04
 
 Clear buttons you can hit, a 44 px large combobox, a visible datepicker label, a selected day you can see in dark, and touch-sized day panels (finance-intelligence rules page, rows 5 to 7; follow-ups 046-f1, 046-f2, 046-n3, 046-n4). One new optional input; no API breaks.
