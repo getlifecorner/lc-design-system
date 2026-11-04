@@ -64,6 +64,8 @@ Start with `next: spec-writer`, task "Write the spec for this request". Then rep
 
 **Follow-ups first** (released, or stopped after a review). Findings that need fixing go back into the pipeline without asking the owner (`CLAUDE.md` → *Follow-ups*). Take the rows routed `queue` in *Open items* of `release.md` (in a stopped run, the open `should-fix` findings in `review.md`) and skip those an open request or the inbox already covers. Write the rest as one item into the inbox (format in *Collect*, `from: owner`, `dir:` this repository), with the requirement on one line: `Follow-ups <IDs> of request <NNN>: <one clause each>; details in requests/<NNN>-<slug>/<document> <section>.` It runs with the next bundle. Name the IDs in your final message; the `backlog` rows are already in `requests/BACKLOG.md`.
 
+**Commit the log** (every outcome). The last handoff row comes after the release commit, so it would stay uncommitted: stage `requests/<NNN>-<slug>/log.md` and, if changed, `requests/README.md` by name, and commit them on the branch the run ends on with `chore(requests): log <NNN> (<outcome>)`. Don't push it: a push of `main` runs CI and the docs deploy, and the next release push carries it.
+
 Free the lock in every outcome (released, answered, stopped): interactive, `rm tmp/lc-request/lock` if it names your pid; headless, it is free once the process ends. The next queued call then starts by itself.
 
 Your final message is what the requester receives. In headless runs it is all the calling project gets, so it must stand on its own:
