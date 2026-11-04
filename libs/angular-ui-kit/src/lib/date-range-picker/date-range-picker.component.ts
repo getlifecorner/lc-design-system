@@ -16,6 +16,7 @@ import {
 import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
 import { ICON_CALENDAR } from '@lifecorner/angular-ui-kit/icons';
+import { closestLang } from '@lifecorner/angular-ui-kit/internal/a11y';
 
 export interface DateRange {
   start: Date | null;
@@ -59,7 +60,11 @@ export class DateRangePickerComponent implements ControlValueAccessor {
   readonly disabled = input(false);
   readonly minDate = input<Date | null>(null);
   readonly maxDate = input<Date | null>(null);
-  /** BCP 47 locale for the displayed dates, month title and weekday headers */
+  /**
+   * BCP 47 locale for the displayed dates, month title and weekday headers.
+   * Also the open panel's `lang` when the host has no `[lang]` ancestor (3.30.2).
+   * @default 'de-DE'
+   */
   readonly locale = input('de-DE');
 
   /** Accessible name of the clear button. */
@@ -84,6 +89,15 @@ export class DateRangePickerComponent implements ControlValueAccessor {
 
   /** Effective disabled state: `disabled` input OR form control disabled */
   protected readonly isDisabled = computed(() => this.disabled() || this.formDisabled());
+
+  /**
+   * `lang` of the open panel (3.30.2, WCAG 3.1.2). The panel sits in the host
+   * and inherits a `[lang]` ancestor through the DOM, so it gets one only
+   * without any: then `locale`. `null` while closed.
+   */
+  protected readonly panelLang = computed(() =>
+    this.isOpen() && closestLang(this.elRef.nativeElement) === null ? this.locale() || null : null
+  );
 
   private onChange: (val: DateRange) => void = () => { /* set by registerOnChange */ };
   private onTouched: () => void = () => { /* set by registerOnTouched */ };

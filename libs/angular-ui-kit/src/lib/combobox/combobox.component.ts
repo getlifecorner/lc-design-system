@@ -24,6 +24,7 @@ import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/ico
 import { ICON_PLUS, ICON_X_MARK } from '@lifecorner/angular-ui-kit/icons';
 import { SpinnerComponent } from '@lifecorner/angular-ui-kit/spinner';
 import { ChipComponent } from '@lifecorner/angular-ui-kit/chip';
+import { closestLang } from '@lifecorner/angular-ui-kit/internal/a11y';
 
 export interface ComboboxOption {
   value: string;
@@ -44,7 +45,8 @@ export type ComboboxSize = 'xs' | 'sm' | 'md' | 'lg';
  * Supports free-text input with sync/async option suggestions,
  * single/multiple selection, create new entries, and keyboard navigation.
  * The suggestion list is rendered in a CDK overlay so it is never clipped
- * by `overflow: hidden` ancestors (cards, modals, table cells).
+ * by `overflow: hidden` ancestors (cards, modals, table cells). The dropdown
+ * takes the `lang` of the host's closest `[lang]` (3.30.2).
  *
  * The selection is two-way bindable by an option's `value` string
  * (`[(selectedValue)]`, single mode), next to the `valueChange` output with
@@ -176,6 +178,13 @@ export class ComboboxComponent implements ControlValueAccessor {
 
   /** Effective disabled state: `disabled` input OR form control disabled */
   protected readonly isDisabled = computed(() => this.disabled() || this.formDisabled());
+
+  /**
+   * `lang` of the open dropdown (3.30.2, WCAG 3.1.2): the overlay renders under
+   * `<body>`, so it takes the host's closest `[lang]`, else none. Read at every
+   * opening; `null` while closed, so the server never reads the DOM.
+   */
+  protected readonly panelLang = computed(() => (this.isOpen() ? closestLang(this.elRef.nativeElement) : null));
 
   /** Selected values */
   protected selectedSingle = signal<ComboboxOption | null>(null);

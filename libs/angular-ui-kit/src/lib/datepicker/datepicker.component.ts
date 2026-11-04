@@ -16,6 +16,7 @@ import {
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { OverlayModule } from '@angular/cdk/overlay';
+import { closestLang } from '@lifecorner/angular-ui-kit/internal/a11y';
 
 export type DateValue = Date | string | null;
 
@@ -168,7 +169,8 @@ export class DatepickerComponent implements ControlValueAccessor {
   /**
    * BCP 47 locale for month and weekday names and the day buttons' accessible
    * names (e.g. `'de-DE'`). Empty keeps the built-in English names; the days
-   * are then named in `en-US` ("Wednesday, July 1, 2026").
+   * are then named in `en-US` ("Wednesday, July 1, 2026"). Also the open
+   * panel's `lang` when the host has no `[lang]` ancestor (3.30.2).
    * @default ''
    */
   readonly locale = input('');
@@ -264,6 +266,15 @@ export class DatepickerComponent implements ControlValueAccessor {
 
   /** Month granularity (3.29). */
   protected readonly isMonthMode = computed(() => this.granularity() === 'month');
+
+  /**
+   * `lang` of the open panel (3.30.2, WCAG 3.1.2): the overlay renders under
+   * `<body>`, so it takes the host's closest `[lang]`, else `locale`, else none.
+   * Read at every opening; `null` while closed, so the server never reads the DOM.
+   */
+  protected readonly panelLang = computed(() =>
+    this.isOpen() ? (closestLang(this.host.nativeElement) ?? (this.locale() || null)) : null
+  );
 
   // Computed values
   readonly formattedDate = computed(() => {
@@ -398,6 +409,7 @@ export class DatepickerComponent implements ControlValueAccessor {
   // Private properties
   private readonly document = inject(DOCUMENT);
   private readonly injector = inject(Injector);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   private onChange: (value: Date | null) => void = () => {};
   // eslint-disable-next-line @typescript-eslint/no-empty-function

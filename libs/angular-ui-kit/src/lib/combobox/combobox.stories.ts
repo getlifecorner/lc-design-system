@@ -242,3 +242,37 @@ export const ClearTargetsDe: Story = {
       </div>`,
   }),
 };
+
+/** 3.30.2 (request 049, 048-f1): the dropdown takes the host's language context. */
+export const PanelLanguage: Story = {
+  name: 'Panel Language',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.30.2 (request 049, 048-f1): the panel renders under `<body>`, outside the page\'s `lang` wrapper; it now takes the host\'s closest `[lang]` (the combobox has no `locale`), so screen readers read the German panel with German rules. Layout unchanged.',
+      },
+    },
+  },
+  render: () => ({
+    props: { fruitOptions, monthOptions },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 16px; max-width: 400px;">
+        <lc-combobox [options]="fruitOptions" label="Select a fruit" />
+        <div lang="de">
+          <lc-combobox
+            [options]="monthOptions"
+            label="Gilt ab"
+            placeholder="Monat suchen …"
+            emptyMessage="Keine Treffer"
+            clearAriaLabel="Auswahl löschen"
+          />
+        </div>
+      </div>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    canvasElement.querySelector<HTMLInputElement>('[lang="de"] lc-combobox input')?.focus();
+  },
+};

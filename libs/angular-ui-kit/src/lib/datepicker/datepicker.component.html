@@ -86,6 +86,7 @@
       [id]="inputId + '-calendar'"
       role="dialog"
       [attr.aria-label]="isMonthMode() ? monthDialogAriaLabel() : dialogAriaLabel()"
+      [attr.lang]="panelLang()"
     >
       <!-- Calendar Header (month mode, 3.29: the year and year buttons) -->
       <div class="lc-datepicker-header">

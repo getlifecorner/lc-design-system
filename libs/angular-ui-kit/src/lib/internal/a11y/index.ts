@@ -5,3 +5,4 @@
  * entry and without a semver guarantee.
  */
 export * from './label-in-name';
+export * from './content-lang';

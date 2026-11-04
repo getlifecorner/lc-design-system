@@ -76,6 +76,7 @@
       role="listbox"
       [id]="listboxId"
       [attr.aria-multiselectable]="multiple() ? true : null"
+      [attr.lang]="panelLang()"
       (mousedown)="$event.preventDefault()"
     >
       @for (group of groupedOptions(); track group.label) {

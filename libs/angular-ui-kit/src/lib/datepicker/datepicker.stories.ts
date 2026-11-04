@@ -257,7 +257,7 @@ export const LabelDe: Story = {
     docs: {
       description: {
         story:
-          '3.30 (request 047, finance-intelligence rules page, row 7): the field „Gilt ab“ (`granularity="month"`) and „Buchungsdatum“ (day mode) with visible German labels; at 360 px „Gilt ab“ is one 21 px line over a 328 px field. In the two-column row of `size="sm"` fields (158 px each at 360 px), „Leistungsverrechnungsschlüssel ab“ breaks with a hyphen over two lines (42 px) instead of overflowing. The clear buttons are named „Monat löschen“ and „Datum löschen“. The open panel of „Buchungsdatum“ has German texts only (3.30.1): „Heute“, the dialog „Datum wählen“, „Vorheriger Monat“ and „Nächster Monat“, and the selected day is named „Mittwoch, 4. November 2026, ausgewählt“.',
+          '3.30 (request 047, finance-intelligence rules page, row 7): the field „Gilt ab“ (`granularity="month"`) and „Buchungsdatum“ (day mode) with visible German labels; at 360 px „Gilt ab“ is one 21 px line over a 328 px field. In the two-column row of `size="sm"` fields (158 px each at 360 px), „Leistungsverrechnungsschlüssel ab“ breaks with a hyphen over two lines (42 px) instead of overflowing. The clear buttons are named „Monat löschen“ and „Datum löschen“. The open panel of „Buchungsdatum“ has German texts only (3.30.1): „Heute“, the dialog „Datum wählen“, „Vorheriger Monat“ and „Nächster Monat“, and the selected day is named „Mittwoch, 4. November 2026, ausgewählt“. The open panel is marked `lang="de"` (3.30.2).',
       },
     },
   },
@@ -293,6 +293,45 @@ export const LabelDe: Story = {
         </div>
       </div>`,
   }),
+};
+
+/** 3.30.2 (request 049, 048-f1): the panel takes the host's language context. */
+export const PanelLanguage: Story = {
+  name: 'Panel Language',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.30.2 (request 049, 048-f1): the panel renders under `<body>`, outside the page\'s `lang` wrapper; it now takes the host\'s closest `[lang]` (else `locale`), so screen readers read the German panel with German rules. Layout unchanged.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [DatepickerComponent, FormsModule] },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 16px; max-width: 400px;">
+        <lc-datepicker label="Start date" [ngModel]="'2026-07-15'"></lc-datepicker>
+        <div lang="de">
+          <lc-datepicker
+            label="Buchungsdatum"
+            locale="de-DE"
+            placeholder="Datum wählen"
+            clearAriaLabel="Datum löschen"
+            todayLabel="Heute"
+            selectedAriaLabel="ausgewählt"
+            dialogAriaLabel="Datum wählen"
+            previousMonthAriaLabel="Vorheriger Monat"
+            nextMonthAriaLabel="Nächster Monat"
+            [ngModel]="'2026-07-15'"
+          ></lc-datepicker>
+        </div>
+      </div>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    canvasElement.querySelector<HTMLInputElement>('[lang="de"] lc-datepicker input')?.click();
+  },
 };
 
 /** 3.30 (request 047, 046-f1): the clear button's hit area in every size, day and month mode. */
