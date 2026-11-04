@@ -124,7 +124,9 @@ No built-in string added or changed. Story strings (EN default → DE in the new
 |---|---|---|---|
 | Datepicker *Panel Language* (new, after *Label (DE)*) | `form-datepicker--panel-language` | flex column, gap 16, max-width 400: field 1 `label="Start date"` `[ngModel]="'2026-07-15'"` (no wrapper, no `locale`); `<div lang="de">` field 2 with `locale="de-DE"`, the §7 strings, `[ngModel]="'2026-07-15'"`. `play`: in story view, wait 50 ms, click `[lang="de"] lc-datepicker input` | EN panel `lang="en"`, DE panel `lang="de"`; both open at July 2026 (no today marker, hash-stable) |
 | Combobox *Panel Language* (new, after *Clear Targets (DE)*) | `form-combobox--panel-language` | same column: field 1 `fruitOptions`, `label="Select a fruit"`; `<div lang="de">` field 2 `monthOptions` with the §7 strings. `play`: in story view, wait 50 ms, focus `[lang="de"] lc-combobox input` | EN dropdown `lang="en"`, DE dropdown `lang="de"` (12 German months) |
-| Description of both | — | "3.30.2 (request 049, 048-f1): the panel renders under `<body>`, outside the page's `lang` wrapper; it now takes the host's closest `[lang]` (else `locale`), so screen readers read the German panel with German rules. Layout unchanged." | AC-9 docs |
+| Description of both | — | "3.30.2 (request 049, 048-f1): the panel renders under `<body>`, outside the page's `lang` wrapper; it now takes the host's closest `[lang]` (else `locale`), so screen readers read the German panel with German rules. Layout unchanged." Combobox: "(the combobox has no `locale`)" instead of "(else `locale`)". | AC-9 docs |
+
+*Change note (review r1, 2026-11-05):* the shared description gave the combobox a `locale` fallback it doesn't have (§1, spec assumption 2). The developer's wording (build.md deviation 1) is the correct one and is adopted here.
 
 AC-9 says "a story … shows both panels": one story per component instead, because only one overlay is open at a time (the datepicker has a backdrop) and each docs page should show its own panel. Both stories are listed in `build.md`.
 

@@ -17,4 +17,6 @@ Open findings that don't need a request of their own: nits, known limits, wordin
 | 047-n2 | datepicker | *Default* open at 360 (field 16–344): the panel is end-aligned at x 2, not pushed to 8, because the CDK fit check ignores the left margin; fields at x 24 get x 8. | 047 review r1, nit 4 |
 | 047-n3 | datepicker | At 200 % text and 360 px the day panel is 360 × 626 at x 8, 8 px past the right edge inside its padding (3.29: 618 wide). | 047 review r1, nit 5 |
 | 048-n2 | datepicker (story) | *Label (DE)*: „Gilt ab“ and both sm fields still use English panel defaults (visible "Today" in a German story, served by the MCP); add `todayLabel`, `dialogAriaLabel`, month/year nav labels and `selectedAriaLabel`. | 048 review r1, nit 2 |
+| 049-n2 | combobox | The dropdown is content-sized, not field-wide, although `cdkConnectedOverlayMatchWidth` is on: 135.03 px under a 328 px field (*Panel Language* DE), 85.92 px (*Starts with a choice*). Pre-existing. | 049 review r1, nit 2 |
+| 049-n3 | datepicker, combobox | A host `lang` change while the panel stays open shows only at the next opening (design §1). | 049 review r1, nit 3 |
 | 045-n4 | app-shell, toast-outlet | Known limit: at 360 px a `top-*` toast (y 72) covers a title placed right under the header (h1 at y 80); documented, `bottom-*` recommended. | 045 review r1, nit 4 |

@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.30.2] - 2026-11-05
+
+Overlay panels that speak the page's language (follow-up 048-f1). No API breaks.
+
+### Fixed
+
+- **`lc-datepicker` and `lc-combobox` panel language** (048-f1, WCAG 3.1.2 Language of Parts): the datepicker panel and the combobox dropdown render in the CDK overlay under `<body>`, outside your `lang` wrapper (`<main lang="de">`), so screen readers read „Juli 2026“, „Heute“ and the German day names with the page's `en` rules. The panel root now takes the host's closest `[lang]`, else the datepicker's `locale`, else none (combobox: the closest `[lang]` only; it has no `locale`). The value is read at every opening. Stories *Panel Language* (Form/Datepicker, Form/Combobox): the English field's panel is `lang="en"`, the German one's `lang="de"`.
+- **`lc-date-range-picker`**: its panel is in the host and already inherits a `[lang]` ancestor; on a page without any `lang` it now gets `lang` from `locale` (default `de-DE`).
+
+### Compatibility
+
+- No API breaks, no new input. Closed fields render as before (no `lang` attribute); the open panels gain only `lang`. Layout unchanged: the datepicker panel keeps 342 × 448 px at 360 px and 310 × 395 px at 1280 px, and all 124 at-rest and 28 opened shots of the three components' stories are hash-identical to 3.30.1. If a page sets `lang="en"` around a field with `locale="de-DE"`, the panel is marked `en`: the page's `lang` wins.
+
+### Known
+
+- Other overlay components (`lc-select` measured: its listbox resolves to the page's `en` inside a `lang="de"` host; `lc-menu`, `lc-tooltip`, `lc-popover` likely the same) do not yet take the host's `lang`. Planned for the next release.
+- The combobox dropdown is content-sized (135 px under a 328 px field in *Panel Language*), not field-wide. A `lang` change while a panel stays open shows at the next opening.
+
 ## [3.30.1] - 2026-11-04
 
 Day buttons whose names contain the number you see, and a corrected story text (follow-ups 047-f1, 047-f2). No API breaks.

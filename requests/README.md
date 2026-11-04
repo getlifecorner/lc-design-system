@@ -92,3 +92,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [046](046-inputs-money-range-card-footer/) lc-datepicker month granularity, lc-combobox two-way value, lc-number-input decimal comma, unit and size; lc-money range; lc-card equal footer | bundle (finance-intelligence, life-os) | regeln-2026-11-03 rows 1–4; CC-1, CC-2 | 3.29.0 | |
 | [047](047-datepicker-combobox-targets-label/) lc-datepicker and lc-combobox clear targets, datepicker selected day in dark, combobox lg input height, datepicker label | bundle (owner, finance-intelligence) | 046-f1, 046-f2; regeln-2026-11-03 rows 5–7 | 3.30.0 | 3.30.0 |
 | [048](048-datepicker-label-day-names/) lc-datepicker Label (DE) story description, day button accessible names | bundle (owner) | 047-f1, 047-f2 | 3.30.1 | 3.30.1 |
+| [049](049-overlay-panel-lang/) lc-datepicker, lc-date-range-picker and lc-combobox overlay panel language | bundle (owner) | 048-f1 | 3.30.2 | 3.30.2 |
