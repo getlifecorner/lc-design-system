@@ -81,8 +81,15 @@ const meta: Meta<BottomNavComponent> = {
         'Route of the "More" entry (on overflow or with `showMore`): a page listing the rest. Empty renders a button that emits `moreClick`',
       table: { defaultValue: { summary: "''" } },
     },
+    moreBadge: {
+      control: 'object',
+      description:
+        'Badge on the "More" entry (`BottomNavBadge`: `{ value, variant? }`, on overflow or with `showMore`), e.g. the open tasks on the pages behind it: drawn like an item badge and read after the label through `badgeAriaLabel`. The kit doesn\'t add up the hidden destinations\' badges; pass the value to show. It sits on the bar\'s last entry, so keep it to two characters (`\'9+\'`). `null` or `undefined`: no badge',
+      table: { defaultValue: { summary: 'null' } },
+    },
     badgeAriaLabel: {
-      description: 'Text read after a label when the item has a badge; `{value}` is replaced with the badge value',
+      description:
+        'Text read after a label when the item has a badge, and after the "More" label with `moreBadge`; `{value}` is replaced with the badge value',
       table: { defaultValue: { summary: '{value} new' } },
     },
     reselect: { action: 'reselect', description: 'The current item was tapped again (scroll the page to the top)' },
@@ -276,6 +283,78 @@ export const WithBadges: Story = {
     template: phoneFrame(
       `<lc-bottom-nav [items]="items" [activeRoute]="activeRoute" [variant]="variant" [badgeAriaLabel]="badgeAriaLabel" [fixed]="fixed" />`,
       '16px',
+    ),
+  }),
+};
+
+/** `moreBadge` (3.31, request 050): overflow, a hidden destination is current, so "More" carries the badge on its pill. */
+export const MoreBadge: Story = {
+  name: 'More Badge',
+  args: {
+    items: [
+      { id: 'today', label: 'Today', icon: 'sun', route: '/' },
+      { id: 'contracts', label: 'Contracts', icon: 'file-text', route: '/contracts', badge: { value: 2, variant: 'primary' } },
+      { id: 'finances', label: 'Finances', icon: 'wallet', route: '/finances' },
+      { id: 'documents', label: 'Documents', icon: 'folder', route: '/documents' },
+      { id: 'calendar', label: 'Calendar', icon: 'calendar', route: '/calendar' },
+      { id: 'household', label: 'Household', icon: 'home', route: '/household' },
+    ],
+    activeRoute: '/household',
+    moreRoute: '/more',
+    moreBadge: { value: 3, variant: 'primary' },
+    variant: 'docked',
+    ariaLabel: 'Main navigation',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`moreBadge` (3.31, request 050): six destinations, so the first four stay and "More" takes the rest. A hidden destination (Household) is current, so "More" is current and its badge sits on the pill. The kit does not add up the hidden badges: the app passes the value. Screen readers hear "Contracts 2 new" and "More 3 new" (`badgeAriaLabel`).',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: phoneFrame(
+      `<lc-bottom-nav [items]="items" [activeRoute]="activeRoute" [moreRoute]="moreRoute" [moreBadge]="moreBadge"
+         [variant]="variant" [ariaLabel]="ariaLabel" [fixed]="fixed" (reselect)="reselect($event)" />`,
+    ),
+  }),
+};
+
+/** `moreBadge` with `showMore` (3.31, request 050): the Finance Intelligence bar, "Mehr" read as "Mehr 1 offen". */
+export const MoreBadgeGerman: Story = {
+  name: 'More Badge (German, floating)',
+  args: {
+    items: [
+      { id: 'cockpit', label: 'Cockpit', icon: 'presentation-chart-line', route: '/cockpit' },
+      { id: 'costs', label: 'Kosten', icon: 'banknotes', route: '/kosten' },
+    ],
+    showMore: true,
+    moreLabel: 'Mehr',
+    moreRoute: '/mehr',
+    activeRoute: '/kosten',
+    moreBadge: { value: 1, variant: 'warning' },
+    badgeAriaLabel: '{value} offen',
+    variant: 'floating',
+    ariaLabel: 'Hauptnavigation',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`moreBadge` with `showMore` (3.31, request 050): the Finance Intelligence bar with two destinations plus "Mehr", which carries the open assignments behind it. With `badgeAriaLabel="{value} offen"` screen readers hear "Mehr 1 offen".',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: phoneFrame(
+      `<lc-bottom-nav [items]="items" [showMore]="showMore" [moreLabel]="moreLabel" [moreRoute]="moreRoute"
+         [activeRoute]="activeRoute" [moreBadge]="moreBadge" [badgeAriaLabel]="badgeAriaLabel" [variant]="variant"
+         [ariaLabel]="ariaLabel" [fixed]="fixed" (reselect)="reselect($event)" />`,
+      '16px',
+      'de',
     ),
   }),
 };

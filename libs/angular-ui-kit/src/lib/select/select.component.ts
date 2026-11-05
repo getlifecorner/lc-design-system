@@ -14,6 +14,7 @@ import {
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
 import { OverlayModule } from '@angular/cdk/overlay';
+import { closestLang } from '@lifecorner/angular-ui-kit/internal/a11y';
 
 export interface SelectOption {
   value: string | number;
@@ -41,6 +42,8 @@ export type SelectValue = string | number | string[] | number[] | null;
  * - Keyboard navigation support
  * - CDK overlay positioning
  * - ControlValueAccessor integration for reactive forms
+ *
+ * The dropdown takes the `lang` of the host's closest `[lang]` (3.31).
  *
  * @example
  * ```html
@@ -174,6 +177,15 @@ export class SelectComponent implements ControlValueAccessor {
 
   /** Effective disabled state: the `disabled` input OR the form control's disabled state. */
   readonly isDisabled = computed(() => this.disabled() || this.formDisabled());
+
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /**
+   * `lang` of the open dropdown (3.31, request 050, WCAG 3.1.2): the overlay
+   * renders under `<body>`, so it takes the host's closest `[lang]`, else none.
+   * Read at every opening; `null` while closed, so the server never reads the DOM.
+   */
+  protected readonly panelLang = computed(() => (this.isOpen() ? closestLang(this.host.nativeElement) : null));
 
   // Computed values
   readonly filteredOptions = computed(() => {

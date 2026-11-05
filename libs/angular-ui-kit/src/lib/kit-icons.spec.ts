@@ -52,7 +52,6 @@ const NOT_KIT_COMPONENTS = new Set(['icon', 'icons', 'icon-names', 'internal']);
  * `<folder>/<file>: <literal>`.
  */
 const NOT_ICONS: Record<string, string> = {
-  'bottom-nav/bottom-nav.component.ts: error': 'badge variant',
   'card/card.component.ts: error': 'badge variant',
   'chat/chat.component.html: user': 'message role',
   'chat/chat.component.html: file': 'input type',

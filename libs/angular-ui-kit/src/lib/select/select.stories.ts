@@ -246,3 +246,51 @@ export const FilledStates: Story = {
     `,
   }),
 };
+
+/** 3.31 (request 050, 049-f1): the dropdown takes the host's language. */
+export const PanelLanguage: Story = {
+  name: 'Panel Language',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.31 (request 050, follow-up 049-f1, WCAG 3.1.2): the dropdown opens in an overlay under `<body>`, outside the field\'s `lang`, so it takes the `lang` of the field\'s closest `[lang]` at every opening: the German field inside `<div lang="de">` opens a panel with `lang="de"`, so screen readers read „Österreich“, the search field and „Keine Treffer“ as German. The English field opens with the page\'s `lang`. Without any `lang` above the field, the panel gets none. The story opens the German field (in the story view).',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      options: countryOptions,
+      germanOptions: [
+        { value: 'de', label: 'Deutschland' },
+        { value: 'at', label: 'Österreich' },
+        { value: 'ch', label: 'Schweiz' },
+        { value: 'fr', label: 'Frankreich' },
+        { value: 'it', label: 'Italien' },
+        { value: 'es', label: 'Spanien' },
+      ],
+    },
+    template: `
+      <div style="max-width: 400px; display: flex; flex-direction: column; gap: 16px;">
+        <lc-select placeholder="Select a country" ariaLabel="Country" [options]="options"></lc-select>
+        <div lang="de">
+          <lc-select
+            placeholder="Land wählen"
+            ariaLabel="Land"
+            searchPlaceholder="Land suchen …"
+            searchAriaLabel="Land suchen"
+            noOptionsLabel="Keine Treffer"
+            clearAriaLabel="Auswahl löschen"
+            [searchable]="true"
+            [options]="germanOptions"
+          ></lc-select>
+        </div>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    canvasElement.querySelector<HTMLElement>('[lang="de"] lc-select [role="combobox"]')?.click();
+  },
+};

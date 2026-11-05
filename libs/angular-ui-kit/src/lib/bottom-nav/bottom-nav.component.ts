@@ -3,7 +3,15 @@ import { NgTemplateOutlet } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
 import { ICON_DOTS } from '@lifecorner/angular-ui-kit/icons';
-import { BadgeComponent } from '@lifecorner/angular-ui-kit/badge';
+import { BadgeComponent, type BadgeVariant } from '@lifecorner/angular-ui-kit/badge';
+
+/** A count or status on a bottom-nav entry (`BottomNavItem.badge`, `moreBadge`). */
+export interface BottomNavBadge {
+  /** Text or number inside the badge. */
+  value: string | number;
+  /** Badge colour (`lc-badge` variant). */
+  variant?: BadgeVariant;
+}
 
 /**
  * A destination in the bottom navigation bar. A subset of `NavigationItem`, so
@@ -22,12 +30,7 @@ export interface BottomNavItem {
   /** Sort order; items without one keep their array order. */
   displayOrder?: number;
   /** Count or status shown on the icon; read out through `badgeAriaLabel`. */
-  badge?: {
-    /** Text or number inside the badge. */
-    value: string | number;
-    /** Badge colour (`lc-badge` variant). */
-    variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
-  };
+  badge?: BottomNavBadge;
 }
 
 /** Surface of the bar: `docked` spans the bottom edge, `floating` is an inset pill. */
@@ -161,8 +164,23 @@ export class BottomNavComponent {
   readonly moreRoute = input('');
 
   /**
-   * Text read after an item's label when it has a badge; `{value}` is
-   * replaced with the badge value (e.g. "3 new").
+   * Badge on the "More" entry (on overflow or with `showMore`), e.g. the open
+   * tasks on the pages behind it: drawn like an item badge and read after the
+   * label through `badgeAriaLabel`. The kit doesn't add up the hidden
+   * destinations' badges; pass the value to show. It sits on the bar's last
+   * entry, so keep it to two characters (`'9+'`). `null` or `undefined`: no
+   * badge.
+   *
+   * @default null
+   */
+  readonly moreBadge = input<BottomNavBadge | null | undefined>(null);
+
+  /**
+   * Text read after an item's label, and after the "More" label with
+   * `moreBadge`, when it has a badge; `{value}` is replaced with the badge
+   * value (e.g. "3 new").
+   *
+   * @default '{value} new'
    */
   readonly badgeAriaLabel = input('{value} new');
 
@@ -198,6 +216,7 @@ export class BottomNavComponent {
       label: this.moreLabel(),
       icon: this.moreIcon(),
       route: moreRoute,
+      badge: this.moreBadge() ?? undefined,
     };
     const moreCurrent =
       (moreRoute !== '' && this.matches(moreRoute)) || hidden.some((item) => this.matches(item.route));

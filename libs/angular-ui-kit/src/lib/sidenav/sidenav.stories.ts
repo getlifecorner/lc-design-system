@@ -106,6 +106,12 @@ const meta: Meta<SidenavComponent> = {
       description: 'Accessible name of the collapse button while the rail is collapsed. Expanded, it uses `collapseAriaLabel`',
       table: { defaultValue: { summary: "'Expand navigation'" } },
     },
+    badgeAriaLabel: {
+      control: 'text',
+      description:
+        "Text read after an item's label when it has a badge, at every level. On the collapsed rail, where labels are hidden, the label and this text name the item. `{value}` is replaced with the badge value, e.g. `'{value} offen'` → \"Stammdaten 1 offen\". The badge itself is hidden from screen readers. Empty: the badge isn't read",
+      table: { defaultValue: { summary: "'{value}'" } },
+    },
   },
 
   parameters: {
@@ -122,7 +128,7 @@ Sidenav component for application navigation sidebar.
 - **Hierarchical navigation** with collapsible groups (up to 3 levels deep)
 - **Section headlines** for item grouping with optional action buttons (\`item.action\`)
 - **Action buttons** on any item — hover-reveal icon buttons that emit \`itemAction\`
-- **Badges** on items (\`item.badge\`) for counts or status indicators with color variants
+- **Badges** on items (\`item.badge\`) for counts or status indicators with color variants, read after the label with \`badgeAriaLabel\` (on the collapsed rail the label and the badge text name the item)
 - **One current item** — the link for \`activeRoute\` (or, without it, the one the router's URL matches) gets \`aria-current="page"\` and the current look, every other link neither; the current item keeps its color on hover
 - **Keyboard navigation** — Escape closes drawer mode
 - Configurable **width** and **position** (left/right)
@@ -155,6 +161,7 @@ Sidenav component for application navigation sidebar.
 | \`brandAriaLabel\` | \`string\` | \`''\` | Accessible name of the brand link; empty: the name |
 | \`showCollapseToggle\` | \`boolean\` | \`false\` | Collapse button at the bottom of the docked rail |
 | \`expandAriaLabel\` | \`string\` | \`'Expand navigation'\` | Name of that button while collapsed |
+| \`badgeAriaLabel\` | \`string\` | \`'{value}'\` | Text read after a badged item's label; \`{value}\` is the badge value |
 
 **Outputs:**
 | Output | Payload | Description |
@@ -439,7 +446,12 @@ export const WithGroupsAndActions: Story = {
 export const WithBadges: Story = {
   name: 'With Badges',
   parameters: {
-    docs: { description: { story: 'Navigation items can display a badge with a count or label on the right side. Badges support all color variants.' } },
+    docs: {
+      description: {
+        story:
+          'Navigation items can display a badge with a count or label on the right side. Badges support all color variants. Screen readers hear the label and then the badge through `badgeAriaLabel` (default `{value}`, 3.31): "Tasks 12", "Messages New"; the badge itself is hidden from them.',
+      },
+    },
   },
   args: {
     isOpen: true,
@@ -520,7 +532,9 @@ export const CollapsedRailBadges: Story = {
           'The badge sits on the item\'s top-right corner as a compact count bubble ' +
           'and keeps an opaque backdrop plus a ring in the rail color, so it stays ' +
           'readable where a wider value ("99+") reaches over the icon. Shown on both ' +
-          'themes because the ring follows `--lc-sidenav-bg`.',
+          'themes because the ring follows `--lc-sidenav-bg`. The labels are hidden on ' +
+          'the rail, so the badge text read to screen readers starts with the label ' +
+          '(3.31): "One digit 3".',
       },
     },
   },
@@ -554,6 +568,55 @@ export const CollapsedRailBadges: Story = {
             <lc-sidenav [isOpen]="true" mode="docked" [collapsed]="true" theme="light" [items]="items" activeRoute="/b"></lc-sidenav>
           </div>
         </div>
+      </div>`,
+  }),
+};
+
+/** German badge names at every level (request 050): Finance Intelligence's open assignments, expanded and on the rail. */
+const badgeNameItems = [
+  { id: 'cockpit', icon: 'presentation-chart-line', label: 'Cockpit', route: '/cockpit', displayOrder: 1 },
+  {
+    id: 'assignments', icon: 'clipboard-document-list', label: 'Offene Zuordnungen', route: '/zuordnungen', displayOrder: 2,
+    badge: { value: 12, variant: 'warning' },
+  },
+  {
+    id: 'master-data', icon: 'folder', label: 'Stammdaten', route: '', displayOrder: 3, badge: { value: 1, variant: 'warning' },
+    children: [
+      { id: 'accounts', icon: 'building-bank', label: 'Konten', route: '/stammdaten/konten', displayOrder: 1, badge: { value: 1, variant: 'warning' } },
+      { id: 'cost-centres', icon: 'calculator', label: 'Kostenstellen', route: '/stammdaten/kostenstellen', displayOrder: 2 },
+    ],
+  },
+  {
+    id: 'areas', icon: '', label: 'Bereiche', route: '', displayOrder: 4, isSection: true,
+    children: [
+      { id: 'finances', icon: 'wallet', label: 'Finanzen', route: '/finanzen', displayOrder: 1, badge: { value: 3, variant: 'primary' } },
+      {
+        id: 'banks', icon: 'building-bank', label: 'Banken', route: '', displayOrder: 2, badge: { value: 2, variant: 'error' },
+        children: [
+          { id: 'statements', icon: 'document-text', label: 'Kontoauszüge', route: '/banken/auszuege', displayOrder: 1, badge: { value: 2, variant: 'error' } },
+        ],
+      },
+    ],
+  },
+];
+
+/** 3.31 (request 050): `badgeAriaLabel` at all six badge sites, expanded and on the collapsed rail. */
+export const BadgeAccessibleNameGerman: Story = {
+  name: 'Badge Accessible Name (German)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`badgeAriaLabel="{value} offen"` (3.31, request 050): every badged item reads its badge after the label from a visually hidden text, at every level (open „Banken“ for the third level); the badge itself is hidden from screen readers, so nothing is read twice and nothing moves. Left expanded: „Offene Zuordnungen 12 offen“. Right the collapsed rail, where the labels are hidden: the hidden text starts with the label, so the rail item is also named „Offene Zuordnungen 12 offen“ (until 3.30 only „12“). The default `{value}` reads „Offene Zuordnungen 12“.',
+      },
+    },
+  },
+  render: () => ({
+    props: { items: badgeNameItems, activeRoute: '/stammdaten/konten' },
+    template: `
+      <div lang="de" style="display: flex; flex-wrap: wrap; gap: 24px;">
+        ${brandRail('badgeAriaLabel="{value} offen" ariaLabel="Hauptnavigation"', '240px', 'overflow: visible; position: relative; z-index: 2;')}
+        ${brandRail('[collapsed]="true" badgeAriaLabel="{value} offen" ariaLabel="Hauptnavigation"', '240px', 'overflow: visible; position: relative; z-index: 1;')}
       </div>`,
   }),
 };

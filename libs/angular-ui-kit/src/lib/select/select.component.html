@@ -93,7 +93,12 @@
     (backdropClick)="onClickOutside()"
     (detach)="close()"
   >
-    <div #dropdownPanel class="lc-select__dropdown" [class.lc-select__dropdown--open]="isOpen()">
+    <div
+      #dropdownPanel
+      class="lc-select__dropdown"
+      [class.lc-select__dropdown--open]="isOpen()"
+      [attr.lang]="panelLang()"
+    >
       @if (searchable()) {
         <div class="lc-select__search">
           <input

@@ -172,7 +172,7 @@
                             }
                             <span class="lc-sidenav__nav-label">{{ child.label }}</span>
                             @if (child.badge) {
-                              <lc-badge [variant]="child.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ child.badge.value }}</lc-badge>
+                              <lc-badge aria-hidden="true" [variant]="child.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ child.badge.value }}</lc-badge>&ngsp;<span class="lc-sidenav__sr-only">{{ badgeText(child) }}</span>
                             }
                             <lc-icon name="chevron-down" size="xs" [decorative]="true" class="lc-sidenav__nav-chevron" />
                           </button>
@@ -200,7 +200,7 @@
                                 }
                                 <span class="lc-sidenav__nav-label">{{ grandchild.label }}</span>
                                 @if (grandchild.badge) {
-                                  <lc-badge [variant]="grandchild.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ grandchild.badge.value }}</lc-badge>
+                                  <lc-badge aria-hidden="true" [variant]="grandchild.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ grandchild.badge.value }}</lc-badge>&ngsp;<span class="lc-sidenav__sr-only">{{ badgeText(grandchild) }}</span>
                                 }
                               </a>
                             }
@@ -221,7 +221,7 @@
                             }
                             <span class="lc-sidenav__nav-label">{{ child.label }}</span>
                             @if (child.badge) {
-                              <lc-badge [variant]="child.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ child.badge.value }}</lc-badge>
+                              <lc-badge aria-hidden="true" [variant]="child.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ child.badge.value }}</lc-badge>&ngsp;<span class="lc-sidenav__sr-only">{{ badgeText(child) }}</span>
                             }
                           </a>
                           @if (child.action) {
@@ -254,7 +254,7 @@
                 <lc-icon [name]="item.icon" size="sm" [decorative]="true" class="lc-sidenav__nav-icon" />
                 <span class="lc-sidenav__nav-label">{{ item.label }}</span>
                 @if (item.badge) {
-                  <lc-badge [variant]="item.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ item.badge.value }}</lc-badge>
+                  <lc-badge aria-hidden="true" [variant]="item.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ item.badge.value }}</lc-badge>&ngsp;<span class="lc-sidenav__sr-only">{{ badgeText(item) }}</span>
                 }
                 <lc-icon name="chevron-down" size="xs" [decorative]="true" class="lc-sidenav__nav-chevron" />
               </button>
@@ -280,7 +280,7 @@
                     <lc-icon [name]="child.icon" size="sm" [decorative]="true" class="lc-sidenav__nav-icon" />
                     <span class="lc-sidenav__nav-label">{{ child.label }}</span>
                     @if (child.badge) {
-                      <lc-badge [variant]="child.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ child.badge.value }}</lc-badge>
+                      <lc-badge aria-hidden="true" [variant]="child.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ child.badge.value }}</lc-badge>&ngsp;<span class="lc-sidenav__sr-only">{{ badgeText(child) }}</span>
                     }
                   </a>
                 }
@@ -299,7 +299,7 @@
                 <lc-icon [name]="item.icon" size="sm" [decorative]="true" class="lc-sidenav__nav-icon" />
                 <span class="lc-sidenav__nav-label">{{ item.label }}</span>
                 @if (item.badge) {
-                  <lc-badge [variant]="item.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ item.badge.value }}</lc-badge>
+                  <lc-badge aria-hidden="true" [variant]="item.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ item.badge.value }}</lc-badge>&ngsp;<span class="lc-sidenav__sr-only">{{ badgeText(item) }}</span>
                 }
               </a>
               @if (item.action) {

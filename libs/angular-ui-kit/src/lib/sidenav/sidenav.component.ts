@@ -56,7 +56,9 @@ export type SidenavVariant = 'default' | 'transparent';
  * - Hierarchical navigation with collapsible groups (up to 3 levels)
  * - Section headlines for item grouping with optional action buttons
  * - Action buttons on any item (hover-reveal)
- * - Badge support on items (count / status indicator)
+ * - Badge support on items (count / status indicator), read after the label
+ *   through `badgeAriaLabel` (3.31); on the collapsed rail the label and the
+ *   badge text name the item
  * - One current item, announced and painted alike: the link for `activeRoute`
  *   (or, without it, the one the router's URL matches) gets
  *   `aria-current="page"` and the current look, every other link neither
@@ -288,6 +290,17 @@ export class SidenavComponent implements OnDestroy {
   readonly closeAriaLabel = input('Close navigation');
 
   /**
+   * Text read after an item's label when it has a badge, at every level. On
+   * the collapsed rail, where labels are hidden, the label and this text name
+   * the item. `{value}` is replaced with the badge value, e.g.
+   * `'{value} offen'` → "Stammdaten 1 offen". The badge itself is hidden from
+   * screen readers. Empty: the badge isn't read.
+   *
+   * @default '{value}'
+   */
+  readonly badgeAriaLabel = input('{value}');
+
+  /**
    * Ids of the expanded parent items — the single source of truth for
    * `isExpanded`. Seeded with the current item's parent whenever it changes
    * (see constructor), so a group opens on navigation but can still
@@ -420,6 +433,13 @@ export class SidenavComponent implements OnDestroy {
 
   /** Whether the rail shows only icons (as `lc-sidenav--collapsed`). */
   protected readonly isRail = computed(() => this.collapsed() && !this.isMobile());
+
+  /** Visually hidden badge text: `badgeAriaLabel` with `{value}`; on the rail, where labels are hidden, after the label. */
+  protected badgeText(item: NavigationItem): string {
+    if (!item.badge) return '';
+    const text = this.badgeAriaLabel().replace('{value}', String(item.badge.value));
+    return this.isRail() ? `${item.label} ${text}` : text;
+  }
 
   /** The collapse button's accessible name: what a press does. */
   protected readonly collapseToggleLabel = computed(() =>

@@ -496,6 +496,18 @@ const EXPECT_IN_HTML = [
       && /<label[^>]*\sfor="lc-combobox-[0-9]+"[^>]*>\s*Konto\s*<\/label>/.test(cb)
       && /\.lc-combobox--lg\[_ngcontent-[^\]]*\]\s+\.lc-combobox__input\[_ngcontent-[^\]]*\]\s*\{[^}]*height:\s*2\.75rem;\s*margin-block:\s*-0?\.25rem/.test(html);
   }],
+  // 3.31 (request 050, stammdaten-2026-11-05 rows 1–2): the badge text is in the
+  // server HTML: the bottom nav's "Mehr" link (home.html, `moreBadge`) carries
+  // the badge and its hidden "1 offen"; the sidenav's Kosten link (probe-314.ts)
+  // hides its lc-badge and reads "1 offen" from the hidden span (050 AC-13).
+  ['badge text before JS: bottom nav "Mehr" and a sidenav item (050 AC-13)', (html) => {
+    const c = '(?:<!--[^]*?-->|\\s)*';
+    const more = html.match(/<a(?=[^>]*\sclass="[^"]*\blc-bottom-nav__item\b)(?=[^>]*\shref="[^"]*\/mehr")[^>]*>(?:(?!<\/a>)[^])*<\/a>/)?.[0] ?? '';
+    const costs = html.match(/<a(?=[^>]*\sclass="[^"]*\blc-sidenav__nav-item\b)(?=[^>]*\shref="\/kosten")[^>]*>(?:(?!<\/a>)[^])*<\/a>/)?.[0] ?? '';
+    return new RegExp(`<span[^>]*\\sclass="lc-bottom-nav__badge"[^>]*>${c}<lc-badge[^>]*>(?:(?!</lc-badge>)[^])*>${c}1${c}</`).test(more)
+      && new RegExp(`<span[^>]*\\sclass="lc-bottom-nav__label"[^>]*>${c}Mehr${c}</span>${c}<span[^>]*\\sclass="lc-bottom-nav__sr-only"[^>]*>1 offen</span>`).test(more)
+      && new RegExp(`<lc-badge(?=[^>]*\\saria-hidden="true")(?=[^>]*\\sclass="[^"]*\\blc-sidenav__nav-badge\\b)[^>]*>(?:(?!</lc-badge>)[^])*</lc-badge>(?:<!--[^]*?-->)* <span[^>]*\\sclass="lc-sidenav__sr-only"[^>]*>1 offen</span>`).test(costs);
+  }],
 ];
 
 /**

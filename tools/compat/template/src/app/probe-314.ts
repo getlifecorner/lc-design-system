@@ -20,7 +20,7 @@ import type { NavigationItem } from '@lifecorner/angular-ui-kit/models';
       <lc-sidenav shell-nav mode="docked" [isOpen]="true" width="100%" [mobileBreakpoint]="0" theme="dark"
                   brandName="Finance Intelligence" brandIcon="presentation-chart-line" brandHref="/"
                   brandAriaLabel="Finance Intelligence – Startseite" ariaLabel="Hauptnavigation (Finanzen)"
-                  [items]="nav" activeRoute="/" />
+                  [items]="nav" activeRoute="/" badgeAriaLabel="{value} offen" />
       <lc-stat-trend id="compat-costs" label="Kosten (Monat)" value="48,2 Mio. €" change="+3,1 %" sentiment="negative"
                      [labels]="{ up: 'gestiegen', negative: 'ungünstig' }" />
     </lc-app-shell>
@@ -29,6 +29,7 @@ import type { NavigationItem } from '@lifecorner/angular-ui-kit/models';
 export class Probe314 {
   protected readonly nav: NavigationItem[] = [
     { id: 'overview', icon: 'home', label: 'Übersicht', route: '/', displayOrder: 1 },
-    { id: 'costs', icon: 'banknotes', label: 'Kosten', route: '/kosten', displayOrder: 2 },
+    // 3.31 (request 050): a badged item reads its badge from the hidden text
+    { id: 'costs', icon: 'banknotes', label: 'Kosten', route: '/kosten', displayOrder: 2, badge: { value: 1, variant: 'warning' } },
   ];
 }

@@ -15,6 +15,7 @@ import { Overlay, OverlayRef, ConnectedPosition } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { Subscription } from 'rxjs';
 import { OverlayStackService } from '@lifecorner/angular-ui-kit/internal/overlay';
+import { closestLang } from '@lifecorner/angular-ui-kit/internal/a11y';
 
 export type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
 
@@ -108,6 +109,8 @@ const FALLBACKS: Record<TooltipPosition, TooltipPosition[]> = {
  * Uses Angular CDK Overlay for positioning; flips to the opposite side when
  * the preferred one does not fit the viewport, and can be dismissed with
  * Escape (WCAG 1.4.13).
+ *
+ * The tooltip takes the `lang` of the host's closest `[lang]` (3.31).
  *
  * @example
  * ```html
@@ -215,6 +218,10 @@ export class TooltipDirective implements OnDestroy {
       const tooltipEl = this.tooltipRef.location.nativeElement as HTMLElement;
       // The id is what the host's aria-describedby points at
       this.renderer.setAttribute(tooltipEl, 'id', this.tooltipId);
+      // The overlay renders under <body>, outside the host's lang (WCAG 3.1.2):
+      // the tooltip takes the host's closest [lang], read at every show
+      const lang = closestLang(this.elementRef.nativeElement);
+      if (lang !== null) this.renderer.setAttribute(tooltipEl, 'lang', lang);
       this.addDescribedBy();
       this.setPositionClass(this.tooltipPosition());
 

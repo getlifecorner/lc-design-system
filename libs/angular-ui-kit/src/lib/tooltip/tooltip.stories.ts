@@ -93,3 +93,29 @@ export const Toolbar: Story = {
       </div>`,
   }),
 };
+
+/** 3.31 (request 050, 049-f1): the tooltip takes the host's language. */
+export const Language: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.31 (request 050, follow-up 049-f1, WCAG 3.1.2): the tooltip opens in an overlay under `<body>`, outside its host\'s `lang`, so the tooltip element (the one `aria-describedby` points at) takes the `lang` of the host\'s closest `[lang]` at every show: the German button inside `<div lang="de">` shows its tooltip with `lang="de"`. The English one takes the page\'s `lang`. Without any `lang` above the host, the tooltip gets none. The story shows the German tooltip (in the story view).',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: flex; gap: 24px; padding: 60px 16px;">
+        <lc-button lcTooltip="Save your current progress">Save</lc-button>
+        <div lang="de">
+          <lc-button lcTooltip="Änderungen speichern, bevor du die Seite verlässt" tooltipPosition="bottom">Speichern</lc-button>
+        </div>
+      </div>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    canvasElement.querySelector('[lang="de"] lc-button')?.dispatchEvent(new MouseEvent('mouseenter'));
+  },
+};
