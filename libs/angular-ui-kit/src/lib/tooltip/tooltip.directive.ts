@@ -11,7 +11,7 @@ import {
   ChangeDetectionStrategy,
   inject,
 } from '@angular/core';
-import { Overlay, OverlayRef, ConnectedPosition } from '@angular/cdk/overlay';
+import { Overlay, OverlayRef, ConnectedPosition, FlexibleConnectedPositionStrategy } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { Subscription } from 'rxjs';
 import { OverlayStackService } from '@lifecorner/angular-ui-kit/internal/overlay';
@@ -105,12 +105,23 @@ const FALLBACKS: Record<TooltipPosition, TooltipPosition[]> = {
 };
 
 /**
+ * What the tooltip describes (3.32, request 051): the host when it matches,
+ * else the first element inside it that does (`lc-button`'s `<button>`).
+ */
+const CONTROL =
+  'a[href], button, input:not([type=hidden]), select, textarea, [tabindex]:not([tabindex="-1"])';
+
+/**
  * Tooltip directive for displaying contextual information.
  * Uses Angular CDK Overlay for positioning; flips to the opposite side when
  * the preferred one does not fit the viewport, and can be dismissed with
  * Escape (WCAG 1.4.13).
  *
  * The tooltip takes the `lang` of the host's closest `[lang]` (3.31).
+ *
+ * Shows on hover and on keyboard focus of the host or of an element inside it
+ * (3.32). On a wrapper such as `lc-button`, the tooltip describes and anchors
+ * to the wrapped `<button>`.
  *
  * @example
  * ```html
@@ -155,11 +166,18 @@ export class TooltipDirective implements OnDestroy {
    */
   tooltipDisabled = input<boolean>(false);
 
-  /** Id of the tooltip element; the host's `aria-describedby` points at it while shown. */
+  /**
+   * Id of the tooltip element; while shown, the `aria-describedby` of the
+   * described element (the host, or the focusable element it wraps, such as
+   * `lc-button`'s `<button>`) points at it.
+   */
   readonly tooltipId = `lc-tooltip-${++TooltipDirective.nextId}`;
 
   private overlayRef?: OverlayRef;
   private tooltipRef?: ComponentRef<TooltipContentComponent>;
+  private positionStrategy?: FlexibleConnectedPositionStrategy;
+  /** The element whose `aria-describedby` holds the tooltip id while shown. */
+  private describedEl?: HTMLElement;
   private positionSubscription?: Subscription;
   private showTimeout?: number;
   private hideTimeout?: number;
@@ -197,6 +215,27 @@ export class TooltipDirective implements OnDestroy {
   }
 
   /**
+   * 3.32 (request 051, 050-f3): `focus` does not bubble, so focus on an
+   * element inside the host (`lc-button`'s `<button>`) arrives as `focusin`.
+   * The host's own focus is handled by `onFocus`, so it is skipped here.
+   */
+  @HostListener('focusin', ['$event'])
+  onFocusIn(event: FocusEvent): void {
+    if (event.target === this.elementRef.nativeElement) return;
+    this.showWithDelay();
+  }
+
+  /** Hides when focus leaves the host from an element inside it (not when it moves within). */
+  @HostListener('focusout', ['$event'])
+  onFocusOut(event: FocusEvent): void {
+    const host = this.elementRef.nativeElement;
+    if (event.target === host) return;
+    const next = event.relatedTarget as Node | null;
+    if (next && host.contains(next)) return;
+    this.hideWithDelay();
+  }
+
+  /**
    * Show tooltip programmatically
    */
   show(): void {
@@ -211,18 +250,23 @@ export class TooltipDirective implements OnDestroy {
     }
 
     if (!this.tooltipRef && this.overlayRef) {
+      // Resolved at every show: the wrapped control is described, and it is
+      // the anchor when it is the host's only child (3.32, request 051)
+      const control = this.resolveControl();
+      this.positionStrategy?.setOrigin(this.resolveAnchor(control));
+
       const portal = new ComponentPortal(TooltipContentComponent, this.viewContainerRef);
       this.tooltipRef = this.overlayRef.attach(portal) as ComponentRef<TooltipContentComponent>;
       this.tooltipRef.instance.content = this.lcTooltip();
 
       const tooltipEl = this.tooltipRef.location.nativeElement as HTMLElement;
-      // The id is what the host's aria-describedby points at
+      // The id is what the described element's aria-describedby points at
       this.renderer.setAttribute(tooltipEl, 'id', this.tooltipId);
       // The overlay renders under <body>, outside the host's lang (WCAG 3.1.2):
       // the tooltip takes the host's closest [lang], read at every show
       const lang = closestLang(this.elementRef.nativeElement);
       if (lang !== null) this.renderer.setAttribute(tooltipEl, 'lang', lang);
-      this.addDescribedBy();
+      this.addDescribedBy(control);
       this.setPositionClass(this.tooltipPosition());
 
       // Escape dismisses the tooltip (WCAG 1.4.13) — only when it is the
@@ -301,6 +345,7 @@ export class TooltipDirective implements OnDestroy {
       .position()
       .flexibleConnectedTo(this.elementRef)
       .withPositions(this.getPositions());
+    this.positionStrategy = positionStrategy;
 
     // Keep the tooltip element's position class in sync with the side the
     // overlay actually chose (it flips at viewport edges)
@@ -330,23 +375,38 @@ export class TooltipDirective implements OnDestroy {
     this.renderer.addClass(tooltipEl, `lc-tooltip--${position}`);
   }
 
-  /** Append the tooltip id to the host's aria-describedby without clobbering ids the caller set. */
-  private addDescribedBy(): void {
+  /** The described element: the host if it is a control, else the first control inside it, else the host. */
+  private resolveControl(): HTMLElement {
     const host = this.elementRef.nativeElement;
-    const ids = (host.getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean);
-    if (!ids.includes(this.tooltipId)) ids.push(this.tooltipId);
-    this.renderer.setAttribute(host, 'aria-describedby', ids.join(' '));
+    if (host.matches(CONTROL)) return host;
+    return host.querySelector<HTMLElement>(CONTROL) ?? host;
   }
 
-  private removeDescribedBy(): void {
+  /** The overlay origin: the control when it is the host's only element child (a wrapper), else the host. */
+  private resolveAnchor(control: HTMLElement): HTMLElement {
     const host = this.elementRef.nativeElement;
-    const ids = (host.getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean);
+    return control !== host && host.childElementCount === 1 && host.firstElementChild === control ? control : host;
+  }
+
+  /** Append the tooltip id to the element's aria-describedby without clobbering ids the caller set. */
+  private addDescribedBy(el: HTMLElement): void {
+    this.describedEl = el;
+    const ids = (el.getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean);
+    if (!ids.includes(this.tooltipId)) ids.push(this.tooltipId);
+    this.renderer.setAttribute(el, 'aria-describedby', ids.join(' '));
+  }
+
+  /** Removes the tooltip id from the element it was added to, keeping the other ids. */
+  private removeDescribedBy(): void {
+    const el = this.describedEl ?? this.elementRef.nativeElement;
+    this.describedEl = undefined;
+    const ids = (el.getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean);
     if (!ids.includes(this.tooltipId)) return;
     const rest = ids.filter((id) => id !== this.tooltipId);
     if (rest.length) {
-      this.renderer.setAttribute(host, 'aria-describedby', rest.join(' '));
+      this.renderer.setAttribute(el, 'aria-describedby', rest.join(' '));
     } else {
-      this.renderer.removeAttribute(host, 'aria-describedby');
+      this.renderer.removeAttribute(el, 'aria-describedby');
     }
   }
 
@@ -365,6 +425,7 @@ export class TooltipDirective implements OnDestroy {
     this.clearTimeouts();
     this.positionSubscription?.unsubscribe();
     this.positionSubscription = undefined;
+    this.positionStrategy = undefined;
     if (this.overlayRef) {
       this.overlayRef.dispose();
       this.overlayRef = undefined;

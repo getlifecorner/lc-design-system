@@ -474,3 +474,12 @@
 .lc-header--dark {
   @include -dark-theme-colors;
 }
+
+// `<lc-sidenav theme="dark">` on a light page: its badges took the page's
+// light palette, light chips on the dark rail (request 051, 050-f2).
+// Re-declared on the badge host they match a dark page (min 5.63:1). Only the
+// badge: the collapsed rail's label tooltip floats over the page and keeps the
+// page palette. A root-level token override does not reach inside.
+.lc-sidenav-container--dark .lc-sidenav__nav-badge {
+  @include -dark-theme-colors;
+}

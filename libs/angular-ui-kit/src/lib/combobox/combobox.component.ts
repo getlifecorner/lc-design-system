@@ -141,6 +141,17 @@ export class ComboboxComponent implements ControlValueAccessor {
   readonly size = input<ComboboxSize>('md');
 
   /**
+   * Whether the list opens when the field gets focus (3.32, request 051).
+   * With `false`, focus alone (`focus()` from the page, Tab) leaves the list
+   * closed and `aria-expanded="false"`; a click or tap on the field, typing or
+   * ArrowDown opens it. Use it in forms that move focus into the field
+   * themselves, on open or to the first invalid field after a rejected save.
+   * Escape and choosing an option work as before.
+   * @default true
+   */
+  readonly openOnFocus = input<boolean>(true);
+
+  /**
    * The `value` of the selected option, two-way (3.29, regeln row 2):
    * `[(selectedValue)]="month"`. Shows the matching option's label (from
    * `options`, or the current selection); an unknown value shows an empty
@@ -438,10 +449,19 @@ export class ComboboxComponent implements ControlValueAccessor {
     if (!this.hitsFrameControl(event)) event.preventDefault();
   }
 
-  /** A click on the frame beside the input and its buttons focuses the input. */
+  /**
+   * A click on the frame beside the input and its buttons focuses the input.
+   * With `openOnFocus` off (3.32, request 051), a click or tap on the input or
+   * the frame also opens the list, which focus alone no longer does.
+   */
   protected onFrameClick(event: MouseEvent): void {
-    if (this.isDisabled() || this.hitsFrameControl(event)) return;
-    this.inputEl()?.nativeElement.focus();
+    if (this.isDisabled()) return;
+    const onInput = event.target === this.inputEl()?.nativeElement;
+    if (!onInput) {
+      if (this.hitsFrameControl(event)) return;
+      this.inputEl()?.nativeElement.focus();
+    }
+    if (!this.openOnFocus()) this.openIfAny();
   }
 
   protected onInputChange(event: Event): void {
@@ -460,6 +480,11 @@ export class ComboboxComponent implements ControlValueAccessor {
   }
 
   protected onInputFocus(): void {
+    if (this.openOnFocus()) this.openIfAny();
+  }
+
+  /** Opens the list when there is something to show: a long enough query, or options. */
+  private openIfAny(): void {
     if (this.query().length >= this.minChars() || this.options().length > 0) {
       this.isOpen.set(true);
     }

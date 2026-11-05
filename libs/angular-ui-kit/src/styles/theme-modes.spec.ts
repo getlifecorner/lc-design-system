@@ -98,3 +98,47 @@ describe('Theme scope of a themed header', () => {
     expect(dark.indexOf('.lc-header--dark {')).toBeGreaterThan(dark.indexOf(':root.system {'));
   });
 });
+
+/**
+ * Request 051 (050-f2, design §1 B, D-3): a sidenav with `theme="light"` /
+ * `"dark"` re-declares every colour token of that theme on its badge hosts,
+ * so the badges take the rail's palette instead of the page's (1.11–1.96:1 on
+ * a light rail on a dark page before). Only the badge host: the collapsed
+ * rail's label tooltip keeps the page palette. On a matching page the values
+ * equal the root's, so the badge renders exactly as before (AC-4).
+ */
+describe('Theme scope of a themed sidenav rail badge (request 051)', () => {
+  const COLOUR = /^--(color-|gradient-|shadow-|elevation-|accent-line$|app-background-image$)/;
+  const colours = (tokens: Record<string, string>) =>
+    Object.fromEntries(Object.entries(tokens).filter(([name]) => COLOUR.test(name)));
+  const LIGHT_RAIL = '.lc-sidenav-container--light .lc-sidenav__nav-badge {';
+  const DARK_RAIL = '.lc-sidenav-container--dark .lc-sidenav__nav-badge {';
+
+  it('AC-3/AC-4: the light rail badge declares exactly the colour tokens of the light root (172), with the same values', () => {
+    const badge = tokensOf(light, `\n${LIGHT_RAIL}`);
+    expect(Object.keys(badge)).toHaveLength(172);
+    expect(badge).toEqual(colours(tokensOf(light, ':root,')));
+  });
+
+  it('AC-3/AC-4: the dark rail badge declares exactly the colour tokens of the dark root (172), with the same values', () => {
+    const badge = tokensOf(dark, `\n${DARK_RAIL}`);
+    expect(Object.keys(badge)).toHaveLength(172);
+    expect(badge).toEqual(colours(tokensOf(dark, ':root.dark,')));
+  });
+
+  it('emits each rail rule once, in its own theme file, after the header rule', () => {
+    expect(light.split(LIGHT_RAIL)).toHaveLength(2);
+    expect(dark.split(DARK_RAIL)).toHaveLength(2);
+    expect(light.includes('.lc-sidenav-container--dark')).toBe(false);
+    expect(dark.includes('.lc-sidenav-container--light')).toBe(false);
+    expect(light.indexOf(LIGHT_RAIL)).toBeGreaterThan(light.indexOf('.lc-header--light {'));
+    expect(dark.indexOf(DARK_RAIL)).toBeGreaterThan(dark.indexOf('.lc-header--dark {'));
+  });
+
+  it('scopes the badge host only, not the rail or its label tooltip', () => {
+    for (const css of [light, dark]) {
+      const selectors = [...css.matchAll(/(^|\n)([^\n{}]*lc-sidenav[^\n{}]*)\{/g)].map((m) => m[2].trim());
+      expect(selectors).toEqual([expect.stringMatching(/^\.lc-sidenav-container--(light|dark) \.lc-sidenav__nav-badge$/)]);
+    }
+  });
+});

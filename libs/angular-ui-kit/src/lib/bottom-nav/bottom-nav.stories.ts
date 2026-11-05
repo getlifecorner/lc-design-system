@@ -359,6 +359,41 @@ export const MoreBadgeGerman: Story = {
   }),
 };
 
+/** The Finance Intelligence bar of request 051: Kosten with a badge, "Mehr" with `moreBadge`. */
+const fiBarItems: BottomNavItem[] = [
+  { id: 'cockpit', label: 'Cockpit', icon: 'presentation-chart-line', route: '/cockpit' },
+  { id: 'costs', label: 'Kosten', icon: 'banknotes', route: '/kosten', badge: { value: 2, variant: 'primary' } },
+];
+const fiBarItemsKostenCurrent: BottomNavItem[] = [
+  fiBarItems[0],
+  { ...fiBarItems[1], badge: { value: 4, variant: 'success' } },
+];
+
+/** 3.32 (request 051, 050-f1): a badge on the current pill reads like a badge on the bar. */
+export const CurrentPillBadges: Story = {
+  name: 'Badges on the Current Pill',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.32 (request 051, follow-up 050-f1, WCAG 1.4.3): a badge on the current pill has the bar colour under its own translucent fill, so it reads exactly like a badge on the bar. In dark, warning text measured 4.03:1 (floating) and 4.26:1 (docked) on the pill tint, success 4.49:1; now the lowest is warning at 5.17:1 floating and 5.55:1 docked. Light is unchanged (lowest success 4.85:1). Badges off the current pill (Kosten in the first two bars, Mehr in the third) keep their colours. The backdrop reads `--lc-bottom-nav-bg` when the app sets it.',
+      },
+    },
+  },
+  render: () => ({
+    props: { fiBarItems, fiBarItemsKostenCurrent, openAssignments: { value: 1, variant: 'warning' }, offenLabel: '{value} offen' },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px; max-width: 360px;">
+        <lc-bottom-nav [items]="fiBarItems" [showMore]="true" moreLabel="Mehr" moreRoute="/mehr" activeRoute="/mehr/stammdaten"
+          [moreBadge]="openAssignments" [badgeAriaLabel]="offenLabel" variant="floating" [fixed]="false" ariaLabel="Hauptnavigation, schwebend" />
+        <lc-bottom-nav [items]="fiBarItems" [showMore]="true" moreLabel="Mehr" moreRoute="/mehr" activeRoute="/mehr/stammdaten"
+          [moreBadge]="openAssignments" [badgeAriaLabel]="offenLabel" variant="docked" [fixed]="false" ariaLabel="Hauptnavigation, angedockt" />
+        <lc-bottom-nav [items]="fiBarItemsKostenCurrent" [showMore]="true" moreLabel="Mehr" moreRoute="/mehr" activeRoute="/kosten"
+          [moreBadge]="openAssignments" [badgeAriaLabel]="offenLabel" variant="floating" [fixed]="false" ariaLabel="Hauptnavigation, Kosten aktuell" />
+      </div>`,
+  }),
+};
+
 /** Fixed to the viewport (`fixed=true`, the default in apps): open the story on its own to see it at the bottom. */
 export const FixedToViewport: Story = {
   args: { items: twoDestinations, activeRoute: '/', variant: 'floating', fixed: true },

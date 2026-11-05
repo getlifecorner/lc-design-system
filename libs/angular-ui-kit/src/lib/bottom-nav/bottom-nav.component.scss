@@ -190,6 +190,16 @@
   pointer-events: none;
 }
 
+// On the current pill the badge's translucent fill lay over the pill tint: in
+// dark, warning measured 4.03:1 (floating) and 4.26:1 (docked), success 4.49:1
+// (050-f1). The bar colour under its own fill makes it pixel-for-pixel a badge
+// on the bar (warning 5.17 / 5.55). Set on the inner `.lc-badge`: the
+// `lc-badge` host is a 24 px line box round the 20 px badge (request 051).
+.lc-bottom-nav__item--current .lc-bottom-nav__badge ::ng-deep .lc-badge {
+  background-image: linear-gradient(var(--lc-badge-bg), var(--lc-badge-bg));
+  background-color: var(--lc-bottom-nav-bg, var(--_bg));
+}
+
 .lc-bottom-nav__sr-only {
   position: absolute;
   width: 1px;

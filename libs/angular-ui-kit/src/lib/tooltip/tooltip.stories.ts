@@ -119,3 +119,32 @@ export const Language: Story = {
     canvasElement.querySelector('[lang="de"] lc-button')?.dispatchEvent(new MouseEvent('mouseenter'));
   },
 };
+
+/** 3.32 (request 051, 050-f3): on `lc-button` the tooltip shows on keyboard focus and describes the inner button. */
+export const KeyboardFocus: Story = {
+  name: 'Keyboard Focus',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.32 (request 051, follow-up 050-f3, WCAG 1.4.13 and 1.3.1): Tab to an `lc-button` with `lcTooltip` and the tooltip shows (after `tooltipShowDelay`); Escape or moving focus away hides it. While shown, `aria-describedby` with the tooltip id sits on the focused inner `<button>`, not on the `lc-button` host, and the tooltip anchors to that button: 8 px above it (top) or below it (bottom), also when the button sits in a line of text, whose host box is only 18 px high. Long texts wrap at 300 px and stay inside the screen at 360 px. The story focuses the German button (in the story view).',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 120px; padding: 96px 16px 120px; text-align: center;">
+        <div>
+          <lc-button lcTooltip="Saves your changes and keeps this page open, so you can carry on editing">Save</lc-button>
+        </div>
+        <div lang="de">
+          <lc-button lcTooltip="Speichert die Änderungen an der Kostenstellenzuordnung und lässt die Seite geöffnet" tooltipPosition="bottom">Speichern</lc-button>
+        </div>
+      </div>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    canvasElement.querySelector<HTMLButtonElement>('[lang="de"] lc-button button')?.focus();
+  },
+};

@@ -572,6 +572,51 @@ export const CollapsedRailBadges: Story = {
   }),
 };
 
+/** Every badge variant once, the warning one on the current item (request 051). */
+const themedRailItems = [
+  { id: 'dashboard', icon: 'home', label: 'Dashboard', route: '/dashboard', displayOrder: 1, badge: { value: 7, variant: 'default' } },
+  { id: 'tasks', icon: 'clipboard-document-list', label: 'Tasks', route: '/tasks', displayOrder: 2, badge: { value: 12, variant: 'primary' } },
+  { id: 'messages', icon: 'envelope', label: 'Messages', route: '/messages', displayOrder: 3, badge: { value: 'New', variant: 'success' } },
+  { id: 'approvals', icon: 'check', label: 'Approvals', route: '/approvals', displayOrder: 4, badge: { value: 3, variant: 'warning' } },
+  { id: 'notifications', icon: 'bell', label: 'Notifications', route: '/notifications', displayOrder: 5, badge: { value: 2, variant: 'error' } },
+  { id: 'documents', icon: 'folder', label: 'Documents', route: '/documents', displayOrder: 6, badge: { value: 5, variant: 'info' } },
+];
+
+/** 3.32 (request 051, 050-f2): a themed rail's badges take the rail's palette, on either page theme. */
+export const ThemedRailBadges: Story = {
+  name: 'Themed Rail Badges',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.32 (request 051, follow-up 050-f2, WCAG 1.4.3): with `theme="light"` or `"dark"` the badges take the rail\'s palette, not the page\'s, like the slot content of a themed `lc-header`. A light rail on a dark page measured 1.11–1.96:1 badge text before; now 4.85–10.97:1, as on a light page. A dark rail on a light page shows the dark badges (lowest 5.63:1, warning on the current item). On a page of the same theme nothing changes. A root-level token override does not reach a themed rail\'s badges. Switch the toolbar theme to see both pages.',
+      },
+    },
+  },
+  render: () => ({
+    props: { items: themedRailItems },
+    template: `
+      <div style="display: flex; flex-wrap: wrap; gap: 16px;">
+        <div style="display: flex; gap: 16px;">
+          <div style="display: flex; height: 320px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
+            <lc-sidenav [isOpen]="true" mode="docked" width="240px" [mobileBreakpoint]="0" theme="light" [items]="items" activeRoute="/approvals" ariaLabel="Light rail"></lc-sidenav>
+          </div>
+          <div style="display: flex; height: 320px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
+            <lc-sidenav [isOpen]="true" mode="docked" [collapsed]="true" [mobileBreakpoint]="0" theme="light" [items]="items" activeRoute="/approvals" ariaLabel="Light rail, collapsed"></lc-sidenav>
+          </div>
+        </div>
+        <div style="display: flex; gap: 16px;">
+          <div style="display: flex; height: 320px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
+            <lc-sidenav [isOpen]="true" mode="docked" width="240px" [mobileBreakpoint]="0" theme="dark" [items]="items" activeRoute="/approvals" ariaLabel="Dark rail"></lc-sidenav>
+          </div>
+          <div style="display: flex; height: 320px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
+            <lc-sidenav [isOpen]="true" mode="docked" [collapsed]="true" [mobileBreakpoint]="0" theme="dark" [items]="items" activeRoute="/approvals" ariaLabel="Dark rail, collapsed"></lc-sidenav>
+          </div>
+        </div>
+      </div>`,
+  }),
+};
+
 /** German badge names at every level (request 050): Finance Intelligence's open assignments, expanded and on the rail. */
 const badgeNameItems = [
   { id: 'cockpit', icon: 'presentation-chart-line', label: 'Cockpit', route: '/cockpit', displayOrder: 1 },

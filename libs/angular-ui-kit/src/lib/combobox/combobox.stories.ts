@@ -30,6 +30,12 @@ selection, create-new entries, grouped options, and keyboard navigation.
         "3.29: the `value` of the selected option, two-way: `[(selectedValue)]=\"month\"`. Shows that option's label (also when `options` arrive later; unknown = empty). Page writes, also back to `null`, select or clear silently; every user choice or clear emits `selectedValueChange`, next to the unchanged `valueChange` (the option object). Single mode only; use it or a forms binding, not both.",
       table: { defaultValue: { summary: 'null' } },
     },
+    openOnFocus: {
+      control: 'boolean',
+      description:
+        'Whether the list opens when the field gets focus (3.32, request 051). With `false`, focus alone (`focus()` from the page, Tab) leaves the list closed and `aria-expanded="false"`; a click or tap on the field, typing or ArrowDown opens it. Use it in forms that move focus into the field themselves, on open or to the first invalid field after a rejected save. Escape and choosing an option work as before.',
+      table: { defaultValue: { summary: 'true' } },
+    },
   },
 };
 
@@ -274,5 +280,88 @@ export const PanelLanguage: Story = {
     if (viewMode !== 'story') return;
     await new Promise((resolve) => setTimeout(resolve, 50));
     canvasElement.querySelector<HTMLInputElement>('[lang="de"] lc-combobox input')?.focus();
+  },
+};
+
+const costCentreOptions: ComboboxOption[] = [
+  { value: '4711', label: '4711 Administration' },
+  { value: '4712', label: '4712 Sales' },
+  { value: '4713', label: '4713 Production' },
+  { value: '4714', label: '4714 Research and development' },
+  { value: '4715', label: '4715 Human resources' },
+];
+
+const kostenstellenOptions: ComboboxOption[] = [
+  { value: '4711', label: '4711 Verwaltung' },
+  { value: '4712', label: '4712 Vertrieb' },
+  { value: '4713', label: '4713 Produktion' },
+  { value: '4714', label: '4714 Forschung und Entwicklung' },
+  { value: '4715', label: '4715 Personalabteilung' },
+];
+
+/** 3.32 (request 051, stammdaten row 3): the form puts focus into the field, the list stays closed. */
+export const OpenOnFocusOff: Story = {
+  name: 'Open on focus off',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.32 (request 051, finance-intelligence master data, row 3): `[openOnFocus]="false"`. The form moves focus into the field itself (on open, or to the first invalid field after a rejected save, here on load), and the list stays closed: `aria-expanded="false"`, no listbox, so the error text below the field stays visible. A click or tap on the field, typing or ArrowDown opens the list; Escape and choosing an option work as before. With the default `true` the list opens on every focus, as before.',
+      },
+    },
+  },
+  render: () => ({
+    props: { costCentreOptions },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 16px; max-width: 400px;">
+        <lc-combobox
+          [options]="costCentreOptions"
+          label="Cost centre"
+          placeholder="Search cost centres…"
+          error="Select a cost centre from the list."
+          [openOnFocus]="false"
+        />
+        <div><lc-button>Save</lc-button></div>
+      </div>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    canvasElement.querySelector<HTMLInputElement>('lc-combobox input')?.focus();
+  },
+};
+
+/** 3.32 (request 051): the same in German, with `multiple`. */
+export const OpenOnFocusOffDe: Story = {
+  name: 'Open on focus off (DE)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.32 (request 051): `[openOnFocus]="false"` with `multiple`, in German. Focus from the page leaves the list closed and the error text visible; a click or tap on the field, typing or ArrowDown opens it.',
+      },
+    },
+  },
+  render: () => ({
+    props: { kostenstellenOptions },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px; max-width: 400px;">
+        <lc-combobox
+          [options]="kostenstellenOptions"
+          [multiple]="true"
+          label="Kostenstellen"
+          placeholder="Kostenstelle suchen …"
+          emptyMessage="Keine Treffer"
+          clearAriaLabel="Auswahl löschen"
+          error="Wählen Sie mindestens eine Kostenstelle aus."
+          [openOnFocus]="false"
+        />
+        <div><lc-button>Speichern</lc-button></div>
+      </div>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    canvasElement.querySelector<HTMLInputElement>('lc-combobox input')?.focus();
   },
 };
