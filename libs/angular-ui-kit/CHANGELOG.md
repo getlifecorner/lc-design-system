@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.31.0] - 2026-11-05
+
+A badge on the bottom nav's "More" entry, spoken badges in the side navigation, and select and tooltip overlays in the host's language (Finance Intelligence spec 010, follow-up 049-f1). No API breaks.
+
+### Added
+
+- **`lc-bottom-nav` `moreBadge`** (stammdaten-2026-11-05 row 1, Finance Intelligence spec 010, navigation counter „Offene Zuordnungen“): the "More" entry the kit builds itself (on overflow or with `showMore`) takes a badge, `[moreBadge]="{ value: 1, variant: 'warning' }"`, drawn like an item badge and read after the label through `badgeAriaLabel`: „Mehr 1 offen“. The kit doesn't add up the badges behind "More"; pass the value, at most two characters (`'9+'`). Default `null`: no badge. New type `BottomNavBadge` (`{ value; variant? }`), also the type of `BottomNavItem.badge` (same shape). Stories *More Badge*, *More Badge (German, floating)*.
+- **`lc-sidenav` `badgeAriaLabel`** (row 2): a badged item reads its badge from a visually hidden text after the label, at every level (items, groups, children, section children and theirs); the `lc-badge` is hidden from screen readers. Default `'{value}'` keeps today's names („Tasks 12“); `'{value} offen'` → „Offene Zuordnungen 12 offen“; `''` silences the badge. Story *Badge Accessible Name (German)*.
+
+### Fixed
+
+- **`lc-select` and `lcTooltip` language** (049-f1, WCAG 3.1.2): the dropdown and the tooltip render under `<body>`; they now take the `lang` of the host's closest `[lang]`, read at every opening. Stories *Panel Language* (Form/Select), *Language* (Feedback/Tooltip). `lc-menu` and `lc-popover` render inside their host and already inherit it.
+- **Collapsed sidenav rail**: a badged rail item was named by its count alone („3“); its hidden text now starts with the label: „Agent Runs 3“.
+
+### Compatibility
+
+- No API breaks; both inputs optional. Without `moreBadge` the bottom nav renders as before. Badged sidenav items gain `aria-hidden="true"` on the `lc-badge`, a space and a `.lc-sidenav__sr-only` span, nothing else (the 3.30.2 DOM otherwise; unbadged items unchanged); item 44 px, rail 39 × 44 and badge boxes unchanged, 207 of 210 navigation shots hash-identical to 3.30.2 (3 known flakes). A test that pins a badged item's `textContent` now sees the hidden text. Open select and tooltip panels gain only `lang`, and only below an element with `lang`.
+
+### Known
+
+- A badged rail item also keeps its label as description (`title`); "99+" on a 5-entry bar at 360 px ends 3.6 px past the floating bar's edge.
+- Pre-existing, queued for the next release: the warning badge on the current bottom-nav pill in dark is 4.03:1 (floating) / 4.26:1 (docked); a `theme="light"` sidenav rail on a dark page draws badges at 1.22–1.97:1; `lcTooltip` on `lc-button` does not show on keyboard focus and anchors 4 px over the button.
+
 ## [3.30.2] - 2026-11-05
 
 Overlay panels that speak the page's language (follow-up 048-f1). No API breaks.

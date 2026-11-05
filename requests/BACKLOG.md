@@ -20,3 +20,6 @@ Open findings that don't need a request of their own: nits, known limits, wordin
 | 049-n2 | combobox | The dropdown is content-sized, not field-wide, although `cdkConnectedOverlayMatchWidth` is on: 135.03 px under a 328 px field (*Panel Language* DE), 85.92 px (*Starts with a choice*). Pre-existing. | 049 review r1, nit 2 |
 | 049-n3 | datepicker, combobox | A host `lang` change while the panel stays open shows only at the next opening (design §1). | 049 review r1, nit 3 |
 | 045-n4 | app-shell, toast-outlet | Known limit: at 360 px a `top-*` toast (y 72) covers a title placed right under the header (h1 at y 80); documented, `bottom-*` recommended. | 045 review r1, nit 4 |
+| 050-n4 | select | The dropdown is content-sized (`min-width: 200px`), not field-wide: 200 px under a 328 px (360) / 400 px (1280) field (*Panel Language*, *Default*). Pre-existing, as 049-n2. | 050 review r1, nit 4 |
+| 050-n5 | sidenav | Known limit L-1: a badged rail item keeps its label as description (`title`): "Agent Runs 3, link, Agent Runs". | 050 review r1, nit 5 |
+| 050-n6 | bottom-nav | Known limit L-2: More badge "99+" on a 5-entry bar at 360 px ends 3.6 px past the floating bar's edge (1.2 px docked); JSDoc says at most 2 characters. | 050 review r1, nit 6 |

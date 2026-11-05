@@ -93,3 +93,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [047](047-datepicker-combobox-targets-label/) lc-datepicker and lc-combobox clear targets, datepicker selected day in dark, combobox lg input height, datepicker label | bundle (owner, finance-intelligence) | 046-f1, 046-f2; regeln-2026-11-03 rows 5–7 | 3.30.0 | 3.30.0 |
 | [048](048-datepicker-label-day-names/) lc-datepicker Label (DE) story description, day button accessible names | bundle (owner) | 047-f1, 047-f2 | 3.30.1 | 3.30.1 |
 | [049](049-overlay-panel-lang/) lc-datepicker, lc-date-range-picker and lc-combobox overlay panel language | bundle (owner) | 048-f1 | 3.30.2 | 3.30.2 |
+| [050](050-overlay-lang-nav-badges/) lc-select, lc-menu, lc-tooltip, lc-popover overlay language; lc-bottom-nav moreBadge, lc-sidenav badgeAriaLabel | bundle (owner, finance-intelligence) | 049-f1; stammdaten-2026-11-05 rows 1–2 | 3.31.0 | 3.31.0 |
