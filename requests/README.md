@@ -94,3 +94,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [048](048-datepicker-label-day-names/) lc-datepicker Label (DE) story description, day button accessible names | bundle (owner) | 047-f1, 047-f2 | 3.30.1 | 3.30.1 |
 | [049](049-overlay-panel-lang/) lc-datepicker, lc-date-range-picker and lc-combobox overlay panel language | bundle (owner) | 048-f1 | 3.30.2 | 3.30.2 |
 | [050](050-overlay-lang-nav-badges/) lc-select, lc-menu, lc-tooltip, lc-popover overlay language; lc-bottom-nav moreBadge, lc-sidenav badgeAriaLabel | bundle (owner, finance-intelligence) | 049-f1; stammdaten-2026-11-05 rows 1–2 | 3.31.0 | 3.31.0 |
+| [051](051-badge-contrast-tooltip-combobox-focus/) lc-bottom-nav current-pill badge contrast, lc-sidenav light rail badges, lcTooltip on lc-button focus, lc-combobox openOnFocus | bundle (owner, finance-intelligence) | 050-f1, 050-f2, 050-f3; stammdaten-2026-11-05 row 3 | 3.32.0 | 3.32.0 |

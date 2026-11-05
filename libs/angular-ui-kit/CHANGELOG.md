@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.32.0] - 2026-11-05
+
+Badges that keep their contrast on the current bottom-nav pill and on themed sidenav rails, tooltips on keyboard focus of `lc-button`, and a combobox that can stay closed on focus (Finance Intelligence master data, follow-ups 050-f1 … f3). No API breaks.
+
+### Added
+
+- **`lc-combobox` `openOnFocus`** (stammdaten-2026-11-05 row 3, Finance Intelligence master data page on the phone): with `[openOnFocus]="false"`, focus alone (`focus()` from your form on open, or into the first invalid field after a 422, or Tab) leaves the list closed: `aria-expanded="false"`, no listbox, so it no longer covers the field's error text (measured at 360 px: error at y 89, uncovered). A click or tap on the field, typing or ArrowDown opens it; Escape and choosing work as before. Default `true`: unchanged. Stories *Open on focus off*, *Open on focus off (DE)*.
+
+### Fixed
+
+- **`lcTooltip` on `lc-button`** (050-f3, WCAG 1.4.13, 1.3.1): the tooltip now also shows when focus lands on an element inside the host (Tab to `lc-button`), hides on Escape or when focus leaves, puts `aria-describedby` on the focused inner `<button>` (your `ariaDescribedBy` ids are kept) instead of the host, and anchors to the button: 8 px above or below its 42 px box (it started 4 px over it). Story *Keyboard Focus*.
+- **`lc-bottom-nav` badge on the current pill** (050-f1, WCAG 1.4.3): in dark, warning text measured 4.03:1 floating and 4.26:1 docked, success 4.49:1; the badge now has the bar colour under its fill and reads like a badge on the bar (lowest: warning 5.17:1 floating, 5.55:1 docked). Light unchanged (lowest 4.85:1). Story *Badges on the Current Pill*.
+- **`lc-sidenav theme="light"` / `"dark"` badges** (050-f2, WCAG 1.4.3): the badges took the page's palette (1.11–1.96:1 on a light rail on a dark page); they now take the rail's, as on a page of that theme (light rail 4.85–10.97:1, dark rail lowest 5.63:1). Story *Themed Rail Badges*.
+
+### Compatibility
+
+- No API breaks; `openOnFocus` is optional. A tooltip on a wrapper now also shows on keyboard focus inside it, describes the wrapped control, and anchors to it when it is the wrapper's only child: on an `lc-button` in text or a block (an 18 px inline host), top and bottom tooltips move 12 px outwards; in flex rows nothing moves. A themed rail's badges, like a themed header's content, no longer follow root-level token overrides. Your `--lc-bottom-nav-bg` now also paints under the current pill's badge. Combobox markup and prerendered HTML unchanged; the global stylesheet grows by about 231 B gzip.
+
+### Known
+
+- A tooltip on a host with several controls describes the first control, not the focused one.
+
 ## [3.31.0] - 2026-11-05
 
 A badge on the bottom nav's "More" entry, spoken badges in the side navigation, and select and tooltip overlays in the host's language (Finance Intelligence spec 010, follow-up 049-f1). No API breaks.

@@ -108,6 +108,8 @@ metadata:
 
 - **050.** Measure today's accessible names before you accept a spec's default label text: `'{value} new'` would have renamed every consumer's badged items (and read "New new"), so `'{value}'` kept them. Count template sites yourself (spec said 5, there were 6). A `display: none` label plus `title` names an item by its visible badge alone ("3"), and the title becomes the description: hidden text on such a rail must start with the label. `lang="de"` on English text changes the glyph raster (same box): prove "no pixel change" with the page's own `lang`. `lcTooltip` on `lc-button` never shows on focus (`focus` doesn't bubble) and describes the host (F-3). Check badges on every container state: the warning badge on the current bottom-nav pill fails in dark (4.03).
 
+- **051.** `--lc-badge-bg/-fg` can't be set from an ancestor (each variant class declares them on `.lc-badge`): re-theme badges through the underlying `--color-*` tokens. A spec clause "badge boundary ≥ 3:1" is unattainable for kit badges (matching rails 1.00–2.95): measure the matching case and record the 1.4.11 reading as a decision. A new `(click)` in an SSR'd template may add `jsaction`: put pointer triggers into an existing handler. `HTMLStyleElement.disabled` toggles a prototype for before/after in one measure; prove an odd diff with a non-matching-selector control. **r1:** a "describe the host's first control" rule is wrong for hosts with several controls: describe the `focusin` target when it is a control (nit 051-1). axe marks gradient-backed text `color-contrast` incomplete: compute it.
+
 **Why:** each of these cost a round trip or would have broken the build.
 
 **How to apply:** name the relevant ones in the design's risk list.

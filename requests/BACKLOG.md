@@ -23,3 +23,4 @@ Open findings that don't need a request of their own: nits, known limits, wordin
 | 050-n4 | select | The dropdown is content-sized (`min-width: 200px`), not field-wide: 200 px under a 328 px (360) / 400 px (1280) field (*Panel Language*, *Default*). Pre-existing, as 049-n2. | 050 review r1, nit 4 |
 | 050-n5 | sidenav | Known limit L-1: a badged rail item keeps its label as description (`title`): "Agent Runs 3, link, Agent Runs". | 050 review r1, nit 5 |
 | 050-n6 | bottom-nav | Known limit L-2: More badge "99+" on a 5-entry bar at 360 px ends 3.6 px past the floating bar's edge (1.2 px docked); JSDoc says at most 2 characters. | 050 review r1, nit 6 |
+| 051-n1 | tooltip | `lcTooltip` on a host with several controls always describes the first control, so Tab to the second describes the first. No regression; no kit template uses such a host. | 051 review r1, nit 1 |
