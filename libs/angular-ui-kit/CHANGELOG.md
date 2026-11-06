@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.33.1] - 2026-11-06
+
+Toasts in an `lc-toast-outlet` stack no longer touch (052-s2, found in the review of request 052). No API breaks.
+
+### Fixed
+
+- **Toast outlet: toasts in a stack are 8 px apart** (052-s2): 8 px (`--spacing-2`) between the toasts of a stack, within a live region and across the assertive and polite regions, in top and bottom stacks and in either bottom-stack order (they were 0 px apart). At 360 px: 16–94, 102–180, 188–266 px. The first toast stays 16 px from the stack's edge, an empty region and the last toast add no space, and a single toast renders exactly as before. At 200 % text the gap is 16 px, so a full stack of 5 scrolls 64 px further (at 360 × 640: 888 instead of 824 px). CSS only, the same before JavaScript runs; light, dark and forced colours alike. Story *Stack Spacing*.
+
+### Compatibility
+
+- No API breaks. Visible change: toasts in a stack move apart by 8 px each. An empty stack's (invisible, click-through) box is 24 px high instead of 32.
+
+### Known
+
+- In a top stack the assertive region (warnings, errors) always comes above the polite one, so the newest toast is not always the topmost (053-n2). Announcements are unaffected.
+
 ## [3.33.0] - 2026-11-06
 
 Focus after an action on the next-step card, the header's context button on the phone, the current choice in lists, and the 20 backlog rows of requests 043–051 (Finance Intelligence Monatsstand and app shell). No API breaks.
