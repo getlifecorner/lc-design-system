@@ -34,6 +34,11 @@
   width: 100%;
   max-width: calc(400px + 2 * var(--spacing-4));
   padding: var(--spacing-4);
+  // 3.33.1 (request 053, 052-s2): every toast keeps 8 px above it (see the
+  // region rules), so the top padding gives those 8 px back: the visually
+  // first toast stays 16 px from the stack's top, as before. Right, bottom
+  // and left stay 16 px.
+  padding-top: calc(var(--spacing-4) - var(--spacing-2));
   box-sizing: border-box;
   pointer-events: none;
   // A stack taller than the space between the offsets (200 % text, several
@@ -84,6 +89,16 @@
   flex-direction: inherit;
   align-items: inherit;
   width: 100%;
+}
+
+// 3.33.1 (request 053, 052-s2): toasts in a stack are 8 px apart, within a
+// region and across the two. Every region runs top to bottom (top stacks
+// inherit `column`, bottom stacks set it below), so the margin always lies
+// between a toast and the one above it, in either `--latest` order. Nothing
+// follows the last toast, and an empty region holds no toast, so it adds no
+// space (no state selector, the same layout in prerendered HTML).
+.lc-toast-outlet__region > lc-toast {
+  margin-top: var(--spacing-2);
 }
 
 // 3.33 (request 052, D-1, 045-n2): in a bottom stack the newest toast sits

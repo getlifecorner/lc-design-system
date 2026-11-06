@@ -162,6 +162,40 @@ class ToastOutletBottomOrderDemoComponent implements OnInit {
   }
 }
 
+/**
+ * 3.33.1 (request 053, 052-s2): a top-right stack across both live regions,
+ * in German. Error (assertive), Success with an action and Info (polite) show
+ * in this order on init and stay (`duration: 0`).
+ */
+@Component({
+  selector: 'lc-toast-outlet-stack-spacing-demo',
+  standalone: true,
+  imports: [ToastOutletComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `<div lang="de"><lc-toast-outlet closeAriaLabel="Benachrichtigung schließen" /></div>`,
+})
+class ToastOutletStackSpacingDemoComponent implements OnInit {
+  private readonly toastService = inject(ToastService);
+
+  ngOnInit(): void {
+    const position = 'top-right';
+    this.toastService.show({ message: 'Synchronisierung fehlgeschlagen.', variant: 'error', position, duration: 0 });
+    this.toastService.show({
+      message: 'Änderungen gespeichert.',
+      variant: 'success',
+      position,
+      duration: 0,
+      action: { label: 'Rückgängig', onClick: () => undefined },
+    });
+    this.toastService.show({
+      message: 'Kontoauszugsverarbeitung abgeschlossen: 12 Buchungen übernommen.',
+      variant: 'info',
+      position,
+      duration: 0,
+    });
+  }
+}
+
 const SERVICE_CALL_SNIPPET = `// app.component.html (the shell): once
 <lc-toast-outlet closeAriaLabel="Benachrichtigung schließen" />
 
@@ -208,7 +242,13 @@ const meta: Meta<DemoArgs> = {
   component: ToastOutletComponent,
   decorators: [
     moduleMetadata({
-      imports: [ToastOutletDemoComponent, ToastServiceCallDemoComponent, ToastOutletOffsetsDemoComponent, ToastOutletBottomOrderDemoComponent],
+      imports: [
+        ToastOutletDemoComponent,
+        ToastServiceCallDemoComponent,
+        ToastOutletOffsetsDemoComponent,
+        ToastOutletBottomOrderDemoComponent,
+        ToastOutletStackSpacingDemoComponent,
+      ],
     }),
   ],
   parameters: {
@@ -232,7 +272,7 @@ How a page shows a toast (3.17). Checked against \`toast.service.ts\`, \`toast-o
 | \`showCloseButton\` | \`boolean\` | \`true\` | A close button named by the outlet's \`closeAriaLabel\` |
 | \`action\` | \`{ label: string; onClick: () => void }\` | none | One text button; \`onClick\` runs, then the toast closes |
 
-**4. Behaviour.** At most 5 toasts are shown in total; a sixth removes the oldest. The timers run only in the browser (none on the server). A toast never takes focus.
+**4. Behaviour.** At most 5 toasts are shown in total; a sixth removes the oldest. The timers run only in the browser (none on the server). A toast never takes focus. The toasts of a stack are 8 px (\`--spacing-2\`) apart (3.33.1), within a live region and across the two, with no extra space for an empty region or after the last toast; the stack keeps its 16 px padding. See the *Stack Spacing* story.
 
 **5. Announcement.** Each position has two live regions that exist from the start, before any toast: \`aria-live="polite"\` for success and info, \`aria-live="assertive"\` for warning and error, both \`aria-atomic="false"\`. A new toast is read **once**, when it is inserted: its message, then the action label and the close button's name (the icons are hidden). Closing a toast is not announced, and a new toast doesn't repeat the older ones. A standalone \`<lc-toast>\` (\`announce\` true, outside the outlet) is its own \`role="status"\` (success, info) or \`role="alert"\` (warning, error).
 
@@ -330,5 +370,21 @@ export const BottomStackOrder: Story = {
   },
   render: () => ({
     template: `<lc-toast-outlet-bottom-order-demo />`,
+  }),
+};
+
+export const StackSpacing: Story = {
+  name: 'Stack Spacing',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.33.1 (request 053, 052-s2): toasts in a stack are 8 px (`--spacing-2`) apart, within a live region and across the two (assertive: the error; polite: the success and the info toast), with no extra space for an empty region or after the last toast. The German info toast wraps to 3 lines at 360 px and to 2 from 1024 px; the gap stays 8 px. For bottom stacks, see *Bottom Stack Order*.',
+      },
+      story: { inline: false, height: '480px' },
+    },
+  },
+  render: () => ({
+    template: `<lc-toast-outlet-stack-spacing-demo />`,
   }),
 };

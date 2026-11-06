@@ -41,10 +41,13 @@ const POSITIONS: readonly ToastPosition[] = [
  * (200 % text), so each toast stays reachable.
  *
  * Bottom stacks show the newest toast nearest the edge (3.33); top stacks the
- * oldest at the top. A `top-*` stack lies over the page on purpose (a toast
- * stays visible wherever the page is scrolled), so in the shell it can cover
- * a title right under the header (at 360 px a toast at y 72 over an h1 at
- * y 80): prefer `bottom-*` there.
+ * oldest at the top. The toasts of a stack are 8 px (`--spacing-2`) apart
+ * (3.33.1), within a live region and across the two; an empty region and the
+ * last toast add no space, and the stack keeps its 16 px padding. A `top-*`
+ * stack lies over the page on purpose (a toast stays visible wherever the
+ * page is scrolled), so in the shell it can cover a title right under the
+ * header (at 360 px a toast at y 72 over an h1 at y 80): prefer `bottom-*`
+ * there.
  *
  * CSS hooks (set them on `lc-toast-outlet` or any ancestor, e.g. `:root`;
  * each wins over the shell's value; write lengths, `0px` rather than `0`):

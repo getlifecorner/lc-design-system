@@ -13,7 +13,8 @@ import { ToastService, type Toast } from './toast.service';
  * - The toast's `:host` rule never applied (the component is
  *   `ViewEncapsulation.None`), so a standalone toast was inline and as wide as
  *   its parent. The rule now targets the element, outlet toasts excluded: the
- *   outlet sizes its stack (content-wide, touching) and keeps doing so.
+ *   outlet sizes its stack (content-wide, 8 px apart since 3.33.1, request
+ *   053) and keeps doing so.
  * - A long German compound in the message is hyphenated at a syllable; the
  *   limit keeps short English words unhyphenated.
  */
