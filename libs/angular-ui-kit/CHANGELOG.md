@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.33.0] - 2026-11-06
+
+Focus after an action on the next-step card, the header's context button on the phone, the current choice in lists, and the 20 backlog rows of requests 043–051 (Finance Intelligence Monatsstand and app shell). No API breaks.
+
+### Added
+
+- **`lc-next-step-card` `focusTitle()`** (monatsstand-2026-11-05 row 1, Finance Intelligence „Monatsstand“): after „Einfrieren“, „Freigeben“ or „Verwerfen“ replaced the card's state, call `afterNextRender(() => this.card().focusTitle(), { injector })`: the title gets `tabindex="-1"` (never in the Tab order) and focus, so focus doesn't fall back to `body` (WCAG 2.4.3), and the screen reader reads the new title. Keyboard focus shows a 2 px ring (4.37:1 light, 9.13:1 dark), nothing moves. Without the call nothing changes; your wrapper `div tabindex="-1"` can go. Story *Focus After Action*.
+- **`lc-header` `contextPlacement`** (app-shell-2026-11-05 row 1): `contextPlacement="below"` keeps the context button visible up to 640 px as a full-width row under the title (at 360 px 352 × 49.6 px, label over name, „…“ with `title` for long names); title, `end` slot and account menu stay in row 1; from 641 px it is inline as before. CSS only, one button, prerendered. Default `'inline'`: unchanged. New type `HeaderContextPlacement`. Story *Context Below*; your `subtitle` + icon-button transition can go.
+- **`lc-list` `aria-current`** (app-shell-2026-11-05 row 2): a `selected: true` row carries `aria-current="true"` on its row element (button, link or plain row), so screen readers announce the current choice; look unchanged, keep your „Gewählt“ badge. Story *Current Choice*.
+
+### Fixed
+
+- **Datepicker panel position** (047-n1, n2, n3): 4 px from the field above it too (was 0), 8 px from every viewport edge after a push (at 360 px x 10, right 352; was x 2), at most the viewport minus 16 px and scrolling inside at 200 % text. 1024/1280 unchanged. Story *Opens Above*.
+- **Combobox and select dropdown width** (049-n2, 050-n4): at least as wide as the field (328 px at 360, 400 / 1248 px at 1280; were 85–200 px), wider content still grows it; combobox list 4 px above the field too (047-n1). Story *Opens Above* (Form/Combobox).
+- **Live panel language** (049-n3): a host `lang` change while the datepicker or combobox panel is open shows at once.
+- **Bottom toasts** (045-n2): the newest toast is nearest the edge (Warning, Error, Success now read Success, Error, Warning from the edge), so at 200 % text it and its close are in view; announcements unchanged. Story *Bottom Stack Order*.
+- **Table checkbox** (F-30): on the row middle (±0.5 px; was 2.25–3 px above), rows unchanged.
+- **Tag chips** (F-32): long tags wrap (with hyphens under your `lang`) instead of ending in „…“. A wrapped chip is a rounded rectangle (radius 12.8 px, half a one-line chip), so its text keeps 3.2 / 3.8 px from the curve as on one-line chips; one-line chips stay pills. Story *Long Tags (DE)*.
+- **Textarea** (043-n7, 044-n1): error text `--color-error-600` in light (8.39:1, as the other fields; was `#6b0909`), focus is the 2 px ring of select and datepicker (4.37:1 light, 9.95:1 dark; the 20 % halo is gone).
+- **Chat attachment sizes** (044-n2): in the host's language („240,0 KB“ under `lang="de"`), on one line.
+- **Forced colours** (044-n3): the pressed notification-center filters and log-level pills are underlined in Highlight (the rich-text editor's mark), also while focused; they had the focus ring's outline.
+- **Sidenav rail** (050-n5): a badged rail item no longer repeats its label as description („Agent Runs 3, link“); the tooltip stays.
+- **Bottom nav** (050-n6): a three-character More badge („99+“) ends at the bar's last entry instead of 1.2 / 1.4 px past the docked / floating bar; badges that fit don't move.
+- **`lcTooltip` on a host with several controls** (051-n1): the focused control is described; `aria-describedby` follows focus.
+- Stories: *Label (DE)* German panel labels (048-n2), *Touch Targets (DE)* measured values (043-n8), *Wide page* table fits the region (045-n1).
+
+### Changed
+
+- **Toast outlet docs** (045-n4): a `top-*` stack lies over the page on purpose and can cover a title right under the header at 360 px; prefer `bottom-*` in the shell (known limit, documented).
+
+### Compatibility
+
+- No API breaks; `contextPlacement` and `focusTitle()` are optional. Visible changes: table checkboxes move ≤ 3 px down; long tag chips wrap into rounded rectangles; textarea error text and focus ring; chat size format follows `lang`; bottom toasts reorder; datepicker panel 8 px from the edges and 4 px above the field; combobox/select panels at least field-wide (a full-width select at 1280 opens 1248 px wide); badged rail items lose `title`; forced-colours pressed pills underline. DOM additions: one empty `aria-hidden` span in the datepicker wrapper, a `style` (private width) on open combobox/select panels, `data-tooltip` on collapsed rail items.
+
+### Known
+
+- Toasts in a stack touch each other (0 px between cards, also across the two live regions); an 8 px gap follows in the next release.
+- A three-character More badge („99+“) on a five-entry bottom nav at 360 px starts 3.2 px left of the pill centre and covers two of the More glyph's three dots; the entry's label names it. Keep the badge to two characters where the glyph matters.
+- Collapsed sidenav rail: items without a badge keep `title` equal to their label, so a screen reader may read the name twice.
+
 ## [3.32.0] - 2026-11-05
 
 Badges that keep their contrast on the current bottom-nav pill and on themed sidenav rails, tooltips on keyboard focus of `lc-button`, and a combobox that can stay closed on focus (Finance Intelligence master data, follow-ups 050-f1 … f3). No API breaks.
