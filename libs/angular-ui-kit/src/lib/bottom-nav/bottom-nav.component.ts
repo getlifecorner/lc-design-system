@@ -168,8 +168,9 @@ export class BottomNavComponent {
    * tasks on the pages behind it: drawn like an item badge and read after the
    * label through `badgeAriaLabel`. The kit doesn't add up the hidden
    * destinations' badges; pass the value to show. It sits on the bar's last
-   * entry, so keep it to two characters (`'9+'`). `null` or `undefined`: no
-   * badge.
+   * entry; values up to three characters (`'99+'`) fit: on the last entry a
+   * badge that would pass the entry's edge moves left until it ends there
+   * (3.33). `null` or `undefined`: no badge.
    *
    * @default null
    */

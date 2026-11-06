@@ -19,6 +19,7 @@ import {
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { MarkdownComponent } from '@lifecorner/angular-ui-kit/markdown';
+import { closestLang } from '@lifecorner/angular-ui-kit/internal/a11y';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
 import {
   ICON_CHECK_CIRCLE,
@@ -226,7 +227,12 @@ export class ChatComponent {
   /** Maximum file size in bytes. `0` disables the check. */
   maxFileSize = input<number>(0);
 
-  /** BCP 47 locale of the message times (hour and minute). */
+  /**
+   * BCP 47 locale of the message times (hour and minute). Attachment sizes
+   * follow the host's language (closest `lang`, 3.33), English without one:
+   * `240,0 KB` under `lang="de"`.
+   * @default 'de-DE'
+   */
   locale = input('de-DE');
 
   /** Header badge while a message is streaming. */
@@ -397,11 +403,30 @@ export class ChatComponent {
     });
   }
 
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /**
+   * Attachment size with one decimal in the host's language (3.33, request
+   * 052, 044-n2): the closest `lang`, English without one (or when it is
+   * empty or invalid), so `240.0 KB` by default and `240,0 KB` under
+   * `lang="de"`. No digit grouping, as before.
+   */
   protected formatBytes(size: number | undefined): string {
     if (!size && size !== 0) return '';
     if (size < 1024) return `${size} B`;
-    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    const decimal = this.decimalFormat();
+    if (size < 1024 * 1024) return `${decimal.format(size / 1024)} KB`;
+    return `${decimal.format(size / (1024 * 1024))} MB`;
+  }
+
+  private decimalFormat(): Intl.NumberFormat {
+    const options: Intl.NumberFormatOptions = { minimumFractionDigits: 1, maximumFractionDigits: 1, useGrouping: false };
+    const lang = closestLang(this.host.nativeElement);
+    try {
+      return new Intl.NumberFormat(lang || 'en', options);
+    } catch {
+      return new Intl.NumberFormat('en', options);
+    }
   }
 
   protected isImage(att: ChatAttachment): boolean {

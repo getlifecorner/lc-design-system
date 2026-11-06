@@ -77,19 +77,21 @@ describe('lc-combobox 3.30.2 dropdown language (request 049)', () => {
       open();
       expect(dropdown()).not.toBeNull();
       expect(dropdown()?.hasAttribute('lang')).toBe(false);
-      expect(attributeNames(dropdown() as HTMLElement)).toBe('class id role');
+      // 3.33 (request 052, D-6): + `style`, the field width as a private
+      // custom property on the open list (combobox.panel-width.spec.ts).
+      expect(attributeNames(dropdown() as HTMLElement)).toBe('class id role style');
     });
 
     it('adds lang and nothing else to the dropdown attributes (AC-7, AC-8)', () => {
       create({ lang: 'de' });
       open();
-      expect(attributeNames(dropdown() as HTMLElement)).toBe('class id lang role');
+      expect(attributeNames(dropdown() as HTMLElement)).toBe('class id lang role style');
     });
 
     it('keeps aria-multiselectable next to lang in multiple mode', () => {
       create({ lang: 'de', multiple: true });
       open();
-      expect(attributeNames(dropdown() as HTMLElement)).toBe('aria-multiselectable class id lang role');
+      expect(attributeNames(dropdown() as HTMLElement)).toBe('aria-multiselectable class id lang role style');
     });
 
     it('keeps focus on the input (AC-8)', () => {

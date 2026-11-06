@@ -508,6 +508,17 @@ const EXPECT_IN_HTML = [
       && new RegExp(`<span[^>]*\\sclass="lc-bottom-nav__label"[^>]*>${c}Mehr${c}</span>${c}<span[^>]*\\sclass="lc-bottom-nav__sr-only"[^>]*>1 offen</span>`).test(more)
       && new RegExp(`<lc-badge(?=[^>]*\\saria-hidden="true")(?=[^>]*\\sclass="[^"]*\\blc-sidenav__nav-badge\\b)[^>]*>(?:(?!</lc-badge>)[^])*</lc-badge>(?:<!--[^]*?-->)* <span[^>]*\\sclass="lc-sidenav__sr-only"[^>]*>1 offen</span>`).test(costs);
   }],
+  // 3.33 (request 052, app-shell row 1, probe-333.ts): `contextPlacement="below"`
+  // is a class and CSS only: the header carries the class, the context button is
+  // in the page once with its name, and the ≤ 640 px rules (the end group
+  // dissolved, the button's own row) are in the page's CSS before JS (052 AC-8).
+  ['header context row below: class, one button, the rules before JS (app-shell row 1, 052 AC-8)', (html) => {
+    const h = html.match(/<lc-header(?=[^>]*\sid="compat-header-333")[^>]*>(?:(?!<\/lc-header>)[^])*<\/lc-header>/)?.[0] ?? '';
+    return /<header[^>]*\sclass="[^"]*\blc-header--context-below\b/.test(h)
+      && (h.match(/\sclass="lc-header__context-info"/g) ?? []).length === 1
+      && /\saria-label="Monatsstand wählen, Monatsstand September 2026 · Fassung 1"/.test(h)
+      && /@media\s*\(max-width:\s*640px\)\s*\{\s*\.lc-header--context-below\s*\{\s*justify-content:\s*flex-end;?\s*\}\s*\.lc-header--context-below\s+\.lc-header__end\s*\{\s*display:\s*contents;?\s*\}/.test(html);
+  }],
 ];
 
 /**

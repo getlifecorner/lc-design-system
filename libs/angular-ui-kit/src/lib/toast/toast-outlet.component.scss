@@ -85,3 +85,20 @@
   align-items: inherit;
   width: 100%;
 }
+
+// 3.33 (request 052, D-1, 045-n2): in a bottom stack the newest toast sits
+// nearest the edge. Each region runs top to bottom, so its newest toast is at
+// its edge side, and the region holding the stack's newest toast
+// (`--latest`, set by the outlet) comes first in the column-reverse stack,
+// at the edge. The DOM keeps both live regions and the append order.
+.lc-toast-outlet__stack--bottom-left,
+.lc-toast-outlet__stack--bottom-center,
+.lc-toast-outlet__stack--bottom-right {
+  > .lc-toast-outlet__region {
+    flex-direction: column;
+  }
+
+  > .lc-toast-outlet__region--latest {
+    order: -1;
+  }
+}

@@ -573,9 +573,13 @@
   max-width: 9rem;
 }
 
+// 3.33 (request 052, 044-n2): the size stays on one line; the name (max 9rem,
+// ellipsis) gives way first in the 16rem chip.
 .lc-chat__pending-size {
   color: var(--color-text-tertiary);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .lc-chat__pending-remove {

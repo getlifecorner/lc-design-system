@@ -166,7 +166,8 @@
                             [class.lc-sidenav__nav-item--has-active-child]="hasActiveChild(child)"
                             (click)="toggleExpanded(child)"
                             [attr.aria-expanded]="isExpanded(child)"
-                            [title]="collapsed() ? child.label : ''">
+                            [title]="collapsed() && !child.badge ? child.label : ''"
+                            [attr.data-tooltip]="collapsed() ? child.label : null">
                             @if (child.icon) {
                               <lc-icon [name]="child.icon" size="sm" [decorative]="true" class="lc-sidenav__nav-icon" />
                             }
@@ -215,7 +216,8 @@
                             (click)="handleItemClick(child)"
                             [class.lc-sidenav__nav-item--active]="isItemActive(child)"
                             [attr.aria-current]="isItemActive(child) ? 'page' : null"
-                            [title]="collapsed() ? child.label : ''">
+                            [title]="collapsed() && !child.badge ? child.label : ''"
+                            [attr.data-tooltip]="collapsed() ? child.label : null">
                             @if (child.icon) {
                               <lc-icon [name]="child.icon" size="sm" [decorative]="true" class="lc-sidenav__nav-icon" />
                             }
@@ -250,7 +252,8 @@
                 [class.lc-sidenav__nav-item--has-active-child]="hasActiveChild(item)"
                 (click)="toggleExpanded(item)"
                 [attr.aria-expanded]="isExpanded(item)"
-                [title]="collapsed() ? item.label : ''">
+                [title]="collapsed() && !item.badge ? item.label : ''"
+                [attr.data-tooltip]="collapsed() ? item.label : null">
                 <lc-icon [name]="item.icon" size="sm" [decorative]="true" class="lc-sidenav__nav-icon" />
                 <span class="lc-sidenav__nav-label">{{ item.label }}</span>
                 @if (item.badge) {
@@ -295,7 +298,8 @@
                 (click)="handleItemClick(item)"
                 [class.lc-sidenav__nav-item--active]="isItemActive(item)"
                 [attr.aria-current]="isItemActive(item) ? 'page' : null"
-                [title]="collapsed() ? item.label : ''">
+                [title]="collapsed() && !item.badge ? item.label : ''"
+                [attr.data-tooltip]="collapsed() ? item.label : null">
                 <lc-icon [name]="item.icon" size="sm" [decorative]="true" class="lc-sidenav__nav-icon" />
                 <span class="lc-sidenav__nav-label">{{ item.label }}</span>
                 @if (item.badge) {

@@ -137,9 +137,15 @@
 }
 
 // Dropdown — positioned by the CDK overlay (see template), so no
-// absolute positioning / z-index here. The pane matches the field width.
+// absolute positioning / z-index here. 3.33 (request 052): the 4 px gap is
+// the positions' offset (047-n1: as a margin inside the pane it was 0 above
+// the field), and the list is at least as wide as the field (049-n2: the
+// pane's flex row sized it to its content), at most the viewport minus 16 px;
+// wider content still grows it. The field width is read at every opening.
 .lc-combobox__dropdown {
-  margin-top: 0.25rem;
+  flex: 1 1 auto;
+  min-width: max(80px, var(--_lc-combobox-field-width, 0px));
+  max-width: calc(100vw - 2 * var(--spacing-2));
   max-height: 240px;
   overflow-y: auto;
   background-color: var(--color-surface-raised);

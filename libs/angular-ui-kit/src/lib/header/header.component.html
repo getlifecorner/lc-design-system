@@ -9,6 +9,7 @@
   [class.lc-header--has-nav]="navItems().length > 0"
   [class.lc-header--static]="!sticky()"
   [class.lc-header--transparent]="variant() === 'transparent'"
+  [class.lc-header--context-below]="contextBelow()"
 >
   <!-- Hamburger menu icon (mobile only) -->
   @if (showHamburger()) {

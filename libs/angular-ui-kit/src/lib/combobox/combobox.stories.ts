@@ -256,7 +256,7 @@ export const PanelLanguage: Story = {
     docs: {
       description: {
         story:
-          '3.30.2 (request 049, 048-f1): the panel renders under `<body>`, outside the page\'s `lang` wrapper; it now takes the host\'s closest `[lang]` (the combobox has no `locale`), so screen readers read the German panel with German rules. Layout unchanged.',
+          '3.30.2 (request 049, 048-f1): the panel renders under `<body>`, outside the page\'s `lang` wrapper; it now takes the host\'s closest `[lang]` (the combobox has no `locale`), so screen readers read the German panel with German rules. Since 3.33 the list is at least as wide as the field (328 px at 360; it was as wide as its longest option) and a `lang` changed while it is open shows at once.',
       },
     },
   },
@@ -280,6 +280,32 @@ export const PanelLanguage: Story = {
     if (viewMode !== 'story') return;
     await new Promise((resolve) => setTimeout(resolve, 50));
     canvasElement.querySelector<HTMLInputElement>('[lang="de"] lc-combobox input')?.focus();
+  },
+};
+
+/** 3.33 (request 052, 047-n1, 049-n2): a field at the bottom of the viewport opens its list above. */
+export const OpensAbove: Story = {
+  name: 'Opens Above',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.33 (request 052): the field sits at the bottom of the viewport, so the list opens above it, 4 px from the field as below (047-n1: it was 0 above, the gap was a margin inside the overlay). The list is at least as wide as the field (049-n2: it was as wide as its longest option) and at most the viewport minus 16 px; wider options still grow it.',
+      },
+      story: { inline: false, height: '560px' },
+    },
+  },
+  render: () => ({
+    props: { fruitOptions },
+    template: `
+      <div style="display: flex; flex-direction: column; justify-content: flex-end; min-height: calc(100vh - 32px); max-width: 400px;">
+        <lc-combobox [options]="fruitOptions" label="Select a fruit" placeholder="Type to search..." />
+      </div>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    canvasElement.querySelector<HTMLInputElement>('lc-combobox input')?.focus();
   },
 };
 

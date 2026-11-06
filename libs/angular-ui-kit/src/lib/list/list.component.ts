@@ -72,7 +72,12 @@ export interface ListItem {
   id?: string;
   /** Whether the item is disabled */
   disabled?: boolean;
-  /** Whether the item is selected / highlighted */
+  /**
+   * Whether the item is the current choice: a tinted row and, since 3.33,
+   * `aria-current="true"` on the row element (the button with `clickable`,
+   * the link with `href`, the row otherwise). Pair it with a visible mark such
+   * as a badge; the tint alone is colour.
+   */
   selected?: boolean;
   /** Any additional data */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

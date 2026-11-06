@@ -141,11 +141,16 @@
   }
 }
 
-// Forced colours drop box-shadow: the pressed pill gets an outline instead.
+// Forced colours drop box-shadow and fills. 3.33 (request 052, 044-n3, D-3):
+// the pressed pill is underlined in Highlight, the rich-text-editor's mode
+// mark: a shape other than the focus ring (it was a 2 px outline, hidden on
+// focus), shown together with the ring when the pressed pill has focus.
 @media (forced-colors: active) {
-  .lc-log-viewer__level-pill--active:not(:focus-visible) {
-    outline: 2px solid Highlight;
-    outline-offset: 1px;
+  .lc-log-viewer__level-pill[aria-pressed='true'] {
+    text-decoration-line: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+    text-decoration-color: Highlight;
   }
 }
 

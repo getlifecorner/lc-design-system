@@ -1,16 +1,122 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { moduleMetadata } from '@storybook/angular';
-import { NextStepCardComponent } from './next-step-card.component';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { expect, userEvent, waitFor } from 'storybook/test';
+import { NextStepCardComponent, type NextStepCardTone } from './next-step-card.component';
 import { ButtonComponent } from '../button/button.component';
 import { ButtonLinkComponent } from '../button/button-link.component';
 import { IconComponent } from '../icon/icon.component';
+
+/** The three states of the monthly snapshot in the *Focus After Action* story. */
+const SNAPSHOT_STEPS: readonly { tone: NextStepCardTone; icon: string; title: string; message: string; action: string }[] = [
+  {
+    tone: 'warning',
+    icon: 'clock',
+    title: 'Monatsstand einfrieren',
+    message: 'September 2026 · Fassung 1 ist vollständig und kann eingefroren werden.',
+    action: 'Einfrieren',
+  },
+  {
+    tone: 'success',
+    icon: 'check-circle',
+    title: 'Monatsstand eingefroren',
+    message: 'September 2026 · Fassung 1 ist eingefroren.',
+    action: 'Freigeben',
+  },
+  {
+    tone: 'primary',
+    icon: 'check-circle',
+    title: 'Monatsstand freigegeben',
+    message: 'September 2026 · Fassung 1 ist freigegeben.',
+    action: 'Von vorn',
+  },
+];
+
+/**
+ * 3.33 (request 052): the action replaces the card's state, so the button
+ * that had focus is gone; the page moves focus to the new title.
+ */
+@Component({
+  selector: 'lc-next-step-focus-demo',
+  standalone: true,
+  imports: [NextStepCardComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div lang="de">
+      <lc-next-step-card
+        titleTag="h2"
+        [announce]="true"
+        [tone]="current().tone"
+        [icon]="current().icon"
+        [cardTitle]="current().title"
+        [message]="current().message"
+        [primaryLabel]="current().action"
+        (primaryClick)="next()"
+      />
+    </div>
+  `,
+})
+class NextStepFocusDemoComponent {
+  private readonly card = viewChild.required(NextStepCardComponent);
+  private readonly injector = inject(Injector);
+  private readonly step = signal(0);
+  protected readonly current = computed(() => SNAPSHOT_STEPS[this.step()]);
+
+  protected next(): void {
+    this.step.update((s) => (s + 1) % SNAPSHOT_STEPS.length);
+    // The used button is gone after this render: focus the new title.
+    afterNextRender(() => this.card().focusTitle(), { injector: this.injector });
+  }
+}
+
+const FOCUS_AFTER_ACTION_SNIPPET = `import { ChangeDetectionStrategy, Component, Injector, afterNextRender, inject, signal, viewChild } from '@angular/core';
+import { NextStepCardComponent } from '@lifecorner/angular-ui-kit/next-step-card';
+
+@Component({
+  selector: 'app-monatsstand-page',
+  imports: [NextStepCardComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: \`
+    <lc-next-step-card
+      titleTag="h2"
+      [announce]="true"
+      [tone]="frozen() ? 'success' : 'warning'"
+      [cardTitle]="frozen() ? 'Monatsstand eingefroren' : 'Monatsstand einfrieren'"
+      [primaryLabel]="frozen() ? 'Freigeben' : 'Einfrieren'"
+      (primaryClick)="frozen() ? release() : freeze()"
+    />
+  \`,
+})
+export class MonatsstandPage {
+  private readonly card = viewChild.required(NextStepCardComponent);
+  private readonly injector = inject(Injector);
+  protected readonly frozen = signal(false);
+
+  protected freeze(): void {
+    this.frozen.set(true); // the result replaces the card's state and its button
+    afterNextRender(() => this.card().focusTitle(), { injector: this.injector });
+  }
+
+  protected release(): void {
+    // the next state, then focusTitle() the same way
+  }
+}`;
 
 const meta: Meta<NextStepCardComponent> = {
   title: 'Feedback/Next Step Card',
   component: NextStepCardComponent,
   decorators: [
     moduleMetadata({
-      imports: [ButtonComponent, ButtonLinkComponent, IconComponent],
+      imports: [ButtonComponent, ButtonLinkComponent, IconComponent, NextStepFocusDemoComponent],
     }),
   ],
   argTypes: {
@@ -92,6 +198,11 @@ eine nächste Schritt?"
   both built-in buttons \`outline\` in the primary tone at \`actionSize\` (use \`lg\`), the primary
   first, no chevron. \`primaryClick\`, \`secondaryClick\`, \`primaryLoading\`, \`primaryDisabled\`
   and \`announce\` work as before.
+- **\`focusTitle()\` (3.33):** moves focus to the title (\`tabindex="-1"\`, out of the Tab order),
+  e.g. after an action replaced the card's state, so focus doesn't fall back to the page
+  (WCAG 2.4.3). Call it after the new state has rendered:
+  \`afterNextRender(() => this.card().focusTitle(), { injector })\` with
+  \`card = viewChild.required(NextStepCardComponent)\`. See *Focus After Action*.
 - Der Host ist ein Size-Container (\`container-type: inline-size\`) und nimmt die volle Breite
   seines Elternelements ein.
 
@@ -459,5 +570,37 @@ export const EqualAnswersAt200Text: LargeTextStory = {
       </div>
       <style>::ng-deep html:has(#storybook-root [data-lc-story-text="200%"]) { font-size: 200%; }</style>`,
   }),
+};
+
+/**
+ * 3.33 (request 052, monatsstand row 1): after „Einfrieren“ the card shows
+ * its next state and the used button is gone; `focusTitle()` moves focus to
+ * the new title.
+ */
+export const FocusAfterAction: Story = {
+  name: 'Focus After Action',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.33 (request 052, finance-intelligence Monatsstand row 1): „Einfrieren“ replaces the card\'s state („Monatsstand eingefroren“, „Freigeben“), so the button that had focus disappears. The page then calls `focusTitle()` after the new state has rendered: the title (`h2` here) gets `tabindex="-1"` and focus, so focus doesn\'t fall back to the page (WCAG 2.4.3) and a screen reader reads the new title, which also names the card\'s region. The title stays out of the Tab order. After a keyboard action the title shows the 2 px `--color-primary-500` ring (offset 2 px; 4.37:1 light, 9.13:1 dark on the default card), after a click it takes focus without a ring; nothing moves. Without the call the card behaves as before. The story presses „Einfrieren“ with the keyboard on load.',
+      },
+      source: { code: FOCUS_AFTER_ACTION_SNIPPET, language: 'typescript' },
+    },
+  },
+  render: () => ({
+    template: `<lc-next-step-focus-demo />`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    const button = await waitFor(() => {
+      const b = canvasElement.querySelector<HTMLButtonElement>('lc-next-step-card lc-button button');
+      expect(b).not.toBeNull();
+      return b as HTMLButtonElement;
+    });
+    button.focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(canvasElement.ownerDocument.activeElement?.textContent?.trim()).toBe('Monatsstand eingefroren'));
+  },
 };
 

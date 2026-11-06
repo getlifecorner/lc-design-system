@@ -123,8 +123,10 @@ const EXPECTED: Record<Field, [State, Look, Look][]> = {
   textarea: [
     ['rest', [F, SUN, 'none'], [F, S, 'none']],
     ['hover', [TS, HOV, 'none'], [TS, S, 'none']],
-    ['focus', [P, S, 'none'], [P, S, 'none']],
-    ['focus+hover', [P, S, 'none'], [P, S, 'none']],
+    // 3.33 (request 052, 044-n1, AC-14): focus is the 2 px primary ring of
+    // lc-select and lc-datepicker (it was a 20 % halo, outline none).
+    ['focus', [P, S, P], [P, S, P]],
+    ['focus+hover', [P, S, P], [P, S, P]],
     ['error', [E, SUN, 'none'], [E, S, 'none']],
     ['error+hover', [E, SUN, 'none'], [E, S, 'none']],
     ['error+focus', [E, S, E], [E, S, E]],

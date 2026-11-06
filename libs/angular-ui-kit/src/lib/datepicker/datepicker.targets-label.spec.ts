@@ -220,7 +220,10 @@ describe('lc-datepicker 3.30 (request 047)', () => {
       const node = fixture.debugElement.queryAllNodes(By.directive(CdkConnectedOverlay))[0];
       const overlay = node.injector.get(CdkConnectedOverlay);
       expect(overlay.push).toBe(true);
-      expect(overlay.viewportMargin).toBe(8);
+      // 3.33 (request 052, D-5): the 8 px live in the geometry (origin box
+      // and panel margin, datepicker.overlay-geometry.spec.ts); the CDK's own
+      // margin ignored the start side, so it is 0 now.
+      expect(overlay.viewportMargin).toBe(0);
     });
 
     it('marks the selected day with the selected class (the ring is CSS)', () => {

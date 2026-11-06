@@ -6,17 +6,17 @@
   <div class="lc-next-step-card__body">
     @switch (titleTag()) {
       @case ('h2') {
-        <h2 class="lc-next-step-card__title" [attr.aria-live]="announce() ? 'polite' : null">
+        <h2 #titleEl class="lc-next-step-card__title" [attr.aria-live]="announce() ? 'polite' : null">
           {{ cardTitle() }}
         </h2>
       }
       @case ('h3') {
-        <h3 class="lc-next-step-card__title" [attr.aria-live]="announce() ? 'polite' : null">
+        <h3 #titleEl class="lc-next-step-card__title" [attr.aria-live]="announce() ? 'polite' : null">
           {{ cardTitle() }}
         </h3>
       }
       @default {
-        <div class="lc-next-step-card__title" [attr.aria-live]="announce() ? 'polite' : null">
+        <div #titleEl class="lc-next-step-card__title" [attr.aria-live]="announce() ? 'polite' : null">
           {{ cardTitle() }}
         </div>
       }

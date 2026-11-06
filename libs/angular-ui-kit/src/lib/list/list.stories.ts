@@ -78,7 +78,7 @@ List component for displaying structured item collections.
 - Action buttons with click events; 3.3: \`actionVariant\`, \`actionSize\` and a per-row
   \`ListItem.actionAriaLabel\` when the visible label repeats on every row
 - Long unbroken texts wrap (3.3); pointer and hover only on \`clickable\` rows (3.3)
-- Selected/highlighted state
+- Selected state: a tinted row and, since 3.33, \`aria-current="true"\` on the row element (pair it with a visible mark such as a badge)
 - Accessible with ARIA list role; \`clickable\` rows are keyboard-operable
 - Link rows (3.16): \`ListItem.href\` renders the row as a real \`<a href>\` (middle click, context menu, at least 44 px);
   \`linkClick\` reports plain clicks for router navigation. A disabled item stays a plain row, and an \`href\` row
@@ -466,6 +466,44 @@ export const LinkRows: Story = {
             </span>
           </ng-template>
         </lc-list>
+      </div>`,
+  }),
+};
+
+const snapshotChoices = [
+  { id: '2026-09-1', label: 'September 2026 · Fassung 1', selected: true, badge: 'Gewählt', badgeVariant: 'primary' as const },
+  { id: '2026-08-2', label: 'August 2026 · Fassung 2' },
+  { id: '2026-07-1', label: 'Juli 2026 · Fassung 1' },
+];
+
+/** 3.33 (request 052, finance-intelligence app-shell row 2): the current choice is announced, not only tinted. */
+export const CurrentChoice: Story = {
+  name: 'Current Choice',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.33 (request 052, finance-intelligence app-shell row 2): the sheet „Monatsstand wählen“. The row with `selected: true` carries `aria-current="true"` on its row element, so a screen reader announces it as the current one; the other rows carry no attribute. It works on button rows (`clickable`, first list) and on link rows (`href`, second list), and on plain rows. The look is unchanged: the tint plus the visible badge „Gewählt“, so the state is never colour alone.',
+      },
+    },
+  },
+  args: { itemClick: fn(), linkClick: fn() },
+  render: (args) => ({
+    props: {
+      ...args,
+      snapshotChoices,
+      snapshotLinks: snapshotChoices.map((item) => ({ ...item, href: `/monatsstand/${item.id}` })),
+    },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 24px; max-width: 480px;">
+        <section aria-labelledby="choice-heading">
+          <h2 id="choice-heading" style="margin: 0 0 8px; font-size: var(--font-size-lg);">Monatsstand wählen</h2>
+          <lc-list [items]="snapshotChoices" [clickable]="true" [showDividers]="true" (itemClick)="itemClick($event)" />
+        </section>
+        <section aria-labelledby="choice-links-heading">
+          <h2 id="choice-links-heading" style="margin: 0 0 8px; font-size: var(--font-size-lg);">Monatsstand öffnen</h2>
+          <lc-list [items]="snapshotLinks" [showDividers]="true" (linkClick)="linkClick($event)" />
+        </section>
       </div>`,
   }),
 };

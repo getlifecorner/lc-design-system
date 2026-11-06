@@ -190,6 +190,33 @@
   pointer-events: none;
 }
 
+// 3.33 (request 052, 050-n6, D-2): on the last entry the badge's box spans
+// from the pill centre + 6 px to the entry's end edge (the entry is its
+// containing block; top 2 px = 4 px above the pill, as before). A badge that
+// fits sits at the box's start, where it always sat; one that would pass the
+// entry ("99+" on the More entry of a five-entry bar at 360 px) overflows
+// towards the start instead (`safe`), so it ends at the entry's edge. Without
+// `safe` the fallback keeps the old position.
+.lc-bottom-nav__entry:last-child {
+  position: relative;
+
+  .lc-bottom-nav__pill {
+    position: static;
+  }
+
+  .lc-bottom-nav__badge {
+    top: 2px;
+    right: 0;
+    direction: rtl;
+    justify-content: flex-end;
+    justify-content: safe flex-end;
+
+    > lc-badge {
+      direction: ltr;
+    }
+  }
+}
+
 // On the current pill the badge's translucent fill lay over the pill tint: in
 // dark, warning measured 4.03:1 (floating) and 4.26:1 (docked), success 4.49:1
 // (050-f1). The bar colour under its own fill makes it pixel-for-pixel a badge

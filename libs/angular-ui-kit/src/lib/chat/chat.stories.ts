@@ -523,7 +523,7 @@ export const PendingAttachments: Story = {
   name: 'Pending Attachments (DE)',
   render: () => ({
     template: `
-      <div style="height: 560px;">
+      <div lang="de" style="height: 560px;">
         <lc-chat title="Assistent" [messages]="messages" [allowFileUpload]="true" accept="image/*,.pdf"></lc-chat>
       </div>
     `,
@@ -543,7 +543,7 @@ export const PendingAttachments: Story = {
     docs: {
       description: {
         story:
-          '3.27.2 (request 044, F-28). Four files are selected in the story view: three PDFs with long names and an image. Each remove button stays 20 × 20 px but has a 44 × 44 px hit area (WCAG 2.5.8), centred and without paint, so its hover fill shows anywhere in it; the focus ring stays round the 20 px button (`Highlight` in forced colours). Chips whose remove buttons line up in wrapped rows are now 14 px apart (were 6): the two hit areas meet in the middle of the gap instead of overlapping by 8 px, where the lower button won a click on the upper chip. Chip sizes and the 144 px names (ellipsis) are as before; at 1280 px all four chips share one row and nothing moves.',
+          '3.33 (request 052, 044-n2): the wrapper sets `lang="de"`, so the sizes read „1,2 MB“, „5,0 KB“, „240,0 KB“ and stay on one line (the chip is 30 px high; the name gives way with "…"); the *EN* story keeps „240.0 KB“. 3.27.2 (request 044, F-28). Four files are selected in the story view: three PDFs with long names and an image. Each remove button stays 20 × 20 px but has a 44 × 44 px hit area (WCAG 2.5.8), centred and without paint, so its hover fill shows anywhere in it; the focus ring stays round the 20 px button (`Highlight` in forced colours). Chips whose remove buttons line up in wrapped rows are now 14 px apart (were 6): the two hit areas meet in the middle of the gap instead of overlapping by 8 px, where the lower button won a click on the upper chip. Chip sizes and the 144 px names (ellipsis) are as before; at 1280 px all four chips share one row and nothing moves.',
       },
     },
   },

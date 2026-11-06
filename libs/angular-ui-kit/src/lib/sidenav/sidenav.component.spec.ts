@@ -663,7 +663,9 @@ describe('SidenavComponent', () => {
     // follows the root theme, so it must use the semantic surface/ink tokens —
     // `--color-neutral-900` + `#fff` inverted to white-on-white in dark.
     const scss = readFileSync(resolve(__dirname, 'sidenav.component.scss'), 'utf-8');
-    const start = scss.indexOf('content: attr(title);');
+    // 3.33 (request 052, D-7): the item tooltip reads `data-tooltip` (it read
+    // `title`); its rule is still the first one with that content.
+    const start = scss.indexOf('content: attr(data-tooltip);');
     const ruleStart = scss.lastIndexOf('&:hover::after', start);
     const rule = scss.slice(ruleStart, scss.indexOf('}', start));
 

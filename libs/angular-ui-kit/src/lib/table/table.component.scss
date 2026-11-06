@@ -330,6 +330,13 @@
   height: 16px;
   cursor: pointer;
   accent-color: var(--color-primary);
+  // 3.33 (request 052, F-30): centred in a content box as tall as the line
+  // box it sat in (21 px at 100 %, 1lh at 200 %), so it sits on the row's
+  // middle (it was 2.25–3 px above) and no row height changes. Browsers
+  // without `lh` keep the first margin.
+  display: block;
+  margin: 2.5px auto;
+  margin: max(2.5px, calc((1lh - 16px) / 2)) auto;
 
   // Request 042 (F-18): only the browser ring showed (2.29:1 in dark).
   &:focus-visible {

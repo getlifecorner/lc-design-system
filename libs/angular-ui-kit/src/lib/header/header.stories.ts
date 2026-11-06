@@ -93,6 +93,13 @@ const meta: Meta<HeaderComponent> = {
     showProfileMenuItem: { description: 'Whether to show a "Profile" item in the user menu' },
     contextName: { description: 'Contextual name displayed in the header (e.g. tenant, organization, project)' },
     contextLabel: { description: 'Label displayed above the context name (e.g. "Tenant", "Organization", "Project")' },
+    contextPlacement: {
+      control: 'inline-radio',
+      options: ['inline', 'below'],
+      description:
+        '3.33 (app-shell row 1): where the context button sits up to 640 px. `inline`: in the end group, hidden up to 640 px (as before). `below`: up to 640 px a row of its own under the title, as wide as the header and at least 44 px high; title, `end` slot and account menu stay in the first row. From 641 px both render the button inline. No second row without `contextName`',
+      table: { defaultValue: { summary: 'inline' } },
+    },
     theme: {
       control: 'select',
       options: ['auto', 'light', 'dark'],
@@ -541,6 +548,39 @@ export const AppShellPhone: Story = {
     const name = canvasElement.querySelector('.lc-header__menu-user-name') as HTMLElement;
     await expect(name.textContent?.trim()).toBe('Johanna-Friederike Apfelbaum-Kieselbacher-Morgentau');
   },
+};
+
+/**
+ * 3.33 (request 052, finance-intelligence app-shell row 1): the context
+ * button in a row of its own under the title up to 640 px.
+ */
+export const ContextBelow: Story = {
+  name: 'Context Below',
+  args: { contextClick: fn() },
+  argTypes: { contextClick: { action: 'contextClick', description: 'Emitted when the context button is clicked' } },
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        story:
+          '3.33 (request 052, finance-intelligence app-shell row 1): `contextPlacement="below"`. Up to 640 px the context button is not hidden but takes a row of its own under the title, as wide as the header (its text lines up with the title, as the nav row does) and at least 44 px high: „Monatsstand“ over „September 2026 · Fassung 1“, named „Monatsstand wählen, Monatsstand September 2026 · Fassung 1“, emitting `contextClick`. Title and account menu stay in the first row; the DOM and focus order are unchanged (one button). A long name ends with "…" (its full text is the `title`), as inline. From 641 px both headers render exactly as `inline`: the button sits in the end group. Without `contextName` there is no second row. First the requester\'s header (`size="sm"`, transparent, no logo, avatar), then the default bar with a 60-character name.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 24px; padding-bottom: 24px; background: var(--color-background);">
+        <lc-header lang="de" size="sm" variant="transparent" [sticky]="false" [showLogo]="false"
+                   title="Finance Intelligence" titleTag="span" contextPlacement="below"
+                   contextLabel="Monatsstand" contextName="September 2026 · Fassung 1" contextAriaLabel="Monatsstand wählen"
+                   userMenuTrigger="avatar" userAvatarFallback="person" userMenuAriaLabel="Menü für Johanna Müller"
+                   profileLabel="Einstellungen" logoutLabel="Abmelden" (contextClick)="contextClick()" />
+        <lc-header [sticky]="false" title="LifeCorner" titleTag="span" contextPlacement="below"
+                   contextLabel="Tenant" contextName="Acme Corporation Europe · Shared Services Centre, Fiscal 2026"
+                   userName="Sarah Connor" userEmail="sarah@example.com" (contextClick)="contextClick()" />
+      </div>`,
+  }),
 };
 
 /** Root text size of a large-text story: `200%` is a phone set to large text (not browser zoom). */

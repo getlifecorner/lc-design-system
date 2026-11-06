@@ -34,11 +34,16 @@
     color: var(--color-text-tertiary);
   }
   
+  // 3.33 (request 052, 044-n1): focus is the 2 px ring of lc-select and
+  // lc-datepicker (it was a border hue change plus a 20 % halo). An outline,
+  // so nothing moves; the error focus below keeps its error ring.
   &:focus {
     border-color: var(--color-primary-500);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-500) 20%, transparent);
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 0;
+    box-shadow: none;
   }
-  
+
   // Size variants
   &--xs {
     padding: var(--spacing-2) var(--spacing-3);
@@ -81,10 +86,12 @@
     
     &:focus {
       border-color: var(--color-primary-500);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-500) 20%, transparent);
+      outline: 2px solid var(--color-primary-500);
+      outline-offset: 0;
+      box-shadow: none;
     }
   }
-  
+
   // Request 044 (F-31): the filled field keeps the 3:1 field boundary of the
   // outline variant (it was transparent at rest and on hover). Rest 4.39:1
   // light, 7.02:1 dark on the sunken fill; hover 6.86:1 light, 8.17:1 dark on
@@ -101,7 +108,9 @@
     &:focus {
       background-color: var(--color-surface);
       border-color: var(--color-primary-500);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-500) 20%, transparent);
+      outline: 2px solid var(--color-primary-500);
+      outline-offset: 0;
+      box-shadow: none;
     }
   }
   
@@ -143,9 +152,12 @@
   color: var(--color-text-secondary);
 }
 
+// 3.33 (request 052, 043-n7): the error ink of lc-input, lc-select and
+// lc-datepicker (light #9d0e0e, 8.39:1; it was --color-text-error, #6b0909;
+// dark unchanged).
 .lc-textarea-error-message {
   font-size: var(--font-size-xs);
-  color: var(--color-text-error);
+  color: var(--color-error-600);
 }
 
 .lc-textarea-char-count,
@@ -188,6 +200,8 @@
 }
 
 @media (forced-colors: active) {
+  // 3.33 (request 052, 044-n1): the focus ring in every variant.
+  .lc-textarea:focus,
   .lc-textarea--error:focus {
     outline-color: Highlight;
   }

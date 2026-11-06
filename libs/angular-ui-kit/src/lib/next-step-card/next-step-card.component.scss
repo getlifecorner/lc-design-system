@@ -76,6 +76,14 @@
     color: var(--color-text-primary);
     letter-spacing: -0.01em;
     overflow-wrap: break-word;
+
+    // 3.33 (request 052): focused by `focusTitle()` after a keyboard action;
+    // the header logo's ring (an outline: no layout shift).
+    &:focus-visible {
+      outline: 2px solid var(--color-primary-500);
+      outline-offset: 2px;
+      border-radius: var(--border-radius-sm);
+    }
   }
 
   &__message {
@@ -440,5 +448,12 @@
         font-size: var(--font-size-lg, 1.125rem);
       }
     }
+  }
+}
+
+// 3.33 (request 052): the title ring in forced colours.
+@media (forced-colors: active) {
+  .lc-next-step-card__title:focus-visible {
+    outline-color: Highlight;
   }
 }

@@ -49,6 +49,11 @@
   gap: 2px;
   padding: 2px 8px;
   border-radius: var(--border-radius-full);
+  // 3.33 (request 052, D-8): half a one-line chip (0.5lh + padding-block 2 +
+  // border 1 = 12.8 px at 100 %). A one-line chip stays a pill; a wrapped chip
+  // becomes a rounded rectangle whose text keeps the one-line clearance from
+  // the curve. Browsers without `lh` keep the pill above.
+  border-radius: calc(0.5lh + 3px);
   background: rgba(32, 132, 151, 0.16);
   border: 1px solid var(--color-border-strong);
   // The subtle ink (request 043, F-26): 7.18:1 light on the tint (primary-500
@@ -59,11 +64,16 @@
   user-select: none;
 }
 
+// 3.33 (request 052, F-32, D-8): a long tag wraps (no line limit) instead of
+// ending in an ellipsis, so its full text can be read; German compounds break
+// with a hyphen where the host's `lang` allows it.
 .lc-tag-input__tag-text {
   max-width: 150px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  hyphenate-limit-chars: 12 4 3;
 }
 
 .lc-tag-input__tag-remove {

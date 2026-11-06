@@ -38,9 +38,13 @@ const POSITIONS: readonly ToastPosition[] = [
  * hidden, the bottom offset is the safe-area inset. Without a shell, and in
  * prerendered HTML, both are `0px`, as before. Every stack is at most as high
  * as the space between the offsets and scrolls when its toasts need more
- * (200 % text), so each toast stays reachable. In the shell, prefer the
- * `bottom-*` positions: a top toast can still cover a page title placed
- * right under the header.
+ * (200 % text), so each toast stays reachable.
+ *
+ * Bottom stacks show the newest toast nearest the edge (3.33); top stacks the
+ * oldest at the top. A `top-*` stack lies over the page on purpose (a toast
+ * stays visible wherever the page is scrolled), so in the shell it can cover
+ * a title right under the header (at 360 px a toast at y 72 over an h1 at
+ * y 80): prefer `bottom-*` there.
  *
  * CSS hooks (set them on `lc-toast-outlet` or any ancestor, e.g. `:root`;
  * each wins over the shell's value; write lengths, `0px` rather than `0`):
@@ -89,6 +93,22 @@ export class ToastOutletComponent {
       }
     }
     return groups;
+  });
+
+  /**
+   * 3.33 (request 052, 045-n2): per `bottom-*` stack, the live level of its
+   * newest toast. That region gets `lc-toast-outlet__region--latest` and is
+   * laid out at the edge, so the newest toast sits nearest the edge (and, in
+   * a scrolling stack, in view at rest). DOM and announcement order stay.
+   */
+  protected readonly latestLive = computed(() => {
+    const latest = new Map<ToastPosition, ToastLive>();
+    for (const toast of this.toastService.toasts()) {
+      if (toast.position.startsWith('bottom-')) {
+        latest.set(toast.position, ToastOutletComponent.liveFor(toast));
+      }
+    }
+    return latest;
   });
 
   protected toastsFor(position: ToastPosition, live: ToastLive): readonly Toast[] {

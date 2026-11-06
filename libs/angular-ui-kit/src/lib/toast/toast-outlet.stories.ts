@@ -141,6 +141,27 @@ class ToastOutletOffsetsDemoComponent implements OnInit {
   }
 }
 
+/**
+ * 3.33 (request 052, 045-n2): a bottom stack with mixed levels. Warning,
+ * Error and Success show in this order on init and stay (`duration: 0`).
+ */
+@Component({
+  selector: 'lc-toast-outlet-bottom-order-demo',
+  standalone: true,
+  imports: [ToastOutletComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `<lc-toast-outlet />`,
+})
+class ToastOutletBottomOrderDemoComponent implements OnInit {
+  private readonly toastService = inject(ToastService);
+
+  ngOnInit(): void {
+    for (const variant of ['warning', 'error', 'success'] as const) {
+      this.toastService.show({ message: MESSAGES[variant], variant, position: 'bottom-center', duration: 0 });
+    }
+  }
+}
+
 const SERVICE_CALL_SNIPPET = `// app.component.html (the shell): once
 <lc-toast-outlet closeAriaLabel="Benachrichtigung schließen" />
 
@@ -185,7 +206,11 @@ interface DemoArgs {
 const meta: Meta<DemoArgs> = {
   title: 'Feedback/Toast Outlet',
   component: ToastOutletComponent,
-  decorators: [moduleMetadata({ imports: [ToastOutletDemoComponent, ToastServiceCallDemoComponent, ToastOutletOffsetsDemoComponent] })],
+  decorators: [
+    moduleMetadata({
+      imports: [ToastOutletDemoComponent, ToastServiceCallDemoComponent, ToastOutletOffsetsDemoComponent, ToastOutletBottomOrderDemoComponent],
+    }),
+  ],
   parameters: {
     docs: {
       description: {
@@ -220,7 +245,7 @@ How a page shows a toast (3.17). Checked against \`toast.service.ts\`, \`toast-o
 | \`--lc-toast-outlet-offset-top\` | \`0px\`; in the shell: the header's bottom edge | the space kept free above the \`top-*\` stacks |
 | \`--lc-toast-outlet-offset-bottom\` | \`0px\`; in the shell: the shown bar's top edge from the viewport's bottom | the space kept free below the \`bottom-*\` stacks |
 
-Every stack is at most as high as the space between the two offsets and scrolls when its toasts need more (200 % text), so each one stays reachable. In the shell, prefer \`bottom-*\`: a top toast can still cover a page title right under the header. See *Layout/App Shell → Toasts in the shell* and the *Offsets* story.
+Every stack is at most as high as the space between the two offsets and scrolls when its toasts need more (200 % text), so each one stays reachable. Bottom stacks show the newest toast nearest the edge (3.33), top stacks the oldest at the top. A \`top-*\` stack lies over the page on purpose (a toast stays visible wherever the page is scrolled), so in the shell it can cover a title right under the header (at 360 px a toast at y 72 over an h1 at y 80): prefer \`bottom-*\` there. See *Layout/App Shell → Toasts in the shell* and the *Offsets* and *Bottom Stack Order* stories.
         `,
       },
     },
@@ -282,12 +307,28 @@ export const Offsets: Story = {
     docs: {
       description: {
         story:
-          'AS-34 without `lc-app-shell`: the app keeps its own 64 px header and 90 px bar free with `<lc-toast-outlet style="--lc-toast-outlet-offset-top: 64px; --lc-toast-outlet-offset-bottom: 90px" />` (dashed bands). The `top-right` toast starts 16 px below the band (y 80), the `bottom-right` toast ends 16 px above the bottom band. The hooks win over the shell\'s values; write lengths (`0px`, not `0`).',
+          'AS-34 without `lc-app-shell`: the app keeps its own 64 px header and 90 px bar free with `<lc-toast-outlet style="--lc-toast-outlet-offset-top: 64px; --lc-toast-outlet-offset-bottom: 90px" />` (dashed bands). The `top-right` toast starts 16 px below the band (y 80), the `bottom-right` toast ends 16 px above the bottom band. The hooks win over the shell\'s values; write lengths (`0px`, not `0`). Known limit (3.33, 045-n4): a `top-*` stack lies over the page on purpose (a toast stays visible wherever the page is scrolled), so in the shell it can cover a title right under the header (at 360 px a toast at y 72 over an h1 at y 80): prefer `bottom-*` there.',
       },
       story: { inline: false, height: '480px' },
     },
   },
   render: () => ({
     template: `<lc-toast-outlet-offsets-demo />`,
+  }),
+};
+
+export const BottomStackOrder: Story = {
+  name: 'Bottom Stack Order',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.33 (request 052, 045-n2): a `bottom-center` stack shows the newest toast nearest the edge. Warning, Error and Success are shown in this order, so from the edge up they read Success, Error, Warning; at 200 % text the stack scrolls and the newest toast with its close button is in view at rest. The DOM keeps both live regions (assertive for Warning and Error, polite for Success) and the order the toasts were shown in, so announcements are unchanged; only the visual order changed (it was Warning, Error, Success from the edge).',
+      },
+      story: { inline: false, height: '480px' },
+    },
+  },
+  render: () => ({
+    template: `<lc-toast-outlet-bottom-order-demo />`,
   }),
 };

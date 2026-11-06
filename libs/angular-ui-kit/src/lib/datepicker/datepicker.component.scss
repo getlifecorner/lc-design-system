@@ -28,6 +28,19 @@
   width: 100%;
 }
 
+// 3.33 (request 052, D-5, 047-n1/n2): the overlay origin. The CDK checks fits
+// against [0, viewport − 2 × margin] and ignores the start margin, so the
+// margins live in the geometry instead: the origin is the field 4 px shorter
+// at top and bottom and 8 px wider on both sides, and the panel's 8 px margin
+// takes them back (4 px gap below and above, edges aligned with the field,
+// 8 px from every viewport edge after a push).
+.lc-datepicker-overlay-origin {
+  position: absolute;
+  inset: var(--spacing-1) calc(-1 * var(--spacing-2));
+  visibility: hidden;
+  pointer-events: none;
+}
+
 // Computed classes applied via TypeScript
 .lc-datepicker {
   width: 100%;
@@ -217,10 +230,18 @@
 // 3.30 (request 047): in the flow of the CDK overlay pane (it was absolute,
 // so the pane measured 0 × 0 and the overlay could never push the panel
 // into the viewport; same place where it fits).
+// 3.33 (request 052, D-5, 047-n3): an 8 px margin on all sides (with the
+// origin box above: the 4 px gap and the viewport margin), at most the
+// viewport minus those margins (the kit's border-box reset), scrolling inside
+// when taller (200 % text).
 .lc-datepicker-calendar {
   position: relative;
   z-index: 1000;
-  margin-top: var(--spacing-1);
+  margin: var(--spacing-2);
+  max-width: calc(100vw - 2 * var(--spacing-2));
+  max-height: calc(100vh - 2 * var(--spacing-2));
+  max-height: calc(100dvh - 2 * var(--spacing-2));
+  overflow-y: auto;
   padding: var(--lc-density-padding-md, var(--spacing-4));
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);

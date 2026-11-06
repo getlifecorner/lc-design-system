@@ -294,7 +294,9 @@ export class SidenavComponent implements OnDestroy {
    * the collapsed rail, where labels are hidden, the label and this text name
    * the item. `{value}` is replaced with the badge value, e.g.
    * `'{value} offen'` → "Stammdaten 1 offen". The badge itself is hidden from
-   * screen readers. Empty: the badge isn't read.
+   * screen readers. Empty: the badge isn't read. Since 3.33 a badged rail
+   * item has no `title` (it repeated the label as a description); its
+   * tooltip still shows on hover and focus.
    *
    * @default '{value}'
    */

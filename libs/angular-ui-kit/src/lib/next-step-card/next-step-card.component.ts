@@ -76,6 +76,9 @@ export type NextStepCardActionSize = 'sm' | 'md' | 'lg';
  *   `stacked` for several equal-width actions; `titleTag` for a heading
  * - `actionsStyle="equal"` (3.16, BA-5): a question with two answers of the
  *   same weight, both outline buttons in the primary tone, primary first
+ * - `focusTitle()` (3.33): moves focus to the title (`tabindex="-1"`, out of
+ *   the Tab order) after an action replaced the card's state, so focus
+ *   doesn't fall back to the page (WCAG 2.4.3)
  *
  * The host is a size container (`container-type: inline-size`) and takes the
  * full inline size of its parent.
@@ -220,6 +223,25 @@ export class NextStepCardComponent implements AfterViewChecked {
   secondaryClick = output<void>();
 
   private actionsSlot = viewChild<ElementRef<HTMLElement>>('actionsSlot');
+
+  /** The title element of whichever `titleTag` branch is rendered. */
+  private titleEl = viewChild<ElementRef<HTMLElement>>('titleEl');
+
+  /**
+   * Moves focus to the card's title (3.33), e.g. after an action replaced the
+   * card's state, so focus doesn't fall back to the page (WCAG 2.4.3). Gives
+   * the title `tabindex="-1"` first: it stays out of the Tab order. Call it
+   * after the new state has rendered, e.g.
+   * `afterNextRender(() => this.card().focusTitle(), { injector })` with
+   * `card = viewChild.required(NextStepCardComponent)`. Does nothing while no
+   * title is rendered.
+   */
+  focusTitle(): void {
+    const title = this.titleEl()?.nativeElement;
+    if (!title) return;
+    title.setAttribute('tabindex', '-1');
+    title.focus();
+  }
 
   /**
    * Whether content was projected into `[slot='actions']` — projected actions

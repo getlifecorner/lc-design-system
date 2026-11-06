@@ -69,7 +69,9 @@ describe('LogViewerComponent output region (043)', () => {
 
     it('AC-9/AC-13: the region draws the kit ring inset (the root clips), Highlight in forced colours', () => {
       expect(css).toMatch(/\n\.lc-log-viewer__content:focus-visible \{\s*outline: 2px solid var\(--color-primary-500\);\s*outline-offset: -2px;\s*\}/);
-      const forced = css.slice(css.indexOf('@media (forced-colors: active)', css.indexOf('.lc-log-viewer__level-pill--active:not(:focus-visible)') + 1));
+      // 3.33 (request 052, 044-n3): the pressed-pill rule of the first forced
+      // block is now the underline (`[aria-pressed=true]`); same anchor role.
+      const forced = css.slice(css.indexOf('@media (forced-colors: active)', css.indexOf('.lc-log-viewer__level-pill[aria-pressed=true]') + 1));
       expect(forced).toMatch(/\.lc-log-viewer__content:focus-visible \{\s*outline-color: Highlight;/);
     });
 

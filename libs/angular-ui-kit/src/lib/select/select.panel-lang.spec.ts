@@ -96,7 +96,9 @@ describe('lc-select 3.31 dropdown language (request 050)', () => {
     it('adds lang and nothing else to the dropdown attributes', () => {
       create({ lang: 'de' });
       toggle();
-      expect(attributeNames(dropdown() as HTMLElement)).toBe('class lang');
+      // 3.33 (request 052, D-6): + `style`, the field width as a private
+      // custom property on the open panel (select.panel-width.spec.ts).
+      expect(attributeNames(dropdown() as HTMLElement)).toBe('class lang style');
     });
 
     it('shows a host lang change made while closed at the next opening', () => {
@@ -118,7 +120,8 @@ describe('lc-select 3.31 dropdown language (request 050)', () => {
       toggle();
       expect(dropdown()).not.toBeNull();
       expect(dropdown()?.hasAttribute('lang')).toBe(false);
-      expect(attributeNames(dropdown() as HTMLElement)).toBe('class');
+      // 3.33 (request 052, D-6): + `style` (the field width).
+      expect(attributeNames(dropdown() as HTMLElement)).toBe('class style');
     });
 
     it('drops the attribute when the wrapper loses its lang while closed', () => {

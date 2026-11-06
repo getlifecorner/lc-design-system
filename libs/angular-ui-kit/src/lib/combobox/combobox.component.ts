@@ -18,13 +18,13 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { OverlayModule } from '@angular/cdk/overlay';
+import { OverlayModule, type ConnectedPosition } from '@angular/cdk/overlay';
 import { Observable, Subject, catchError, debounce, defer, of, switchMap, timer } from 'rxjs';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
 import { ICON_PLUS, ICON_X_MARK } from '@lifecorner/angular-ui-kit/icons';
 import { SpinnerComponent } from '@lifecorner/angular-ui-kit/spinner';
 import { ChipComponent } from '@lifecorner/angular-ui-kit/chip';
-import { closestLang } from '@lifecorner/angular-ui-kit/internal/a11y';
+import { openPanelLang } from '@lifecorner/angular-ui-kit/internal/a11y';
 
 export interface ComboboxOption {
   value: string;
@@ -88,6 +88,7 @@ export class ComboboxComponent implements ControlValueAccessor {
 
   private readonly inputEl = viewChild<ElementRef<HTMLInputElement>>('inputEl');
   private readonly dropdownEl = viewChild<ElementRef<HTMLElement>>('dropdownEl');
+  private readonly inputWrapper = viewChild<ElementRef<HTMLElement>>('inputWrapper');
 
   private readonly elRef = inject(ElementRef);
   private readonly querySubject = new Subject<string>();
@@ -193,9 +194,33 @@ export class ComboboxComponent implements ControlValueAccessor {
   /**
    * `lang` of the open dropdown (3.30.2, WCAG 3.1.2): the overlay renders under
    * `<body>`, so it takes the host's closest `[lang]`, else none. Read at every
-   * opening; `null` while closed, so the server never reads the DOM.
+   * opening and, since 3.33, again when a `lang` changes while the list is
+   * open; `null` while closed, so the server never reads the DOM.
    */
-  protected readonly panelLang = computed(() => (this.isOpen() ? closestLang(this.elRef.nativeElement) : null));
+  protected readonly panelLang = openPanelLang(this.isOpen);
+
+  /**
+   * The field's width in px while the list is open (3.33, request 052,
+   * 049-n2), read at every opening: the list's floor (`min-width`), so it is
+   * at least as wide as the field and wider content still grows it. `null`
+   * while closed.
+   */
+  protected readonly fieldWidth = computed(() =>
+    this.isOpen() ? (this.inputWrapper()?.nativeElement.getBoundingClientRect().width ?? null) : null,
+  );
+
+  /**
+   * Below the field, else above it, start- then end-aligned (the CDK's
+   * defaults), 4 px from the field on either side (3.33, 047-n1: the gap was
+   * a margin inside the pane, so it was 0 above). The list is never pushed,
+   * so the offset can't move it off the field.
+   */
+  protected readonly positions: ConnectedPosition[] = [
+    { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: 4 },
+    { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom', offsetY: -4 },
+    { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 4 },
+    { originX: 'end', originY: 'top', overlayX: 'end', overlayY: 'bottom', offsetY: -4 },
+  ];
 
   /** Selected values */
   protected selectedSingle = signal<ComboboxOption | null>(null);

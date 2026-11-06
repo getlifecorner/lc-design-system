@@ -185,11 +185,14 @@ describe('lcTooltip 3.32 focus inside a wrapper (request 051)', () => {
       expect(byId('field').hasAttribute('aria-describedby')).toBe(false);
     });
 
-    it('a host with two controls: on the first one, whichever has focus', () => {
+    // 3.33 (request 052, 051-n1, AC-28): the control that has focus is
+    // described (3.32 described the first one whichever had focus, the
+    // known defect this row fixes; tooltip.two-controls.spec.ts).
+    it('a host with two controls: on the one that has focus', () => {
       const dir = directiveOf('pair');
       byId('second').focus();
-      expect(byId('first').getAttribute('aria-describedby')).toBe(dir.tooltipId);
-      expect(byId('second').hasAttribute('aria-describedby')).toBe(false);
+      expect(byId('second').getAttribute('aria-describedby')).toBe(dir.tooltipId);
+      expect(byId('first').hasAttribute('aria-describedby')).toBe(false);
       expect(byId('pair').hasAttribute('aria-describedby')).toBe(false);
     });
   });

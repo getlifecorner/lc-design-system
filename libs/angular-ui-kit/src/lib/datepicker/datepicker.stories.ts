@@ -257,7 +257,7 @@ export const LabelDe: Story = {
     docs: {
       description: {
         story:
-          '3.30 (request 047, finance-intelligence rules page, row 7): the field „Gilt ab“ (`granularity="month"`) and „Buchungsdatum“ (day mode) with visible German labels; at 360 px „Gilt ab“ is one 21 px line over a 328 px field. In the two-column row of `size="sm"` fields (158 px each at 360 px), „Leistungsverrechnungsschlüssel ab“ breaks with a hyphen over two lines (42 px) instead of overflowing. The clear buttons are named „Monat löschen“ and „Datum löschen“. The open panel of „Buchungsdatum“ has German texts only (3.30.1): „Heute“, the dialog „Datum wählen“, „Vorheriger Monat“ and „Nächster Monat“, and the selected day is named „Mittwoch, 4. November 2026, ausgewählt“. The open panel is marked `lang="de"` (3.30.2).',
+          '3.30 (request 047, finance-intelligence rules page, row 7): the field „Gilt ab“ (`granularity="month"`) and „Buchungsdatum“ (day mode) with visible German labels; at 360 px „Gilt ab“ is one 21 px line over a 328 px field. In the two-column row of `size="sm"` fields (158 px each at 360 px), „Leistungsverrechnungsschlüssel ab“ breaks with a hyphen over two lines (42 px) instead of overflowing. The clear buttons are named „Monat löschen“ and „Datum löschen“. The open panel of „Buchungsdatum“ has German texts only (3.30.1): „Heute“, the dialog „Datum wählen“, „Vorheriger Monat“ and „Nächster Monat“, and the selected day is named „Mittwoch, 4. November 2026, ausgewählt“. The open panel is marked `lang="de"` (3.30.2). Since 3.33 (048-n2) the other panels are German too: „Gilt ab“ passes „Monat wählen“, „Vorheriges Jahr“, „Nächstes Jahr“, „Dieser Monat“ and „ausgewählt“, and both sm fields „Heute“, „Datum wählen“, „Vorheriger Monat“, „Nächster Monat“ and „ausgewählt“.',
       },
     },
   },
@@ -272,6 +272,11 @@ export const LabelDe: Story = {
           locale="de-DE"
           placeholder="Monat wählen"
           clearAriaLabel="Monat löschen"
+          monthDialogAriaLabel="Monat wählen"
+          previousYearAriaLabel="Vorheriges Jahr"
+          nextYearAriaLabel="Nächstes Jahr"
+          currentMonthLabel="Dieser Monat"
+          selectedAriaLabel="ausgewählt"
           [ngModel]="'2026-07'"
         ></lc-datepicker>
         <lc-datepicker
@@ -288,8 +293,8 @@ export const LabelDe: Story = {
           [ngModel]="'2026-11-04'"
         ></lc-datepicker>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <lc-datepicker size="sm" label="Leistungsverrechnungsschlüssel ab" locale="de-DE" placeholder="Datum wählen" clearAriaLabel="Datum löschen"></lc-datepicker>
-          <lc-datepicker size="sm" label="Leistungsverrechnungsschlüssel bis" locale="de-DE" placeholder="Datum wählen" clearAriaLabel="Datum löschen"></lc-datepicker>
+          <lc-datepicker size="sm" label="Leistungsverrechnungsschlüssel ab" locale="de-DE" placeholder="Datum wählen" clearAriaLabel="Datum löschen" todayLabel="Heute" dialogAriaLabel="Datum wählen" previousMonthAriaLabel="Vorheriger Monat" nextMonthAriaLabel="Nächster Monat" selectedAriaLabel="ausgewählt"></lc-datepicker>
+          <lc-datepicker size="sm" label="Leistungsverrechnungsschlüssel bis" locale="de-DE" placeholder="Datum wählen" clearAriaLabel="Datum löschen" todayLabel="Heute" dialogAriaLabel="Datum wählen" previousMonthAriaLabel="Vorheriger Monat" nextMonthAriaLabel="Nächster Monat" selectedAriaLabel="ausgewählt"></lc-datepicker>
         </div>
       </div>`,
   }),
@@ -366,7 +371,7 @@ export const DayPanel: Story = {
     docs: {
       description: {
         story:
-          '3.30 (request 047): the selected day has the inset 2 px `--color-primary-500` ring of the month cells (follow-up 046-f2): 4.37:1 on the light panel, 9.13:1 on the dark one, where the fill alone is 2.78:1; its text stays 6.21:1 on the fill. Below 1024 px (follow-up 046-n3) every target is 44 px: the month buttons 44 × 44, "Today" 44 high and the days 44 × 44 without gaps, so the panel is 342 × 448 px at 360 px and is pushed into the viewport, 8 px from its left edge here (at 320 px the days are 38.56 px). From 1024 px the panel keeps its 310 × 395 px. The wrapper puts the field at x 24, as in lc-app-page. Without `locale`, each day is named with its long English date ("Wednesday, July 15, 2026, selected"), so the visible number is part of the name (WCAG 2.5.3, 3.30.1).',
+          '3.30 (request 047): the selected day has the inset 2 px `--color-primary-500` ring of the month cells (follow-up 046-f2): 4.37:1 on the light panel, 9.13:1 on the dark one, where the fill alone is 2.78:1; its text stays 6.21:1 on the fill. Below 1024 px (follow-up 046-n3) every target is 44 px: the month buttons 44 × 44, "Today" 44 high and the days 44 × 44 without gaps, so the panel is 342 × 448 px at 360 px and is pushed into the viewport, at x 10 with its right edge 8 px from the viewport edge (3.33: every push keeps 8 px from all edges; at 320 px the days are 38.56 px). From 1024 px the panel keeps its 310 × 395 px. The wrapper puts the field at x 24, as in lc-app-page. Without `locale`, each day is named with its long English date ("Wednesday, July 15, 2026, selected"), so the visible number is part of the name (WCAG 2.5.3, 3.30.1).',
       },
     },
   },
@@ -375,6 +380,28 @@ export const DayPanel: Story = {
     template: `
       <div style="max-width: 400px; padding-inline: 8px;">
         <lc-datepicker ariaLabel="Booking date" [ngModel]="'2026-07-15'"></lc-datepicker>
+      </div>`,
+  }),
+  play: openByClick,
+};
+
+/** 3.33 (request 052, 047-n1/n2/n3): a field at the bottom of the viewport opens its panel above. */
+export const OpensAbove: Story = {
+  name: 'Opens Above',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.33 (request 052, 047-n1): the field sits at the bottom of the viewport, so the panel opens above it, with the same 4 px gap as below (it was 0). The panel keeps 8 px from every viewport edge after a push (047-n2: at 360 px it was end-aligned at x 2), is at most the viewport minus 16 px wide and high, and scrolls inside when it needs more (047-n3, 200 % text). Start and end edges stay aligned with the field when it fits.',
+      },
+      story: { inline: false, height: '560px' },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [DatepickerComponent, FormsModule] },
+    template: `
+      <div style="display: flex; flex-direction: column; justify-content: flex-end; min-height: calc(100vh - 32px); max-width: 400px;">
+        <lc-datepicker label="Start date" [ngModel]="'2026-07-15'"></lc-datepicker>
       </div>`,
   }),
   play: openByClick,

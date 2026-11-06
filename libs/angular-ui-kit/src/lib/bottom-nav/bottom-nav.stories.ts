@@ -84,7 +84,7 @@ const meta: Meta<BottomNavComponent> = {
     moreBadge: {
       control: 'object',
       description:
-        'Badge on the "More" entry (`BottomNavBadge`: `{ value, variant? }`, on overflow or with `showMore`), e.g. the open tasks on the pages behind it: drawn like an item badge and read after the label through `badgeAriaLabel`. The kit doesn\'t add up the hidden destinations\' badges; pass the value to show. It sits on the bar\'s last entry, so keep it to two characters (`\'9+\'`). `null` or `undefined`: no badge',
+        'Badge on the "More" entry (`BottomNavBadge`: `{ value, variant? }`, on overflow or with `showMore`), e.g. the open tasks on the pages behind it: drawn like an item badge and read after the label through `badgeAriaLabel`. The kit doesn\'t add up the hidden destinations\' badges; pass the value to show. It sits on the bar\'s last entry; values up to three characters (`\'99+\'`) fit: on the last entry a badge that would pass the entry\'s edge moves left until it ends there (3.33). `null` or `undefined`: no badge',
       table: { defaultValue: { summary: 'null' } },
     },
     badgeAriaLabel: {
@@ -319,6 +319,46 @@ export const MoreBadge: Story = {
       `<lc-bottom-nav [items]="items" [activeRoute]="activeRoute" [moreRoute]="moreRoute" [moreBadge]="moreBadge"
          [variant]="variant" [ariaLabel]="ariaLabel" [fixed]="fixed" (reselect)="reselect($event)" />`,
     ),
+  }),
+};
+
+/** The *More Badge* destinations: four stay, "More" takes the rest (request 052). */
+const moreBadgeItems: BottomNavItem[] = [
+  { id: 'today', label: 'Today', icon: 'sun', route: '/' },
+  { id: 'contracts', label: 'Contracts', icon: 'file-text', route: '/contracts', badge: { value: 2, variant: 'primary' } },
+  { id: 'finances', label: 'Finances', icon: 'wallet', route: '/finances' },
+  { id: 'documents', label: 'Documents', icon: 'folder', route: '/documents' },
+  { id: 'calendar', label: 'Calendar', icon: 'calendar', route: '/calendar' },
+  { id: 'household', label: 'Household', icon: 'home', route: '/household' },
+];
+
+/** 3.33 (request 052, 050-n6): a three-character More badge stays inside the bar. */
+export const MoreBadgeThreeCharacters: Story = {
+  name: 'More Badge, Three Characters',
+  parameters: {
+    // Fullscreen: the 360 px phone frames fill a 360 px viewport (the padded
+    // canvas would push their end edge, and the badge, out of view).
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        story:
+          '3.33 (request 052, 050-n6): "99+" on the "More" entry of a five-entry bar at 360 px, docked and floating. On the last entry a badge that would pass the entry\'s edge moves left until it ends there (it ended 1.2 px past the docked and 1.4 px past the floating bar\'s edge); a badge that fits ("3" in *More Badge*) stays where it always sat, 6 px right of the pill centre, and badges on the other entries ("2" on Contracts) never move. The value is shown as passed, never shortened.',
+      },
+    },
+  },
+  render: () => ({
+    props: { moreBadgeItems, ninetyNine: { value: '99+', variant: 'primary' } },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        ${phoneFrame(
+          `<lc-bottom-nav [items]="moreBadgeItems" activeRoute="/household" moreRoute="/more" [moreBadge]="ninetyNine"
+             variant="docked" [fixed]="false" ariaLabel="Main navigation, docked" />`,
+        )}
+        ${phoneFrame(
+          `<lc-bottom-nav [items]="moreBadgeItems" activeRoute="/household" moreRoute="/more" [moreBadge]="ninetyNine"
+             variant="floating" [fixed]="false" ariaLabel="Main navigation, floating" />`,
+        )}
+      </div>`,
   }),
 };
 

@@ -16,7 +16,7 @@ import {
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { OverlayModule } from '@angular/cdk/overlay';
-import { closestLang } from '@lifecorner/angular-ui-kit/internal/a11y';
+import { openPanelLang } from '@lifecorner/angular-ui-kit/internal/a11y';
 
 export type DateValue = Date | string | null;
 
@@ -267,14 +267,16 @@ export class DatepickerComponent implements ControlValueAccessor {
   /** Month granularity (3.29). */
   protected readonly isMonthMode = computed(() => this.granularity() === 'month');
 
+  /** The host's closest `[lang]` while the panel is open, kept live (3.33, 049-n3). */
+  private readonly hostLang = openPanelLang(this.isOpen);
+
   /**
    * `lang` of the open panel (3.30.2, WCAG 3.1.2): the overlay renders under
    * `<body>`, so it takes the host's closest `[lang]`, else `locale`, else none.
-   * Read at every opening; `null` while closed, so the server never reads the DOM.
+   * Read at every opening and, since 3.33, again when a `lang` changes while
+   * the panel is open; `null` while closed, so the server never reads the DOM.
    */
-  protected readonly panelLang = computed(() =>
-    this.isOpen() ? (closestLang(this.host.nativeElement) ?? (this.locale() || null)) : null
-  );
+  protected readonly panelLang = computed(() => (this.isOpen() ? (this.hostLang() ?? (this.locale() || null)) : null));
 
   // Computed values
   readonly formattedDate = computed(() => {

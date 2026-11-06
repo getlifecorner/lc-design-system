@@ -143,7 +143,7 @@ export const TouchTargets: Story = {
     docs: {
       description: {
         story:
-          '3.27.1 (request 043): six German tags, three chip rows at 360 px, one row from 1024 px. Each × (16 px) has a 24 × 24 px hit area inside its chip (0.8 px from the chip top, 4 px from its end), without paint: WCAG 2.5.8 is met by size. A 44 px area would cover the next chip row (29.6 px apart) and the text input 12 px after the last ×. The chip text uses `--color-on-primary-subtle` (F-26): 7.18:1 in light on its tint (was 3.43), 6.34:1 in dark (unchanged); the × at rest 3.59:1 / 3.96:1.',
+          '3.27.1 (request 043): six German tags, three chip rows at 360 px, one row from 1024 px. Each × (16 px) has a 24 × 24 px hit area inside its chip (5 px from its end), without paint: WCAG 2.5.8 is met by size. A 44 px area would cover the next chip row and the text input 13 px after the last ×. The chip text uses `--color-on-primary-subtle` (F-26): 7.18:1 in light on its tint (was 3.43), 6.34:1 in dark (unchanged); the × at rest 3.59:1 / 3.96:1. Since 3.33 (F-32) a tag longer than 150 px wraps instead of ending in "…": „Kostenstellenverantwortung“ is two lines („Kostenstellenverant-/wortung“, 45.2 px), so the field is 118.4 px high at 360 px; the host sets `lang="de"` for the hyphen.',
       },
     },
   },
@@ -152,6 +152,24 @@ export const TouchTargets: Story = {
     // Not `tags`: Storybook copies every story prop that is not an input onto the
     // story component, so `tags` replaced the component's `tags` signal (review 043 r1 F1).
     props: { seedTags: ['Kostenstellenverantwortung', 'Budget', 'Freigabe', 'Reisekosten', 'Personal', 'Quartal'] },
-    template: `<lc-tag-input label="Schlagwörter" placeholder="Schlagwort hinzufügen…" removeTagAriaLabel="Entfernen" [ngModel]="seedTags"></lc-tag-input>`,
+    template: `<lc-tag-input lang="de" label="Schlagwörter" placeholder="Schlagwort hinzufügen…" removeTagAriaLabel="Entfernen" [ngModel]="seedTags"></lc-tag-input>`,
+  }),
+};
+
+/** 3.33 (request 052, F-32): long tags wrap and stay readable in full. */
+export const LongTags: Story = {
+  name: 'Long Tags (DE)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.33 (request 052, F-32): a tag longer than the chip\'s 150 px text width wraps over as many lines as it needs (it ended in "…" with no way to read it). „Leistungsverrechnungsschlüssel Nebenkosten 2026“ is three lines at 360 px, „Kostenstellenverantwortung“ two with a hyphen (the host sets `lang="de"`), „Q3“ stays one line. The × keeps its 24 × 24 px area inside the chip, centred on the chip\'s height; the chip text and the × keep their colours.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [TagInputComponent, FormsModule] },
+    props: { seedTags: ['Leistungsverrechnungsschlüssel Nebenkosten 2026', 'Kostenstellenverantwortung', 'Q3'] },
+    template: `<lc-tag-input lang="de" label="Schlagwörter" placeholder="Schlagwort hinzufügen…" removeTagAriaLabel="Entfernen" [ngModel]="seedTags"></lc-tag-input>`,
   }),
 };

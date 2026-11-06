@@ -3,7 +3,12 @@
     <!-- Both regions are always present (even empty) so that toasts inserted
          later are announced; the toasts themselves do not announce again. -->
     @for (live of liveLevels; track live) {
-      <div class="lc-toast-outlet__region" [attr.aria-live]="live" aria-atomic="false">
+      <div
+        class="lc-toast-outlet__region"
+        [class.lc-toast-outlet__region--latest]="latestLive().get(position) === live"
+        [attr.aria-live]="live"
+        aria-atomic="false"
+      >
         @for (toast of toastsFor(position, live); track toast.id) {
           <lc-toast [toast]="toast" [announce]="false" [closeAriaLabel]="closeAriaLabel()" (closed)="onClosed($event)" />
         }

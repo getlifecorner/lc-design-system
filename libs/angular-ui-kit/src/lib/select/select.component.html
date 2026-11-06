@@ -97,6 +97,7 @@
       #dropdownPanel
       class="lc-select__dropdown"
       [class.lc-select__dropdown--open]="isOpen()"
+      [style.--_lc-select-field-width.px]="fieldWidth()"
       [attr.lang]="panelLang()"
     >
       @if (searchable()) {

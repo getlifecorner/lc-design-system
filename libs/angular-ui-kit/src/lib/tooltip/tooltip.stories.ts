@@ -148,3 +148,32 @@ export const KeyboardFocus: Story = {
     canvasElement.querySelector<HTMLButtonElement>('[lang="de"] lc-button button')?.focus();
   },
 };
+
+/** 3.33 (request 052, 051-n1): a host with two controls describes the one that has focus. */
+export const HostWithTwoControls: Story = {
+  name: 'Host with Two Controls',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.33 (request 052, 051-n1): `lcTooltip` on a group with two buttons. Tab to „Fett“ and the tooltip describes „Fett“; Tab on to „Kursiv“ and `aria-describedby` moves to „Kursiv“ (it stayed on the first button), while the tooltip stays shown. On hover it describes the first button. Hosts with one control and `lc-button` behave as before. The story focuses „Fett“, then „Kursiv“ (in the story view).',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div lang="de" style="padding: 72px 16px;">
+        <div lcTooltip="Formatierung" role="group" aria-label="Textformat" style="display: inline-flex; gap: 8px;">
+          <lc-button variant="outline">Fett</lc-button>
+          <lc-button variant="outline">Kursiv</lc-button>
+        </div>
+      </div>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const buttons = canvasElement.querySelectorAll<HTMLButtonElement>('[role="group"] lc-button button');
+    buttons[0]?.focus();
+    buttons[1]?.focus();
+  },
+};

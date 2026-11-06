@@ -67,12 +67,13 @@
     cdkConnectedOverlay
     [cdkConnectedOverlayOrigin]="inputWrapper"
     [cdkConnectedOverlayOpen]="isOpen()"
-    [cdkConnectedOverlayMatchWidth]="true"
+    [cdkConnectedOverlayPositions]="positions"
     (detach)="isOpen.set(false)"
   >
     <div
       #dropdownEl
       class="lc-combobox__dropdown"
+      [style.--_lc-combobox-field-width.px]="fieldWidth()"
       role="listbox"
       [id]="listboxId"
       [attr.aria-multiselectable]="multiple() ? true : null"

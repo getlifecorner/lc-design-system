@@ -1023,12 +1023,16 @@ export const ReservedAndNamedRightColumn: PageWidthStory = {
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
 
-/** The account page's table (AS-36), German, long headers; sortable headers are its keyboard stops. */
+/**
+ * The account page's table (AS-36), German; sortable headers are its keyboard
+ * stops. 3.33 (request 052, 045-n1): shorter headers („Kontoinhaber/in“,
+ * „Aktualisiert“), so the table fits the 928 px region at 1280 to 1920 px.
+ */
 const accountColumns: TableColumn[] = [
-  { key: 'holder', label: 'Kontoinhaberin oder Kontoinhaber', sortable: true },
+  { key: 'holder', label: 'Kontoinhaber/in', sortable: true },
   { key: 'name', label: 'Kontobezeichnung', sortable: true },
   { key: 'bank', label: 'Kreditinstitut', sortable: true },
-  { key: 'updated', label: 'Letzte Aktualisierung', sortable: true },
+  { key: 'updated', label: 'Aktualisiert', sortable: true },
   { key: 'balance', label: 'Kontostand', sortable: true, align: 'end', formatter: (value) => euro.format(value as number) },
 ];
 

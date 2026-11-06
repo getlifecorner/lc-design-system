@@ -64,15 +64,17 @@
         />
       </svg>
     </div>
+    <!-- 3.33 (request 052, D-5): the overlay's origin (see the SCSS). -->
+    <span #overlayOrigin class="lc-datepicker-overlay-origin" aria-hidden="true"></span>
   </div>
 
   <!-- Calendar Panel -->
   <ng-template
     cdkConnectedOverlay
-    [cdkConnectedOverlayOrigin]="datepickerInput"
+    [cdkConnectedOverlayOrigin]="overlayOrigin"
     [cdkConnectedOverlayOpen]="isOpen()"
     [cdkConnectedOverlayPush]="true"
-    [cdkConnectedOverlayViewportMargin]="8"
+    [cdkConnectedOverlayViewportMargin]="0"
     [cdkConnectedOverlayHasBackdrop]="true"
     [cdkConnectedOverlayBackdropClass]="'cdk-overlay-transparent-backdrop'"
     (backdropClick)="onClickOutside()"

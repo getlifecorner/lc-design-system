@@ -284,7 +284,10 @@ describe('SidenavComponent badgeAriaLabel (3.31, request 050)', () => {
       expect(getComputedStyle(entry(label).querySelector('.lc-sidenav__nav-label') as Element).display).toBe('none');
       expect(srText(label)).toBe(text);
       expect(name(label)).toBe(text);
-      expect(entry(label).getAttribute('title')).toBe(label);
+      // 3.33 (request 052, 050-n5, D-7): no `title` any more (it became the
+      // description, repeating the label); the tooltip reads `data-tooltip`.
+      expect(entry(label).getAttribute('title')).toBe('');
+      expect(entry(label).getAttribute('data-tooltip')).toBe(label);
     });
 
     it('reads "Label value" with the default (was the bare count)', () => {

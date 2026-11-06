@@ -457,13 +457,18 @@ describe('Component pairings of 3.19.1 (request 025)', () => {
     for (const rule of chipRules) expect(rule[4]).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(|:\s*white\b/i);
   });
 
-  it('AC-13: in forced colours the pressed chip keeps a Highlight outline unless it is focused', () => {
+  // 3.33 (request 052, 044-n3, AC-16): the pressed mark in forced colours is
+  // a Highlight underline (the rich-text-editor's), not the focus ring's
+  // 2 px outline, and it stays while the chip is focused.
+  it('AC-13: in forced colours the pressed chip is underlined in Highlight, also while focused', () => {
     const at = ncCss.indexOf('@media (forced-colors: active)');
     expect(at).toBeGreaterThan(-1);
     const media = ncCss.slice(at, ncCss.indexOf('}\n}', at));
-    expect(media).toMatch(/\.lc-nc__filter--active:not\(:focus-visible\) \{/);
-    expect(media).toMatch(/outline: 2px solid Highlight;/);
-    expect(media).toMatch(/outline-offset: 1px;/);
+    expect(media).toMatch(
+      /\.lc-nc__filter\[aria-pressed=true\] \{\s*text-decoration-line: underline;\s*text-decoration-thickness: 2px;\s*text-underline-offset: 4px;\s*text-decoration-color: Highlight;/,
+    );
+    expect(media).not.toMatch(/:not\(:focus-visible\)/);
+    expect(media).not.toMatch(/outline: 2px solid Highlight;/);
   });
 
   /** Design 025 §5, per palette [light, dark]: the minimum over both panel ends. */
@@ -735,12 +740,15 @@ describe('Component pairings of 3.21.1 (request 029)', () => {
     expect(sheets.nc).not.toMatch(/#3b82f6|#22c55e|#f59e0b|#ef4444/i);
   });
 
-  it('D-2: the level pills stay at full opacity; the pressed pill gets an outline in forced colours', () => {
+  // 3.33 (request 052, 044-n3, AC-16): the forced-colours mark is the
+  // rich-text-editor's Highlight underline (was a 2 px outline, hidden on focus).
+  it('D-2: the level pills stay at full opacity; the pressed pill is underlined in forced colours', () => {
     expect(fills('log', '.lc-log-viewer__level-pill').opacity).toBeUndefined();
     expect(fills('log', '.lc-log-viewer__level-pill--active').opacity).toBeUndefined();
     expect(sheets.log).toMatch(
-      /@media \(forced-colors: active\) \{\s*\.lc-log-viewer__level-pill--active:not\(:focus-visible\) \{\s*outline: 2px solid Highlight;\s*outline-offset: 1px;\s*\}/,
+      /@media \(forced-colors: active\) \{\s*\.lc-log-viewer__level-pill\[aria-pressed=true\] \{\s*text-decoration-line: underline;\s*text-decoration-thickness: 2px;\s*text-underline-offset: 4px;\s*text-decoration-color: Highlight;\s*\}/,
     );
+    expect(sheets.log).not.toMatch(/level-pill--active:not\(:focus-visible\)/);
   });
 
   it('AC-10: the progress track is unchanged; primary reads the theme token (request 039), secondary the data mark (036)', () => {

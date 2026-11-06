@@ -187,6 +187,16 @@ export class SelectComponent implements ControlValueAccessor {
    */
   protected readonly panelLang = computed(() => (this.isOpen() ? closestLang(this.host.nativeElement) : null));
 
+  /**
+   * The trigger's width in px while the dropdown is open (3.33, request 052,
+   * 050-n4), read at every opening: the panel's floor next to its 200 px
+   * (`min-width`), so it is at least as wide as the field and wider content
+   * still grows it. `null` while closed.
+   */
+  protected readonly fieldWidth = computed(() =>
+    this.isOpen() ? (this.selectTrigger()?.nativeElement.getBoundingClientRect().width ?? null) : null,
+  );
+
   // Computed values
   readonly filteredOptions = computed(() => {
     const query = this.searchQuery().toLowerCase();

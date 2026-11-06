@@ -121,7 +121,8 @@ const CONTROL =
  *
  * Shows on hover and on keyboard focus of the host or of an element inside it
  * (3.32). On a wrapper such as `lc-button`, the tooltip describes and anchors
- * to the wrapped `<button>`.
+ * to the wrapped `<button>`. On a host with several controls, the one that
+ * has focus is described (3.33); on hover, the first.
  *
  * @example
  * ```html
@@ -222,6 +223,13 @@ export class TooltipDirective implements OnDestroy {
   @HostListener('focusin', ['$event'])
   onFocusIn(event: FocusEvent): void {
     if (event.target === this.elementRef.nativeElement) return;
+    // 3.33 (request 052, 051-n1): focus moved to another control inside the
+    // host while the tooltip shows: that control is described now.
+    const target = event.target as HTMLElement | null;
+    if (this.tooltipRef && target?.matches?.(CONTROL) && target !== this.describedEl) {
+      this.removeDescribedBy();
+      this.addDescribedBy(target);
+    }
     this.showWithDelay();
   }
 
@@ -375,10 +383,16 @@ export class TooltipDirective implements OnDestroy {
     this.renderer.addClass(tooltipEl, `lc-tooltip--${position}`);
   }
 
-  /** The described element: the host if it is a control, else the first control inside it, else the host. */
+  /**
+   * The described element: the host if it is a control, else the control
+   * inside it that has focus (3.33, request 052, 051-n1: a host with several
+   * controls), else the first control inside it, else the host.
+   */
   private resolveControl(): HTMLElement {
     const host = this.elementRef.nativeElement;
     if (host.matches(CONTROL)) return host;
+    const focused = host.ownerDocument?.activeElement as HTMLElement | null | undefined;
+    if (focused && focused !== host && host.contains(focused) && focused.matches(CONTROL)) return focused;
     return host.querySelector<HTMLElement>(CONTROL) ?? host;
   }
 

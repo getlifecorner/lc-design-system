@@ -404,6 +404,36 @@ $hamburger-glyph: 24px;
   }
 }
 
+// 3.33 (request 052, app-shell row 1): `contextPlacement="below"` (the class
+// is set only with a `contextName`). Up to 640 px the end group dissolves
+// (`display: contents`), so title, end slot, theme button and account menu
+// keep their first-row places while the context button takes a row of its
+// own after them (and after a has-nav header's nav row): as wide as the
+// header, bleeding into its padding as the nav row does so the label's text
+// lines up with the brand, at least 44 px high, its texts start-aligned.
+// From 641 px nothing applies: the button sits in the end group as before.
+@media (max-width: 640px) {
+  .lc-header--context-below {
+    justify-content: flex-end;
+
+    .lc-header__end {
+      display: contents;
+    }
+
+    .lc-header__context-info {
+      display: flex;
+      order: 2;
+      flex: 1 0 calc(100% + 2 * var(--spacing-3));
+      margin: 0 calc(-1 * var(--spacing-3)) var(--spacing-2);
+      max-width: none;
+      min-height: var(--size-min-touch-height, 2.75rem);
+      align-items: flex-start;
+      justify-content: center;
+      text-align: start;
+    }
+  }
+}
+
 .lc-header__context-label {
   font-size: var(--font-size-xs);
   font-weight: 500;

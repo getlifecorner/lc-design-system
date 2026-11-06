@@ -51,6 +51,13 @@ export type HeaderVariant = 'default' | 'transparent';
 export type HeaderUserMenuTrigger = 'icon' | 'avatar';
 
 /**
+ * Where the context button sits up to 640 px (3.33): `inline` in the end
+ * group, hidden up to 640 px (as before), or `below`, a row of its own under
+ * the title. From 641 px both render it inline.
+ */
+export type HeaderContextPlacement = 'inline' | 'below';
+
+/**
  * AppHeaderComponent - Global application header for the LifeCorner shell
  *
  * Features:
@@ -92,6 +99,9 @@ export type HeaderUserMenuTrigger = 'icon' | 'avatar';
  *   as typed (no uppercase).
  * - The account menu is at most `min(18rem, 100vw − 2rem)` wide; the name and
  *   email in its header wrap instead of being cut.
+ * - `contextPlacement="below"` (3.33): up to 640 px the context button
+ *   (`contextName`) takes a full-width row of its own under the title instead
+ *   of being hidden; from 641 px it sits in the end group as before.
  * - Every built-in label is an input (`homeAriaLabel`, `hamburgerAriaLabel`,
  *   `userMenuAriaLabel`, `navAriaLabel`, `profileLabel`, `logoutLabel`,
  *   `themeToDarkAriaLabel`, `themeToLightAriaLabel`, `contextAriaLabel`);
@@ -248,6 +258,16 @@ export class HeaderComponent {
   readonly autoToggleTheme = input(true);
   readonly contextName = input('');
   readonly contextLabel = input('');
+  /**
+   * Where the context button sits up to 640 px (3.33, app-shell row 1).
+   * `'inline'`: in the end group, hidden up to 640 px (as before). `'below'`:
+   * up to 640 px a row of its own under the title, as wide as the header and
+   * at least 44 px high; title, `end` slot and account menu stay in the first
+   * row. From 641 px both render the button inline. No second row without
+   * `contextName`.
+   * @default 'inline'
+   */
+  readonly contextPlacement = input<HeaderContextPlacement>('inline');
   readonly menuSize = input<'sm' | 'md' | 'lg'>('sm');
   readonly showProfileMenuItem = input(true);
   /** Render the account menu (avatar trigger with Profile/Logout). */
@@ -374,6 +394,9 @@ export class HeaderComponent {
   protected readonly contextButtonAriaLabel = computed(() =>
     nameWithText(this.contextAriaLabel(), [this.contextLabel(), this.contextName()].filter(Boolean).join(' ')),
   );
+
+  /** `contextPlacement="below"` with a context button to place (3.33). */
+  protected readonly contextBelow = computed(() => this.contextPlacement() === 'below' && !!this.contextName());
 
   /**
    * Get menu items for profile dropdown
