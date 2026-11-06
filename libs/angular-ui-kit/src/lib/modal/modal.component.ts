@@ -10,6 +10,9 @@ import {
   HostListener,
   OnDestroy,
   inject,
+  afterNextRender,
+  untracked,
+  EnvironmentInjector,
 } from '@angular/core';
 import { A11yModule } from '@angular/cdk/a11y';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
@@ -28,6 +31,13 @@ export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
 export type ModalPlacement = 'center' | 'auto' | 'sheet';
 
 /**
+ * What a custom-element `returnFocusTo` host (`<lc-button>`) hands the focus
+ * to when it can't take it itself.
+ */
+const FOCUSABLE =
+  'button:not([disabled]), [href], input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/**
  * Modal dialog component for focused user interactions.
  *
  * Features:
@@ -35,7 +45,9 @@ export type ModalPlacement = 'center' | 'auto' | 'sheet';
  * - Placement: centred, or a bottom sheet on phones (`placement="auto"`)
  * - Header and footer stay visible while the body scrolls; the close button
  *   is a 44 px target
- * - Focus trap for keyboard accessibility
+ * - Focus trap for keyboard accessibility; `returnFocusTo` (3.34) names the
+ *   element that gets the focus back after the dialog closed (WebKit doesn't
+ *   focus a tapped button, so the one captured at open is `body`)
  * - Backdrop click and Escape key to close
  * - Two-way open binding
  * - Header, body, and footer content slots
@@ -124,6 +136,21 @@ export class ModalComponent implements OnDestroy {
   closeAriaLabel = input('Close modal');
 
   /**
+   * Element that gets the focus back after the dialog closed (3.34), instead
+   * of the one that had it at open. Set it to the trigger: WebKit (Safari,
+   * every iOS browser) doesn't focus a tapped button, so the captured element
+   * is `body`. Applied after the next render, once the dialog has left the DOM
+   * and the focus trap has restored its captured element. This holds on every
+   * close: ×, Escape, backdrop, `open` false, `closeModal()`, and destroying an
+   * open modal. A custom-element host that can't take focus (`<lc-button>`)
+   * hands it to its first focusable descendant. Ignored when the element is no
+   * longer in the document or can't take focus; the captured element then
+   * keeps it. `null`: as before.
+   * @default null
+   */
+  returnFocusTo = input<HTMLElement | null>(null);
+
+  /**
    * Emitted when modal opens
    */
   readonly modalOpened = output<void>();
@@ -160,6 +187,13 @@ export class ModalComponent implements OnDestroy {
   /** Identifies this instance in the overlay stack. */
   private readonly modalId = `lc-modal-${++ModalComponent.nextId}`;
   private originalOverflow?: string;
+  /**
+   * The environment injector: a node injector would cancel the focus-return
+   * hook when the modal is destroyed while open (`ConfirmService`).
+   */
+  private readonly environmentInjector = inject(EnvironmentInjector);
+  /** Whether `showModal()` ran without a `hideModal()` after it. */
+  private shown = false;
 
   constructor() {
     // Watch for open state changes
@@ -231,9 +265,11 @@ export class ModalComponent implements OnDestroy {
 
   /**
    * Show the modal. Focus is moved inside and restored on close by the
-   * template's `cdkTrapFocus` / `cdkTrapFocusAutoCapture`.
+   * template's `cdkTrapFocus` / `cdkTrapFocusAutoCapture`, then given to
+   * `returnFocusTo` when set (3.34).
    */
   private showModal(): void {
+    this.shown = true;
     this.overlayStack.push(this.modalId);
 
     // Lock body scroll
@@ -254,5 +290,32 @@ export class ModalComponent implements OnDestroy {
       document.body.style.overflow = this.originalOverflow;
       this.originalOverflow = undefined;
     }
+
+    if (!this.shown) return;
+    this.shown = false;
+    // Untracked: this runs inside the open effect, and a tracked read would
+    // re-run it (and re-push the modal above a nested overlay) when the input
+    // changes.
+    if (untracked(this.returnFocusTo)) this.scheduleFocusReturn();
+  }
+
+  /**
+   * Focuses `returnFocusTo` after the next render: the template refresh has
+   * removed the dialog, and `cdkTrapFocus` has restored its captured element
+   * on destroy, so this is the last focus write. Reads the input again then,
+   * so a trigger re-rendered meanwhile is taken from a fresh query.
+   */
+  private scheduleFocusReturn(): void {
+    afterNextRender(
+      () => {
+        const target = this.returnFocusTo();
+        if (this.shown || !target?.isConnected) return;
+        target.focus();
+        if (target.ownerDocument.activeElement !== target && target.localName.includes('-')) {
+          target.querySelector<HTMLElement>(FOCUSABLE)?.focus();
+        }
+      },
+      { injector: this.environmentInjector },
+    );
   }
 }

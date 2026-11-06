@@ -115,6 +115,7 @@
     <!-- Context info (e.g. tenant, organization, project) -->
     @if (contextName()) {
       <button
+        #contextButton
         type="button"
         class="lc-header__context-info"
         [attr.aria-label]="contextButtonAriaLabel()"

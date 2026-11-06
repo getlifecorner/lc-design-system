@@ -1,7 +1,9 @@
 import {
+  AfterRenderRef,
   Component,
   ElementRef,
   Injector,
+  afterNextRender,
   input,
   output,
   signal,
@@ -102,6 +104,8 @@ export type HeaderContextPlacement = 'inline' | 'below';
  * - `contextPlacement="below"` (3.33): up to 640 px the context button
  *   (`contextName`) takes a full-width row of its own under the title instead
  *   of being hidden; from 641 px it sits in the end group as before.
+ * - `focusContext()` (3.34): moves the focus to the context button after the
+ *   next render, e.g. after a choice in the sheet it opened (WCAG 2.4.3).
  * - Every built-in label is an input (`homeAriaLabel`, `hamburgerAriaLabel`,
  *   `userMenuAriaLabel`, `navAriaLabel`, `profileLabel`, `logoutLabel`,
  *   `themeToDarkAriaLabel`, `themeToLightAriaLabel`, `contextAriaLabel`);
@@ -340,6 +344,12 @@ export class HeaderComponent {
 
   private readonly hamburger = viewChild('hamburger', { read: ElementRef<HTMLElement> });
 
+  /** The context button (`contextName`), while it is rendered. */
+  private readonly contextButton = viewChild<ElementRef<HTMLButtonElement>>('contextButton');
+
+  /** The `focusContext()` hook waiting for the next render. */
+  private pendingContextFocus?: AfterRenderRef;
+
   constructor() {
     // The hamburger is an <lc-button>; the ARIA state belongs on its native
     // <button> (the element that has the button role), not on the custom
@@ -449,6 +459,25 @@ export class HeaderComponent {
    */
   closeDropdown(): void {
     this.dropdownOpen.set(false);
+  }
+
+  /**
+   * Moves the focus to the context button after the next render (3.34), so a
+   * `contextName` set just before is already in its name. Call it right after
+   * the choice, or when the sheet that changes the context closes. Does
+   * nothing while the button isn't shown (no `contextName`, or up to 640 px
+   * with `contextPlacement="inline"`). A second call before that render
+   * replaces the first.
+   */
+  focusContext(): void {
+    this.pendingContextFocus?.destroy();
+    this.pendingContextFocus = afterNextRender(
+      () => {
+        this.pendingContextFocus = undefined;
+        this.contextButton()?.nativeElement.focus();
+      },
+      { injector: this.injector },
+    );
   }
 
   /**

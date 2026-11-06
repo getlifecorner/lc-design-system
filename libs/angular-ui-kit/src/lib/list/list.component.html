@@ -57,7 +57,7 @@
   }
 </ng-template>
 
-<div [class]="listClasses()" role="list">
+<div #listEl [class]="listClasses()" role="list">
   @for (item of items(); track item.id || $index) {
     @if (isLinkRow(item)) {
       <!-- A real link over the whole row (3.16, TD-4); the row element carries the item styles. -->

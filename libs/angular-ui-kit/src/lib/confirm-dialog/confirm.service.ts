@@ -27,6 +27,11 @@ export interface ConfirmOptions {
   buttonSize?: ConfirmDialogButtonSize;
   /** `center`, `auto` (a bottom sheet below 640 px) or `sheet` (3.3). */
   placement?: ModalPlacement;
+  /**
+   * Element that gets the focus back after the dialog closed (3.34); see
+   * `lc-modal` `returnFocusTo`.
+   */
+  returnFocusTo?: HTMLElement | null;
 }
 
 /**
@@ -73,6 +78,7 @@ export class ConfirmService {
       if (opts.closeAriaLabel) componentRef.setInput('closeAriaLabel', opts.closeAriaLabel);
       if (opts.buttonSize) componentRef.setInput('buttonSize', opts.buttonSize);
       if (opts.placement) componentRef.setInput('placement', opts.placement);
+      if (opts.returnFocusTo) componentRef.setInput('returnFocusTo', opts.returnFocusTo);
 
       const cleanup = () => {
         this.appRef.detachView(componentRef.hostView);

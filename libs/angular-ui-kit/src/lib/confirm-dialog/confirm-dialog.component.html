@@ -5,6 +5,7 @@
   [showCloseButton]="true"
   [closeAriaLabel]="closeAriaLabel()"
   [ariaLabelledBy]="titleId"
+  [returnFocusTo]="returnFocusTo()"
   (openChange)="$event ? null : onModalClose()"
 >
   <div slot="header">

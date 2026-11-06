@@ -189,6 +189,9 @@ $text-link: 'a:where(:not(.btn))';
   flex-shrink: 0;
   background: transparent;
   border: none;
+  // The glyph takes the variant's text colour (3.34): the UA `buttontext`
+  // black was 1.15–1.39:1 on the dark tints (WCAG 1.4.11).
+  color: inherit;
   cursor: pointer;
   padding: var(--spacing-1);
   margin: calc(var(--spacing-1) * -1);
@@ -197,6 +200,18 @@ $text-link: 'a:where(:not(.btn))';
   display: flex;
   align-items: center;
   justify-content: center;
+  // The 44 × 44 hit area below is centred on the 28 px box (3.34).
+  position: relative;
+
+  // A transparent 44 × 44 px hit area (3.34): the box, its margin and its
+  // paint stay as they are, so the alert's look and height don't change. CSS
+  // px, not `--size-min-touch-height`: that token is 88 px at 200 % text and
+  // would cover the action beside the ×.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: min(0px, calc((100% - 44px) / 2));
+  }
 
   &:hover {
     background-color: var(--color-surface-hover);

@@ -1,12 +1,18 @@
 import {
+  AfterRenderRef,
   Component,
   ChangeDetectionStrategy,
+  ElementRef,
+  Injector,
   input,
   computed,
   contentChild,
   effect,
+  inject,
   isDevMode,
   output,
+  viewChild,
+  afterNextRender,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { IconComponent } from '@lifecorner/angular-ui-kit/icon';
@@ -100,6 +106,13 @@ export interface ListLinkClickEvent {
 }
 
 /**
+ * The part of a row that `focusItem()` focuses (3.34): `row`, the row's
+ * button (`clickable`) or link (`href`), or `action`, its built-in action
+ * button.
+ */
+export type ListItemPart = 'row' | 'action';
+
+/**
  * List component for displaying structured item collections.
  *
  * Features:
@@ -111,6 +124,9 @@ export interface ListLinkClickEvent {
  * - Accessible with ARIA list role; `clickable` rows are keyboard-operable
  * - `ListItem.href` rows are real links over the full row (3.16, TD-4);
  *   `linkClick` hands plain clicks to your router
+ * - `focusItem(id, part)` (3.34): moves the focus to a row's button or link,
+ *   or to its action, e.g. when the sheet that action opened closes
+ *   (WCAG 2.4.3)
  *
  * @example
  * ```html
@@ -192,6 +208,14 @@ export class ListComponent {
    */
   readonly linkClick = output<ListLinkClickEvent>();
 
+  private readonly injector = inject(Injector);
+
+  /** The `role="list"` element; each item renders exactly one child of it. */
+  private readonly listEl = viewChild<ElementRef<HTMLElement>>('listEl');
+
+  /** The `focusItem()` hook waiting for the next render. */
+  private pendingItemFocus?: AfterRenderRef;
+
   constructor() {
     effect(() => {
       if (!isDevMode()) return;
@@ -202,6 +226,36 @@ export class ListComponent {
         }
       }
     });
+  }
+
+  /**
+   * Moves the focus into the row of the first item with this `id` after the
+   * next render (3.34). `'row'`: the row's button (`clickable`) or link
+   * (`href`). `'action'`: its built-in action button. Does nothing for an
+   * unknown `id`, for a row without that part (a plain row, a disabled row for
+   * `'row'`, no `action`, an `lcListItem` template's own controls), or when
+   * the list is destroyed first. A second call before that render replaces the
+   * first.
+   * @param id The `ListItem.id` of the row.
+   * @param part Which part of the row gets the focus.
+   */
+  focusItem(id: string, part: ListItemPart = 'row'): void {
+    this.pendingItemFocus?.destroy();
+    this.pendingItemFocus = afterNextRender(
+      () => {
+        this.pendingItemFocus = undefined;
+        const index = (this.items() ?? []).findIndex((item) => item.id === id);
+        const row = index < 0 ? null : this.listEl()?.nativeElement.children.item(index);
+        // querySelector skips the row element itself, so a plain row matches nothing.
+        const target = row?.querySelector<HTMLElement>(
+          part === 'action'
+            ? '.lc-list__action-area button'
+            : 'a.lc-list__item, .lc-list__item[role=button]:not([aria-disabled=true])',
+        );
+        target?.focus();
+      },
+      { injector: this.injector },
+    );
   }
 
   /** Whether a row renders as a link: `href` set and not disabled. */

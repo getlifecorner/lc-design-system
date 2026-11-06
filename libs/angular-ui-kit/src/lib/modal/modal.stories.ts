@@ -20,6 +20,8 @@ Use it for confirmations, forms, and important user interactions that require at
 - 3.3: \`placement="auto"\` — a bottom sheet below 640 px (full width, top corners rounded,
   clear of the safe area, at most 90 dvh), centred above; \`placement="sheet"\` always a sheet.
   Header and footer stay visible while the body scrolls; the close button is a 44 px target.
+- 3.34: \`returnFocusTo\` names the element that gets the focus back after the dialog closed (the trigger),
+  on every close path; WebKit does not focus a tapped button, so without it the focus falls to \`body\`.
 
 Click the **Open Modal** button in each story to see the modal in action.
         `,
@@ -41,6 +43,12 @@ Click the **Open Modal** button in each story to see the modal in action.
       description:
         '3.3: `center` (3.2); `auto` — a bottom sheet below 640 px viewport width, centred above; `sheet` — always a bottom sheet. The sheet spans the width, rounds its top corners, keeps clear of `env(safe-area-inset-bottom)` and is at most 90 dvh high; `full` size ignores it.',
       table: { defaultValue: { summary: 'center' } },
+    },
+    returnFocusTo: {
+      control: false,
+      description:
+        '3.34: the element that gets the focus back after the dialog closed, instead of the one that had it at open. Set it to the trigger: WebKit (Safari, every iOS browser) does not focus a tapped button, so the captured element is `body`. Applied after the render that removes the dialog, on every close (×, Escape, backdrop, `open` false). An `<lc-button>` host hands the focus to its `<button>`. Ignored when the element is gone; `null` keeps the 3.33 behaviour.',
+      table: { defaultValue: { summary: 'null' } },
     },
   },
 };
@@ -178,6 +186,53 @@ export const BottomSheetOnPhones: Story = {
         <div slot="footer" style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
           <lc-button variant="danger" size="lg" [fullWidth]="true" (click)="isOpen = false">Entfernen</lc-button>
           <lc-button variant="outline" size="lg" [fullWidth]="true" (click)="isOpen = false">Abbrechen</lc-button>
+        </div>
+      </lc-modal>`,
+  }),
+};
+
+/**
+ * 3.34 (request 054, finance-intelligence monatsstand row 1): the focus goes
+ * back to the trigger, also in WebKit, where a tap doesn't focus a button.
+ */
+export const ReturnFocusTo: Story = {
+  name: 'Focus return (3.34)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.34 (request 054, finance-intelligence monatsstand row 1): each trigger is passed as `returnFocusTo`, so after Schließen, Escape, the backdrop, „Abbrechen“, „Speichern“ or „Übernehmen“ the focus is on the trigger\'s button again. Without it, a WebKit tap leaves `body` focused at open, and the focus falls to `body` on close. The trigger is the `<lc-button>` host (`$event.currentTarget` of its click); the modal hands the focus to the `<button>` inside it. „Fassung umbenennen“ opens a centred dialog, „Monatsstand wählen“ a bottom sheet below 640 px (`placement="auto"`).',
+      },
+      story: { inline: false, height: '360px' },
+    },
+  },
+  render: () => ({
+    props: { renameOpen: false, chooseOpen: false, renameTrigger: null, chooseTrigger: null },
+    template: `
+      <div lang="de" style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <lc-button variant="outline" (click)="renameTrigger = $any($event.currentTarget); renameOpen = true">Fassung umbenennen</lc-button>
+        <lc-button variant="primary" (click)="chooseTrigger = $any($event.currentTarget); chooseOpen = true">Monatsstand wählen</lc-button>
+      </div>
+      <lc-modal lang="de" [open]="renameOpen" (openChange)="renameOpen = $event" size="sm" [returnFocusTo]="renameTrigger"
+        ariaLabelledBy="rename-title" closeAriaLabel="Schließen">
+        <div slot="header"><h2 id="rename-title">Fassung umbenennen</h2></div>
+        <div slot="body">
+          <p style="margin: 0; color: var(--color-text-secondary); line-height: 1.5;">August 2026 · Fassung 1</p>
+        </div>
+        <div slot="footer" style="display: flex; gap: 8px; justify-content: flex-end;">
+          <lc-button variant="ghost" (click)="renameOpen = false">Abbrechen</lc-button>
+          <lc-button variant="primary" (click)="renameOpen = false">Speichern</lc-button>
+        </div>
+      </lc-modal>
+      <lc-modal lang="de" [open]="chooseOpen" (openChange)="chooseOpen = $event" placement="auto" [returnFocusTo]="chooseTrigger"
+        ariaLabelledBy="choose-title" closeAriaLabel="Schließen">
+        <div slot="header"><h2 id="choose-title">Monatsstand wählen</h2></div>
+        <div slot="body">
+          <p style="margin: 0; color: var(--color-text-secondary); line-height: 1.5;">September 2026 · Fassung 1</p>
+        </div>
+        <div slot="footer" style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+          <lc-button variant="primary" size="lg" [fullWidth]="true" (click)="chooseOpen = false">Übernehmen</lc-button>
+          <lc-button variant="outline" size="lg" [fullWidth]="true" (click)="chooseOpen = false">Abbrechen</lc-button>
         </div>
       </lc-modal>`,
   }),

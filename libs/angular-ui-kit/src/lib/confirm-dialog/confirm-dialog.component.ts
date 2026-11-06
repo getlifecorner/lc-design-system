@@ -106,6 +106,13 @@ export class ConfirmDialogComponent {
    */
   readonly placement = input<ModalPlacement>('center');
 
+  /**
+   * Passed to `lc-modal` (3.34). The focus returns after confirm, cancel,
+   * Escape and ×. Set it to the trigger. `null`: as before.
+   * @default null
+   */
+  readonly returnFocusTo = input<HTMLElement | null>(null);
+
   /** Id of the title, which names the dialog. */
   protected readonly titleId = `lc-confirm-title-${++ConfirmDialogComponent.nextId}`;
 

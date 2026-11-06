@@ -83,6 +83,9 @@ List component for displaying structured item collections.
 - Link rows (3.16): \`ListItem.href\` renders the row as a real \`<a href>\` (middle click, context menu, at least 44 px);
   \`linkClick\` reports plain clicks for router navigation. A disabled item stays a plain row, and an \`href\` row
   renders no \`action\` (nothing interactive inside a link, also not in an \`lcListItem\` template)
+- 3.34: \`focusItem(id, part = 'row')\` moves the focus to a row's button or link (\`'row'\`) or its action
+  (\`'action'\`) after the next render, e.g. when the sheet that action opened closes; it does nothing for an
+  unknown id or a row without that part (see *Focus Item*)
 `,
       },
     },
@@ -505,6 +508,55 @@ export const CurrentChoice: Story = {
           <lc-list [items]="snapshotLinks" [showDividers]="true" (linkClick)="linkClick($event)" />
         </section>
       </div>`,
+  }),
+};
+
+/** The history of the monthly snapshots, each row with its „Details“ action. */
+const snapshotHistory = [
+  { id: 'h-2026-09-1', label: 'September 2026 · Fassung 1', badge: 'Gewählt', badgeVariant: 'primary' as const, selected: true },
+  { id: 'h-2026-08-2', label: 'August 2026 · Fassung 2' },
+  { id: 'h-2026-08-1', label: 'August 2026 · Fassung 1', badge: 'Ersetzt' },
+].map((item) => ({ ...item, action: 'Details', actionAriaLabel: `Details zu ${item.label}` }));
+
+/**
+ * 3.34 (request 054, finance-intelligence monatsstand row 3): when the sheet
+ * a row opened closes, the focus goes back to that row's action or button.
+ */
+export const FocusItem: Story = {
+  name: 'Focus Item (3.34)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.34 (request 054, finance-intelligence monatsstand row 3): „Details“ in the history and a row of the choice list open one sheet. When it closes (Schließen in the footer or the header, Escape, the backdrop), the page calls `focusItem(id, \'action\')` on the history or `focusItem(id)` on the choice list, and after the next render the focus is on that row\'s „Details“ or on the row itself, also in WebKit, where a tap does not focus a button. The ring follows `:focus-visible`: shown after Escape or a key, not after a pointer close. An unknown id or a row without the part leaves the focus where it is.',
+      },
+    },
+  },
+  render: () => ({
+    props: { historyItems: snapshotHistory, choiceItems: snapshotChoices, opener: null, detail: null, part: 'row', sheetOpen: false },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 24px; max-width: 480px;">
+        <section aria-labelledby="history-heading">
+          <h2 id="history-heading" style="margin: 0 0 8px; font-size: var(--font-size-lg);">Verlauf</h2>
+          <lc-list #historyList [items]="historyItems" [showDividers]="true" actionVariant="outline" actionSize="lg"
+                   (actionClick)="opener = historyList; detail = $event; part = 'action'; sheetOpen = true" />
+        </section>
+        <section aria-labelledby="choice-heading">
+          <h2 id="choice-heading" style="margin: 0 0 8px; font-size: var(--font-size-lg);">Monatsstand wählen</h2>
+          <lc-list #choiceList [items]="choiceItems" size="sm" [clickable]="true" [showDividers]="true"
+                   (itemClick)="opener = choiceList; detail = $event; part = 'row'; sheetOpen = true" />
+        </section>
+      </div>
+      <lc-modal lang="de" [open]="sheetOpen" (openChange)="sheetOpen = $event; $event ? null : opener.focusItem(detail.id, part)"
+                placement="auto" size="sm" ariaLabelledBy="focus-item-sheet-title" closeAriaLabel="Schließen">
+        <div slot="header"><h2 id="focus-item-sheet-title">Details</h2></div>
+        <div slot="body">
+          <p style="margin: 0; color: var(--color-text-secondary); line-height: 1.5;">{{ detail?.label }}</p>
+        </div>
+        <div slot="footer" style="display: flex; flex-direction: column; width: 100%;">
+          <lc-button variant="outline" size="lg" [fullWidth]="true" (click)="sheetOpen = false; opener.focusItem(detail.id, part)">Schließen</lc-button>
+        </div>
+      </lc-modal>`,
   }),
 };
 

@@ -1,0 +1,15 @@
+# Log 054: lc-modal / lc-confirm-dialog returnFocusTo, lc-header focusContext(), lc-list focusItem(), lc-alert close target
+
+## Owner decisions
+
+## Handoffs
+
+Times come from `date '+%Y-%m-%d %H:%M'` when the row is written, never estimated.
+
+| Time | From → to | Status | Reason | Task |
+|---|---|---|---|---|
+| 2026-11-06 14:18 | spec-writer → ui-ux-designer | done | The spec is ready and the work is an extension of existing components, so the next step is the design. | Design the API and visuals for AC-1…20 in requests/054-focus-return-alert-close/spec.md. Cover the `returnFocusTo` timing relative to the trap release, the `focusContext()` and `focusItem()` internals, and how the alert close reaches 44 px without changing the look or height. Specify the stories and measurements. |
+| 2026-11-06 14:35 | ui-ux-designer → web-developer | done | The API, timing, internals, stories and measurements are fixed. The alert change is proven hash-identical by prototype, and the baselines are captured. | Implement design.md for request 054: returnFocusTo on lc-modal, lc-confirm-dialog and ConfirmOptions (environment-injector afterNextRender, untracked read, custom-element descendant rule), focusContext(), focusItem() with ListItemPart, the alert close ::before 44 px hit area inside the existing block, the 5 stories in §8, the unit tests in §9 and the changelog draft; then compare against tmp/story-shots/054/baseline. |
+| 2026-11-06 14:59 | web-developer → ui-ux-designer | done | All gates are green on 938b950, and 264/264 baseline shots are identical; the new stories need the design review, plus a decision on one pre-existing contrast failure that was found while building. | Review request 054 (stories feedback-modal--return-focus-to, feedback-confirmdialog--return-focus-to, navigation-header--focus-context, data-display-list--focus-item, feedback-alert--close-target). Also decide on build.md "Found while building": the alert × in dark measures 1.26:1. Fix it in 054 or queue it. |
+| 2026-11-06 15:13 | ui-ux-designer → web-developer | changes-requested | Review r1: AC-1…20 pass as built. F-1 (must-fix): the alert × glyph is 1.15–1.39:1 in dark. It is fixed in 054, because this request makes that × the 44 px target. The fix was prototyped with computed contrast and an exact compare set (design D-5). | Fix review.md F-1: add `color: inherit` inside `.lc-alert__close {` (design D-5), update `alert.close-target.spec.ts`, the *Close Target* story text and the changelog. Re-run the gates. Compare against `054/baseline` (expect 84 identical / 66 differ) and against `054/r1-ink-proto` (expect 150/150). F-2 is optional. |
+| 2026-11-06 15:26 | web-developer → ui-ux-designer | done | F-1 and F-2 are fixed and all gates are green on 77fa5c7; the shots match the expected compare sets exactly (84/66 vs baseline, 150/150 vs the D-5 prototype, FC 6/6). | Review round 2 of request 054 (stories feedback-alert--close-target, navigation-header--focus-context; the 11 alert/error-display stories with a ×): `color: inherit` on the alert ×, the spec pin, the story texts and the changelog *Fixed* entries in build.md. |

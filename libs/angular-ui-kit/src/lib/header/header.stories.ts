@@ -201,6 +201,8 @@ AppHeaderComponent - Global application header for the LifeCorner shell
   *Avatar Trigger Names*.
 - The subtitle is one line with "…", its full text in \`title\`, shown as typed.
 - The account menu is at most \`min(18rem, 100vw − 2rem)\` wide; name and email wrap.
+- 3.34: \`focusContext()\` moves the focus to the context button after the next render, e.g. after a
+  choice in the sheet it opened; it does nothing while the button is not shown (see *Focus Context*).
 
 **Labels** (English defaults, one input each): \`homeAriaLabel\`, \`hamburgerAriaLabel\`,
 \`userMenuAriaLabel\`, \`navAriaLabel\`, \`themeToDarkAriaLabel\`, \`themeToLightAriaLabel\`,
@@ -580,6 +582,64 @@ export const ContextBelow: Story = {
                    contextLabel="Tenant" contextName="Acme Corporation Europe · Shared Services Centre, Fiscal 2026"
                    userName="Sarah Connor" userEmail="sarah@example.com" (contextClick)="contextClick()" />
       </div>`,
+  }),
+};
+
+/**
+ * The rows of the sheet „Monatsstand wählen“ (as the list's *Current Choice*
+ * story): the row of `month` is `selected` and marked „Gewählt“.
+ */
+const snapshotChoicesFor = (month: string) =>
+  [
+    { id: '2026-09-1', label: 'September 2026 · Fassung 1' },
+    { id: '2026-08-2', label: 'August 2026 · Fassung 2' },
+    { id: '2026-07-1', label: 'Juli 2026 · Fassung 1' },
+  ].map((row) => (row.label === month ? { ...row, selected: true, badge: 'Gewählt', badgeVariant: 'primary' as const } : row));
+
+/**
+ * 3.34 (request 054, finance-intelligence monatsstand row 2): after a choice
+ * in the sheet the context button opened, the focus goes back to it, with the
+ * new name.
+ */
+export const FocusContext: Story = {
+  name: 'Focus Context (3.34)',
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        story:
+          '3.34 (request 054, finance-intelligence monatsstand row 2): the context button opens the sheet „Monatsstand wählen“. A row sets the header\'s `contextName` and calls `focusContext()`; closing the sheet with Schließen, Escape or the backdrop calls it too. After the next render the focus is on the context button, and its name already holds the new `contextName`. First the requester\'s header (`contextPlacement="below"`, the button shown at every width), then the default bar (`inline`, the button shown from 641 px; up to 640 px it is hidden and `focusContext()` does nothing).',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      month: 'September 2026 · Fassung 1',
+      sheetOpen: false,
+      opener: null,
+      snapshotChoices: snapshotChoicesFor('September 2026 · Fassung 1'),
+      snapshotChoicesFor,
+    },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 24px; padding-bottom: 24px; background: var(--color-background);">
+        <lc-header #h1 size="sm" variant="transparent" [sticky]="false" [showLogo]="false"
+                   title="Finance Intelligence" titleTag="span" contextPlacement="below"
+                   contextLabel="Monatsstand" [contextName]="month" contextAriaLabel="Monatsstand wählen"
+                   userMenuTrigger="avatar" userAvatarFallback="person" userMenuAriaLabel="Menü für Johanna Müller"
+                   profileLabel="Einstellungen" logoutLabel="Abmelden" (contextClick)="opener = h1; sheetOpen = true" />
+        <lc-header #h2 [sticky]="false" title="Finance Intelligence" titleTag="span"
+                   contextLabel="Monatsstand" [contextName]="month" contextAriaLabel="Monatsstand wählen"
+                   userName="Johanna Müller" userMenuAriaLabel="Menü für Johanna Müller"
+                   profileLabel="Einstellungen" logoutLabel="Abmelden" (contextClick)="opener = h2; sheetOpen = true" />
+      </div>
+      <lc-modal lang="de" [open]="sheetOpen" (openChange)="sheetOpen = $event; $event ? null : opener.focusContext()"
+                placement="auto" ariaLabelledBy="focus-context-sheet-title" closeAriaLabel="Schließen">
+        <div slot="header"><h2 id="focus-context-sheet-title">Monatsstand wählen</h2></div>
+        <div slot="body">
+          <lc-list [items]="snapshotChoices" [clickable]="true" [showDividers]="true"
+                   (itemClick)="month = $event.label; snapshotChoices = snapshotChoicesFor($event.label); sheetOpen = false; opener.focusContext()" />
+        </div>
+      </lc-modal>`,
   }),
 };
 

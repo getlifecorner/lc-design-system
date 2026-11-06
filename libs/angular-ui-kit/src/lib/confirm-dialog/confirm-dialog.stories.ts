@@ -18,6 +18,9 @@ Also available as an imperative service: \`ConfirmService.confirm()\`.
 \`[slot='preview']\` shows what the action affects; \`confirmLoading\` keeps the dialog open with a
 busy confirm button; \`buttonSize="lg"\` gives 48.5 px buttons; \`placement="auto"\` makes it a
 bottom sheet below 640 px.
+
+**3.34:** \`returnFocusTo\` (and \`ConfirmOptions.returnFocusTo\`) gives the focus back to the trigger after
+confirm, cancel, Escape and ×, also in WebKit, where a tap does not focus a button.
         `,
       },
       story: { inline: false, height: '120px' },
@@ -49,6 +52,12 @@ bottom sheet below 640 px.
       options: ['center', 'auto', 'sheet'],
       description: '3.3: passed to `lc-modal` — `auto` is a bottom sheet below 640 px, centred above.',
       table: { defaultValue: { summary: 'center' } },
+    },
+    returnFocusTo: {
+      control: false,
+      description:
+        '3.34: passed to `lc-modal` — the element that gets the focus back after confirm, cancel, Escape and ×. Set it to the trigger (WebKit does not focus a tapped button). `ConfirmService.confirm()` takes the same option. `null` keeps the 3.33 behaviour.',
+      table: { defaultValue: { summary: 'null' } },
     },
   },
 };
@@ -170,6 +179,43 @@ export const RealUse: Story = {
       >
         <p slot="preview" style="margin: 0; font-weight: 600;">iPhone · Safari · zuletzt heute 20:05</p>
       </lc-confirm-dialog>`,
+  }),
+};
+
+/**
+ * 3.34 (request 054, finance-intelligence monatsstand row 1): the focus goes
+ * back to the trigger after „Löschen“, „Abbrechen“, Escape and ×.
+ */
+export const ReturnFocusTo: Story = {
+  name: 'Focus return (3.34)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.34 (request 054, finance-intelligence monatsstand row 1): the trigger is passed as `returnFocusTo`, so after „Löschen“, „Abbrechen“, Escape or Schließen the focus is on „Fassung löschen“ again, also in WebKit, where a tap does not focus a button. The trigger is the `<lc-button>` host (`$event.currentTarget` of its click); the dialog hands the focus to the `<button>` inside it. A bottom sheet below 640 px (`placement="auto"`) with 48.5 px buttons.',
+      },
+      story: { inline: false, height: '360px' },
+    },
+  },
+  render: () => ({
+    props: { deleteOpen: false, deleteTrigger: null },
+    template: `
+      <lc-button lang="de" variant="danger" (click)="deleteTrigger = $any($event.currentTarget); deleteOpen = true">Fassung löschen</lc-button>
+      <lc-confirm-dialog
+        lang="de"
+        [open]="deleteOpen"
+        variant="destructive"
+        title="Fassung löschen?"
+        message="August 2026 · Fassung 1 wird für alle gelöscht."
+        confirmLabel="Löschen"
+        cancelLabel="Abbrechen"
+        closeAriaLabel="Schließen"
+        buttonSize="lg"
+        placement="auto"
+        [returnFocusTo]="deleteTrigger"
+        (confirmed)="deleteOpen = false"
+        (cancelled)="deleteOpen = false"
+      />`,
   }),
 };
 

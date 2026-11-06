@@ -16,7 +16,7 @@ Use it to inform users about important state changes, errors, warnings, or confi
 **Key Features:**
 - 4 semantic variants (success, error, warning, info)
 - Optional title and icon
-- Dismissible option with close button
+- Dismissible option with close button; 3.34: it takes taps on 44 × 44 px, keeps its 28 px box, and its glyph is in the text colour
 - Action slot (\`slot="action"\`) for a button right of the body, e.g. retry;
   3.3: \`actionsLayout="stacked"\` puts several actions in their own row below the text
 - 3.12: a text link as the one way forward (\`<a slot="action" href="…">\`, e.g. an address): a 44 × 44 px target,
@@ -353,6 +353,52 @@ export const NarrowColumn: Story = {
         </div>
         ${thresholdBox('257px')}
         ${thresholdBox('258px')}
+      </div>`,
+  }),
+};
+
+/** The requester's note (finance-intelligence app shell, Artboard 20 a). */
+const GONE_NOTE = 'Den gewählten Entwurf gibt es nicht mehr, gezeigt wird September 2026 · Fassung 1.';
+
+/** A dismissible alert with the German close name; `extra` adds attributes, `content` the action slot. */
+const closable = (extra = '', content = '') => `
+  <lc-alert variant="info" ${extra} [dismissible]="true" closeAriaLabel="Hinweis schließen">${content}</lc-alert>`;
+
+/**
+ * 3.34 (request 054, finance-intelligence monatsstand bug): the × of a
+ * dismissible alert keeps its 28 px box and look, and takes taps on a
+ * 44 × 44 px area centred on it.
+ */
+export const CloseTarget: Story = {
+  name: 'Close Target (3.34)',
+  decorators: [moduleMetadata({ imports: [ButtonComponent] })],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.34 (request 054, finance-intelligence monatsstand bug): the × of a dismissible alert still paints a 28 × 28 px box (36 × 36 px at 200 % text), but a transparent area centred on it takes taps and clicks on 44 × 44 px. The glyph is in the text colour (`--color-text-primary`) instead of the browser\'s button black, so in light and dark it is at least 13.66:1 at rest and 9.45:1 on hover (it was 1.15–1.39:1 in dark). The box, hover fill, focus ring and the height of every alert are unchanged. Where the area meets the action beside the ×, it touches it without covering it; in a compact alert below 16rem it reaches 3 px past the border. With a title and icon, the requester\'s note without a title, without an icon, beside a button, beside a link, with stacked actions, then a 240 px column with the default density and with `data-density="compact"`.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px;">
+        ${closable(`title="Monatsstand" message="${GONE_NOTE}"`)}
+        ${closable(`message="${GONE_NOTE}"`)}
+        ${closable(`title="Monatsstand" message="${GONE_NOTE}" [showIcon]="false"`)}
+        ${closable(
+          'title="Laden fehlgeschlagen" message="Die Vorhaben-Liste konnte nicht geladen werden."',
+          '<lc-button slot="action" variant="outline" size="sm">Erneut versuchen</lc-button>',
+        )}
+        ${closable('title="Lieber direkt?" message="Sie können uns auch ohne das Formular erreichen."', SHORT_LINK)}
+        ${closable(
+          'title="Du hast nur einen Passkey" message="Ohne einen zweiten kommst du nicht mehr in dein Konto, wenn dieses Gerät fehlt." actionsLayout="stacked"',
+          '<lc-button slot="action" variant="outline" size="lg">Zweiten Passkey einrichten</lc-button><lc-button slot="action" variant="ghost" size="lg">Später</lc-button>',
+        )}
+        <div style="width: 240px; display: flex; flex-direction: column; gap: 16px;">
+          ${closable(`message="${GONE_NOTE}"`)}
+          <div data-density="compact">${closable(`message="${GONE_NOTE}"`)}</div>
+        </div>
       </div>`,
   }),
 };
