@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.34.0] - 2026-11-06
+
+The focus goes back to the trigger after a dialog, the header's context button and a list row can be focused from outside, and the alert's × is a 44 px target that can also be seen in dark (Finance Intelligence Monatsstand and app shell). No API breaks.
+
+### Added
+
+- **`lc-modal` / `lc-confirm-dialog` `returnFocusTo`** (monatsstand-2026-11-06 row 1, Finance Intelligence „Monatsstand“ and App-Shell 5.3): pass the trigger, e.g. `$event.currentTarget` of an `lc-button` click (the `<lc-button>` host hands the focus to its `<button>`). After ×, Escape, the backdrop, `open` false, `closeModal()`, confirm, „Abbrechen“ or destroying an open dialog, the focus is on it again after the render that removes the dialog. Before, a WebKit tap (Safari, every iOS browser) didn't focus the button, so the focus fell to `body` (WCAG 2.4.3). Measured with a click that doesn't focus (the WebKit case) at 360 px (bottom sheet) and 1280 px, light and dark: 40 of 40 closes land on the trigger (before: `body`). `ConfirmOptions.returnFocusTo` does the same for `ConfirmService`. An element that is no longer in the document or can't take focus is ignored, and the element focused at open keeps it. Default `null`: unchanged. Stories *Focus return (3.34)* (Modal, ConfirmDialog). Your remember-and-refocus on `modalClosed` / `cancelled` can go.
+- **`lc-header` `focusContext()`** (row 2, App-Shell 5.3): call it right after a choice in the sheet „Monatsstand wählen“, or when that sheet closes. After the next render the focus is on the context button, and its name already holds the new `contextName` („Monatsstand wählen, Monatsstand August 2026 · Fassung 2“). Measured at 360, 641 and 1280 px with `contextPlacement` `below` and `inline`. It does nothing while the button isn't shown (no `contextName`, or up to 640 px with `inline`). Story *Focus Context (3.34)*. Your `aria-label` lookup can go.
+- **`lc-list` `focusItem(id, part = 'row')`** and the type `ListItemPart` (row 3, Monatsstand flow 9): `'action'` focuses the row's „Details“ button, `'row'` the row's button (`clickable`) or link (`href`), after the next render. It works with every `size`, dividers, badges and `selected`. Keyboard focus shows the kit's ring: action outline, row inset 2 px (`#208497` light, `#84c7d4` dark). An unknown `id`, a plain or disabled row, a row without an action, or your own `lcListItem` controls: nothing happens. Story *Focus Item (3.34)*. Your `aria-label` lookup can go.
+
+### Fixed
+
+- **Alert ×: a 44 × 44 px target** (monatsstand-2026-11-06 bug, App-Shell Artboard 20 a): the × of a `dismissible` alert (and of `lc-error-display`) takes taps on 44 × 44 px at 100 % and 200 % text. It was 28 × 28 px. The box (28 × 28 px; 36 × 36 px at 200 %), hover fill, focus ring and the alert's height are unchanged. The area touches the action or link beside the × without covering it. In a compact alert narrower than 16rem it reaches 3 px past the border. Story *Close Target (3.34)*.
+- **Alert ×: visible in dark** (018 S2, open since 3.13.1's *Known*): the × glyph had no colour of its own, so it was the browser's button black, 1.15:1 (error), 1.26:1 (info) and 1.39:1 (warning) on the dark tints, and 1.26–2.04:1 on hover (WCAG 1.4.11 needs 3:1). It now takes the alert's text colour (`--color-text-primary`). In all four variants, light: 13.66–16.00:1 at rest, 9.59–13.94:1 on hover (the glyph goes from #000 to #111827); dark: 13.90–16.70:1 at rest, 9.45–15.32:1 on hover. Of 150 alert, error-display and density shots in both themes, the 84 without a × are pixel-identical to 3.33.1, and the 66 with a × differ only in the glyph colour. Forced colours are unchanged (`ButtonText`).
+
+### Compatibility
+
+- No API breaks: the input, the option and both methods are optional, and the defaults render and behave as in 3.33.1. The DOM and the prerendered HTML are unchanged. `.lc-alert__close` is now `position: relative` with a transparent `::before`, and `color: inherit`.
+
+### Known
+
+- `lc-drawer`, `lc-sidenav` and `lc-gallery` restore the focus as before (no `returnFocusTo`): in WebKit their close still leaves `body` focused.
+- WebKit itself was not automated for this release. The Chromium measurements use a click that doesn't focus the trigger, as WebKit does.
+- With an inline action beside the ×, an `lc-alert` at 360 px leaves the message about 70 px (one word per line); this is the 3.2 layout, unchanged.
+
 ## [3.33.1] - 2026-11-06
 
 Toasts in an `lc-toast-outlet` stack no longer touch (052-s2, found in the review of request 052). No API breaks.

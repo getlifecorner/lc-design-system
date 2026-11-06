@@ -49,3 +49,30 @@ API check against §2: names, types, defaults, JSDoc, `ListItemPart` export (`ex
 F-2 is optional in the same round.
 
 **Verdict:** changes requested (F-1)
+
+## Round 2 — 2026-11-06, commit 0e0b408 (gates on 77fa5c7, `git diff --quiet 77fa5c7 -- libs tools` holds)
+
+The diff since round 1 (938b950..77fa5c7) touches only `alert.component.scss` (`color: inherit` after `border: none`), `alert.close-target.spec.ts`, `alert.stories.ts` and `header.stories.ts`. The ACs not listed below keep their round-1 result. Developer's Storybook build, not stale. Shots: `r2/` (25 stories × 360/1024/1280 × L/D), `r2-revert/`, `r2-f2-review/`. Opened 1 shot (*Close Target* 360 dark: the × is visible).
+
+| AC / finding | Result | Evidence |
+|---|---|---|
+| F-1 / AC-17 (× glyph ≥ 3:1) | pass | `r2/` ink measure (no CSS injected), 66 shots with a ×, rest / hover: L `#111827` error 13.66 / 9.59, info 14.13 / 10.59, warning 15.95 / 13.94; D `#f1f6f8` warning 13.90 / 9.45, info 15.28 / 12.66, error 16.70 / 15.32. No `rgb(0, 0, 0)` glyph left. Success (no × in these stories) from `r1-success-probe`, as in design §5 |
+| AC-15 (only the glyph colour changes) | pass | `r2/` vs `r1-ink-proto`: 150 identical / 0 differ (the proto's 84 equal `baseline`). Revert proof: *Close Target* with `color: revert !important` injected is hash-identical to round 0's `new/` 6/6 (glyph back to `#000`, D 1.26), so the round-1 change is the glyph colour only. Box 28 px. FC: developer `r2-fc` 6/6 = `fc0` |
+| F-1 spec pin | pass | `alert.close-target.spec.ts`: `color: inherit` right after `border: none` in `.lc-alert__close`, no variant rule sets the × `color` (regex skips `background-color`), the 3.33.1 sha1 (6722, `11ed3a6…`) after removing all 3 additions. `test-alert-r1.log`: 4 suites, 71 tests |
+| F-1 story texts | pass | Meta: "its glyph is in the text colour". *Close Target*: "at least 13.66:1 at rest and 9.45:1 on hover (it was 1.15–1.39:1 in dark)" = the minima above over both themes |
+| AC-20 (changelog draft) | pass | build.md: *Fixed* split into "44 × 44 px target" (no "look unchanged"; box, hover fill, ring and height) and "visible in dark" with 018 S2, the before/after ranges per theme, 84 identical / 66 differ by the glyph colour, FC `ButtonText`. Summary line and *Compatibility* name `color: inherit` |
+| F-2 / AC-9 story | pass | `r2-f2-review` measure, 360 + 1280 L: at first September `aria-current` + „Gewählt“; after the row August the focus is on header 1's button („… August 2026 · Fassung 2“) and the reopened sheet marks August only; Escape → header 1's button, sheet empty. At 1280 via header 2: Juli → focus on header 2's button, both names „… Juli 2026 · Fassung 1“, sheet marks Juli only. At 360 header 2 is hidden |
+
+API: unchanged since round 1 (no input, output or type added in r1).
+
+### Findings
+
+| # | Severity | Status |
+|---|---|---|
+| F-1 | must-fix | fixed (above) |
+| F-2 | nit | fixed (above) |
+| F-3 | nit → backlog | open: message column beside an inline action + × at 360 (69.7 px), 3.2 layout |
+
+Notes for the release-manager: the AC-6 manual Safari/iOS check stays open (build.md *Deviations*, changelog *Known*). The r1 test gate is two runs: the full suite lost `datepicker.month` (untouched) to a worker SIGSEGV, and it passed alone 28/28 (`tmp/054/test.log`, `test-datepicker-month.log`).
+
+**Verdict:** approved
