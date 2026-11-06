@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.35.0] - 2026-11-06
+
+Forms can put the focus into a textarea or combobox, the drawer and the sidenav drawer give the focus back to their trigger, and an alert with a button stays readable at 360 px (Finance Intelligence „Monat einfrieren“, „Freigeben“; backlog). No API breaks.
+
+### Added
+
+- **`lc-textarea` / `lc-combobox` `focus(options?)`** (monatsstand-prove-2026-11-06 row 1, Finance Intelligence „Freigeben“ and „Monat einfrieren“): focuses the native `<textarea>` / `<input>`, e.g. the first field when a form opens or the field with the error after a 422 (WCAG 2.4.3). Call it after the render: `afterNextRender(() => this.note().focus(), { injector })` with `note = viewChild.required(TextareaComponent)`; in an `lc-modal` that runs after the dialog's own first focus. `options` as for `HTMLElement.focus()`. The combobox opens its list as a user's focus does: with `[openOnFocus]="false"` it stays closed (`aria-expanded="false"`). Disabled fields take no focus; a read-only textarea does. Measured at 360 px (bottom sheet) and 1280 px, light and dark: the focus is in the field, with the 2 px ring (4.18:1 light, 7.58:1 dark on the sheet). Stories *Focus on Open (3.35)* (Textarea, Combobox ×2). Your `lc-textarea textarea` / `lc-combobox input` query can go.
+- **`lc-drawer` / `lc-sidenav` `returnFocusTo`** (054-n3): as on `lc-modal` (3.34). Pass the trigger; after ×, Escape, the backdrop, `open`/`isOpen` false, a phone item or brand tap (sidenav) or destroying it while open, the focus is on it again (drawer: after its 250 ms slide-out). Sidenav: drawer mode only. Measured with a click that doesn't focus (WebKit): 15 of 15 closes land on the trigger (before: `body`). Default `null`: unchanged. Stories *Focus return (3.35)*. `lc-gallery` needs none: its lightbox returns the focus to the tapped thumbnail, also in WebKit.
+
+### Changed
+
+- **Combobox focus ring**: the field shows the 2 px `--color-primary-500` ring of select, datepicker and textarea (4.37:1 light, 9.95:1 dark on the page), also after `focus()` from code; the 20 % halo (1.28:1 / 1.50:1) is gone. Forced colours: `Highlight`.
+
+### Fixed
+
+- **Alert with a button at phone width** (054-n1): from 16rem to 30rem inside the border (alerts of 258–481 px at 100 % text, 514–961 px at 200 %) a button in `slot="action"` takes its own row below the text, lined up with it, at its natural width. At 360 px the message beside the × is 226 px wide (258 px without ×); it was about 70 px, one word per line. Wider alerts, text links, `actionsLayout="stacked"` and the narrow layout below 16rem are unchanged; CSS only, also before JavaScript. Story *Inline Action, Narrow (3.35)*.
+- **Toast outlet docs** (053-n2): a top stack shows its assertive region (error, warning) above its polite one, each oldest first; the docs said "oldest at the top". No behaviour change.
+
+### Compatibility
+
+- No API breaks: two optional methods and two optional inputs; defaults render and behave as in 3.34.0, the DOM and the prerendered HTML are unchanged. Visible changes: the combobox ring, and inline button actions in alerts of 258–481 px.
+
+### Known
+
+- `lc-bottom-nav` `moreBadge`: „99+“ on the last of five entries at 360 px starts 3.2 px (docked) / 3.4 px (floating) left of the pill centre and covers two of the More glyph's three dots; the label and the badge text name the entry (052-n3).
+- The collapsed sidenav rail keeps `title` on its links: Chrome takes the name from it (no duplicate description), and without it the links would have no name (052-n4).
+- `lc-header`'s hamburger has no element to pass to `returnFocusTo` yet; `lc-combobox` has no `announceError`. WebKit itself is still not automated (054-n2).
+
 ## [3.34.0] - 2026-11-06
 
 The focus goes back to the trigger after a dialog, the header's context button and a list row can be focused from outside, and the alert's × is a 44 px target that can also be seen in dark (Finance Intelligence Monatsstand and app shell). No API breaks.

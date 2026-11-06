@@ -2,6 +2,7 @@
 
 - **Status:** ready
 - **Spec:** [spec.md](spec.md) — AC-1 … AC-15. Kit 3.34.0 (main 91e23e1); expected release 3.35.0 (minor).
+- **Change note (review r1, 2026-11-06):** §3 said the modal body padding was 24 (field 312 in the 360 sheet). It is 16 at every width, measured as 328 / 566 (build.md deviation 4). This was a design error, and the build matches the kit.
 
 ## 1. Approach
 
@@ -74,7 +75,7 @@ Unchanged at 100 % text (992 / 1248 alerts are past 30rem; 96 of 102 alert shots
 | alert band | content 256–479.99 px at 100 % | — | `16rem`, `30rem` (container query) |
 | dropped action | margin-top 4 + container gap 12; indent 36 with icon, 0 without | button as projected | `--spacing-1`, `--spacing-3`, `24px` icon |
 | combobox ring | 2 px solid, offset 0, outside the 1 px border; field 328 × 42 at 360 | — | `--color-primary-500` |
-| *Focus on Open* sheet (< 640) / dialog | modal `placement="auto"`, `size="md"`, body pad 24: field 312 wide in a 360 sheet | textarea md 16/24, label 14/500 | modal and field tokens as today |
+| *Focus on Open* sheet (< 640) / dialog | modal `placement="auto"`, `size="md"`, body pad 16 (`--spacing-4`) at every width: field 328 wide in the 360 sheet (x 16), 566 in the 600 px dialog (review r1; was "pad 24, 312") | textarea md 16/24, label 14/500 | modal and field tokens as today |
 
 Drawer, sidenav, textarea, gallery, bottom-nav, toast-outlet and tag-input: no layout change.
 

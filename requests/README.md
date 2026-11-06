@@ -98,3 +98,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [052](052-focus-title-header-row-backlog/) lc-next-step-card focusTitle(), lc-header contextPlacement, lc-list aria-current, backlog sweep (20 rows) | bundle (finance-intelligence, owner) | monatsstand-2026-11-05 row 1; app-shell-2026-11-05 rows 1–2; BACKLOG (20 rows) | 3.33.0 | 3.33.0 |
 | [053](053-toast-stack-gap/) lc-toast-outlet stack gap | bundle (owner) | 052-s2 | 3.33.1 | 3.33.1 |
 | [054](054-focus-return-alert-close/) lc-modal / lc-confirm-dialog returnFocusTo, lc-header focusContext(), lc-list focusItem(), lc-alert close target | bundle (finance-intelligence) | monatsstand-2026-11-06 rows 1–3, bug | 3.34.0 | 3.34.0 |
+| [055](055-textarea-combobox-focus-backlog/) lc-textarea / lc-combobox focus(), backlog sweep (9 rows) | bundle (finance-intelligence, owner) | monatsstand-prove-2026-11-06 row 1; BACKLOG (9 rows) | 3.35.0 | 3.35.0 |
