@@ -53,7 +53,7 @@ Use it to inform users about important state changes, errors, warnings, or confi
       control: 'inline-radio',
       options: ['inline', 'stacked'],
       description:
-        '3.3: `inline` — one action right of the body (3.2); 3.12: a text link (`<a slot="action">`) takes up to half the row and drops below the text under 576 px of alert width. `stacked` — the actions in their own row below the text; below 576 px of alert width one per line at full width, 8 px apart, from 576 px side by side at natural width (a text link keeps its text width).',
+        '3.3: `inline` — one action right of the body (3.2); 3.12: a text link (`<a slot="action">`) takes up to half the row and drops below the text under 576 px of alert width; 3.35: from 16rem to 30rem inside the border (alerts of 258–481 px at 100 % text, 514–961 px at 200 %) a button action takes its own row below the text, lined up with it, at its natural width. `stacked` — the actions in their own row below the text; below 576 px of alert width one per line at full width, 8 px apart, from 576 px side by side at natural width (a text link keeps its text width).',
       table: { defaultValue: { summary: 'inline' } },
     },
   },
@@ -90,7 +90,7 @@ export const WithAction: Story = {
     docs: {
       description: {
         story:
-          'Project a button with `slot="action"` to render it right of the alert body — the standard "error state with retry" pattern.',
+          'Project a button with `slot="action"` to render it right of the alert body — the standard "error state with retry" pattern. From 16rem to 30rem inside the border (alerts of 258–481 px at 100 % text) the button takes its own row below the text, lined up with it (3.35): at 360 px the message is 258 px wide, not about 100; see *Inline Action, Narrow (3.35)*.',
       },
     },
   },
@@ -398,6 +398,51 @@ export const CloseTarget: Story = {
         <div style="width: 240px; display: flex; flex-direction: column; gap: 16px;">
           ${closable(`message="${GONE_NOTE}"`)}
           <div data-density="compact">${closable(`message="${GONE_NOTE}"`)}</div>
+        </div>
+      </div>`,
+  }),
+};
+
+/** The first alert of *Inline Action, Narrow (3.35)*: an error with a small retry button and the ×. */
+const RETRY_ALERT = `
+  <lc-alert variant="error" title="Laden fehlgeschlagen" message="Die Vorhaben-Liste konnte nicht geladen werden." [dismissible]="true" closeAriaLabel="Hinweis schließen">
+    <lc-button slot="action" variant="outline" size="sm">Erneut versuchen</lc-button>
+  </lc-alert>`;
+
+/**
+ * 3.35 (request 055, 054-n1): from 16rem to 30rem inside the border an
+ * inline button action takes its own row below the text.
+ */
+export const InlineActionNarrow: Story = {
+  name: 'Inline Action, Narrow (3.35)',
+  decorators: [moduleMetadata({ imports: [ButtonComponent] })],
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.35 (request 055, 054-n1): from 16rem to 30rem inside the border (alerts of 258–481 px at 100 % text, 514–961 px at 200 %) a button in `slot="action"` takes its own row below the text, lined up with it, 16 px below the message, at its natural width. At 360 px the message beside the × is 226 px wide (258 px without ×); it was about 70 px, one word per line, with the button beside it. Each button size and the English strings, then the first alert in boxes of 481 px (button below) and 482 px (button beside the text, as before). From 1024 px the alerts are wider than 30rem and look as before. A text link keeps its own rule (below the text under 576 px), `actionsLayout="stacked"` and the narrow layout below 16rem keep theirs.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div lang="de" style="display: flex; flex-direction: column; gap: 16px;">
+          ${RETRY_ALERT}
+          <lc-alert variant="warning" title="Entwurf nicht gespeichert">
+            <lc-button slot="action" variant="outline" size="md">Jetzt speichern</lc-button>
+          </lc-alert>
+          <lc-alert variant="info" message="Für Oktober 2026 gibt es eine neue Fassung." [dismissible]="true" closeAriaLabel="Hinweis schließen">
+            <lc-button slot="action" variant="outline" size="lg">Neue Fassung ansehen</lc-button>
+          </lc-alert>
+        </div>
+        <lc-alert lang="en" variant="error" title="Connection lost" message="We couldn't reach the server." [dismissible]="true" closeAriaLabel="Dismiss">
+          <lc-button slot="action" variant="outline" size="sm">Try again</lc-button>
+        </lc-alert>
+        <div lang="de" style="width: 481px; max-width: 100%;">${RETRY_ALERT}
+        </div>
+        <div lang="de" style="width: 482px; max-width: 100%;">${RETRY_ALERT}
         </div>
       </div>`,
   }),

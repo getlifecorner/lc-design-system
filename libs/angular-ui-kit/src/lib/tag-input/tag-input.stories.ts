@@ -110,7 +110,7 @@ export const KeyboardFocus: Story = {
     docs: {
       description: {
         story:
-          '3.27 (request 042): the story adds the tag "Kostenstellenverantwortung" as typing and Enter would, then focuses its × as Tab would (in the story view). The remove button shows the kit ring at full opacity: 2 px `--color-primary-500`, 2 px outside (3.43:1 light, 6.34:1 dark on the chip), `Highlight` in forced colours. A mouse click shows none (`:focus-visible`). The field keeps its focus border under the pointer too (F-19).',
+          '3.27 (request 042): the story adds the tag "Kostenstellenverantwortung" as typing and Enter would, then focuses its × as Tab would (in the story view). The remove button shows the kit ring at full opacity: 2 px `--color-primary-500`, 2 px outside (3.43:1 light, 6.34:1 dark on the chip), `Highlight` in forced colours. A mouse click shows none (`:focus-visible`). The field keeps its focus border under the pointer too (F-19). The host sets `lang="de"` (3.35, 052-n6), so at 360 px the tag hyphenates: „Kostenstellenverant-/wortung“, a 186 × 45.2 px chip.',
       },
     },
   },
@@ -119,6 +119,11 @@ export const KeyboardFocus: Story = {
     label: 'Schlagwörter',
     removeTagAriaLabel: 'Entfernen',
   },
+  render: (args) => ({
+    moduleMetadata: { imports: [TagInputComponent] },
+    props: args,
+    template: `<lc-tag-input lang="de" [label]="label" [placeholder]="placeholder" [removeTagAriaLabel]="removeTagAriaLabel"></lc-tag-input>`,
+  }),
   play: async ({ canvasElement, viewMode }) => {
     if (viewMode !== 'story') return;
     const input = canvasElement.querySelector<HTMLInputElement>('.lc-tag-input__input');

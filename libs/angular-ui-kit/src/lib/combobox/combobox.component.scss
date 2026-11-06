@@ -33,9 +33,14 @@
     border-color: var(--color-text-secondary);
   }
 
+  // 3.35 (055 D-3): the 2 px ring of select, datepicker and textarea, so a
+  // `focus()` from code shows the same indicator as Tab; the 20 % halo
+  // measured 1.28:1 light, 1.50:1 dark.
   &:focus-within {
     border-color: var(--color-primary-500);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-500) 20%, transparent);
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 0;
+    box-shadow: none;
   }
 
   .lc-combobox--error & {
@@ -237,6 +242,7 @@
 }
 
 @media (forced-colors: active) {
+  .lc-combobox__input-wrapper:focus-within,
   .lc-combobox--error .lc-combobox__input-wrapper:focus-within {
     outline-color: Highlight;
   }

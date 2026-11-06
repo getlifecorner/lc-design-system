@@ -46,6 +46,12 @@ Use it for secondary navigation, detail panels, filters, and forms.
       description: 'Accessible name of the close button — translate it with the page',
       table: { defaultValue: { summary: 'Close drawer' } },
     },
+    returnFocusTo: {
+      control: false,
+      description:
+        '3.35: the element that gets the focus back after the drawer closed, instead of the one that had it at open. Set it to the trigger: WebKit (Safari, every iOS browser) does not focus a tapped button, so the captured element is `body`. Applied when the panel has left the DOM after its 250 ms slide-out, on every close (×, Escape, backdrop, `open` false) and when the drawer is destroyed while open. An `<lc-button>` host hands the focus to its `<button>`. Ignored when the element is gone; `null` keeps the 3.34 behaviour.',
+      table: { defaultValue: { summary: 'null' } },
+    },
   },
 };
 
@@ -243,6 +249,42 @@ export const GermanHeading: Story = {
     props: args,
     template: `
       <lc-drawer lang="de" [open]="open" [position]="position" [size]="size" [heading]="heading" [closeAriaLabel]="closeAriaLabel">${taskBodyDe}
+      </lc-drawer>`,
+  }),
+};
+
+/**
+ * 3.35 (request 055, 054-n3): the trigger is passed as `returnFocusTo`, so the
+ * focus returns to it after the drawer closed, also in WebKit, where a tap
+ * doesn't focus a button.
+ */
+export const ReturnFocusTo: Story = {
+  name: 'Focus return (3.35)',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.35 (request 055, 054-n3): the trigger „Filter“ is passed as `returnFocusTo`, so after „Filter schließen“, Escape, the backdrop or „Anwenden“ the focus is on the trigger\'s button again, once the panel has slid out (250 ms). Without it, a WebKit tap leaves `body` focused at open, and the focus falls to `body` on close. The trigger is the `<lc-button>` host (`$event.currentTarget` of its click); the drawer hands the focus to the `<button>` inside it.',
+      },
+      story: { inline: false, height: '480px' },
+    },
+  },
+  render: () => ({
+    props: { filterOpen: false, filterTrigger: null },
+    template: `
+      <div lang="de">
+        <lc-button variant="outline" (click)="filterTrigger = $any($event.currentTarget); filterOpen = true">Filter</lc-button>
+      </div>
+      <lc-drawer lang="de" [open]="filterOpen" (closed)="filterOpen = false" size="sm" heading="Filter"
+        closeAriaLabel="Filter schließen" [returnFocusTo]="filterTrigger">
+        <div style="padding: 16px; display: flex; flex-direction: column; gap: 16px;">
+          <lc-checkbox label="Nur offene Vorgänge"></lc-checkbox>
+          <div style="display: flex; gap: 8px;">
+            <lc-button variant="outline" [fullWidth]="true">Zurücksetzen</lc-button>
+            <lc-button variant="primary" [fullWidth]="true" (click)="filterOpen = false">Anwenden</lc-button>
+          </div>
+        </div>
       </lc-drawer>`,
   }),
 };

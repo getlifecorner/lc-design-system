@@ -20,7 +20,10 @@ export type AlertVariant = 'success' | 'error' | 'warning' | 'info';
 
 /**
  * Layout of the projected actions (`slot="action"`).
- * - `inline`: one action right of the body, vertically centred (3.2)
+ * - `inline`: one action right of the body, vertically centred (3.2); from
+ *   16rem to 30rem inside the border (alerts of 258–481 px at 100 % text,
+ *   514–961 px at 200 %) a button action takes its own row below the text,
+ *   lined up with it, at its natural width (3.35)
  * - `stacked`: the actions in their own row below the title and message;
  *   below 576 px of alert width one per line at full width, 8 px apart,
  *   from 576 px side by side at their natural width
@@ -44,6 +47,10 @@ export type AlertActionsLayout = 'inline' | 'stacked';
  *   several actions stacked below it (`actionsLayout="stacked"`); 3.12: a text
  *   link (`<a slot="action" href="…">`) as the one way forward gets a
  *   44 × 44 px target, link colour, an underline and a focus ring
+ * - 3.35: from 16rem to 30rem inside the border (alerts of 258–481 px at
+ *   100 % text, 514–961 px at 200 %) an inline button action takes its own
+ *   row below the text, lined up with it, at its natural width, so the
+ *   message keeps about 200 px beside the ×
  * - 3.13.1: narrow layout below 16rem inside the border (alerts under 258 px
  *   at 100 % text, 514 px at 200 %): the icon shares the first row with the
  *   title, message and actions take the full width below, the padding is one
@@ -127,7 +134,10 @@ export class AlertComponent {
 
   /**
    * Layout of the projected actions (`slot="action"`): `inline` — one action
-   * right of the body (3.2); `stacked` — the actions in their own row below
+   * right of the body (3.2); from 16rem to 30rem inside the border (alerts of
+   * 258–481 px at 100 % text, 514–961 px at 200 %) a button action takes its
+   * own row below the text, lined up with it, at its natural width (3.35);
+   * `stacked` — the actions in their own row below
    * the title and message, one per line at full width and 8 px apart below
    * 576 px of alert width, side by side at their natural width from there.
    * @default 'inline'

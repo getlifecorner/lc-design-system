@@ -11,6 +11,8 @@ import {
   HostListener,
   OnDestroy,
   inject,
+  afterNextRender,
+  EnvironmentInjector,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgTemplateOutlet, NgStyle } from '@angular/common';
@@ -29,6 +31,7 @@ import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/ico
 import { ICON_CHEVRON_DOWN, ICON_CHEVRON_LEFT, ICON_CHEVRON_RIGHT } from '@lifecorner/angular-ui-kit/icons';
 import { BadgeComponent } from '@lifecorner/angular-ui-kit/badge';
 import { LogoComponent } from '@lifecorner/angular-ui-kit/logo';
+import { focusReturnTarget } from '@lifecorner/angular-ui-kit/internal/overlay';
 
 export type SidenavPosition = 'left' | 'right';
 export type SidenavMode = 'drawer' | 'docked';
@@ -84,7 +87,9 @@ export type SidenavVariant = 'default' | 'transparent';
  *   `--color-on-surface-selected` (AA on the selected tint)
  * - Accessible: the inner `<nav>` is the navigation landmark; in drawer mode
  *   the panel is a modal dialog (`role="dialog"`, focus moved to the close
- *   button on open, trapped while open, restored on close)
+ *   button on open, trapped while open, restored on close); `returnFocusTo`
+ *   (3.35) names the element that gets the focus back after the drawer
+ *   closed (WebKit doesn't focus a tapped button)
  *
  * @example
  * ```html
@@ -240,6 +245,23 @@ export class SidenavComponent implements OnDestroy {
   readonly hasOverlay = input(true);
 
   /**
+   * Drawer mode only (`mode="drawer"`, or `docked` below `mobileBreakpoint`):
+   * element that gets the focus back after the drawer closed (3.35), instead
+   * of the one that had it at open. Set it to the trigger: WebKit (Safari,
+   * every iOS browser) doesn't focus a tapped button, so the captured element
+   * is `body`. Applied after the next render, once the panel has left the DOM
+   * and the focus trap has restored its captured element. Holds on ×,
+   * Escape, backdrop, an item or brand tap on a phone (they close it through
+   * `closed`), `isOpen` false, and when the sidenav is destroyed while open.
+   * A custom-element host that can't take focus (`<lc-button>`) hands it to
+   * its first focusable descendant. Ignored when the element is no longer in
+   * the document or can't take focus; the captured element then keeps it.
+   * `null`: as before.
+   * @default null
+   */
+  readonly returnFocusTo = input<HTMLElement | null>(null);
+
+  /**
    * Navigation items (`NavigationItem[]`): `id`, `icon`, `label`, `route`,
    * `displayOrder` (sort order, 1 = first); optional `children`
    * (`NavigationItem[]`, a collapsible group, up to 3 levels), `isSection`
@@ -358,6 +380,16 @@ export class SidenavComponent implements OnDestroy {
    */
   readonly itemAction = output<NavigationItem>();
 
+  /** Whether the drawer panel is rendered (drawer mode and open). */
+  private readonly drawerOpen = computed(() => this.isOpen() && this.effectiveMode() === 'drawer');
+  /** Whether the drawer panel was shown without a close after it. */
+  private drawerShown = false;
+  /**
+   * The environment injector: a node injector would cancel the focus-return
+   * hook when the sidenav is destroyed while open.
+   */
+  private readonly environmentInjector = inject(EnvironmentInjector);
+
   constructor() {
     this.router.events
       .pipe(
@@ -382,10 +414,48 @@ export class SidenavComponent implements OnDestroy {
       if (parents.every((id) => expanded.has(id))) return;
       this.expandedItems.set(new Set([...expanded, ...parents]));
     });
+
+    // 3.35: `returnFocusTo` after the drawer panel closed. Untracked: a
+    // change of the input alone must not schedule anything.
+    effect(() => {
+      const open = this.drawerOpen();
+      untracked(() => {
+        if (open) {
+          this.drawerShown = true;
+        } else {
+          this.drawerClosed();
+        }
+      });
+    });
   }
 
   ngOnDestroy(): void {
     this.teardownMediaQuery();
+    this.drawerClosed();
+  }
+
+  /** Ends a shown drawer panel; schedules `returnFocusTo` when set. */
+  private drawerClosed(): void {
+    if (!this.drawerShown) return;
+    this.drawerShown = false;
+    if (this.returnFocusTo()) this.scheduleFocusReturn();
+  }
+
+  /**
+   * Focuses `returnFocusTo` after the next render: the template refresh has
+   * removed the panel, and `cdkTrapFocus` has restored its captured element
+   * on destroy, so this is the last focus write. Reads the input again then,
+   * so a trigger re-rendered meanwhile is taken from a fresh query.
+   */
+  private scheduleFocusReturn(): void {
+    afterNextRender(
+      () => {
+        const target = this.returnFocusTo();
+        if (this.drawerShown || !target?.isConnected) return;
+        focusReturnTarget(target);
+      },
+      { injector: this.environmentInjector },
+    );
   }
 
   private setupMediaQuery(): void {

@@ -10,11 +10,13 @@ import {
   inject,
   HostListener,
   OnDestroy,
+  afterNextRender,
+  EnvironmentInjector,
 } from '@angular/core';
 import { A11yModule } from '@angular/cdk/a11y';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
 import { ICON_X_MARK } from '@lifecorner/angular-ui-kit/icons';
-import { OverlayStackService } from '@lifecorner/angular-ui-kit/internal/overlay';
+import { OverlayStackService, focusReturnTarget } from '@lifecorner/angular-ui-kit/internal/overlay';
 
 export type DrawerPosition = 'left' | 'right';
 export type DrawerSize = 'sm' | 'md' | 'lg' | 'xl';
@@ -32,7 +34,10 @@ const CLOSE_ANIMATION_MS = 250;
  * - Close on Escape key support
  * - Heading text display
  * - Content projection for arbitrary body content
- * - Accessible with ARIA dialog role, focus trap and focus restore
+ * - Accessible with ARIA dialog role, focus trap and focus restore;
+ *   `returnFocusTo` (3.35) names the element that gets the focus back after
+ *   the drawer closed (WebKit doesn't focus a tapped button, so the one
+ *   captured at open is `body`)
  *
  * @example
  * ```html
@@ -81,6 +86,21 @@ export class DrawerComponent implements OnDestroy {
   /** Accessible name of the close button. */
   readonly closeAriaLabel = input('Close drawer');
 
+  /**
+   * Element that gets the focus back after the drawer closed (3.35), instead
+   * of the one that had it at open. Set it to the trigger: WebKit (Safari,
+   * every iOS browser) doesn't focus a tapped button, so the captured element
+   * is `body`. Applied when the panel has left the DOM after its 250 ms
+   * slide-out, once the focus trap has restored its captured element. Holds
+   * on ×, Escape, backdrop, `open` false, and when the drawer is destroyed
+   * while open. A custom-element host that can't take focus (`<lc-button>`)
+   * hands it to its first focusable descendant. Ignored when the element is
+   * no longer in the document or can't take focus; the captured element then
+   * keeps it. `null`: as before.
+   * @default null
+   */
+  readonly returnFocusTo = input<HTMLElement | null>(null);
+
   /** Emitted when the drawer should close. */
   readonly closed = output<void>();
 
@@ -109,6 +129,12 @@ export class DrawerComponent implements OnDestroy {
   private readonly drawerId = `lc-drawer-${++DrawerComponent.nextId}`;
   private closeTimer?: ReturnType<typeof setTimeout>;
   private originalOverflow?: string;
+  /**
+   * The environment injector: a node injector would cancel the focus-return
+   * hook when the drawer is destroyed while open.
+   */
+  private readonly environmentInjector = inject(EnvironmentInjector);
+  private destroyed = false;
 
   constructor() {
     effect(() => {
@@ -129,6 +155,7 @@ export class DrawerComponent implements OnDestroy {
             this.closeTimer = undefined;
             this._visible.set(false);
             this.unlockScroll();
+            if (untracked(this.returnFocusTo)) this.scheduleFocusReturn();
           }, CLOSE_ANIMATION_MS);
         }
       });
@@ -136,10 +163,30 @@ export class DrawerComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     // Navigating away while open must not leave the page scroll-locked
     this.clearCloseTimer();
     this.overlayStack.remove(this.drawerId);
     this.unlockScroll();
+    if (this._visible() && this.returnFocusTo()) this.scheduleFocusReturn();
+  }
+
+  /**
+   * Focuses `returnFocusTo` after the next render (3.35): the template
+   * refresh has removed the panel, and `cdkTrapFocus` has restored its
+   * captured element on destroy, so this is the last focus write. Reads the
+   * input again then, so a trigger re-rendered meanwhile is taken from a
+   * fresh query. Does nothing when the drawer opened again meanwhile.
+   */
+  private scheduleFocusReturn(): void {
+    afterNextRender(
+      () => {
+        const target = this.returnFocusTo();
+        if ((this.open() && !this.destroyed) || !target?.isConnected) return;
+        focusReturnTarget(target);
+      },
+      { injector: this.environmentInjector },
+    );
   }
 
   /**

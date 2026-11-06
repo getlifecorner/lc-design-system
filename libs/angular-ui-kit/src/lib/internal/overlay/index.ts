@@ -6,3 +6,4 @@
  */
 export * from './overlay-stack.service';
 export * from './overlay-insets.service';
+export * from './focus-return';

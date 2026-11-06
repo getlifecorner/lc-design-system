@@ -1647,6 +1647,8 @@ describe('Component pairings of 3.25.0 (request 039)', () => {
     ['textarea', '.lc-textarea--error:focus', '2px solid var(--color-error-600)', '0'],
     ['number', '.number-input--error .number-input__control:focus-within', '2px solid var(--color-error-600)', '0'],
     ['combobox', '.lc-combobox--error .lc-combobox__input-wrapper:focus-within', '2px solid var(--color-error-default)', '0'],
+    // 3.35 (055 D-3): the rest focus ring, so `focus()` from code shows it too.
+    ['combobox', '.lc-combobox__input-wrapper:focus-within', primary, '0'],
   ];
 
   it.each(rings)('AC-2: %s %s draws a solid 2 px outline, no halo', (sheet, selector, outline, offset) => {

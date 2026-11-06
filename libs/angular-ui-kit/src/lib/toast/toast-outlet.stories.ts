@@ -285,7 +285,7 @@ How a page shows a toast (3.17). Checked against \`toast.service.ts\`, \`toast-o
 | \`--lc-toast-outlet-offset-top\` | \`0px\`; in the shell: the header's bottom edge | the space kept free above the \`top-*\` stacks |
 | \`--lc-toast-outlet-offset-bottom\` | \`0px\`; in the shell: the shown bar's top edge from the viewport's bottom | the space kept free below the \`bottom-*\` stacks |
 
-Every stack is at most as high as the space between the two offsets and scrolls when its toasts need more (200 % text), so each one stays reachable. Bottom stacks show the newest toast nearest the edge (3.33), top stacks the oldest at the top. A \`top-*\` stack lies over the page on purpose (a toast stays visible wherever the page is scrolled), so in the shell it can cover a title right under the header (at 360 px a toast at y 72 over an h1 at y 80): prefer \`bottom-*\` there. See *Layout/App Shell → Toasts in the shell* and the *Offsets* and *Bottom Stack Order* stories.
+Every stack is at most as high as the space between the two offsets and scrolls when its toasts need more (200 % text), so each one stays reachable. Bottom stacks show the newest toast nearest the edge (3.33). A top stack shows its assertive region (error, warning) above its polite one (success, info), each oldest first, so a newer error sits above an older success (3.35, 053-n2). A \`top-*\` stack lies over the page on purpose (a toast stays visible wherever the page is scrolled), so in the shell it can cover a title right under the header (at 360 px a toast at y 72 over an h1 at y 80): prefer \`bottom-*\` there. See *Layout/App Shell → Toasts in the shell* and the *Offsets* and *Bottom Stack Order* stories.
         `,
       },
     },
@@ -296,8 +296,13 @@ Every stack is at most as high as the space between the two offsets and scrolls 
       control: 'select',
       options: ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'],
       description: 'Position of the toasts shown by the demo buttons',
+      table: { defaultValue: { summary: "'top-right'" } },
     },
-    duration: { control: 'number', description: 'Auto-dismiss duration in ms (0 = sticky)' },
+    duration: {
+      control: 'number',
+      description: 'Auto-dismiss duration in ms (0 = sticky)',
+      table: { defaultValue: { summary: '4000' } },
+    },
   },
   render: (args) => ({
     props: args,
@@ -337,6 +342,8 @@ export const ServiceCall: Story = {
       source: { code: SERVICE_CALL_SNIPPET, language: 'typescript' },
     },
   },
+  // 3.35 (053-n3): the demo ignores the meta's controls, so none shows.
+  argTypes: { position: { table: { disable: true } }, duration: { table: { disable: true } } },
   render: () => ({
     template: `<lc-toast-service-call-demo />`,
   }),
@@ -352,6 +359,8 @@ export const Offsets: Story = {
       story: { inline: false, height: '480px' },
     },
   },
+  // 3.35 (053-n3): the demo ignores the meta's controls, so none shows.
+  argTypes: { position: { table: { disable: true } }, duration: { table: { disable: true } } },
   render: () => ({
     template: `<lc-toast-outlet-offsets-demo />`,
   }),
@@ -368,6 +377,8 @@ export const BottomStackOrder: Story = {
       story: { inline: false, height: '480px' },
     },
   },
+  // 3.35 (053-n3): the demo ignores the meta's controls, so none shows.
+  argTypes: { position: { table: { disable: true } }, duration: { table: { disable: true } } },
   render: () => ({
     template: `<lc-toast-outlet-bottom-order-demo />`,
   }),
@@ -384,6 +395,8 @@ export const StackSpacing: Story = {
       story: { inline: false, height: '480px' },
     },
   },
+  // 3.35 (053-n3): the demo ignores the meta's controls, so none shows.
+  argTypes: { position: { table: { disable: true } }, duration: { table: { disable: true } } },
   render: () => ({
     template: `<lc-toast-outlet-stack-spacing-demo />`,
   }),

@@ -40,8 +40,10 @@ const POSITIONS: readonly ToastPosition[] = [
  * as the space between the offsets and scrolls when its toasts need more
  * (200 % text), so each toast stays reachable.
  *
- * Bottom stacks show the newest toast nearest the edge (3.33); top stacks the
- * oldest at the top. The toasts of a stack are 8 px (`--spacing-2`) apart
+ * Bottom stacks show the newest toast nearest the edge (3.33). A top stack
+ * shows its assertive region (error, warning) above its polite one (success,
+ * info), each oldest first, so a newer error sits above an older success
+ * (3.35, 053-n2). The toasts of a stack are 8 px (`--spacing-2`) apart
  * (3.33.1), within a live region and across the two; an empty region and the
  * last toast add no space, and the stack keeps its 16 px padding. A `top-*`
  * stack lies over the page on purpose (a toast stays visible wherever the

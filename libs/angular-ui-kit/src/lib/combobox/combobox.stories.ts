@@ -1,6 +1,74 @@
-import { signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Injector, afterNextRender, inject, input, signal, viewChild } from '@angular/core';
 import type { Meta, StoryObj } from '@storybook/angular';
 import { ComboboxComponent, ComboboxOption } from './combobox.component';
+import { ModalComponent } from '../modal/modal.component';
+import { ButtonComponent } from '../button/button.component';
+
+/** The months of the *Focus on Open* stories (request 055). */
+const MONTH_OPTIONS: ComboboxOption[] = [
+  { value: '2026-10', label: 'Oktober 2026', description: 'Noch nicht eingefroren' },
+  { value: '2026-09', label: 'September 2026', description: 'Entwurf vorhanden' },
+  { value: '2026-08', label: 'August 2026', description: 'Fassung 1 freigegeben' },
+  { value: '2026-07', label: 'Juli 2026', description: 'Fassung 2 freigegeben' },
+];
+
+/**
+ * 3.35 (request 055, monatsstand-prove row 1): "Monat einfrieren" opens a
+ * form with the focus in its month field.
+ */
+@Component({
+  selector: 'lc-combobox-focus-on-open-demo',
+  standalone: true,
+  imports: [ComboboxComponent, ModalComponent, ButtonComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div lang="de">
+      <lc-button variant="primary" (click)="openForm($any($event.currentTarget))">Monat einfrieren</lc-button>
+      <lc-modal
+        [open]="open()"
+        (openChange)="open.set($event)"
+        placement="auto"
+        size="md"
+        [returnFocusTo]="trigger()"
+        [closeOnBackdropClick]="false"
+        ariaLabelledBy="freeze-title"
+        closeAriaLabel="Schließen"
+      >
+        <div slot="header"><h2 id="freeze-title">Monat einfrieren</h2></div>
+        <div slot="body">
+          <lc-combobox
+            [options]="months"
+            label="Monat"
+            placeholder="Monat suchen …"
+            emptyMessage="Keine Treffer"
+            clearAriaLabel="Auswahl löschen"
+            [openOnFocus]="openOnFocus()"
+          />
+        </div>
+        <div slot="footer" style="display: flex; gap: 8px; justify-content: flex-end;">
+          <lc-button variant="ghost" (click)="open.set(false)">Abbrechen</lc-button>
+          <lc-button variant="primary" (click)="open.set(false)">Einfrieren</lc-button>
+        </div>
+      </lc-modal>
+    </div>
+  `,
+})
+class ComboboxFocusOnOpenDemoComponent {
+  /** Passed to the field's `openOnFocus`. */
+  readonly openOnFocus = input(true);
+  private readonly injector = inject(Injector);
+  private readonly field = viewChild.required(ComboboxComponent);
+  protected readonly months = MONTH_OPTIONS;
+  protected readonly open = signal(false);
+  protected readonly trigger = signal<HTMLElement | null>(null);
+
+  protected openForm(trigger: HTMLElement): void {
+    this.trigger.set(trigger);
+    this.open.set(true);
+    // After the render: the dialog exists and has moved the focus to its first control.
+    afterNextRender(() => this.field().focus(), { injector: this.injector });
+  }
+}
 
 const meta: Meta<ComboboxComponent> = {
   title: 'Form/Combobox',
@@ -389,5 +457,57 @@ export const OpenOnFocusOffDe: Story = {
     if (viewMode !== 'story') return;
     await new Promise((resolve) => setTimeout(resolve, 50));
     canvasElement.querySelector<HTMLInputElement>('lc-combobox input')?.focus();
+  },
+};
+
+/** 3.35 (request 055, monatsstand-prove row 1): a form that opens with the focus in its month field, list closed. */
+export const FocusOnOpen: Story = {
+  name: 'Focus on Open (3.35)',
+  args: { openOnFocus: false },
+  parameters: {
+    controls: { include: ['openOnFocus'] },
+    docs: {
+      description: {
+        story:
+          '3.35 (request 055, finance-intelligence „Monat einfrieren“): `focus()` moves the focus into the field\'s `<input>`. „Monat einfrieren“ opens an `lc-modal` (`placement="auto"`: a bottom sheet below 640 px) and the page calls `afterNextRender(() => this.month().focus(), { injector })` with `month = viewChild.required(ComboboxComponent)` and its own `injector = inject(Injector)`; that runs after the dialog moved the focus to its first control, so the focus is in „Monat“. With `[openOnFocus]="false"` the list stays closed (`aria-expanded="false"`); a click or tap on the field, typing or ArrowDown opens it. The field shows the same 2 px ring as after Tab (3.35; it was a 1 px border and a faint halo). `returnFocusTo` gives the focus back to the trigger on close. In the story view the trigger is clicked on load without focusing it, as a WebKit tap.',
+      },
+      story: { inline: false, height: '520px' },
+    },
+  },
+  render: (args) => ({
+    props: { openOnFocus: args.openOnFocus },
+    moduleMetadata: { imports: [ComboboxFocusOnOpenDemoComponent] },
+    template: `<lc-combobox-focus-on-open-demo [openOnFocus]="openOnFocus" />`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    canvasElement.querySelector<HTMLButtonElement>('lc-combobox-focus-on-open-demo lc-button button')?.click();
+  },
+};
+
+/** 3.35 (request 055): the same with `openOnFocus` on, the list opens with the focus. */
+export const FocusOnOpenListOpens: Story = {
+  name: 'Focus on Open, List Opens (3.35)',
+  args: { openOnFocus: true },
+  parameters: {
+    controls: { include: ['openOnFocus'] },
+    docs: {
+      description: {
+        story:
+          '3.35 (request 055): *Focus on Open* with `openOnFocus` on (the default). Like a user\'s focus, `focus()` opens the list (`aria-expanded="true"`) with the four months, above the sheet.',
+      },
+      story: { inline: false, height: '520px' },
+    },
+  },
+  render: (args) => ({
+    props: { openOnFocus: args.openOnFocus },
+    moduleMetadata: { imports: [ComboboxFocusOnOpenDemoComponent] },
+    template: `<lc-combobox-focus-on-open-demo [openOnFocus]="openOnFocus" />`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    canvasElement.querySelector<HTMLButtonElement>('lc-combobox-focus-on-open-demo lc-button button')?.click();
   },
 };

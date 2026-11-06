@@ -170,7 +170,11 @@ export class BottomNavComponent {
    * destinations' badges; pass the value to show. It sits on the bar's last
    * entry; values up to three characters (`'99+'`) fit: on the last entry a
    * badge that would pass the entry's edge moves left until it ends there
-   * (3.33). `null` or `undefined`: no badge.
+   * (3.33). `null` or `undefined`: no badge. Known limit (3.35, 052-n3):
+   * '99+' on the last entry of a five-entry bar at 360 px starts 3.2 px
+   * (docked) / 3.4 px (floating) left of the pill centre and covers two of the
+   * More glyph's three dots; the label and the read badge text still name the
+   * entry.
    *
    * @default null
    */

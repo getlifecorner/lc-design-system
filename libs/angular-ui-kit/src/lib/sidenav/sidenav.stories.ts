@@ -112,6 +112,12 @@ const meta: Meta<SidenavComponent> = {
         "Text read after an item's label when it has a badge, at every level. On the collapsed rail, where labels are hidden, the label and this text name the item. `{value}` is replaced with the badge value, e.g. `'{value} offen'` → \"Stammdaten 1 offen\". The badge itself is hidden from screen readers. Empty: the badge isn't read",
       table: { defaultValue: { summary: "'{value}'" } },
     },
+    returnFocusTo: {
+      control: false,
+      description:
+        '3.35, drawer mode only: the element that gets the focus back after the drawer closed, instead of the one that had it at open. Set it to the trigger: WebKit (Safari, every iOS browser) does not focus a tapped button, so the captured element is `body`. Applied after the render that removes the panel, on every close (×, Escape, backdrop, an item or brand tap on a phone, `isOpen` false) and when the sidenav is destroyed while open. An `<lc-button>` host hands the focus to its `<button>`. Ignored when the element is gone; `null` keeps the 3.34 behaviour.',
+      table: { defaultValue: { summary: 'null' } },
+    },
   },
 
   parameters: {
@@ -1084,6 +1090,49 @@ export const TextBrandDrawerGerman: Story = {
                     brandName="Finanz-Controlling Cockpit" brandIcon="presentation-chart-line"
                     brandAriaLabel="Finanz-Controlling Cockpit – Startseite"
                     closeAriaLabel="Navigation schließen" ariaLabel="Hauptnavigation" />
+      </div>`,
+  }),
+};
+
+/** The *Focus return (3.35)* destinations. */
+const focusReturnItems = [
+  { id: 'overview', icon: 'home', label: 'Übersicht', route: '/uebersicht', displayOrder: 1 },
+  { id: 'month', icon: 'calendar', label: 'Monatsstand', route: '/monatsstand', displayOrder: 2 },
+  { id: 'cost-centres', icon: 'folder', label: 'Kostenstellen', route: '/kostenstellen', displayOrder: 3 },
+  { id: 'settings', icon: 'cog-6-tooth', label: 'Einstellungen', route: '/einstellungen', displayOrder: 4 },
+];
+
+/**
+ * 3.35 (request 055, 054-n3): the trigger is passed as `returnFocusTo`, so the
+ * focus returns to it after the drawer closed, also in WebKit, where a tap
+ * doesn't focus a button.
+ */
+export const ReturnFocusTo: Story = {
+  name: 'Focus return (3.35)',
+  parameters: {
+    layout: 'fullscreen',
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.35 (request 055, 054-n3): drawer mode. The bar\'s icon button „Navigation öffnen“ is passed as `returnFocusTo`, so after „Navigation schließen“, Escape or the backdrop the focus is on the trigger\'s button again; on a phone an item or brand tap closes the drawer through `closed` and returns the focus the same way. Without it, a WebKit tap leaves `body` focused at open, and the focus falls to `body` on close. The trigger is the `<lc-button>` host (`$event.currentTarget` of its click); the sidenav hands the focus to the `<button>` inside it. `lc-header`\'s hamburger has no element to pass yet (its `hamburgerClick` carries none).',
+      },
+      story: { inline: false, height: '480px' },
+    },
+  },
+  render: () => ({
+    props: { items: focusReturnItems, navOpen: false, navTrigger: null },
+    template: `
+      <div lang="de" style="min-height: 100vh;">
+        <div style="display: flex; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--color-border);">
+          <lc-button variant="ghost" [iconOnly]="true" ariaLabel="Navigation öffnen"
+            (click)="navTrigger = $any($event.currentTarget); navOpen = true">
+            <lc-icon name="bars-3" size="sm" [decorative]="true"></lc-icon>
+          </lc-button>
+        </div>
+        <lc-sidenav [isOpen]="navOpen" mode="drawer" [items]="items" activeRoute="/monatsstand"
+          ariaLabel="Hauptnavigation" closeAriaLabel="Navigation schließen"
+          [returnFocusTo]="navTrigger" (closed)="navOpen = false" />
       </div>`,
   }),
 };

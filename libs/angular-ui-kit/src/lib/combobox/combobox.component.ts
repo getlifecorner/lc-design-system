@@ -52,6 +52,10 @@ export type ComboboxSize = 'xs' | 'sm' | 'md' | 'lg';
  * (`[(selectedValue)]`, single mode), next to the `valueChange` output with
  * the option object and the forms binding.
  *
+ * `focus()` (3.35) moves the focus into the field's `<input>` when a form
+ * opens or after a rejected save (WCAG 2.4.3); it opens the list as a user's
+ * focus does (`openOnFocus`).
+ *
  * @example
  * ```html
  * <lc-combobox
@@ -431,6 +435,26 @@ export class ComboboxComponent implements ControlValueAccessor {
   setDisabledState(isDisabled: boolean): void {
     this.formDisabled.set(isDisabled);
     if (isDisabled) this.isOpen.set(false);
+  }
+
+  /**
+   * Moves the focus into the field's `<input>` (3.35), e.g. when a form opens
+   * with this field first, or to the field with the error after a rejected
+   * save (422) (WCAG 2.4.3). `options` as for `HTMLElement.focus()`
+   * (`{ preventScroll: true }`). Shows the same focus ring as a user's focus.
+   * Like a user's focus it opens the list when `openOnFocus` is `true` and
+   * there is something to show; with `false` the list stays closed
+   * (`aria-expanded="false"`). A disabled field takes no focus (it stays where
+   * it is). Call it once the field has rendered, e.g.
+   * `afterNextRender(() => this.month().focus(), { injector })` with
+   * `month = viewChild.required(ComboboxComponent)` and the page component's
+   * `injector = inject(Injector)`. In an `lc-modal` that opens with the field,
+   * that call runs after the dialog moved the focus to its first control.
+   * Does nothing before the component has rendered.
+   * @param options Passed to the native `focus()`.
+   */
+  focus(options?: FocusOptions): void {
+    this.inputEl()?.nativeElement.focus(options);
   }
 
   /**

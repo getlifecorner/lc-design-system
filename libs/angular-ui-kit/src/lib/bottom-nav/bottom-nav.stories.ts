@@ -342,7 +342,7 @@ export const MoreBadgeThreeCharacters: Story = {
     docs: {
       description: {
         story:
-          '3.33 (request 052, 050-n6): "99+" on the "More" entry of a five-entry bar at 360 px, docked and floating. On the last entry a badge that would pass the entry\'s edge moves left until it ends there (it ended 1.2 px past the docked and 1.4 px past the floating bar\'s edge); a badge that fits ("3" in *More Badge*) stays where it always sat, 6 px right of the pill centre, and badges on the other entries ("2" on Contracts) never move. The value is shown as passed, never shortened.',
+          '3.33 (request 052, 050-n6): "99+" on the "More" entry of a five-entry bar at 360 px, docked and floating. On the last entry a badge that would pass the entry\'s edge moves left until it ends there (it ended 1.2 px past the docked and 1.4 px past the floating bar\'s edge); a badge that fits ("3" in *More Badge*) stays where it always sat, 6 px right of the pill centre, and badges on the other entries ("2" on Contracts) never move. The value is shown as passed, never shortened. Known limit (3.35, 052-n3): "99+" (37.4 px) starts 3.2 px (docked) / 3.4 px (floating) left of the pill centre and covers two of the More glyph\'s three dots; the label and the read badge text still name the entry.',
       },
     },
   },

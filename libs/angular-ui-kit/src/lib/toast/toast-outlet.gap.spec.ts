@@ -1,7 +1,6 @@
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { createHash } from 'crypto';
 import { resolve } from 'path';
 import { compile } from 'sass';
 import { ToastOutletComponent } from './toast-outlet.component';
@@ -27,8 +26,23 @@ describe('ToastOutletComponent — stack gap (3.33.1, 052-s2)', () => {
     return at[1];
   };
 
+  /**
+   * Every rule of the outlet's stacks, regions and their toasts, as
+   * [selector list, declarations]. 3.35 (request 055, 053-n1): the checks
+   * below look at these rules only (they replaced a length + sha1 pin of the
+   * whole file), so an unrelated rule added later doesn't fail them.
+   */
+  const outletRules = () =>
+    [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+      .map((m) => [m[1].replace(/\s+/g, ' ').trim(), m[2]] as const)
+      .filter(([selector]) => /\.lc-toast-outlet__(stack|region)/.test(selector));
+  /** The declaration names of the rules matching `pattern`, in source order. */
+  const declarations = (pattern: RegExp) =>
+    outletRules().flatMap(([selector, body]) =>
+      [...body.matchAll(/(?:^|[\s;])([a-z-]+)\s*:/g)].map((m) => m[1]).filter((name) => pattern.test(name)).map((name) => `${selector} → ${name}`),
+    );
+
   const GAP_RULE = '\n.lc-toast-outlet__region > lc-toast {\n  margin-top: var(--spacing-2);\n}\n';
-  const PADDING_TOP = '\n  padding-top: calc(var(--spacing-4) - var(--spacing-2));';
 
   describe('CSS (compiled)', () => {
     it('AC-1, AC-2: every outlet toast keeps exactly var(--spacing-2) above it, no literal', () => {
@@ -40,27 +54,20 @@ describe('ToastOutletComponent — stack gap (3.33.1, 052-s2)', () => {
       expect(rule('.lc-toast-outlet__stack')).toMatch(
         /\spadding: var\(--spacing-4\);\s*padding-top: calc\(var\(--spacing-4\) - var\(--spacing-2\)\);/,
       );
-      expect(css.match(/\spadding[a-z-]*:/g)).toEqual([' padding:', ' padding-top:']);
+      expect(declarations(/^padding/)).toEqual(['.lc-toast-outlet__stack → padding', '.lc-toast-outlet__stack → padding-top']);
     });
 
     it('AC-3: no gap, :empty, :has() or other margin, so an empty region and the last toast add nothing', () => {
-      expect(css).not.toMatch(/[\s;{]gap:/);
-      expect(css).not.toMatch(/:empty|:has\(/);
-      expect(css.match(/margin[a-z-]*:/g)).toEqual(['margin-top:']);
+      expect(outletRules().length).toBeGreaterThan(5);
+      expect(declarations(/^(gap|row-gap|column-gap)$/)).toEqual([]);
+      expect(outletRules().filter(([selector]) => /:empty|:has\(|:last-child|:first-child/.test(selector))).toEqual([]);
+      expect(declarations(/^margin/)).toEqual(['.lc-toast-outlet__region > lc-toast → margin-top']);
     });
 
     it('AC-7: the standalone toast keeps its bottom margin, and only outside the outlet (no 16 px)', () => {
       const margins = [...toastCss.matchAll(/([^{}]+)\{([^{}]*margin-(?:top|bottom)[^{}]*)\}/g)].map((m) => m[1].trim());
       expect(margins).toEqual(['lc-toast:not(lc-toast-outlet lc-toast)']);
       expect(toastCss).toMatch(/lc-toast:not\(lc-toast-outlet lc-toast\) \{[^}]*margin-bottom: var\(--spacing-2\);/);
-    });
-
-    it('AC-4, AC-6: apart from the two additions the compiled CSS is the one of 3.33.0', () => {
-      // Length and sha1 of the 3.33.0 file compiled the same way (compared
-      // with a copy of it once, then pinned).
-      const rest = css.replace(GAP_RULE, '').replace(PADDING_TOP, '');
-      expect(rest).not.toBe(css);
-      expect([rest.length, createHash('sha1').update(rest).digest('hex')]).toEqual([2248, '4a24e1d9397f66633f1640c1a8da9fdb2803f959']);
     });
   });
 

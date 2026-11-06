@@ -185,6 +185,41 @@ $text-link: 'a:where(:not(.btn))';
   }
 }
 
+// Inline button actions (3.35, 054-n1): from 16rem to 30rem inside the border
+// (alerts of 258–481 px at 100 % text, 514–961 px at 200 %) a button beside
+// the text and the × left the message about 70 px, one word per line. As the
+// link above, the action drops to its own row below the text, lined up with
+// it, at its natural width (the 3.3 mechanism: `order: 1`, a full-width row).
+// 30rem: the default `md` button "Erneut versuchen" plus the × still leave the
+// message 200 px. A band, not `width < 30rem`: the `:has()` makes these
+// (0,7,1), which would beat the narrow layout's (0,6,0) below 16rem.
+// No word breaking here (see the narrow layout).
+@container lc-alert (16rem <= width < 30rem) {
+  .lc-alert:not(.lc-alert--actions-stacked)
+    .lc-alert__container:has(> .lc-alert__action:not(:empty)):not(:has(> .lc-alert__action > #{$text-link})) {
+    flex-wrap: wrap;
+
+    > .lc-alert__body {
+      flex: 1 1 0;
+    }
+
+    > .lc-alert__action {
+      order: 1;
+      flex: 1 1 100%;
+      align-self: auto;
+      min-width: 0;
+      margin-top: var(--spacing-1);
+    }
+  }
+
+  .lc-alert--with-icon:not(.lc-alert--actions-stacked)
+    .lc-alert__container:not(:has(> .lc-alert__action > #{$text-link}))
+    > .lc-alert__action {
+    // icon (24 px, `md`, at any text size) + the container gap
+    padding-inline-start: calc(24px + var(--spacing-3));
+  }
+}
+
 .lc-alert__close {
   flex-shrink: 0;
   background: transparent;

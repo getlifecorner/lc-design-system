@@ -1,8 +1,89 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { moduleMetadata } from '@storybook/angular';
+import { ChangeDetectionStrategy, Component, Injector, afterNextRender, inject, signal, viewChild } from '@angular/core';
 import { TextareaComponent } from './textarea.component';
 import { InputComponent } from '../input/input.component';
 import { ButtonComponent } from '../button/button.component';
+import { ModalComponent } from '../modal/modal.component';
+
+/**
+ * 3.35 (request 055, monatsstand-prove row 1): "Oktober 2026 freigeben" opens
+ * a form with the focus in its note; a release without a note puts the focus
+ * back into it.
+ */
+@Component({
+  selector: 'lc-textarea-focus-on-open-demo',
+  standalone: true,
+  imports: [TextareaComponent, ModalComponent, ButtonComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div lang="de">
+      <lc-button variant="primary" (click)="openForm($any($event.currentTarget))">Oktober 2026 freigeben</lc-button>
+      <lc-modal
+        [open]="open()"
+        (openChange)="open.set($event)"
+        placement="auto"
+        size="md"
+        [returnFocusTo]="trigger()"
+        [closeOnBackdropClick]="false"
+        ariaLabelledBy="release-title"
+        closeAriaLabel="Schließen"
+      >
+        <div slot="header"><h2 id="release-title">Oktober 2026 freigeben</h2></div>
+        <div slot="body" style="display: flex; flex-direction: column; gap: 16px;">
+          <p style="margin: 0; color: var(--color-text-secondary); line-height: 1.5;">1 Warnung: Kostenstelle 4711 hat keinen Plan.</p>
+          <lc-textarea
+            label="Vermerk"
+            helperText="Begründet die Warnung, höchstens 500 Zeichen."
+            [required]="true"
+            requiredAriaLabel="Pflichtfeld"
+            [rows]="4"
+            [maxLength]="500"
+            [showCharacterCount]="true"
+            [announceError]="false"
+            [error]="error()"
+            errorMessage="Bitte schreiben Sie einen Vermerk."
+            [(value)]="note"
+          />
+        </div>
+        <div slot="footer" style="display: flex; gap: 8px; justify-content: flex-end;">
+          <lc-button variant="ghost" (click)="open.set(false)">Abbrechen</lc-button>
+          <lc-button variant="primary" (click)="release()">Freigeben</lc-button>
+        </div>
+      </lc-modal>
+    </div>
+  `,
+})
+class TextareaFocusOnOpenDemoComponent {
+  private readonly injector = inject(Injector);
+  private readonly field = viewChild.required(TextareaComponent);
+  protected readonly open = signal(false);
+  protected readonly trigger = signal<HTMLElement | null>(null);
+  protected readonly note = signal('');
+  protected readonly error = signal(false);
+
+  protected openForm(trigger: HTMLElement): void {
+    this.trigger.set(trigger);
+    this.note.set('');
+    this.error.set(false);
+    this.open.set(true);
+    this.focusField();
+  }
+
+  protected release(): void {
+    if (this.note().trim()) {
+      this.open.set(false);
+      return;
+    }
+    this.error.set(true);
+    this.focusField();
+  }
+
+  /** After the render: the dialog exists and has moved the focus to its first control. */
+  private focusField(): void {
+    afterNextRender(() => this.field().focus(), { injector: this.injector });
+  }
+}
 
 /** A visitor's message as the server keeps it on a 422/429/503 page (G-CF1). */
 const GERMAN_MESSAGE =
@@ -303,4 +384,28 @@ export const FilledStates: Story = {
         <lc-textarea variant="filled" [rows]="2" label="Kommentar (schreibgeschützt)" [readonly]="true" [value]="readonlyText"></lc-textarea>
       </div>`,
   }),
+};
+
+/** 3.35 (request 055, monatsstand-prove row 1): a form that opens with the focus in its note. */
+export const FocusOnOpen: Story = {
+  name: 'Focus on Open (3.35)',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.35 (request 055, finance-intelligence „Freigeben“): `focus()` moves the focus into the native `<textarea>`. „Oktober 2026 freigeben“ opens an `lc-modal` (`placement="auto"`: a bottom sheet below 640 px) and the page calls `afterNextRender(() => this.note().focus(), { injector })` with `note = viewChild.required(TextareaComponent)` and its own `injector = inject(Injector)`; that runs after the dialog moved the focus to its first control, so the focus is in „Vermerk“. „Freigeben“ without a note sets the error and puts the focus back into the field (WCAG 2.4.3); the error is read once through `aria-describedby` (`[announceError]="false"`). The field shows the same 2 px ring as after Tab. `returnFocusTo` gives the focus back to the trigger on close. In the story view the trigger is clicked on load without focusing it, as a WebKit tap.',
+      },
+      story: { inline: false, height: '520px' },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [TextareaFocusOnOpenDemoComponent] },
+    template: `<lc-textarea-focus-on-open-demo />`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    canvasElement.querySelector<HTMLButtonElement>('lc-textarea-focus-on-open-demo lc-button button')?.click();
+  },
 };

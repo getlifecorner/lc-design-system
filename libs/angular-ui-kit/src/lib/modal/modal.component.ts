@@ -17,7 +17,7 @@ import {
 import { A11yModule } from '@angular/cdk/a11y';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
 import { ICON_X_MARK } from '@lifecorner/angular-ui-kit/icons';
-import { OverlayStackService } from '@lifecorner/angular-ui-kit/internal/overlay';
+import { OverlayStackService, focusReturnTarget } from '@lifecorner/angular-ui-kit/internal/overlay';
 
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
 
@@ -29,13 +29,6 @@ export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
  * - `sheet`: a bottom sheet on every screen
  */
 export type ModalPlacement = 'center' | 'auto' | 'sheet';
-
-/**
- * What a custom-element `returnFocusTo` host (`<lc-button>`) hands the focus
- * to when it can't take it itself.
- */
-const FOCUSABLE =
-  'button:not([disabled]), [href], input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
  * Modal dialog component for focused user interactions.
@@ -310,10 +303,7 @@ export class ModalComponent implements OnDestroy {
       () => {
         const target = this.returnFocusTo();
         if (this.shown || !target?.isConnected) return;
-        target.focus();
-        if (target.ownerDocument.activeElement !== target && target.localName.includes('-')) {
-          target.querySelector<HTMLElement>(FOCUSABLE)?.focus();
-        }
+        focusReturnTarget(target);
       },
       { injector: this.environmentInjector },
     );

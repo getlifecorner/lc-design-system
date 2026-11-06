@@ -51,7 +51,9 @@ const SIZE_COLUMNS: Record<GallerySize, number> = {
  * - Configurable custom column count
  * - Lightbox overlay with navigation (prev/next)
  * - Keyboard navigation (Arrow keys, Escape); focus is trapped inside the
- *   lightbox and returned to the originating thumbnail on close
+ *   lightbox and returned to the originating thumbnail on close: the clicked
+ *   or tapped thumbnail, also in WebKit, where a tap doesn't focus it, so the
+ *   gallery needs no `returnFocusTo` (3.35)
  * - Optional captions and category filtering
  * - Lazy loading with placeholder shimmer
  * - Zoom control in lightbox

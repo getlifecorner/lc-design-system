@@ -56,9 +56,16 @@ describe('AlertComponent — 44 px close target (3.34, request 054)', () => {
   it('AC-15: apart from the three additions the compiled CSS is the one of 3.33.1', () => {
     // Length and sha1 of the 3.33.1 file compiled the same way (compared with
     // a copy of it once, then pinned). The additions: the `::before` rule,
-    // `position: relative` and (D-5) `color: inherit`.
-    const withoutColor = css.replace(COLOR, '\n  border: none;');
-    expect(withoutColor).not.toBe(css);
+    // `position: relative` and (D-5) `color: inherit`. 3.35 (request 055,
+    // 054-n1) added the inline-action band block before the × rule; it is
+    // cut out whole first (alert.inline-action-band.spec.ts pins it).
+    const bandAt = css.indexOf('@container lc-alert (16rem <= width < 30rem) {');
+    expect(bandAt).toBeGreaterThan(-1);
+    const bandEnd = css.indexOf('\n  }\n}', bandAt) + '\n  }\n}'.length;
+    const withoutBand = css.slice(0, bandAt).replace(/\s+$/, '') + css.slice(bandEnd);
+    expect(withoutBand.indexOf('16rem <= width')).toBe(-1);
+    const withoutColor = withoutBand.replace(COLOR, '\n  border: none;');
+    expect(withoutColor).not.toBe(withoutBand);
     const rest = withoutColor.replace(BEFORE, '\n').replace(POSITION, '');
     expect(rest).not.toBe(withoutColor);
     expect([rest.length, createHash('sha1').update(rest).digest('hex')]).toEqual([6722, '11ed3a6df7fe623ccf0e3085306b84227d9c3f63']);

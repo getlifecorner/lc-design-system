@@ -32,6 +32,8 @@ let nextUniqueId = 0;
  * - ControlValueAccessor integration for reactive forms
  * - Plain form posts without JavaScript: `name`, and a `value` that is
  *   prerendered into the native `<textarea>`
+ * - `focus()` (3.35): moves the focus into the native `<textarea>` when a
+ *   form opens or after a rejected save (WCAG 2.4.3)
  *
  * @example
  * ```html
@@ -357,6 +359,24 @@ export class TextareaComponent implements ControlValueAccessor {
    */
   onBlur(): void {
     this.onTouched();
+  }
+
+  /**
+   * Moves the focus into the native `<textarea>` (3.35), e.g. when a form
+   * opens with this field first, or to the field with the error after a
+   * rejected save (422) (WCAG 2.4.3). `options` as for `HTMLElement.focus()`
+   * (`{ preventScroll: true }`). Shows the same focus ring as a user's focus.
+   * A disabled field takes no focus (it stays where it is); a read-only one
+   * does. Call it once the field has rendered, e.g.
+   * `afterNextRender(() => this.note().focus(), { injector })` with
+   * `note = viewChild.required(TextareaComponent)` and the page component's
+   * `injector = inject(Injector)`. In an `lc-modal` that opens with the field,
+   * that call runs after the dialog moved the focus to its first control.
+   * Does nothing before the component has rendered.
+   * @param options Passed to the native `focus()`.
+   */
+  focus(options?: FocusOptions): void {
+    this.textareaElement()?.nativeElement.focus(options);
   }
 
   // ControlValueAccessor implementation
