@@ -620,3 +620,67 @@
     outline-color: Highlight;
   }
 }
+
+// Footer row (3.36, request 056, services row 1, `footerRow`): a ledger sum
+// below the data. A 1 px rule above and a 3 px double rule below in
+// --color-field-border, the only border token with 3:1 on every surface
+// (4.39 light, 5.56 dark); borders stay in forced colours. Its cells pad as
+// the body cells of each size, start-aligned (end with `align: 'end'`),
+// semibold with tabular figures. No hover, no ring: it is not a data row.
+.lc-table tfoot tr {
+  border-top: 1px solid var(--color-field-border);
+  border-bottom: 3px double var(--color-field-border);
+
+  th,
+  td {
+    padding: var(--lc-density-padding-sm, var(--spacing-3)) var(--lc-density-padding-md, var(--spacing-4));
+    text-align: start;
+    font-weight: var(--typography-font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+  }
+
+  th.lc-table__cell--end,
+  td.lc-table__cell--end {
+    text-align: end;
+  }
+}
+
+.lc-table--sm tfoot tr {
+  th,
+  td {
+    padding: var(--lc-density-padding-xs, var(--spacing-2)) var(--lc-density-padding-sm, var(--spacing-3));
+  }
+}
+
+.lc-table--lg tfoot tr {
+  th,
+  td {
+    padding: var(--lc-density-padding-md, var(--spacing-4)) var(--spacing-5);
+  }
+}
+
+.lc-table--bordered tfoot tr {
+  th,
+  td {
+    border-right: 1px solid var(--color-divider);
+
+    &:last-child {
+      border-right: none;
+    }
+  }
+}
+
+// Font size and colour as the body cells: zero specificity, so a
+// `cellClass` colour or size wins and `cellStyle` wins over both.
+:where(.lc-table tfoot tr th, .lc-table tfoot tr td) {
+  font-size: var(--typography-font-size-sm);
+  color: var(--color-text-primary);
+}
+
+:where(.lc-table--sm tfoot tr th, .lc-table--sm tfoot tr td) {
+  font-size: var(--typography-font-size-xs);
+}
+
+:where(.lc-table--lg tfoot tr th, .lc-table--lg tfoot tr td) {
+  font-size: var(--typography-font-size-base);
+}

@@ -1,5 +1,4 @@
 import { TestBed } from '@angular/core/testing';
-import { createHash } from 'crypto';
 import { resolve } from 'path';
 import { compile } from 'sass';
 import { AlertComponent } from './alert.component';
@@ -53,22 +52,62 @@ describe('AlertComponent — 44 px close target (3.34, request 054)', () => {
     expect(rule('.lc-alert__close:focus-visible')).toMatch(/outline: 2px solid var\(--color-primary-500\);\s*outline-offset: 2px;/);
   });
 
-  it('AC-15: apart from the three additions the compiled CSS is the one of 3.33.1', () => {
-    // Length and sha1 of the 3.33.1 file compiled the same way (compared with
-    // a copy of it once, then pinned). The additions: the `::before` rule,
-    // `position: relative` and (D-5) `color: inherit`. 3.35 (request 055,
-    // 054-n1) added the inline-action band block before the × rule; it is
-    // cut out whole first (alert.inline-action-band.spec.ts pins it).
-    const bandAt = css.indexOf('@container lc-alert (16rem <= width < 30rem) {');
-    expect(bandAt).toBeGreaterThan(-1);
-    const bandEnd = css.indexOf('\n  }\n}', bandAt) + '\n  }\n}'.length;
-    const withoutBand = css.slice(0, bandAt).replace(/\s+$/, '') + css.slice(bandEnd);
-    expect(withoutBand.indexOf('16rem <= width')).toBe(-1);
-    const withoutColor = withoutBand.replace(COLOR, '\n  border: none;');
-    expect(withoutColor).not.toBe(withoutBand);
-    const rest = withoutColor.replace(BEFORE, '\n').replace(POSITION, '');
-    expect(rest).not.toBe(withoutColor);
-    expect([rest.length, createHash('sha1').update(rest).digest('hex')]).toEqual([6722, '11ed3a6df7fe623ccf0e3085306b84227d9c3f63']);
+  // 3.36 (request 056, 055-n2): this used to pin length and sha1 of the whole
+  // compiled file, so any unrelated alert SCSS edit failed it. The × rules
+  // are pinned one by one instead: the 28 px box (20 px glyph + 4 px padding,
+  // −4 px margin), its paint, the `position` and `color: inherit` additions of
+  // 3.34 and the `::before` hit area (AC-14 above).
+  it('AC-15: the × rule keeps exactly its 3.34 declarations (28 px box, paint, position)', () => {
+    expect(rule('.lc-alert__close').trim().split(/;\s*/).filter(Boolean)).toEqual([
+      'flex-shrink: 0',
+      'background: transparent',
+      'border: none',
+      'color: inherit',
+      'cursor: pointer',
+      'padding: var(--spacing-1)',
+      'margin: calc(var(--spacing-1) * -1)',
+      'border-radius: var(--border-radius-sm)',
+      'transition: background-color 0.15s ease-in-out',
+      'display: flex',
+      'align-items: center',
+      'justify-content: center',
+      'position: relative',
+    ]);
+    expect(rule('.lc-alert__close:hover').trim()).toBe('background-color: var(--color-surface-hover);');
+    expect(rule('.lc-alert__close:focus-visible').trim().split(/;\s*/).filter(Boolean)).toEqual([
+      'outline: 2px solid var(--color-primary-500)',
+      'outline-offset: 2px',
+    ]);
+    // No other top-level rule sizes or positions the ×.
+    const others = css.match(/(?:^|\n)\.lc-alert__close[^{\n]*\{/g) ?? [];
+    expect(others.map((s) => s.trim())).toEqual([
+      '.lc-alert__close {',
+      '.lc-alert__close::before {',
+      '.lc-alert__close:hover {',
+      '.lc-alert__close:focus-visible {',
+    ]);
+  });
+
+  it('AC-15: the glyph is the 20 px (`sm`) x-mark, so the box stays 28 × 28 px', () => {
+    TestBed.configureTestingModule({ imports: [AlertComponent] });
+    const fixture = TestBed.createComponent(AlertComponent);
+    fixture.componentRef.setInput('dismissible', true);
+    fixture.detectChanges();
+    const icon = (fixture.nativeElement as HTMLElement).querySelector('.lc-alert__close lc-icon') as HTMLElement;
+    expect(icon.getAttribute('name')).toBe('x-mark');
+    expect(icon.getAttribute('size')).toBe('sm');
+    fixture.destroy();
+  });
+
+  it('AC-15 (055-n2): an unrelated rule added to the alert CSS does not change these assertions', () => {
+    const mutated = `${css}\n.lc-alert__zz-unrelated {\n  color: red;\n}\n`;
+    const ruleIn = (text: string, selector: string) =>
+      new RegExp(`(?:^|\\n)${selector.replace(/[.:()]/g, '\\$&')} \\{([^}]*)\\}`).exec(text)?.[1];
+    for (const selector of ['.lc-alert__close', '.lc-alert__close:hover', '.lc-alert__close:focus-visible', '.lc-alert__close::before']) {
+      expect(ruleIn(mutated, selector)).toBe(rule(selector));
+    }
+    expect(mutated).toContain(BEFORE);
+    expect(mutated).toContain(COLOR);
   });
 
   it('the narrow-layout block still follows the × rule (its margin wins by source order)', () => {

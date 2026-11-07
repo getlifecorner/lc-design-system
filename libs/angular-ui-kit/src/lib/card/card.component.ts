@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   input,
+  model,
   output,
   HostListener,
   computed,
@@ -10,7 +11,8 @@ import {
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink, type Params } from '@angular/router';
-import { IconComponent } from '@lifecorner/angular-ui-kit/icon';
+import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
+import { ICON_CHEVRON_DOWN } from '@lifecorner/angular-ui-kit/icons';
 
 /** Visual variant of `lc-card`. */
 export type CardVariant = 'elevated' | 'outlined' | 'flat' | 'raised' | 'dashed';
@@ -20,6 +22,9 @@ export type CardHeadingLevel = 2 | 3 | 4 | 5 | 6;
 
 /** Layout of `lc-card`'s `[card-footer]` slot: `default` (a flex row, end-aligned) or `equal` (children at equal width). */
 export type CardFooterLayout = 'default' | 'equal';
+
+/** Counter for generated ids (3.36): creation order, so prerendered HTML is the same in every build. */
+let nextCardId = 0;
 
 /** Whether a `route` value is a link: `''`, `null` and `undefined` are not. */
 function hasRoute(route: string | readonly unknown[] | null | undefined): boolean {
@@ -39,6 +44,8 @@ function hasRoute(route: string | readonly unknown[] | null | undefined): boolea
  *   the title stays a heading
  * - Equal footer (3.29): `footerLayout="equal"` gives two answers of equal
  *   weight in the `[card-footer]` slot the same width
+ * - Collapsible (3.36): `collapsible` with `[(expanded)]` turns the head into
+ *   one toggle that opens and closes the body and footer
  *
  * @example
  * ```html
@@ -74,7 +81,11 @@ function hasRoute(route: string | readonly unknown[] | null | undefined): boolea
   templateUrl: './card.component.html',
   styleUrls: ['./card.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '[class.lc-card--footer-equal]': "footerLayout() === 'equal'" },
+  host: {
+    '[class.lc-card--footer-equal]': "footerLayout() === 'equal'",
+    '[class.lc-card--collapsed]': 'isCollapsible() && !expanded()',
+  },
+  viewProviders: [ɵprovideKitIcons([ICON_CHEVRON_DOWN])],
 })
 export class CardComponent {
   /**
@@ -229,36 +240,90 @@ export class CardComponent {
   footerLayout = input<CardFooterLayout>('default');
 
   /**
+   * The card can close (3.36, regeln row 1): the head (icon, title, subtitle)
+   * becomes one toggle, a button inside the title's heading with
+   * `aria-expanded` and `aria-controls`, whose hit area is the whole head (at
+   * least 44 px high); Enter, Space or a click open and close the body and the
+   * `[card-footer]`. A chevron at the end of the head shows the state.
+   * `[card-header-action]` stays a separate control beside it. Needs the
+   * built-in `title` (otherwise ignored); wins over `clickable`, `href` and
+   * `route`, which are then ignored; ignored on `dashed`. Bind `[(expanded)]`.
+   * @default false
+   */
+  collapsible = input<boolean>(false);
+
+  /**
+   * Open state of a `collapsible` card (3.36), two-way: `[(expanded)]`. Open
+   * by default, so a plain `collapsible` hides nothing; set `false` for a card
+   * that starts closed (also in prerendered HTML). Closed, only the head
+   * shows: the body is `hidden` and the footer is not displayed.
+   * @default true
+   */
+  readonly expanded = model<boolean>(true);
+
+  /**
    * Emitted when a `clickable` card is clicked or activated with Enter or
    * Space. Not emitted on a link card (`href`/`route`): the link navigates by
    * itself (one navigation); bind the native `(click)` for analytics.
    */
   readonly cardClick = output<MouseEvent>();
 
+  /** Generated id prefix (3.36): creation order, so prerendered HTML is the same in every build. */
+  private readonly uid = `lc-card-${nextCardId++}`;
+
+  /** Id of the body a collapsible card's toggle controls. */
+  protected readonly bodyId = `${this.uid}-body`;
+
+  /** Id of the subtitle that describes a collapsible card's toggle. */
+  protected readonly subtitleId = `${this.uid}-subtitle`;
+
+  /**
+   * Whether the card collapses (3.36): `collapsible` with a built-in title,
+   * except for the dashed tile.
+   */
+  protected readonly isCollapsible = computed(
+    () => this.collapsible() && !!this.title() && this.variant() !== 'dashed',
+  );
+
   /**
    * How the card links (3.24): `href` wins over `route`; `''`/`null` routes
-   * are no link, and the dashed "coming soon" tile never links.
+   * are no link, and the dashed "coming soon" tile never links. A
+   * collapsible card (3.36) never links.
    */
   protected readonly linkMode = computed<'href' | 'route' | null>(() => {
-    if (this.variant() === 'dashed') return null;
+    if (this.variant() === 'dashed' || this.isCollapsible()) return null;
     if (this.href()) return 'href';
     return hasRoute(this.route()) ? 'route' : null;
   });
 
   /**
    * Whether the card acts as a button: `clickable`, except for the dashed
-   * "coming soon" tile, which is never interactive, and a link card, whose
-   * anchor is the only interactive element.
+   * "coming soon" tile, which is never interactive, a link card, whose
+   * anchor is the only interactive element, and a collapsible card (3.36),
+   * whose toggle is.
    */
   protected isClickable = computed(
-    () => this.clickable() && this.variant() !== 'dashed' && !this.linkMode(),
+    () => this.clickable() && this.variant() !== 'dashed' && !this.linkMode() && !this.isCollapsible(),
   );
+
+  /** Opens or closes a collapsible card; `expandedChange` emits the new state. */
+  protected toggle(): void {
+    this.expanded.set(!this.expanded());
+  }
 
   /** `ariaLabel` on the card; on a link card it names the anchor instead. */
   protected readonly cardAriaLabel = computed(() => (this.linkMode() ? undefined : this.ariaLabel()));
 
   constructor() {
     if (isDevMode()) {
+      effect(() => {
+        if (!this.collapsible() || this.variant() === 'dashed') return;
+        if (!this.title()) {
+          console.warn('[lc-card] collapsible needs the built-in title: ignored');
+        } else if (this.clickable() || this.href() || hasRoute(this.route())) {
+          console.warn('[lc-card] collapsible wins over clickable, href and route: they are ignored');
+        }
+      });
       effect(() => {
         if (!this.linkMode()) return;
         if (this.href() && hasRoute(this.route())) {
@@ -294,6 +359,12 @@ export class CardComponent {
     // The dashed tile is never interactive, so it is never selected either.
     if (this.selected() && this.variant() !== 'dashed') {
       classes.push('card-selected');
+    }
+
+    // A collapsible card (3.36), and its closed state.
+    if (this.isCollapsible()) {
+      classes.push('card-collapsible');
+      if (!this.expanded()) classes.push('card-collapsed');
     }
 
     return classes.join(' ');

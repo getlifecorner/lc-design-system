@@ -1960,3 +1960,75 @@ describe('Component pairings of 3.30 (request 047)', () => {
     expect(Math.min(got.textOnFill, got.textOnHoverFill)).toBeGreaterThanOrEqual(4.5);
   });
 });
+
+/**
+ * Request 056 (3.36, design 056 §5): the state strip's marks, ring and
+ * caption, the ledger rules of the description-list total and the table
+ * footer, and the band story's parts. Minima over the page, the surfaces and
+ * a hovered row (translucent fills composited over the surface).
+ */
+describe('Component pairings of 3.36 (request 056)', () => {
+  const lib = (path: string) => resolve(__dirname, '../lib', path);
+  const sheets = {
+    strip: compile(lib('state-strip/state-strip.component.scss')).css,
+    dl: compile(lib('description-list/description-list.component.scss')).css,
+    table: compile(lib('table/table.component.scss')).css,
+  };
+  const body = (sheet: keyof typeof sheets, selector: string) => {
+    const css = sheets[sheet];
+    const at = css.indexOf(`\n${selector} {`);
+    expect([selector, at > -1]).toEqual([selector, true]);
+    return css.slice(at, css.indexOf('}', at));
+  };
+  const floor = (n: number) => Math.floor(n * 100) / 100;
+  const grounds = ['--color-background', '--color-surface', '--color-surface-2', '--color-surface-hover', '--color-surface-sunken'];
+
+  it('AC-4, AC-12, AC-19: the rules pair these tokens', () => {
+    expect(body('strip', '.lc-state-strip__mark--success')).toContain('background-color: var(--color-text-success)');
+    expect(body('strip', '.lc-state-strip__mark--warning')).toContain('background-color: var(--color-text-warning)');
+    expect(body('strip', '.lc-state-strip__mark--error')).toContain('background-color: var(--color-text-error)');
+    expect(body('strip', '.lc-state-strip__mark--neutral')).toContain('background-color: var(--color-field-border)');
+    expect(body('strip', '.lc-state-strip__cell:focus-visible')).toContain('outline: 2px solid var(--color-primary-500)');
+    const caption = body('strip', '.lc-state-strip__caption');
+    expect(caption).toContain('background-color: var(--color-text-primary)');
+    expect(caption).toContain('color: var(--color-surface)');
+    expect(body('dl', '.lc-dl .lc-dl__row--total')).toContain('border-top: 1px solid var(--color-field-border)');
+    expect(body('table', '.lc-table tfoot tr')).toContain('border-bottom: 3px double var(--color-field-border)');
+  });
+
+  // [light, dark], floored; design 056 §5 quotes the rounded values (warning
+  // 5.48 / 6.35, error 11.44, ring 3.97 / 7.58, caption 17.74 / 15.85).
+  const expected = {
+    success: [4.81, 6.97],
+    warning: [5.47, 6.34],
+    error: [11.43, 7.21],
+    neutral: [4.39, 5.56],
+    ring: [3.96, 7.57],
+    caption: [17.73, 15.85],
+  };
+
+  it.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('AC-4, AC-12: %s palette: the design 056 §5 ratios', (_palette, tokens, i) => {
+    const c = (name: string) => color(tokens, name);
+    const surface = c('--color-surface');
+    const ground = (name: string) => over(c(name), surface);
+    const worst = (ink: string) => floor(Math.min(...grounds.map((g) => ratio(over(c(ink), ground(g)), ground(g)))));
+    const got = {
+      success: worst('--color-text-success'),
+      warning: worst('--color-text-warning'),
+      error: worst('--color-text-error'),
+      neutral: worst('--color-field-border'),
+      ring: worst('--color-primary-500'),
+      caption: floor(ratio(c('--color-surface'), c('--color-text-primary'))),
+    };
+    expect(got).toEqual(Object.fromEntries(Object.entries(expected).map(([key, pair]) => [key, pair[i]])));
+    // Marks, ring and rules: 3:1 (WCAG 1.4.11); the caption is text: 4.5:1.
+    for (const key of ['success', 'warning', 'error', 'neutral', 'ring'] as const) expect(got[key]).toBeGreaterThanOrEqual(3);
+    expect(got.caption).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it.each(palettes)('AC-16: %s palette: the band story\'s five part colours keep 3:1 on the surface', (_palette, tokens) => {
+    const surface = color(tokens, '--color-surface');
+    const parts = ['--color-primary-700', '--color-primary-500', '--color-info-default', '--color-secondary-700', '--color-neutral-500'];
+    for (const part of parts) expect([part, ratio(over(color(tokens, part), surface), surface) >= 3]).toEqual([part, true]);
+  });
+});

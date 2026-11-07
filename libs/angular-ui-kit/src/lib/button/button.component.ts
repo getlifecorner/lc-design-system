@@ -19,7 +19,8 @@ export type ButtonVariant =
   | 'danger'
   | 'warning'
   | 'info'
-  | 'inverse';
+  | 'inverse'
+  | 'inverse-outline';
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 export type ButtonType = 'button' | 'submit' | 'reset';
 
@@ -43,7 +44,7 @@ export type ButtonTone = 'neutral' | 'primary';
  *
  * Features:
  * - Multiple variants (primary, secondary, outline, ghost, link, danger,
- *   warning, info, inverse)
+ *   warning, info, inverse, inverse-outline)
  * - Size options (xs, sm, md, lg)
  * - Loading state with spinner
  * - Icon-only mode
@@ -72,7 +73,9 @@ export class ButtonComponent {
    * such as the default `lc-hero` bands (primary, neutral, info, accent-purple,
    * accent-violet). It looks the same in both themes. Not for light backgrounds
    * or `variant="light"` heroes. CSS hook `--lc-button-inverse-fg` (default
-   * `#0d353d`) sets its ink; keep 4.5:1 on white.
+   * `#0d353d`) sets its ink; keep 4.5:1 on white. `inverse-outline` (3.36) is
+   * the quieter action beside it on the same bands: white text and keyline on
+   * a dark translucent fill, the same sizes, height, icon slots and states.
    * @default 'primary'
    */
   readonly variant = input<ButtonVariant>('primary');

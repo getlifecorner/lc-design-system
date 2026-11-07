@@ -11,6 +11,9 @@ import { Directive, input, TemplateRef, inject } from '@angular/core';
  *   </ng-template>
  * </lc-table>
  * ```
+ *
+ * In the `footerRow` (3.36) the same template renders with `footer: true` in
+ * its context (`let-footer="footer"`), e.g. to leave out a badge in the sum.
  */
 @Directive({
   selector: '[lcTableCell]',

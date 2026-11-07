@@ -1,6 +1,11 @@
+import { ChangeDetectionStrategy, Component, Injector, afterNextRender, inject, input, signal, viewChild } from '@angular/core';
 import type { Meta, StoryObj } from '@storybook/angular';
-import { HeroComponent } from './hero.component';
+import { expect, userEvent, waitFor } from 'storybook/test';
+import { HeroComponent, type HeroColor } from './hero.component';
 import { ButtonLinkComponent } from '../button/button-link.component';
+import { ButtonComponent } from '../button/button.component';
+import { IconComponent } from '../icon/icon.component';
+import { PageHeaderComponent } from '../page-header/page-header.component';
 
 const meta: Meta<HeroComponent> = {
   title: 'Layout/Hero',
@@ -20,6 +25,7 @@ Use it at the top of pages to introduce content, highlight key information, or s
 - A media slot (\`[hero-media]\`) for a visual: below the text on small screens, beside it from 1024 px, outside the body's 85 % opacity
 - \`contentWidth="lg"\`: a full-bleed band whose content sits on the 1024 px page column, so its text lines up with the page below
 - Configurable border radius
+- 3.36: \`headingLevel\` (\`h1\`–\`h6\`, the same look) and \`focusTitle()\`, which moves focus to the title after an action replaced the stage (see *Heading Level*, *Focus Title*); \`inverse-outline\` buttons beside \`inverse\` ones (see *Stage Actions*)
         `,
       },
     },
@@ -73,6 +79,13 @@ Use it at the top of pages to introduce content, highlight key information, or s
       description:
         'Content box: full (to the hero padding) or lg (from 1024 px on the 1024 px page column, centred; the background stays full-bleed)',
       table: { defaultValue: { summary: 'full' } },
+    },
+    headingLevel: {
+      control: 'select',
+      options: [1, 2, 3, 4, 5, 6],
+      description:
+        '3.36: element of the title (`h1`–`h6`); the look is the same at every level, size and breakpoint. Use 2 under an `lc-page-header`, which holds the page\'s `h1`',
+      table: { defaultValue: { summary: '1' } },
     },
   },
 };
@@ -431,6 +444,189 @@ export const BandLink: StoryObj<HeroComponent & { linkLabel: string }> = {
       </lc-hero>
       <div id="warteliste" style="max-width: 1024px; margin: 0 auto; padding: 32px 48px; box-sizing: border-box;">
         <p style="margin: 0;">Die Warteliste: das Ziel des Links.</p>
+      </div>`,
+  }),
+};
+
+/** 3.36 (request 056, cockpit row 1): the stage under a page header, its title an `h2`. */
+export const HeadingLevel: Story = {
+  name: 'Heading Level',
+  args: { headingLevel: 2 },
+  parameters: {
+    controls: { include: ['headingLevel'] },
+    docs: {
+      description: {
+        story:
+          '3.36 (request 056, finance-intelligence cockpit row 1): `[headingLevel]="2"`. The page title „Cockpit“ is the `h1` of the `lc-page-header`; the stage\'s title „522.530,00 €“ is an `h2`, so the page has exactly one `h1`. Only the element changes: size, weight, line height and spacing are those of the `h1` title at every level, `size`, `variant` and breakpoint. Default 1 (an `h1`, as before).',
+      },
+    },
+  },
+  render: (args) => ({
+    props: { headingLevel: args.headingLevel },
+    moduleMetadata: { imports: [PageHeaderComponent] },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px;">
+        <lc-page-header title="Cockpit" subtitle="Oktober 2026 · Fassung 1" />
+        <lc-hero label="Gesamtkosten Ist" title="522.530,00 €" color="primary" size="sm" [headingLevel]="headingLevel">
+          <p style="margin: 0;">Plan 600.000,00 € · 87 % verbraucht</p>
+        </lc-hero>
+      </div>`,
+  }),
+};
+
+/**
+ * 3.36 (request 056, monatsstand row 1): „Freigeben“ replaces the stage's
+ * state and disappears; the page then moves focus to the stage's title.
+ */
+@Component({
+  selector: 'lc-hero-focus-title-demo',
+  standalone: true,
+  imports: [HeroComponent, ButtonComponent, IconComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div lang="de">
+      <lc-hero
+        [label]="released() ? 'Monatsstand Oktober 2026 · Fassung 1 freigegeben' : 'Monatsstand Oktober 2026 · Entwurf'"
+        title="522.530,00 €"
+        [color]="color()"
+        size="sm"
+        [headingLevel]="2"
+      >
+        <p style="margin: 0;">{{ released() ? 'Freigegeben am 07.11.2026 von Johanna Müller.' : 'Der Entwurf wartet auf die Freigabe.' }}</p>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px;">
+          @if (!released()) {
+            <lc-button variant="inverse" size="lg" (clicked)="release()">Freigeben</lc-button>
+          }
+          <lc-button variant="inverse-outline" size="lg">
+            <lc-icon slot="icon-before" name="info-circle" size="sm" [decorative]="true" />
+            Herkunft
+          </lc-button>
+        </div>
+      </lc-hero>
+    </div>
+  `,
+})
+class HeroFocusTitleDemoComponent {
+  /** Passed to the hero's `color`. */
+  readonly color = input<HeroColor>('primary');
+  private readonly injector = inject(Injector);
+  private readonly hero = viewChild.required(HeroComponent);
+  protected readonly released = signal(false);
+
+  protected release(): void {
+    this.released.set(true);
+    // After the render: the button that was used is gone, focus goes to the title.
+    afterNextRender(() => this.hero().focusTitle(), { injector: this.injector });
+  }
+}
+
+const FOCUS_TITLE_SNIPPET = `import { ChangeDetectionStrategy, Component, Injector, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
+import { ButtonComponent } from '@lifecorner/angular-ui-kit/button';
+import { HeroComponent } from '@lifecorner/angular-ui-kit/hero';
+
+@Component({
+  selector: 'app-month-stage',
+  imports: [HeroComponent, ButtonComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: \`
+    <lc-hero [label]="label()" title="522.530,00 €" [headingLevel]="2">
+      @if (!released()) {
+        <lc-button variant="inverse" size="lg" (clicked)="release()">Freigeben</lc-button>
+      }
+      <lc-button variant="inverse-outline" size="lg">Herkunft</lc-button>
+    </lc-hero>
+  \`,
+})
+export class MonthStageComponent {
+  private readonly injector = inject(Injector);
+  private readonly hero = viewChild.required(HeroComponent);
+  protected readonly released = signal(false);
+  protected readonly label = computed(() =>
+    this.released() ? 'Monatsstand Oktober 2026 · Fassung 1 freigegeben' : 'Monatsstand Oktober 2026 · Entwurf',
+  );
+
+  protected release(): void {
+    this.released.set(true);
+    afterNextRender(() => this.hero().focusTitle(), { injector: this.injector });
+  }
+}`;
+
+export const FocusTitle: StoryObj<HeroComponent> = {
+  name: 'Focus Title',
+  args: { color: 'primary' },
+  parameters: {
+    controls: { include: ['color'] },
+    docs: {
+      description: {
+        story:
+          '3.36 (request 056, finance-intelligence monatsstand row 1): „Freigeben“ releases the draft; the stage shows the new state and the button is gone. The page calls `afterNextRender(() => this.hero().focusTitle(), { injector })`: the title gets `tabindex="-1"` (it stays out of the Tab order) and the focus, so it doesn\'t fall back to the page (WCAG 2.4.3). With a `label`, the title is named „label title“ (`aria-labelledby`), so a screen reader reads „Monatsstand Oktober 2026 · Fassung 1 freigegeben 522.530,00 €“. The ring is two-tone, a white outline over a 2 px `#111827` band (at least 4.23:1 on every `color`), shown after a keyboard action. Without the call nothing changes. In the story view „Freigeben“ is pressed with Enter on load.',
+      },
+      source: { code: FOCUS_TITLE_SNIPPET, language: 'typescript' },
+    },
+  },
+  render: (args) => ({
+    props: { color: args.color },
+    moduleMetadata: { imports: [HeroFocusTitleDemoComponent] },
+    template: `<lc-hero-focus-title-demo [color]="color" />`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const button = canvasElement.querySelector<HTMLButtonElement>('lc-hero-focus-title-demo lc-button button');
+    button?.focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(canvasElement.ownerDocument.activeElement?.classList.contains('hero__title')).toBe(true));
+  },
+};
+
+const STAGE_COLORS: HeroColor[] = [
+  'primary', 'secondary', 'neutral', 'success', 'info', 'warning', 'accent-orange', 'accent-purple', 'accent-violet',
+];
+
+/** 3.36 (request 056, monatsstand row 2): the main and the quieter action on every band. */
+export const StageActions: Story = {
+  name: 'Stage Actions',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.36 (request 056, finance-intelligence monatsstand row 2): the main action „Freigeben“ (`inverse`) and the quieter „Herkunft“ (`inverse-outline`) side by side on all nine bands, `size="lg"`: both 48.5 px high in one row, the outline clearly the quieter one. Its text keeps at least 4.66:1 and its border at least 3.56:1 on every band under the body\'s 85 % opacity. Last, the pair at `sm`, `md` and `lg`: the same height at every size.',
+      },
+    },
+  },
+  render: () => ({
+    props: { colors: STAGE_COLORS },
+    moduleMetadata: { imports: [ButtonComponent, IconComponent] },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px;">
+        @for (color of colors; track color) {
+          <lc-hero [label]="'Monatsstand · ' + color" title="522.530,00 €" [color]="color" size="sm" [headingLevel]="2">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+              <lc-button variant="inverse" size="lg">Freigeben</lc-button>
+              <lc-button variant="inverse-outline" size="lg">
+                <lc-icon slot="icon-before" name="info-circle" size="sm" [decorative]="true" />
+                Herkunft
+              </lc-button>
+            </div>
+          </lc-hero>
+        }
+        <lc-hero label="Größen" title="sm · md · lg" color="warning" size="sm" [headingLevel]="2">
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+              <lc-button variant="inverse" size="sm">Freigeben</lc-button>
+              <lc-button variant="inverse-outline" size="sm">Herkunft</lc-button>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+              <lc-button variant="inverse" size="md">Freigeben</lc-button>
+              <lc-button variant="inverse-outline" size="md">Herkunft</lc-button>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+              <lc-button variant="inverse" size="lg">Freigeben</lc-button>
+              <lc-button variant="inverse-outline" size="lg">Herkunft</lc-button>
+            </div>
+          </div>
+        </lc-hero>
       </div>`,
   }),
 };

@@ -1,4 +1,22 @@
 <div class="lc-stacked-bar-chart">
+  @if (isBand()) {
+    <!-- 3.36 band: one bar edge to edge, its parts as % of the width (exact before JS, no viewBox). -->
+    <svg
+      width="100%"
+      [attr.height]="height()"
+      role="img"
+      [attr.aria-label]="effectiveAriaLabel()"
+      class="lc-stacked-bar-chart__svg lc-stacked-bar-chart__svg--band"
+    >
+      <title>{{ effectiveAriaLabel() }}</title>
+      @for (part of bandParts(); track $index) {
+        <rect [attr.x]="part.x + '%'" y="0" [attr.width]="part.w + '%'" height="100%" [attr.fill]="part.color" class="lc-stacked-bar-chart__segment" />
+      }
+      @for (gap of bandGaps(); track $index) {
+        <line [attr.x1]="gap + '%'" y1="0" [attr.x2]="gap + '%'" y2="100%" class="lc-stacked-bar-chart__band-gap" />
+      }
+    </svg>
+  } @else {
   <svg
     width="100%"
     [attr.height]="height()"
@@ -39,6 +57,7 @@
       }
     }
   </svg>
+  }
 
   @if (showLegend() && legendItems().length) {
     <div class="lc-stacked-bar-chart__legend">

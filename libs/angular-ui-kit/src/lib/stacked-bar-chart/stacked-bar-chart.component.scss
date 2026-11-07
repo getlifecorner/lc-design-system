@@ -79,3 +79,23 @@
 .lc-stacked-bar-chart__legend-text {
   color: var(--color-text-secondary);
 }
+
+// 3.36 (request 056, cockpit row 2): `variant="band"`. The bar fills the
+// svg; nothing may draw outside it. The parts meet the surface and the
+// surface-coloured gaps (3:1 is the parts' job: pick token colours that reach
+// it, design 056 §5); in forced colours the parts keep their colours (SVG
+// paint isn't forced) and the gaps take the canvas colour.
+.lc-stacked-bar-chart__svg--band {
+  overflow: hidden;
+}
+
+.lc-stacked-bar-chart__band-gap {
+  stroke: var(--lc-stacked-bar-chart-band-gap-color, var(--color-surface));
+  stroke-width: var(--lc-stacked-bar-chart-band-gap, 2px);
+}
+
+@media (forced-colors: active) {
+  .lc-stacked-bar-chart__band-gap {
+    stroke: Canvas;
+  }
+}

@@ -23,7 +23,8 @@ import { ICON_BARS_3, ICON_CHEVRON_DOWN, ICON_LOGOUT, ICON_MOON, ICON_SUN, ICON_
 import { AvatarColor, AvatarComponent, AvatarFallback, ɵavatarInitials } from '@lifecorner/angular-ui-kit/avatar';
 import { MenuComponent, MenuItem } from '@lifecorner/angular-ui-kit/menu';
 import { ThemeService } from '@lifecorner/angular-ui-kit/theme';
-import { nameWithText } from '@lifecorner/angular-ui-kit/internal/a11y';
+import { BadgeComponent, type BadgeVariant } from '@lifecorner/angular-ui-kit/badge';
+import { containsWords, labelWords, nameWithText } from '@lifecorner/angular-ui-kit/internal/a11y';
 
 /** A link in the header's main navigation (`navItems`). */
 export interface HeaderNavItem {
@@ -58,6 +59,19 @@ export type HeaderUserMenuTrigger = 'icon' | 'avatar';
  * the title. From 641 px both render it inline.
  */
 export type HeaderContextPlacement = 'inline' | 'below';
+
+/**
+ * State of the header's context (3.36, `contextBadge`): an `lc-badge`
+ * (`sm`, rounded) inside the context button after `contextName`, e.g.
+ * `{ label: 'Freigegeben', variant: 'success' }`. Keep the label to one or two
+ * words.
+ */
+export interface HeaderContextBadge {
+  /** Visible badge text; it ends the button's accessible name. */
+  label: string;
+  /** Badge variant, as `lc-badge`. @default 'default' */
+  variant?: BadgeVariant;
+}
 
 /**
  * AppHeaderComponent - Global application header for the LifeCorner shell
@@ -106,6 +120,9 @@ export type HeaderContextPlacement = 'inline' | 'below';
  *   of being hidden; from 641 px it sits in the end group as before.
  * - `focusContext()` (3.34): moves the focus to the context button after the
  *   next render, e.g. after a choice in the sheet it opened (WCAG 2.4.3).
+ * - `contextBadge` (3.36): the context's state as a badge inside the context
+ *   button, part of its accessible name; `hamburgerClick` emits the
+ *   hamburger's `<button>`, e.g. for `lc-sidenav [returnFocusTo]`.
  * - Every built-in label is an input (`homeAriaLabel`, `hamburgerAriaLabel`,
  *   `userMenuAriaLabel`, `navAriaLabel`, `profileLabel`, `logoutLabel`,
  *   `themeToDarkAriaLabel`, `themeToLightAriaLabel`, `contextAriaLabel`);
@@ -167,6 +184,7 @@ export type HeaderContextPlacement = 'inline' | 'below';
     IconComponent,
     AvatarComponent,
     MenuComponent,
+    BadgeComponent,
   ],
   // Its own glyphs, and the profile menu's (lc-menu renders them in this view).
   viewProviders: [ɵprovideKitIcons([ICON_BARS_3, ICON_SUN, ICON_MOON, ICON_USER, ICON_CHEVRON_DOWN, ICON_LOGOUT])],
@@ -272,6 +290,19 @@ export class HeaderComponent {
    * @default 'inline'
    */
   readonly contextPlacement = input<HeaderContextPlacement>('inline');
+  /**
+   * State of the context (3.36, app-shell row 1): an `lc-badge` (`sm`,
+   * rounded) inside the context button after `contextName`, e.g.
+   * `{ label: 'Freigegeben', variant: 'success' }`, wherever the button shows
+   * (`inline` and `below`, every size). Its label ends the button's accessible
+   * name („Monatsstand wählen, Monatsstand Oktober 2026 · Fassung 1,
+   * Freigegeben“, WCAG 2.5.3) unless `contextAriaLabel` already holds it. With
+   * a badge the button may grow to 340 px (220 without); a long name ends with
+   * "…" and the badge stays whole. Keep the label to one or two words. Target
+   * size, focus ring, `contextClick` and `focusContext()` don't change.
+   * @default undefined
+   */
+  readonly contextBadge = input<HeaderContextBadge | undefined>(undefined);
   readonly menuSize = input<'sm' | 'md' | 'lg'>('sm');
   readonly showProfileMenuItem = input(true);
   /** Render the account menu (avatar trigger with Profile/Logout). */
@@ -324,13 +355,20 @@ export class HeaderComponent {
   /** Label of the Logout entry in the account menu. */
   readonly logoutLabel = input('Logout');
 
-  readonly hamburgerClick = output<void>();
+  /**
+   * Emitted when the hamburger is clicked. Since 3.36 it carries the
+   * hamburger's native `<button>`, the element that has the focus, so a page
+   * can hand it to `lc-sidenav`: `(hamburgerClick)="trigger = $event; open = true"`
+   * with `[returnFocusTo]="trigger"`. Handlers without `$event` work as before.
+   */
+  readonly hamburgerClick = output<HTMLElement>();
   readonly themeToggleClick = output<void>();
   readonly logoutClick = output<void>();
   readonly profileClick = output<void>();
   readonly contextClick = output<void>();
 
   private readonly injector = inject(Injector);
+  private readonly hostElement = inject<ElementRef<HTMLElement>>(ElementRef);
   private themeServiceInstance: ThemeService | null = null;
 
   /**
@@ -401,9 +439,13 @@ export class HeaderComponent {
    * `contextAriaLabel`, a comma and the visible `contextLabel` and
    * `contextName`, so a voice-control user can say what they see.
    */
-  protected readonly contextButtonAriaLabel = computed(() =>
-    nameWithText(this.contextAriaLabel(), [this.contextLabel(), this.contextName()].filter(Boolean).join(' ')),
-  );
+  protected readonly contextButtonAriaLabel = computed(() => {
+    const name = nameWithText(this.contextAriaLabel(), [this.contextLabel(), this.contextName()].filter(Boolean).join(' '));
+    // 3.36: the badge's word ends the name, unless the name already holds it.
+    const badge = this.contextBadge()?.label.replace(/\s+/g, ' ').trim() ?? '';
+    if (!badge || containsWords(labelWords(name), labelWords(badge))) return name;
+    return name ? `${name}, ${badge}` : badge;
+  });
 
   /** `contextPlacement="below"` with a context button to place (3.33). */
   protected readonly contextBelow = computed(() => this.contextPlacement() === 'below' && !!this.contextName());
@@ -481,10 +523,12 @@ export class HeaderComponent {
   }
 
   /**
-   * Handle hamburger click
+   * Handle hamburger click: emits the hamburger's native `<button>` (3.36).
+   * Called without a rendered hamburger, it emits the header's host element.
    */
   onHamburgerClick(): void {
-    this.hamburgerClick.emit();
+    const host = this.hamburger()?.nativeElement;
+    this.hamburgerClick.emit(host?.querySelector('button') ?? host ?? this.hostElement.nativeElement);
   }
 
   /**

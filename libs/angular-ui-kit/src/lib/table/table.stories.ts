@@ -50,6 +50,7 @@ The Table component displays structured data in rows and columns with advanced d
 - Clickable rows (\`clickable\`, 3.16): every flat row is a tab stop, Enter and Space emit \`rowClick\`; clicks and keys from a link, button or switch inside a row emit nothing. A focused row is announced by its cells, so let the row action open something that announces itself (a dialog, a page)
 - A caption (\`caption\`, 3.16) names the table; \`showCaption=false\` keeps it for screen readers only
 - Number columns (\`TableColumn.align: 'end'\`, 3.17): header and cells at the end edge with tabular figures; a sort arrow sits before the label
+- 3.36: \`footerRow\`, a sum row in \`<tfoot>\` outside sorting, filtering, paging and the tree (see *Footer Row*), and \`TableAction.ariaLabel\`, a name per row for a row action (see *Row Action Names*)
         `,
       },
     },
@@ -93,6 +94,12 @@ The Table component displays structured data in rows and columns with advanced d
       control: 'boolean',
       description: 'false keeps the caption for screen readers only (3.16)',
       table: { defaultValue: { summary: 'true' } },
+    },
+    footerRow: {
+      control: 'object',
+      description:
+        '3.36: one `<tfoot>` row below all data rows (a record of the data shape, e.g. a sum), with the columns, formatters and `lcTableCell` templates (`footer: true`); never sorted, filtered, paged, selected or counted; first cell is the row header',
+      table: { defaultValue: { summary: 'undefined' } },
     },
   },
 };
@@ -1090,6 +1097,95 @@ export const NumberColumns: Story = {
           nextPageAriaLabel="Nächste Seite"
           sortedAscendingLabel="aufsteigend sortiert"
           sortedDescendingLabel="absteigend sortiert"
+          (actionClick)="actionClick($event)"
+        ></lc-table>
+      </div>
+    `,
+  }),
+};
+
+// 3.36 (request 056, finance-intelligence services rows 1–2): costs per service.
+const serviceColumns = [
+  { key: 'name', label: 'Service', sortable: true },
+  { key: 'actual', label: 'Ist', sortable: true, align: 'end' as const, formatter: (value: unknown) => deEuro.format(Number(value ?? 0)) },
+  { key: 'plan', label: 'Plan', sortable: true, align: 'end' as const, formatter: (value: unknown) => deEuro.format(Number(value ?? 0)) },
+];
+
+const serviceData = [
+  { id: 'net', parentId: '', name: 'Demo Netz', actual: 214300, plan: 230000 },
+  { id: 'wan', parentId: 'net', name: 'WAN-Anbindung', actual: 128900, plan: 135000 },
+  { id: 'lan', parentId: 'net', name: 'LAN und WLAN', actual: 85400, plan: 95000 },
+  { id: 'work', parentId: '', name: 'Arbeitsplatz', actual: 175730, plan: 210000 },
+  { id: 'mail', parentId: 'work', name: 'E-Mail und Kalender', actual: 61230, plan: 70000 },
+  { id: 'client', parentId: 'work', name: 'Client-Betrieb', actual: 114500, plan: 140000 },
+  { id: 'none', parentId: '', name: 'Keinem Service zugeordnet', actual: 132500, plan: 160000 },
+];
+
+const serviceFooter = { name: 'Gesamtkosten Ist', actual: 522530, plan: 600000 };
+
+const serviceActions = [
+  { key: 'origin', label: 'Herkunft', variant: 'ghost' as const, ariaLabel: (row: Record<string, unknown>) => `Herkunft von ${row['name']}` },
+];
+
+/** 3.36 (request 056, services row 1): a sum row below a tree table, outside sorting and the tree. */
+export const FooterRow: Story = {
+  name: 'Footer Row',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.36 (request 056, finance-intelligence services row 1): `footerRow` renders one row in `<tfoot>` below all data rows, with the table\'s columns, formatters and alignment (`align: \'end\'` amounts in tabular figures). Sort „Ist“ or „Plan“, or collapse a group: the sum stays last and unchanged. It is never sorted, filtered, paged, selected or counted. Its first cell is the row header (`<th scope="row">`), in tree mode a `rowheader` in a `row` of the treegrid, not in its keyboard model; its label lines up with the level-0 labels. A 1 px rule above and a 3 px double rule below in `--color-field-border` (4.39:1 light, 5.56:1 dark) separate it; its cells are semibold. Callbacks get `rowIndex` −1 and `lcTableCell` templates `footer: true`. On a phone the table scrolls, and the footer with it.',
+      },
+    },
+  },
+  args: { actionClick: fn() },
+  render: (args) => ({
+    props: { ...args, columns: serviceColumns, data: serviceData, footer: serviceFooter, actions: serviceActions },
+    template: `
+      <div lang="de">
+        <lc-table
+          [columns]="columns"
+          [data]="data"
+          [footerRow]="footer"
+          [actions]="actions"
+          actionsLabel="Aktionen"
+          actionsAlign="end"
+          idKey="id"
+          parentKey="parentId"
+          treeColumn="name"
+          caption="Kosten je Service, Oktober 2026"
+          sortedAscendingLabel="aufsteigend sortiert"
+          sortedDescendingLabel="absteigend sortiert"
+          (actionClick)="actionClick($event)"
+        ></lc-table>
+      </div>
+    `,
+  }),
+};
+
+/** 3.36 (request 056, services row 2): each row's action names its object. */
+export const RowActionNames: Story = {
+  name: 'Row Action Names',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.36 (request 056, finance-intelligence services row 2): `TableAction.ariaLabel` as a function of the row, `(row) => \'Herkunft von \' + row.name`. Every row shows the same „Herkunft“ button, but each one is named after its object: „Herkunft von Demo Netz“, „Herkunft von WAN-Anbindung“ … (WCAG 4.1.2), and the visible label stays part of the name (2.5.3). It wins over `tooltip`, `label` and `key`; an empty result falls back to them, and without it the name is as before. A string works too.',
+      },
+    },
+  },
+  args: { actionClick: fn() },
+  render: (args) => ({
+    props: { ...args, columns: serviceColumns, data: serviceData.filter((row) => row.parentId === ''), actions: serviceActions },
+    template: `
+      <div lang="de">
+        <lc-table
+          [columns]="columns"
+          [data]="data"
+          [actions]="actions"
+          actionsLabel="Aktionen"
+          actionsAlign="end"
+          caption="Services"
           (actionClick)="actionClick($event)"
         ></lc-table>
       </div>

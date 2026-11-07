@@ -30,6 +30,8 @@ Description list for key/value metadata (a styled \`<dl>\`).
   width up to half of the free width (row − 32 px); the longer one wraps in the rest: the term
   at spaces, the value at spaces or inside an unbroken string. With \`leaders\` the dots sit on
   the first line, next to the value
+- 3.36 (056): an item's value as a badge (\`badge\`, \`badgeVariant\`), and a sum item (\`total\`) with a rule
+  above and a double rule below, announced with \`totalAriaLabel\` (see *Badge Values*, *Total Row*)
 `,
       },
     },
@@ -37,8 +39,13 @@ Description list for key/value metadata (a styled \`<dl>\`).
   argTypes: {
     items: {
       description:
-        '`DescriptionListItem[]`: `term`, `value`, `valueSuffix`, `href`, `emphasis`, `id`; 3.3: `datetime` (ISO 8601) renders the value inside `<time datetime>` (ignored with `href`).',
+        '`DescriptionListItem[]`: `term`, `value`, `valueSuffix`, `href`, `emphasis`, `id`; 3.3: `datetime` (ISO 8601) renders the value inside `<time datetime>` (ignored with `href`). 3.36: `badge` and `badgeVariant` show the value as an `lc-badge`; `total` marks the sum item (ledger rules, semibold).',
       table: { defaultValue: { summary: 'required' } },
+    },
+    totalAriaLabel: {
+      control: 'text',
+      description: '3.36: read before the term of a `total` item and not shown („Summe“ → „Summe, Gesamtkosten Ist“). Empty adds nothing.',
+      table: { defaultValue: { summary: "''" } },
     },
     layout: {
       control: 'inline-radio',
@@ -356,5 +363,89 @@ export const KeyboardFocus: Story = {
     if (viewMode !== 'story') return;
     canvasElement.querySelector<HTMLElement>('.lc-dl__link')?.focus({ preventScroll: true });
   },
+};
+
+/** The facts of a source card (request 056, quellen row 2): a state as a badge. */
+const badgeItems = [
+  { term: 'Zustand', value: 'Geladen', badge: 'Geladen', badgeVariant: 'success' as const },
+  { term: 'Fassung', value: '1', badge: 'Freigegeben', badgeVariant: 'success' as const },
+  { term: 'Vorgänger', value: '', badge: 'Ersetzt' },
+  { term: 'Letzter Lauf', value: 'Mo 06.10., 06:00', datetime: '2026-10-06T06:00:00+02:00', badge: 'Teilweise', badgeVariant: 'warning' as const },
+  { term: 'Prüfung', value: 'Fehlgeschlagen', badge: 'Fehlgeschlagen', badgeVariant: 'error' as const },
+  { term: 'Plan', value: 'Entwurf', badge: 'Entwurf', badgeVariant: 'primary' as const },
+  { term: 'Hinweis', value: 'Neu', badge: 'Neu', badgeVariant: 'info' as const },
+  { term: 'Abgewiesen', value: '3 Zeilen' },
+];
+
+/** 3.36 (request 056, quellen row 2): an item's value as an `lc-badge`. */
+export const BadgeValues: Story = {
+  name: 'Badge Values',
+  decorators: [moduleMetadata({ imports: [CardComponent] })],
+  args: { items: badgeItems },
+  parameters: {
+    controls: { include: ['items'] },
+    docs: {
+      description: {
+        story:
+          '3.36 (request 056, finance-intelligence quellen row 2): `badge` and `badgeVariant` on an item show its value as an `lc-badge` (rounded; `sm` in an `md` list, `xs` in an `sm` list), in every variant. Term and value stay one `dt`/`dd` pair, read „Zustand, Geladen“. A `value` that is empty or the badge\'s word is not shown; another value stays as text 6 px before the badge („1“ Freigegeben), and `datetime` wraps that text only. The badge\'s block margins keep a badge row at 38.5 px (`md`). Items without a badge are unchanged („Abgewiesen“). `rows` and `stacked`, `md` and `sm`, in a two-column grid of cards.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div lang="de" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+        <lc-card variant="outlined" borderRadius="xl" padding="lg" title="rows · md">
+          <lc-description-list [items]="items" layout="rows" size="md" />
+        </lc-card>
+        <lc-card variant="outlined" borderRadius="xl" padding="lg" title="stacked · md">
+          <lc-description-list [items]="items" layout="stacked" size="md" />
+        </lc-card>
+        <lc-card variant="outlined" borderRadius="xl" padding="lg" title="rows · sm">
+          <lc-description-list [items]="items" layout="rows" size="sm" />
+        </lc-card>
+      </div>
+    `,
+  }),
+};
+
+/** The receipt of „Herkunft“ (request 056, app-shell row 2): parts, then their sum. */
+const totalItems = [
+  { term: 'Personalkosten', value: '412.300,00 €' },
+  { term: 'Sachkosten', value: '98.730,00 €' },
+  { term: 'Umlagen aus Vorkostenstellen', value: '11.500,00 €' },
+  { term: 'Gesamtkosten Ist', value: '522.530,00 €', total: true },
+];
+
+/** 3.36 (request 056, app-shell row 2): the sum item with ledger rules. */
+export const TotalRow: Story = {
+  name: 'Total Row',
+  decorators: [moduleMetadata({ imports: [CardComponent] })],
+  args: { items: totalItems, totalAriaLabel: 'Summe' },
+  parameters: {
+    controls: { include: ['items', 'totalAriaLabel'] },
+    docs: {
+      description: {
+        story:
+          '3.36 (request 056, finance-intelligence app-shell row 2): `total: true` marks the sum item. It gets a 1 px rule above and a 3 px double rule below in `--color-field-border` (4.39:1 light, 5.56:1 dark on the surfaces; forced colours keep them as borders), term and value semibold with tabular figures; its `emphasis` is ignored. With `totalAriaLabel="Summe"` a screen reader reads „Summe, Gesamtkosten Ist, 522.530,00 €“; the word is not shown. `rows` (with the row line under it), `stacked`, and `rows` without separators, in a two-column grid of cards.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div lang="de" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+        <lc-card variant="outlined" borderRadius="xl" padding="lg" title="rows · line">
+          <lc-description-list [items]="items" [totalAriaLabel]="totalAriaLabel" layout="rows" />
+        </lc-card>
+        <lc-card variant="outlined" borderRadius="xl" padding="lg" title="stacked">
+          <lc-description-list [items]="items" [totalAriaLabel]="totalAriaLabel" layout="stacked" />
+        </lc-card>
+        <lc-card variant="outlined" borderRadius="xl" padding="lg" title="rows · none · sm">
+          <lc-description-list [items]="items" [totalAriaLabel]="totalAriaLabel" layout="rows" separator="none" size="sm" />
+        </lc-card>
+      </div>
+    `,
+  }),
 };
 

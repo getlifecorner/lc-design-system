@@ -16,7 +16,7 @@ The Button component is the primary interactive element for triggering actions.
 It supports multiple variants, sizes, states, and slots for icons.
 
 **Key Features:**
-- 9 visual variants for different contexts, including \`inverse\` for the dark \`lc-hero\` bands (since 3.13)
+- 10 visual variants for different contexts, including \`inverse\` for the dark \`lc-hero\` bands (since 3.13) and the quieter \`inverse-outline\` beside it (since 3.36)
 - 4 sizes (xs, sm, md, lg)
 - Loading state with spinner; since 3.17 a loading button keeps focus (\`aria-disabled\`, clicks ignored)
 - Icon slots (before/after)
@@ -39,9 +39,9 @@ same variants and sizes and works without JavaScript (see **Components / Button 
   argTypes: {
     variant: {
       control: 'select',
-      options: ['primary', 'secondary', 'outline', 'ghost', 'link', 'danger', 'warning', 'info', 'inverse'],
+      options: ['primary', 'secondary', 'outline', 'ghost', 'link', 'danger', 'warning', 'info', 'inverse', 'inverse-outline'],
       description:
-        'Visual style variant. `inverse` (3.13, G-WL1): a white pill with dark ink and a white focus ring for dark, coloured or image backgrounds that don\'t follow the theme, such as the default `lc-hero` bands; the same in both themes. CSS hook `--lc-button-inverse-fg` (default `#0d353d`) sets its ink',
+        'Visual style variant. `inverse` (3.13, G-WL1): a white pill with dark ink and a white focus ring for dark, coloured or image backgrounds that don\'t follow the theme, such as the default `lc-hero` bands; the same in both themes. CSS hook `--lc-button-inverse-fg` (default `#0d353d`) sets its ink. `inverse-outline` (3.36): the quieter action beside it on the same bands, white text and border on a dark translucent fill',
       table: { defaultValue: { summary: 'primary' } },
     },
     tone: {
@@ -316,6 +316,45 @@ export const Inverse: Story = {
     const canvas = within(canvasElement);
     const button = canvas.getByRole('button', { name: 'To the waitlist' });
     await expect(button.classList.contains('btn-inverse')).toBe(true);
+    await expect(canvas.getByRole('button', { name: 'Add' }).classList.contains('btn-icon-only')).toBe(true);
+  },
+};
+
+/** 3.36 (request 056, monatsstand row 2): the quieter action beside `inverse` on a dark band. */
+export const InverseOutline: Story = {
+  name: 'Inverse Outline',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.36 (request 056, finance-intelligence monatsstand row 2): `variant="inverse-outline"`, the quieter action beside an `inverse` button on the `lc-hero` bands (see *Layout / Hero / Stage Actions*). White text and a white 1 px border on a 50 % `#111827` scrim, with a 1 px `#111827` line outside the border, so the boundary holds on every band: text at least 4.66:1 under the body\'s 85 % opacity (6.19:1 without it), border and focus ring at least 3.56:1 (4.23:1), computed over all nine bands. Hover darkens the scrim to 62 %, active to 74 %; the focus ring is white over a 2 px dark band, as on `inverse` since 3.36. Same sizes, height, icon slots, `loading` and `disabled` as `inverse`; the same in both themes. In forced colours the border becomes `ButtonText`.',
+      },
+    },
+  },
+  args: { variant: 'inverse-outline', size: 'lg' },
+  render: (args) => ({
+    props: args,
+    moduleMetadata: { imports: [HeroComponent, IconComponent] },
+    template: `
+      <lc-hero title="Monatsstand Oktober 2026" color="primary" size="sm">
+        <p style="margin: 0;">The inverse outline button on the teal band.</p>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px;">
+          <lc-button [variant]="variant" [size]="size" (clicked)="clicked($event)" (focused)="focused($event)" (blurred)="blurred($event)">Provenance</lc-button>
+          <lc-button [variant]="variant" [size]="size" (clicked)="clicked($event)">
+            <lc-icon slot="icon-before" name="info-circle" size="sm" [decorative]="true"></lc-icon>
+            Herkunft
+          </lc-button>
+          <lc-button [variant]="variant" [size]="size" [loading]="true">Loading…</lc-button>
+          <lc-button [variant]="variant" [size]="size" [disabled]="true">Not available</lc-button>
+          <lc-button [variant]="variant" [size]="size" [iconOnly]="true" ariaLabel="Add" (clicked)="clicked($event)">
+            <lc-icon name="plus" size="sm" [decorative]="true"></lc-icon>
+          </lc-button>
+        </div>
+      </lc-hero>`,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Provenance' }).classList.contains('btn-inverse-outline')).toBe(true);
     await expect(canvas.getByRole('button', { name: 'Add' }).classList.contains('btn-icon-only')).toBe(true);
   },
 };

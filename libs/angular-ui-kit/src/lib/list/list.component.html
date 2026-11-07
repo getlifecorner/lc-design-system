@@ -54,6 +54,11 @@
         </span>
       }
     </div>
+
+    <!-- 3.36: a decorative chevron ends a clickable or linked row. -->
+    @if (showChevron() && (clickable() || !!item.href)) {
+      <lc-icon name="chevron-right" class="lc-list__chevron" size="sm" [decorative]="true" />
+    }
   }
 </ng-template>
 

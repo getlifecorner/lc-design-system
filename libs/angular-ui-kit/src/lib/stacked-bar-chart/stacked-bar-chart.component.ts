@@ -4,8 +4,10 @@ import {
   DestroyRef,
   ElementRef,
   afterNextRender,
+  effect,
   inject,
   input,
+  isDevMode,
   computed,
   signal,
 } from '@angular/core';
@@ -29,6 +31,15 @@ export interface StackedBarLegend {
 }
 
 export type StackedBarOrientation = 'vertical' | 'horizontal';
+
+/**
+ * Form of `lc-stacked-bar-chart` (3.36): `chart` (axes, grid, labels and
+ * paddings, as before) or `band` (one horizontal bar edge to edge).
+ */
+export type StackedBarVariant = 'chart' | 'band';
+
+/** Percentages are rounded so the prerendered markup is the same everywhere. */
+const roundPercent = (value: number): number => Math.round(value * 10000) / 10000;
 
 /** viewBox width used until the container has been measured. */
 const DEFAULT_WIDTH = 400;
@@ -57,6 +68,8 @@ const MIN_SEGMENT_LABEL_PX = 14;
  * - Configurable bar gap spacing
  * - Color-coded segments with legend mapping
  * - Responsive SVG rendering
+ * - `variant="band"` (3.36): one horizontal distribution bar edge to edge,
+ *   without axes, grid or paddings
  *
  * @example
  * ```html
@@ -76,6 +89,14 @@ export class StackedBarChartComponent {
       obs.observe(this._el.nativeElement);
       this._destroyRef.onDestroy(() => obs.disconnect());
     });
+    if (isDevMode()) {
+      effect(() => {
+        const count = (this.categories() ?? []).length;
+        if (this.variant() === 'band' && count !== 1) {
+          console.warn(`[lc-stacked-bar-chart] variant="band" needs exactly one category (got ${count}): rendering as chart`);
+        }
+      });
+    }
   }
 
   /** Categories with stacked values. */
@@ -109,6 +130,47 @@ export class StackedBarChartComponent {
    * series names and every category's total.
    */
   ariaLabel = input<string>('');
+
+  /**
+   * Form of the chart (3.36, cockpit row 2). `chart`: axes, grid, labels and
+   * paddings, as before. `band`: one horizontal bar that fills the host's
+   * width edge to edge, `height` px thick, scaled from 0 to the sum of the
+   * values, without axes, grid, labels, values or paddings; the parts are
+   * split by a 2 px gap in the surface colour (CSS hooks
+   * `--lc-stacked-bar-chart-band-gap`, default `2px`, and
+   * `--lc-stacked-bar-chart-band-gap-color`, default `var(--color-surface)`:
+   * set it to the band's background off a card). `ariaLabel`, `legends` and
+   * the legend work as in `chart`. Needs exactly one category (otherwise it
+   * renders as `chart`, with a warning in dev mode); `orientation` is
+   * ignored; negative values draw nothing, and a sum of 0 draws no parts.
+   * Part widths are percentages, so the band is exact in prerendered HTML.
+   * @default 'chart'
+   */
+  variant = input<StackedBarVariant>('chart');
+
+  /** `band` with exactly one category (3.36); otherwise the chart renders. */
+  protected readonly isBand = computed(() => this.variant() === 'band' && (this.categories() ?? []).length === 1);
+
+  /** The band's parts as percentages of the width: 0 … sum of the positive values. */
+  protected readonly bandParts = computed(() => {
+    if (!this.isBand()) return [];
+    const legs = this.legends();
+    const values = (this.categories()[0].values ?? []).map((raw) => Math.max(0, toFinite(raw)));
+    const sum = values.reduce((a, b) => a + b, 0);
+    if (sum <= 0) return [];
+    let at = 0;
+    return values.map((value, i) => {
+      const x = (at / sum) * 100;
+      at += value;
+      return { x: roundPercent(x), w: roundPercent((value / sum) * 100), color: legs[i]?.color || chartColor(i) };
+    });
+  });
+
+  /** The boundaries between two drawn parts, where the band's gap lines sit. */
+  protected readonly bandGaps = computed(() => {
+    const drawn = this.bandParts().filter((part) => part.w > 0);
+    return drawn.slice(1).map((part) => part.x);
+  });
 
   private readonly PL = 40;
   private readonly PR = 10;

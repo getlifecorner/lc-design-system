@@ -4,13 +4,33 @@
     <div
       class="lc-dl__row"
       [class.lc-dl__row--clickable]="clickable()"
+      [class.lc-dl__row--total]="!!item.total"
       (click)="itemClick.emit(item)"
       (keydown)="onRowKeydown($event, item)"
     >
-      <dt class="lc-dl__term" [attr.id]="clickable() ? termId(i) : null">{{ item.term }}</dt>
+      <dt class="lc-dl__term" [attr.id]="clickable() ? termId(i) : null">@if (item.total && totalPrefix()) {<span class="lc-dl__sr-only">{{ totalPrefix() }}</span>}{{ item.term }}</dt>
       <span class="lc-dl__leader" aria-hidden="true"></span>
       <dd [class]="valueClass(item)" [attr.id]="clickable() ? valueId(i) : null">
-        @if (item.href) {
+        @if (item.badge) {
+          <!-- 3.36: the value as a badge; another value stays as text before it (D-2). -->
+          @if (badgeShowsValue(item)) {
+            @if (item.href) {
+              <a class="lc-dl__link" [href]="item.href">{{ item.value }}</a>
+            } @else if (item.datetime) {
+              <time [attr.datetime]="item.datetime">{{ item.value }}</time>
+            } @else {
+              <span class="lc-dl__badge-value">{{ item.value }}</span>
+            }
+          }
+          <lc-badge
+            class="lc-dl__badge"
+            [class.lc-dl__badge--after-value]="badgeShowsValue(item)"
+            [size]="size() === 'sm' ? 'xs' : 'sm'"
+            [rounded]="true"
+            [variant]="item.badgeVariant ?? 'default'"
+            >{{ item.badge }}</lc-badge
+          >
+        } @else if (item.href) {
           <a class="lc-dl__link" [href]="item.href">{{ item.value }}</a>
         } @else if (item.datetime) {
           <time [attr.datetime]="item.datetime">{{ item.value }}</time>

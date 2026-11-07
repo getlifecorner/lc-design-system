@@ -15,7 +15,8 @@ import {
   afterNextRender,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { IconComponent } from '@lifecorner/angular-ui-kit/icon';
+import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
+import { ICON_CHEVRON_RIGHT } from '@lifecorner/angular-ui-kit/icons';
 import { ButtonComponent, ButtonSize, ButtonVariant } from '@lifecorner/angular-ui-kit/button';
 import { ListItemTemplateDirective } from './list-item-template.directive';
 import type { AvatarColor } from '@lifecorner/angular-ui-kit/avatar';
@@ -127,6 +128,8 @@ export type ListItemPart = 'row' | 'action';
  * - `focusItem(id, part)` (3.34): moves the focus to a row's button or link,
  *   or to its action, e.g. when the sheet that action opened closes
  *   (WCAG 2.4.3)
+ * - `showChevron` (3.36): a decorative chevron at the end of every
+ *   `clickable` or `href` row
  *
  * @example
  * ```html
@@ -145,6 +148,7 @@ export type ListItemPart = 'row' | 'action';
   templateUrl: './list.component.html',
   styleUrl: './list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  viewProviders: [ɵprovideKitIcons([ICON_CHEVRON_RIGHT])],
 })
 export class ListComponent {
   /** Custom item template provided via lcListItem directive */
@@ -191,6 +195,17 @@ export class ListComponent {
    * @default 'xs'
    */
   actionSize = input<ButtonSize>('xs');
+
+  /**
+   * Ends every row that opens something, a `clickable` row or an `href` row,
+   * with the kit's `chevron-right` (20 px, `--color-text-tertiary`) after its
+   * badge, metadata and action (3.36, quellen row 3). Decorative: hidden from
+   * screen readers. Plain rows get none, and neither do rows drawn by an
+   * `lcListItem` template (add the icon to the template there). Row height,
+   * target size, focus ring, badge and `actionClick` don't change.
+   * @default false
+   */
+  showChevron = input<boolean>(false);
 
   /** Event emitted when an item is clicked */
   readonly itemClick = output<ListItem>();

@@ -404,6 +404,37 @@ $hamburger-glyph: 24px;
   }
 }
 
+// 3.36 (request 056, app-shell row 1): `contextBadge`. The button may grow to
+// 340 px: at 220 the name „September 2026 · Fassung 1“ (192 px) kept 89 px
+// beside „Freigegeben“. Name and badge share one row; the name keeps its
+// ellipsis, the badge stays whole. The badge's block margins (−2.9 px) take
+// its 24 px box down to the name's 18.2 px line, so the button stays 49.61 px
+// high (55.39 without them). `contextPlacement="below"` lifts the cap below.
+.lc-header__context-info--badge {
+  max-width: 340px;
+}
+
+.lc-header__context-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1-5);
+  min-width: 0;
+  max-width: 100%;
+
+  .lc-header__context-name {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+}
+
+// `inline-flex` (a flex item, so `flex`): the host is the badge's 24 px box,
+// without a line box of its own (a block host was 25 px, the button 50.61).
+.lc-header__context-badge {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-block: calc(0.65 * var(--font-size-sm) - 0.75rem);
+}
+
 // 3.33 (request 052, app-shell row 1): `contextPlacement="below"` (the class
 // is set only with a `contextName`). Up to 640 px the end group dissolves
 // (`display: contents`), so title, end slot, theme button and account menu

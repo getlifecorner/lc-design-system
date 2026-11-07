@@ -149,6 +149,7 @@ and the CSP notes.
 | Pipeline | `lc-pipeline` | Status timeline of connected process nodes; per-node status (complete/current/pending/warning/error) with captions, horizontal/vertical |
 | Skeleton | `lc-skeleton` | Loading placeholder |
 | Spinner | `lc-spinner` | Loading indicator |
+| State Strip | `lc-state-strip` | The states of the last runs at a glance: one segment per run, the state as a shape, a keyboard grid named with the counts per state (3.36) |
 | Stepper | `lc-stepper` | Step-by-step progress |
 | Table | `lc-table` | Data table with sorting, filtering, pagination, formatter callbacks, cell styling hooks and custom cell templates |
 | Timeline | `lc-timeline` | Ordered list of events with times (`<time datetime>`) |

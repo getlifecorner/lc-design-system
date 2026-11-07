@@ -67,7 +67,9 @@ export class ButtonLinkComponent {
    * such as the default `lc-hero` bands (primary, neutral, info, accent-purple,
    * accent-violet). It looks the same in both themes. Not for light backgrounds
    * or `variant="light"` heroes. CSS hook `--lc-button-inverse-fg` (default
-   * `#0d353d`) sets its ink; keep 4.5:1 on white.
+   * `#0d353d`) sets its ink; keep 4.5:1 on white. `inverse-outline` (3.36) is
+   * the quieter link beside it on the same bands: white text and keyline on a
+   * dark translucent fill, the same sizes and height.
    * @default 'primary'
    */
   readonly variant = input<ButtonVariant>('primary');

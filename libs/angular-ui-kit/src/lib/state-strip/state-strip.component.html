@@ -1,0 +1,27 @@
+@if (cells().length) {
+  <!-- An APG single-row grid: one Tab stop, arrows move between the runs. -->
+  <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- the cells are the focusable controls (roving tabindex); their keys bubble here -->
+  <div class="lc-state-strip__grid" role="grid" [attr.aria-label]="gridLabel()" (keydown)="onKeydown($event)">
+    <div class="lc-state-strip__row" role="row">
+      @for (cell of cells(); track $index; let i = $index) {
+        <div
+          #cell
+          class="lc-state-strip__cell"
+          role="gridcell"
+          [attr.tabindex]="i === current() ? 0 : -1"
+          (focus)="onFocus(i)"
+          (blur)="onBlur()"
+          (pointerenter)="onPointerEnter(i)"
+          (pointerleave)="onPointerLeave()"
+        >
+          <span class="lc-state-strip__mark lc-state-strip__mark--{{ cell.state }}"></span>
+          <span class="lc-state-strip__name">{{ cell.name }}</span>
+        </div>
+      }
+    </div>
+  </div>
+  @if (caption()) {
+    <!-- The name of the hovered or focused run, in the tooltip look; the cell is what screen readers read. -->
+    <div class="lc-state-strip__caption" aria-hidden="true">{{ caption() }}</div>
+  }
+}

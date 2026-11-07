@@ -342,6 +342,31 @@ $hero-colors: (
   }
 }
 
+// 3.36 (request 056, monatsstand row 1): the title takes focus only through
+// `focusTitle()`. A two-tone ring (WCAG technique C40): the white outline
+// (the title's own colour) 2 px out, and a 2 px #111827 band between it and
+// the text, so one of the two keeps 3:1 on every band (min 4.23, computed;
+// white alone 2.26 on warning). The bands don't follow the theme, so neither
+// does the ring. The light variant swaps the band to white (ink neutral-800,
+// 10.57). Only in the focused state: at rest nothing changes.
+.hero__title:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px colors.$color-neutral-900;
+  border-radius: var(--border-radius-sm);
+
+  .hero--light & {
+    box-shadow: 0 0 0 2px #fff;
+  }
+}
+
+@media (forced-colors: active) {
+  .hero__title:focus-visible {
+    outline-color: Highlight;
+    box-shadow: none;
+  }
+}
+
 .hero__body {
   margin-top: 1rem;
   font-size: 0.875rem;

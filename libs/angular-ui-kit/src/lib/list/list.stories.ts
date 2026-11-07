@@ -53,6 +53,12 @@ const meta: Meta<ListComponent> = {
       description: '3.3: size of the built-in row action — `xs` (3.2, about 25 px) … `lg` (48.5 px, the 44 px touch target).',
       table: { defaultValue: { summary: 'xs' } },
     },
+    showChevron: {
+      control: 'boolean',
+      description:
+        '3.36: ends every `clickable` or `href` row with a decorative `chevron-right` after badge, metadata and action. Plain rows and `lcListItem` templates get none; row height, focus ring and `actionClick` are unchanged',
+      table: { defaultValue: { summary: 'false' } },
+    },
     linkClick: {
       description:
         '3.16: a plain left click on an `href` row ({ item, event }). Call `event.preventDefault()` and navigate with the router for in-app links; modified and middle clicks do not emit.',
@@ -86,6 +92,7 @@ List component for displaying structured item collections.
 - 3.34: \`focusItem(id, part = 'row')\` moves the focus to a row's button or link (\`'row'\`) or its action
   (\`'action'\`) after the next render, e.g. when the sheet that action opened closes; it does nothing for an
   unknown id or a row without that part (see *Focus Item*)
+- 3.36: \`showChevron\` ends every \`clickable\` or \`href\` row with a decorative chevron (see *Chevron Rows*)
 `,
       },
     },
@@ -644,6 +651,42 @@ Here the handler logs the link and prevents the navigation.
         <p style="margin-top: 1rem; font-family: monospace; color: var(--color-text-secondary);">
           Router-Ziel: <strong>{{ lastLink }}</strong>
         </p>
+      </div>`,
+  }),
+};
+
+/** The rows of the *Chevron Rows* story (request 056, quellen row 3). */
+const chevronSources = [
+  { id: 'sap', label: 'SAP-Ist (Kostenstellen-Einzelposten, Buchungskreis 1000)', subtitle: 'Heute, 06:00', icon: 'server', badge: 'Geladen', badgeVariant: 'success' as const, action: 'Laden', actionAriaLabel: 'SAP-Ist laden' },
+  { id: 'usm', label: 'USM-Leistungsverrechnung', subtitle: 'Gestern, 23:40', icon: 'server', badge: 'Fehlgeschlagen', badgeVariant: 'error' as const },
+  { id: 'plan', label: 'Planwerte 2026', subtitle: 'Noch nie geladen', icon: 'document-text', badge: 'Ausstehend', disabled: true },
+];
+
+/** 3.36 (request 056, quellen row 3): rows that open details end with a chevron. */
+export const ChevronRows: Story = {
+  name: 'Chevron Rows',
+  args: { showChevron: true },
+  parameters: {
+    controls: { include: ['showChevron'] },
+    docs: {
+      description: {
+        story:
+          '3.36 (request 056, finance-intelligence quellen row 3): `[showChevron]="true"`. Every row that opens something, a `clickable` row (first list, `md`, with badge and action) or an `href` row (second list, `sm`), ends with a decorative `chevron-right` (20 px, `--color-text-tertiary`, `aria-hidden`) after badge, metadata and action, spaced by the row gap (12 px, `sm` 8 px). The disabled row dims it with the row. The plain list (third) has no chevron, also with the input set; neither has an `lcListItem` template. Row height, target size, focus ring, badge and `actionClick` are unchanged; the long German labels wrap beside it. Default `false`.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: {
+      showChevron: args.showChevron,
+      sources: chevronSources,
+      links: chevronSources.slice(0, 2).map(({ id, label, subtitle, icon, badge, badgeVariant }) => ({ id, label, subtitle, icon, badge, badgeVariant, href: `#quelle-${id}` })),
+      plain: chevronSources.slice(0, 2).map(({ id, label, subtitle, icon, badge, badgeVariant }) => ({ id, label, subtitle, icon, badge, badgeVariant })),
+    },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 24px; max-width: 480px;">
+        <lc-list [items]="sources" [clickable]="true" [showDividers]="true" [showChevron]="showChevron" />
+        <lc-list [items]="links" size="sm" [showDividers]="true" [showChevron]="showChevron" />
+        <lc-list [items]="plain" [showDividers]="true" [showChevron]="showChevron" />
       </div>`,
   }),
 };

@@ -22,7 +22,26 @@
       }
       <div class="card__header-left">
         <div class="card__title-row">
-          @if (linkMode()) {
+          @if (isCollapsible()) {
+            <!-- Collapsible card (3.36): the heading stays a heading and holds the toggle. -->
+            @switch (headingLevel()) {
+              @case (2) {
+                <h2 class="card__title"><ng-container [ngTemplateOutlet]="cardToggle" /></h2>
+              }
+              @case (4) {
+                <h4 class="card__title"><ng-container [ngTemplateOutlet]="cardToggle" /></h4>
+              }
+              @case (5) {
+                <h5 class="card__title"><ng-container [ngTemplateOutlet]="cardToggle" /></h5>
+              }
+              @case (6) {
+                <h6 class="card__title"><ng-container [ngTemplateOutlet]="cardToggle" /></h6>
+              }
+              @default {
+                <h3 class="card__title"><ng-container [ngTemplateOutlet]="cardToggle" /></h3>
+              }
+            }
+          } @else if (linkMode()) {
             <!-- Link card (3.24): the heading stays a heading and holds the link. -->
             @switch (headingLevel()) {
               @case (2) {
@@ -68,20 +87,41 @@
           }
         </div>
         @if (subtitle()) {
-          <p class="card__subtitle">{{ subtitle() }}</p>
+          <p class="card__subtitle" [attr.id]="isCollapsible() ? subtitleId : null">{{ subtitle() }}</p>
         }
       </div>
       <div class="card__header-action">
         <ng-content select="[card-header-action]"></ng-content>
       </div>
+      @if (isCollapsible()) {
+        <lc-icon name="chevron-down" class="card__chevron" size="sm" [decorative]="true" />
+      }
     </div>
   }
   <ng-content select="[card-header]"></ng-content>
-  <div class="card__body">
+  <div
+    class="card__body"
+    [attr.id]="isCollapsible() ? bodyId : null"
+    [attr.hidden]="isCollapsible() && !expanded() ? '' : null"
+  >
     <ng-content></ng-content>
   </div>
   <ng-content select="[card-footer]"></ng-content>
 </div>
+
+<!-- The toggle of a collapsible card (3.36): a button inside the heading,
+     named by the title and described by the subtitle. Its ::after covers the
+     head, so the icon tile, subtitle and chevron toggle too. -->
+<ng-template #cardToggle>
+  <button
+    type="button"
+    class="card__toggle"
+    [attr.aria-expanded]="expanded()"
+    [attr.aria-controls]="bodyId"
+    [attr.aria-describedby]="subtitle() ? subtitleId : null"
+    (click)="toggle()"
+  >{{ title() }}</button>
+</ng-template>
 
 <!-- The link of a link card (3.24): `href` (plain, no router) or `route`
      (RouterLink, created only here, so other cards never need a router).

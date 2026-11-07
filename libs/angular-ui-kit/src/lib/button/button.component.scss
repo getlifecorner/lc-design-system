@@ -231,8 +231,42 @@ a.btn {
   }
 
   // After the .btn focus ring at equal specificity, so the ring turns white.
+  // 3.36 (request 056, D-9): a 2 px $color-neutral-900 band between the pill
+  // and the white ring (WCAG technique C40). The white ring alone measured
+  // 2.01:1 on the warning band under the hero body's .85 opacity (2.39
+  // success, 2.61 orange, 2.70 secondary); with the band one of the two
+  // colours keeps at least 3.56. At rest nothing changes.
   &:focus-visible {
     outline-color: var(--color-neutral-white);
+    box-shadow: 0 0 0 2px $color-neutral-900;
+  }
+}
+
+// Inverse outline (3.36, request 056, monatsstand row 2): the quieter action
+// beside `inverse` on a dark band that doesn't follow the theme (lc-hero).
+// A 50 % $color-neutral-900 scrim under white text (min 4.66:1 on all nine
+// bands under the body's .85 opacity, 6.19 at full opacity) and a two-tone
+// keyline: the 1 px white border and a 1 px $color-neutral-900 shadow outside
+// it (min 3.56 / 4.23; white alone 2.01). The `.btn` box, so the heights equal
+// `inverse` at every size. Hover .62, active .74; the focus ring is the
+// inverse one (white ring over a 2 px band). The same in both themes.
+.btn-inverse-outline {
+  background-color: rgba($color-neutral-900, 0.5);
+  border-color: var(--color-neutral-white);
+  color: var(--color-neutral-white);
+  box-shadow: 0 0 0 1px $color-neutral-900;
+
+  &:hover:not(:disabled, .btn-loading) {
+    background-color: rgba($color-neutral-900, 0.62);
+  }
+
+  &:active:not(:disabled, .btn-loading) {
+    background-color: rgba($color-neutral-900, 0.74);
+  }
+
+  &:focus-visible {
+    outline-color: var(--color-neutral-white);
+    box-shadow: 0 0 0 2px $color-neutral-900;
   }
 }
 
@@ -249,11 +283,31 @@ a.btn {
   .btn-inverse:focus-visible {
     outline-color: Highlight;
   }
+
+  .btn-inverse-outline {
+    border-color: ButtonText;
+  }
+
+  a.btn-inverse-outline {
+    border-color: LinkText;
+  }
+
+  .btn-inverse-outline:focus-visible {
+    outline-color: Highlight;
+  }
 }
 
 // A focused loading inverse button (3.17): at 50 % no ring colour reaches 3:1
 // on the hero bands, so it is opaque while focused and keeps the white ring.
 .btn.btn-inverse.btn-loading:focus-visible {
+  opacity: 1;
+  outline-color: var(--color-neutral-white);
+}
+
+// The same for a focused loading inverse outline (3.36): (0,4,0) beats
+// `.btn.btn-loading:focus-visible` (0,3,0), whose text-colour ring is meant
+// for light grounds.
+.btn.btn-inverse-outline.btn-loading:focus-visible {
   opacity: 1;
   outline-color: var(--color-neutral-white);
 }
@@ -272,6 +326,10 @@ a.btn {
   }
 
   .btn.btn-inverse.btn-loading:focus-visible {
+    outline-color: Highlight;
+  }
+
+  .btn.btn-inverse-outline.btn-loading:focus-visible {
     outline-color: Highlight;
   }
 }

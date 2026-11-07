@@ -394,3 +394,89 @@
 :host ::ng-deep .card-dashed lc-icon {
   color: var(--color-muted-tile-icon, var(--color-text-tertiary));
 }
+
+// ── Collapsible (3.36, request 056, regeln row 1) ──────────────────────────
+// The head is the toggle: the button inside the heading stretches its
+// ::after over the head (the link-card pattern of 3.24), so the icon tile,
+// subtitle and chevron toggle too; the header action is lifted above it. At
+// least 44 px high, items centred. The button keeps the title's look; the
+// ring is drawn on the head (`:has`), 4.37:1 light / 9.13:1 dark on the card.
+.card-collapsible .card__header {
+  position: relative;
+  isolation: isolate;
+  min-height: 44px;
+  align-items: center;
+  cursor: pointer;
+
+  &:has(.card__toggle:focus-visible) {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+
+    // An outline on a non-focused element turns CanvasText in forced
+    // colours; the focused head gets the system focus colour.
+    @media (forced-colors: active) {
+      outline-color: Highlight;
+    }
+  }
+
+  &:hover .card__chevron {
+    color: var(--color-text-primary);
+  }
+}
+
+.card__toggle {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+  outline: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+}
+
+.card-collapsible .card__header-action {
+  position: relative;
+  z-index: 2;
+}
+
+// The state sign: chevron-down, turned up while open (as lc-accordion).
+.card__chevron {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  transform: rotate(-180deg);
+  transition: transform 200ms ease;
+
+  .card-collapsed & {
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+// Closed: only the head shows, without its divider and spacing.
+.card-collapsed .card__header {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.card__body[hidden] {
+  display: none;
+}
+
+// The projected footer of a closed card. Same weight as the equal-footer
+// rule and after it, so it also hides an equal footer.
+:host(.lc-card--collapsed) > .card > ::ng-deep :is([card-footer], .card-footer) {
+  display: none;
+}

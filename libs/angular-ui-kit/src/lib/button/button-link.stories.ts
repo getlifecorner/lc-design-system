@@ -29,7 +29,7 @@ links to social profiles.
 - No event listeners: navigation is the browser's. After SSR or prerendering the
   markup is a plain \`<a class="btn btn-primary btn-lg" href="…">\`, so it works with
   JavaScript disabled. \`routerLink\` may sit on the same anchor for in-app navigation.
-- Same variants (\`primary | secondary | outline | ghost | link | danger | warning | info | inverse\`),
+- Same variants (\`primary | secondary | outline | ghost | link | danger | warning | info | inverse | inverse-outline\`),
   sizes (\`xs | sm | md | lg\`) and modifiers (\`fullWidth\`, \`iconOnly\`, \`inline\`, \`flush\`, \`tone\` since 3.15) as
   \`lc-button\`, from the same stylesheet. Icon slots: \`[slot='icon-before']\`,
   \`[slot='icon-after']\`.
@@ -46,9 +46,9 @@ height + 2 × 1 px border) and meets the 44 px target; \`md\` is 42 px, \`sm\` 3
   argTypes: {
     variant: {
       control: 'select',
-      options: ['primary', 'secondary', 'outline', 'ghost', 'link', 'danger', 'warning', 'info', 'inverse'],
+      options: ['primary', 'secondary', 'outline', 'ghost', 'link', 'danger', 'warning', 'info', 'inverse', 'inverse-outline'],
       description:
-        'Visual style variant (same as lc-button). `inverse` (3.13, G-WL1): a white pill with dark ink and a white focus ring for dark, coloured or image backgrounds that don\'t follow the theme, such as the default `lc-hero` bands; the same in both themes. CSS hook `--lc-button-inverse-fg` (default `#0d353d`) sets its ink',
+        'Visual style variant (same as lc-button). `inverse` (3.13, G-WL1): a white pill with dark ink and a white focus ring for dark, coloured or image backgrounds that don\'t follow the theme, such as the default `lc-hero` bands; the same in both themes. CSS hook `--lc-button-inverse-fg` (default `#0d353d`) sets its ink. `inverse-outline` (3.36): the quieter link beside it on the same bands',
       table: { defaultValue: { summary: 'primary' } },
     },
     tone: {
@@ -198,6 +198,47 @@ export const Inverse: Story = {
     const link = within(canvasElement).getByRole('link', { name: 'Zur Warteliste' });
     await expect(link.getAttribute('href')).toBe('#warteliste');
     await expect([...link.classList].filter((c) => c.startsWith('btn'))).toEqual(['btn', 'btn-inverse', 'btn-lg']);
+  },
+};
+
+/**
+ * 3.36 (request 056, monatsstand row 2): `variant="inverse-outline"` on a link, the quieter
+ * link beside an `inverse` one on an `lc-hero` band.
+ */
+export const InverseOutline: Story = {
+  name: 'Inverse Outline',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.36 (request 056): `variant="inverse-outline"` on a link, beside an `inverse` link on the teal band. White text and border on a 50 % `#111827` scrim with a 1 px `#111827` line outside the border: text at least 4.66:1, border and focus ring at least 3.56:1 on all nine `lc-hero` bands under the body\'s 85 % opacity. sm, md, lg, one with an icon after the label and an icon-only link; the same height as `inverse` at every size. A link cannot be disabled or busy: use `lc-button` for those states.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [HeroComponent, IconComponent] },
+    template: `
+      <lc-hero title="Monatsstand Oktober 2026" color="primary" size="sm">
+        <p style="margin: 0;">Inverse outline links on the teal band: sm, md, lg, one with an icon and an icon-only link.</p>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px;">
+          <a lcButton variant="inverse-outline" size="sm" href="#herkunft-sm">Small</a>
+          <a lcButton variant="inverse-outline" size="md" href="#herkunft-md">Medium</a>
+          <a lcButton variant="inverse-outline" size="lg" href="#herkunft">Herkunft</a>
+          <a lcButton variant="inverse-outline" size="lg" href="#weiter">
+            Provenance
+            <lc-icon slot="icon-after" name="arrow-right" size="sm" [decorative]="true" />
+          </a>
+          <a lcButton variant="inverse-outline" size="lg" [iconOnly]="true" href="#info" aria-label="Info">
+            <lc-icon name="info-circle" size="sm" [decorative]="true" />
+          </a>
+        </div>
+      </lc-hero>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const link = within(canvasElement).getByRole('link', { name: 'Herkunft' });
+    await expect(link.getAttribute('href')).toBe('#herkunft');
+    await expect([...link.classList].filter((c) => c.startsWith('btn'))).toEqual(['btn', 'btn-inverse-outline', 'btn-lg']);
   },
 };
 

@@ -202,6 +202,18 @@ $lc-list-member-colors: (
   flex-shrink: 0;
 }
 
+// Chevron (3.36, `showChevron`): the row's last item, after the trailing
+// group, spaced by the row gap (12 px; sm 8, lg 16). Decorative; mirrored in
+// right-to-left text. In forced colours it takes the text colour.
+.lc-list__chevron {
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+
+  &:dir(rtl) {
+    transform: scaleX(-1);
+  }
+}
+
 // Pointer and hover only on rows that act (3.3, AC-3): a plain list is not
 // an affordance.
 .lc-list--clickable .lc-list__item {

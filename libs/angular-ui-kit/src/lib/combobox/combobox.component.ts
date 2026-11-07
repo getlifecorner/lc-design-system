@@ -121,6 +121,17 @@ export class ComboboxComponent implements ControlValueAccessor {
   /** Error message */
   readonly error = input<string>();
 
+  /**
+   * Announce the error message the moment it appears (`role="alert"` on the
+   * message), as `lc-textarea`. Set `false` when an `lc-alert` error summary
+   * already announces the errors, e.g. a page that moves focus to this field
+   * after a failed submit (422): the error is then read once, with the field,
+   * not twice (alert and description). The message stays visible, stays linked
+   * through `aria-describedby`, and the input keeps `aria-invalid`.
+   * @default true
+   */
+  readonly announceError = input<boolean>(true);
+
   /** Disabled state */
   readonly disabled = input<boolean>(false);
 

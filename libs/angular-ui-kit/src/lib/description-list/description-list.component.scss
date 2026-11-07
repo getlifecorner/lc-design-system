@@ -232,3 +232,58 @@ $_share: 1000000;
     outline-color: Highlight;
   }
 }
+
+// ── badge value (3.36, request 056, quellen row 2) ──────────────────────────
+// The badge's block margins take its box (24 px, sm list 20 px) down to the
+// value's line, so a badge row is 38.5 px (md), not 41. Another value stands
+// 6 px before it.
+lc-badge.lc-dl__badge {
+  display: inline-flex;
+  margin-block: calc((1lh - 1.5rem) / 2);
+}
+
+.lc-dl--sm lc-badge.lc-dl__badge {
+  margin-block: calc((1lh - 1.25rem) / 2);
+}
+
+.lc-dl__badge--after-value {
+  margin-inline-start: var(--spacing-1-5);
+}
+
+// ── total item (3.36, request 056, app-shell row 2) ─────────────────────────
+// A ledger sum: a rule above and a double rule below in --color-field-border,
+// the only border token with 3:1 on every surface (4.39 light, 5.56 dark;
+// --color-border-strong 1.45 / 1.85). In the rows layout with a row separator
+// the rule above sits on the previous row's line (−1 px), and the double rule
+// also ends a last row. The value is `strong` (emphasis ignored), the term
+// semibold in the primary ink.
+.lc-dl .lc-dl__row--total {
+  border-top: 1px solid var(--color-field-border);
+  border-bottom: 3px double var(--color-field-border);
+}
+
+.lc-dl--rows.lc-dl--sep-line .lc-dl__row.lc-dl__row--total,
+.lc-dl--rows.lc-dl--sep-divider .lc-dl__row.lc-dl__row--total {
+  margin-top: -1px;
+  border-bottom: 3px double var(--color-field-border);
+}
+
+.lc-dl__row--total .lc-dl__term {
+  // The containing block of the hidden prefix.
+  position: relative;
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+// `totalAriaLabel`: read, not shown.
+.lc-dl__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

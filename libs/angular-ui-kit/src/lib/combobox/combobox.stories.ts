@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/angular';
 import { ComboboxComponent, ComboboxOption } from './combobox.component';
 import { ModalComponent } from '../modal/modal.component';
 import { ButtonComponent } from '../button/button.component';
+import { AlertComponent } from '../alert/alert.component';
 
 /** The months of the *Focus on Open* stories (request 055). */
 const MONTH_OPTIONS: ComboboxOption[] = [
@@ -102,6 +103,12 @@ selection, create-new entries, grouped options, and keyboard navigation.
       control: 'boolean',
       description:
         'Whether the list opens when the field gets focus (3.32, request 051). With `false`, focus alone (`focus()` from the page, Tab) leaves the list closed and `aria-expanded="false"`; a click or tap on the field, typing or ArrowDown opens it. Use it in forms that move focus into the field themselves, on open or to the first invalid field after a rejected save. Escape and choosing an option work as before.',
+      table: { defaultValue: { summary: 'true' } },
+    },
+    announceError: {
+      control: 'boolean',
+      description:
+        '3.36 (request 056, 055-n4): announce the error the moment it appears (`role="alert"`), as `lc-textarea`. `false` under an `lc-alert` error summary, e.g. when the page moves focus to the field after a rejected save (422): the error is read once, with the field, not twice. It stays visible and in `aria-describedby`; the input keeps `aria-invalid`.',
       table: { defaultValue: { summary: 'true' } },
     },
   },
@@ -509,5 +516,44 @@ export const FocusOnOpenListOpens: Story = {
     if (viewMode !== 'story') return;
     await new Promise((resolve) => setTimeout(resolve, 50));
     canvasElement.querySelector<HTMLButtonElement>('lc-combobox-focus-on-open-demo lc-button button')?.click();
+  },
+};
+
+/** 3.36 (request 056, 055-n4): the field after a rejected save, under an error summary. */
+export const ErrorAfterSubmit: Story = {
+  name: 'Error After Submit',
+  args: { announceError: false },
+  parameters: {
+    controls: { include: ['announceError'] },
+    docs: {
+      description: {
+        story:
+          '3.36 (request 056, 055-n4): the page after a rejected save (422). The `lc-alert` summary announces the error, and the page moves focus to the field (here on load). With `[announceError]="false"` the error below the field has no `role="alert"`: a screen reader reads it once, with the field (`aria-describedby`), not a second time as an alert. The text stays visible and the input keeps `aria-invalid`. With the default `true` it is announced the moment it appears, as before.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: { kostenstellenOptions, announceError: args.announceError },
+    moduleMetadata: { imports: [AlertComponent, ButtonComponent] },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px; max-width: 400px;">
+        <lc-alert variant="error" title="Bitte prüfen Sie 1 Angabe" message="Kostenstelle: Wählen Sie eine Kostenstelle aus der Liste." />
+        <lc-combobox
+          [options]="kostenstellenOptions"
+          label="Kostenstelle"
+          placeholder="Kostenstelle suchen …"
+          emptyMessage="Keine Treffer"
+          clearAriaLabel="Auswahl löschen"
+          error="Wählen Sie eine Kostenstelle aus der Liste."
+          [openOnFocus]="false"
+          [announceError]="announceError"
+        />
+        <div><lc-button>Speichern</lc-button></div>
+      </div>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    canvasElement.querySelector<HTMLInputElement>('lc-combobox input')?.focus();
   },
 };

@@ -5,6 +5,7 @@ import {
   output,
   computed,
 } from '@angular/core';
+import { BadgeComponent, type BadgeVariant } from '@lifecorner/angular-ui-kit/badge';
 
 /**
  * Emphasis treatment applied to a row's value.
@@ -39,6 +40,24 @@ export interface DescriptionListItem {
   datetime?: string;
   /** Optional visual emphasis for the value. @default 'default' */
   emphasis?: DescriptionListEmphasis;
+  /**
+   * Shows the value as an `lc-badge` (3.36, quellen row 2): rounded, `sm` in
+   * an md list, `xs` in an sm list. A `value` that is empty or the same word
+   * (trimmed, any case) is not shown; another value stays as text before the
+   * badge („1“ [Freigegeben]), and `href` or `datetime` wrap that text only.
+   * Term and value stay one `dt`/`dd` pair, read as „term, badge“.
+   */
+  badge?: string;
+  /** Variant of the `badge`, as `lc-badge`. @default 'default' */
+  badgeVariant?: BadgeVariant;
+  /**
+   * The sum item (3.36, app-shell row 2): a rule above and a double rule
+   * below (`--color-field-border`), term and value semibold with tabular
+   * figures; its `emphasis` is ignored. `totalAriaLabel` is read before its
+   * term. Usually the last item.
+   * @default false
+   */
+  total?: boolean;
   /** Optional opaque payload echoed back in `itemClick`. */
   id?: string;
 }
@@ -74,6 +93,8 @@ let nextUniqueId = 0;
  * - Semantic markup (`<dl>`/`<dt>`/`<dd>`) for accessibility; `clickable`
  *   rows hold a native button (named by term and value) that the keyboard
  *   reaches, and the `dl` keeps its term and value pairs.
+ * - 3.36: an item's value as a badge (`badge`, `badgeVariant`), and a sum
+ *   item (`total`) with ledger rules, announced with `totalAriaLabel`.
  *
  * @example
  * ```html
@@ -89,6 +110,7 @@ let nextUniqueId = 0;
 @Component({
   selector: 'lc-description-list',
   standalone: true,
+  imports: [BadgeComponent],
   templateUrl: './description-list.component.html',
   styleUrls: ['./description-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -131,8 +153,31 @@ export class DescriptionListComponent {
    */
   readonly clickable = input<boolean>(false);
 
+  /**
+   * Read before the term of a `total` item and not shown (3.36, app-shell
+   * row 2): „Summe“ makes a screen reader read „Summe, Gesamtkosten Ist,
+   * 522.530,00 €“. Empty adds nothing.
+   * @default ''
+   */
+  readonly totalAriaLabel = input<string>('');
+
   /** Emitted when a row is clicked (or activated via keyboard when `clickable`). */
   readonly itemClick = output<DescriptionListItem>();
+
+  /** The visually hidden start of a total's term: „Summe, “ (3.36). */
+  protected readonly totalPrefix = computed(() => {
+    const label = this.totalAriaLabel().trim();
+    return label ? `${label}, ` : '';
+  });
+
+  /**
+   * Whether a badge item also shows its `value` as text (3.36, D-2): not when
+   * it is empty or the badge's word.
+   */
+  protected badgeShowsValue(item: DescriptionListItem): boolean {
+    const value = (item.value ?? '').trim();
+    return value !== '' && value.toLowerCase() !== (item.badge ?? '').trim().toLowerCase();
+  }
 
   /** Generated id prefix, taken once per instance, so later ids don't shift. */
   private readonly uid = `lc-dl-${nextUniqueId++}`;
@@ -160,7 +205,8 @@ export class DescriptionListComponent {
   );
 
   protected valueClass(item: DescriptionListItem): string {
-    return `lc-dl__value lc-dl__value--${item.emphasis ?? 'default'}`;
+    // A total is always strong (3.36): its `emphasis` is ignored.
+    return `lc-dl__value lc-dl__value--${item.total ? 'strong' : (item.emphasis ?? 'default')}`;
   }
 
   /**

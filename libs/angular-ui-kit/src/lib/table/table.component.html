@@ -193,7 +193,7 @@
                         size="xs"
                         [iconOnly]="!action.label"
                         [disabled]="isActionDisabled(action, dr.row, dr.absIndex)"
-                        [ariaLabel]="action.tooltip ?? action.label ?? action.key"
+                        [ariaLabel]="actionAriaLabel(action, dr.row, dr.absIndex)"
                         (clicked)="onActionClick(action, dr.row, dr.absIndex)"
                       >
                         @if (action.icon) {
@@ -212,8 +212,69 @@
         }
       }
     </tbody>
+    @if (footerRow(); as footer) {
+      <!-- 3.36: one footer row below every data row; never sorted, filtered,
+           paged, selected or counted. Its first cell is the row header. -->
+      <tfoot class="lc-table__footer">
+        <tr [attr.role]="treeMode() ? 'row' : null">
+          @if (selectable()) {
+            <td class="lc-table__select-cell" [attr.role]="treeMode() ? 'gridcell' : null"></td>
+          }
+          @for (column of columns(); track column.key; let first = $first) {
+            @if (first) {
+              <th
+                scope="row"
+                [class]="getCellClasses(footer, column, -1)"
+                [ngStyle]="getCellStyles(footer, column, -1)"
+                [attr.role]="treeMode() ? 'rowheader' : null"
+              >
+                <ng-container *ngTemplateOutlet="footerCell; context: { row: footer, column: column }"></ng-container>
+              </th>
+            } @else {
+              <td
+                [class]="getCellClasses(footer, column, -1)"
+                [ngStyle]="getCellStyles(footer, column, -1)"
+                [attr.role]="treeMode() ? 'gridcell' : null"
+              >
+                <ng-container *ngTemplateOutlet="footerCell; context: { row: footer, column: column }"></ng-container>
+              </td>
+            }
+          }
+          @if (hasActions()) {
+            <td
+              class="lc-table__actions-cell"
+              [class]="'lc-table__actions-cell--' + actionsAlign()"
+              [attr.role]="treeMode() ? 'gridcell' : null"
+            ></td>
+          }
+        </tr>
+      </tfoot>
+    }
   </table>
 </div>
+
+<!-- 3.36: a footer cell. In the tree column the label lines up with the level-0
+     labels (an empty disclosure slot before it). Templates get `footer: true`. -->
+<ng-template #footerCell let-row="row" let-column="column">
+  @if (isTreeColumn(column.key)) {
+    <span class="lc-table__tree-cell">
+      <span class="lc-table__tree-chevron" [style.width.px]="indentSize()"></span>
+      <span class="lc-table__tree-content">
+        <ng-container *ngTemplateOutlet="footerContent; context: { row: row, column: column }"></ng-container>
+      </span>
+    </span>
+  } @else {
+    <ng-container *ngTemplateOutlet="footerContent; context: { row: row, column: column }"></ng-container>
+  }
+</ng-template>
+
+<ng-template #footerContent let-row="row" let-column="column">
+  @if (hasCustomTemplate(column.key)) {
+    <ng-container *ngTemplateOutlet="getCellTemplate(column.key)!.template; context: { $implicit: row, footer: true }"></ng-container>
+  } @else {
+    {{ getFormattedCellValue(row, column, -1) }}
+  }
+</ng-template>
 
 <!-- Shared cell content (edit input / custom template / formatted value) -->
 <ng-template #cellContent let-row="row" let-column="column" let-absIndex="absIndex">

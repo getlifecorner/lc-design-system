@@ -2,9 +2,29 @@
   <div class="hero__inner">
     <div class="hero__content">
       @if (label()) {
-        <span class="hero__label">{{ label() }}</span>
+        <span #labelEl class="hero__label">{{ label() }}</span>
       }
-      <h1 class="hero__title">{{ title() }}</h1>
+      <!-- 3.36: the element follows `headingLevel`; the look is the same at every level. -->
+      @switch (headingLevel()) {
+        @case (2) {
+          <h2 #titleEl class="hero__title">{{ title() }}</h2>
+        }
+        @case (3) {
+          <h3 #titleEl class="hero__title">{{ title() }}</h3>
+        }
+        @case (4) {
+          <h4 #titleEl class="hero__title">{{ title() }}</h4>
+        }
+        @case (5) {
+          <h5 #titleEl class="hero__title">{{ title() }}</h5>
+        }
+        @case (6) {
+          <h6 #titleEl class="hero__title">{{ title() }}</h6>
+        }
+        @default {
+          <h1 #titleEl class="hero__title">{{ title() }}</h1>
+        }
+      }
       <div class="hero__body">
         <ng-content></ng-content>
       </div>

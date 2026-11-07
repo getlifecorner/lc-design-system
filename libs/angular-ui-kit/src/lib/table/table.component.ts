@@ -98,6 +98,15 @@ export interface TableAction {
   variant?: ButtonVariant;
   /** Optional tooltip / aria-label, useful for icon-only actions */
   tooltip?: string;
+  /**
+   * Accessible name of the action's button (3.36, services row 2): a string,
+   * or a function of the row, so each row's button names its object
+   * (`(row) => 'Herkunft von ' + row.name` → „Herkunft von Demo Netz“) while
+   * the visible label, icon and look stay the same. Wins over `tooltip`,
+   * `label` and `key`; an empty result falls back to them. Keep the visible
+   * label in it (WCAG 2.5.3).
+   */
+  ariaLabel?: string | ((row: Record<string, unknown>, rowIndex: number) => string);
   /** Hide this action for specific rows */
   hidden?: (row: Record<string, unknown>, rowIndex: number) => boolean;
   /** Disable this action for specific rows */
@@ -228,6 +237,8 @@ function isFromNestedControl(event: Event): boolean {
  * - `caption` as the table's `<caption>`, visible or for screen readers only
  *   (`showCaption`, 3.16)
  * - Empty state text for no data
+ * - `footerRow` (3.36): a sum row in `<tfoot>`, outside sorting, filtering,
+ *   paging and the tree; `TableAction.ariaLabel` names each row's action
  * - Accessible with proper table semantics
  *
  * @example
@@ -387,6 +398,20 @@ export class TableComponent {
 
   /** Horizontal alignment of the action buttons (and header label) within the cell */
   actionsAlign = input<TableActionsAlign>('start');
+
+  /**
+   * One footer row below all data rows (3.36, services row 1), e.g. a sum:
+   * a record of the data's shape, rendered as a `<tfoot>` row with the
+   * table's columns, `lcTableCell` templates (their context has
+   * `footer: true`), `cellClass`, `cellStyle` and `formatter` (`rowIndex`
+   * −1). It is never sorted, filtered, searched, paged, selected or counted,
+   * stays last in every tree state, and its first cell is the row header
+   * (`<th scope="row">`). A 1 px rule above and a 3 px double rule below
+   * (`--color-field-border`) separate it; its cells are semibold with tabular
+   * figures. The table scrolls on small screens, and the footer with it.
+   * @default undefined
+   */
+  footerRow = input<Record<string, unknown> | undefined>(undefined);
 
   // -- Tree / grouped rows --
   /**
@@ -938,6 +963,20 @@ export class TableComponent {
     rowIndex: number
   ): boolean {
     return action.disabled ? action.disabled(row, rowIndex) : false;
+  }
+
+  /**
+   * Accessible name of an action button (3.36): `ariaLabel` (a string or the
+   * row's result) over `tooltip`, `label` and `key`; without it, as before.
+   */
+  protected actionAriaLabel(
+    action: TableAction,
+    row: Record<string, unknown>,
+    rowIndex: number
+  ): string {
+    const own = typeof action.ariaLabel === 'function' ? action.ariaLabel(row, rowIndex) : action.ariaLabel;
+    if (own && own.trim()) return own;
+    return action.tooltip ?? action.label ?? action.key;
   }
 
   /**

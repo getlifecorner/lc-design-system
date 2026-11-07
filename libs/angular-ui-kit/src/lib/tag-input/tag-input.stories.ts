@@ -43,6 +43,23 @@ Tag input component for entering and managing multiple tags.
 export default meta;
 type Story = StoryObj<TagInputComponent>;
 
+/**
+ * 3.36 (request 056, 055-n1): the behaviour args of the stories with their own
+ * `render`, with the component defaults when a control is untouched, so every
+ * control shown takes effect and the default rendering stays the same.
+ */
+const behaviour = (args: Story['args'] = {}) => ({
+  separator: args.separator ?? 'both',
+  maxTags: args.maxTags ?? Infinity,
+  allowDuplicates: args.allowDuplicates ?? false,
+  removable: args.removable ?? true,
+  disabled: args.disabled ?? false,
+});
+
+/** The bindings of `behaviour()` on an `lc-tag-input`. */
+const BEHAVIOUR_BINDINGS =
+  '[separator]="separator" [maxTags]="maxTags" [allowDuplicates]="allowDuplicates" [removable]="removable" [disabled]="disabled"';
+
 export const Default: Story = {
   parameters: {
     docs: { description: { story: 'Basic tag input with default settings. Press Enter to add tags.' } },
@@ -121,8 +138,8 @@ export const KeyboardFocus: Story = {
   },
   render: (args) => ({
     moduleMetadata: { imports: [TagInputComponent] },
-    props: args,
-    template: `<lc-tag-input lang="de" [label]="label" [placeholder]="placeholder" [removeTagAriaLabel]="removeTagAriaLabel"></lc-tag-input>`,
+    props: { ...args, ...behaviour(args) },
+    template: `<lc-tag-input lang="de" [label]="label" [placeholder]="placeholder" [removeTagAriaLabel]="removeTagAriaLabel" ${BEHAVIOUR_BINDINGS}></lc-tag-input>`,
   }),
   play: async ({ canvasElement, viewMode }) => {
     if (viewMode !== 'story') return;
@@ -145,6 +162,8 @@ export const KeyboardFocus: Story = {
 export const TouchTargets: Story = {
   name: 'Touch Targets (DE)',
   parameters: {
+    // 3.36 (055-n1): the German texts are fixed; the behaviour controls are bound.
+    controls: { exclude: ['label', 'placeholder', 'removeTagAriaLabel'] },
     docs: {
       description: {
         story:
@@ -152,12 +171,12 @@ export const TouchTargets: Story = {
       },
     },
   },
-  render: () => ({
+  render: (args) => ({
     moduleMetadata: { imports: [TagInputComponent, FormsModule] },
     // Not `tags`: Storybook copies every story prop that is not an input onto the
     // story component, so `tags` replaced the component's `tags` signal (review 043 r1 F1).
-    props: { seedTags: ['Kostenstellenverantwortung', 'Budget', 'Freigabe', 'Reisekosten', 'Personal', 'Quartal'] },
-    template: `<lc-tag-input lang="de" label="Schlagwörter" placeholder="Schlagwort hinzufügen…" removeTagAriaLabel="Entfernen" [ngModel]="seedTags"></lc-tag-input>`,
+    props: { ...behaviour(args), seedTags: ['Kostenstellenverantwortung', 'Budget', 'Freigabe', 'Reisekosten', 'Personal', 'Quartal'] },
+    template: `<lc-tag-input lang="de" label="Schlagwörter" placeholder="Schlagwort hinzufügen…" removeTagAriaLabel="Entfernen" [ngModel]="seedTags" ${BEHAVIOUR_BINDINGS}></lc-tag-input>`,
   }),
 };
 
@@ -165,6 +184,8 @@ export const TouchTargets: Story = {
 export const LongTags: Story = {
   name: 'Long Tags (DE)',
   parameters: {
+    // 3.36 (055-n1): the German texts are fixed; the behaviour controls are bound.
+    controls: { exclude: ['label', 'placeholder', 'removeTagAriaLabel'] },
     docs: {
       description: {
         story:
@@ -172,9 +193,9 @@ export const LongTags: Story = {
       },
     },
   },
-  render: () => ({
+  render: (args) => ({
     moduleMetadata: { imports: [TagInputComponent, FormsModule] },
-    props: { seedTags: ['Leistungsverrechnungsschlüssel Nebenkosten 2026', 'Kostenstellenverantwortung', 'Q3'] },
-    template: `<lc-tag-input lang="de" label="Schlagwörter" placeholder="Schlagwort hinzufügen…" removeTagAriaLabel="Entfernen" [ngModel]="seedTags"></lc-tag-input>`,
+    props: { ...behaviour(args), seedTags: ['Leistungsverrechnungsschlüssel Nebenkosten 2026', 'Kostenstellenverantwortung', 'Q3'] },
+    template: `<lc-tag-input lang="de" label="Schlagwörter" placeholder="Schlagwort hinzufügen…" removeTagAriaLabel="Entfernen" [ngModel]="seedTags" ${BEHAVIOUR_BINDINGS}></lc-tag-input>`,
   }),
 };

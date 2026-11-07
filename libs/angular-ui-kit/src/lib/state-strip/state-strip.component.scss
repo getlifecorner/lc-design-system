@@ -1,0 +1,126 @@
+// lc-state-strip (3.36, request 056, quellen row 1): one segment per run.
+// The host is the caption's containing block; without segments it is gone.
+:host {
+  display: block;
+  position: relative;
+}
+
+:host(.lc-state-strip--empty) {
+  display: none;
+}
+
+.lc-state-strip__grid {
+  display: block;
+}
+
+// The runs share the width up to the segment cap (24 px: ten runs are 240 px),
+// and narrower strips shrink them, so more runs never overflow.
+.lc-state-strip__row {
+  display: flex;
+  block-size: var(--lc-state-strip-height, 2rem);
+}
+
+.lc-state-strip__cell {
+  position: relative;
+  flex: 1 1 0;
+  min-inline-size: 0;
+  max-inline-size: var(--lc-state-strip-segment-max-width, 1.5rem);
+
+  &:hover {
+    background-color: var(--color-surface-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: -2px;
+  }
+}
+
+// The state is a shape (height and place), not only a colour. At the 32 px
+// default: success top 4 h 11, error top 17 h 11, warning top 8 h 16 (centred),
+// neutral a 2 px dash in the middle. The inks keep 3:1 on every page and
+// surface in both themes (design 056 §5).
+.lc-state-strip__mark {
+  position: absolute;
+  inset-inline: min(3px, 25%);
+
+  &--success {
+    top: 12.5%;
+    height: 34.375%;
+    background-color: var(--color-text-success);
+  }
+
+  &--error {
+    top: 53.125%;
+    height: 34.375%;
+    background-color: var(--color-text-error);
+  }
+
+  &--warning {
+    top: 25%;
+    height: 50%;
+    background-color: var(--color-text-warning);
+  }
+
+  &--neutral {
+    top: calc(50% - 1px);
+    height: 2px;
+    background-color: var(--color-field-border);
+  }
+}
+
+// The cell's name: read, not shown (the caption shows it to pointer and
+// keyboard users).
+.lc-state-strip__name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+// In the lc-tooltip look, 4 px below the strip, at its start; as wide as the
+// text up to the strip's width, then it wraps.
+.lc-state-strip__caption {
+  position: absolute;
+  top: calc(100% + 4px);
+  inset-inline-start: 0;
+  z-index: 1;
+  inline-size: max-content;
+  max-inline-size: 100%;
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--border-radius-md);
+  background-color: var(--color-text-primary);
+  color: var(--color-surface);
+  box-shadow: var(--elevation-2);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  pointer-events: none;
+}
+
+// Forced colours: the marks keep their shapes in the text colour (neutral in
+// GrayText), the ring is the system focus colour, the caption gets a border.
+@media (forced-colors: active) {
+  .lc-state-strip__mark {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+  }
+
+  .lc-state-strip__mark--neutral {
+    background-color: GrayText;
+  }
+
+  .lc-state-strip__cell:focus-visible {
+    outline-color: Highlight;
+  }
+
+  .lc-state-strip__caption {
+    border: 1px solid CanvasText;
+  }
+}

@@ -1115,7 +1115,7 @@ export const ReturnFocusTo: Story = {
     docs: {
       description: {
         story:
-          '3.35 (request 055, 054-n3): drawer mode. The bar\'s icon button „Navigation öffnen“ is passed as `returnFocusTo`, so after „Navigation schließen“, Escape or the backdrop the focus is on the trigger\'s button again; on a phone an item or brand tap closes the drawer through `closed` and returns the focus the same way. Without it, a WebKit tap leaves `body` focused at open, and the focus falls to `body` on close. The trigger is the `<lc-button>` host (`$event.currentTarget` of its click); the sidenav hands the focus to the `<button>` inside it. `lc-header`\'s hamburger has no element to pass yet (its `hamburgerClick` carries none).',
+          '3.35 (request 055, 054-n3): drawer mode. The bar\'s icon button „Navigation öffnen“ is passed as `returnFocusTo`, so after „Navigation schließen“, Escape or the backdrop the focus is on the trigger\'s button again; on a phone an item or brand tap closes the drawer through `closed` and returns the focus the same way. Without it, a WebKit tap leaves `body` focused at open, and the focus falls to `body` on close. The trigger is the `<lc-button>` host (`$event.currentTarget` of its click); the sidenav hands the focus to the `<button>` inside it. Since 3.36 `lc-header`\'s `hamburgerClick` carries the hamburger\'s `<button>` to pass the same way (see *Navigation / Header / Hamburger Focus Return*).',
       },
       story: { inline: false, height: '480px' },
     },

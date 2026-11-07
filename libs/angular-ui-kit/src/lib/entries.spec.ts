@@ -66,10 +66,12 @@ describe('secondary entries (AS-15)', () => {
   // and the internal `icon-set` (AS-17) and `navigation` (AS-18) entries;
   // 3.8 (request 005, G-4) the public `character` and `character-svg` entries;
   // 3.11.5 (request 015, AS-33) the internal `a11y` entry (Label in Name);
-  // 3.16 (request 022, BA-4) the public `money` entry.
-  it('has one entry per folder: 114 public and 6 internal', () => {
-    expect(publicEntries).toHaveLength(114);
+  // 3.16 (request 022, BA-4) the public `money` entry; 3.36 (request 056,
+  // quellen row 1) the public `state-strip` entry.
+  it('has one entry per folder: 115 public and 6 internal', () => {
+    expect(publicEntries).toHaveLength(115);
     expect(publicEntries).toContain('money');
+    expect(publicEntries).toContain('state-strip');
     expect(entries.filter((e) => e.startsWith('internal/'))).toEqual([
       'internal/a11y',
       'internal/chart',

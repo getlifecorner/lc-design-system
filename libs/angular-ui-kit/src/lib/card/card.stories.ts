@@ -5,6 +5,7 @@ import { CardComponent } from './card.component';
 import { IconComponent } from '../icon/icon.component';
 import { BadgeComponent } from '../badge/badge.component';
 import { DescriptionListComponent } from '../description-list/description-list.component';
+import { ButtonComponent } from '../button/button.component';
 
 // `lc-button` and `a[lcButton]` come from the preview's global imports.
 const meta: Meta<CardComponent> = {
@@ -119,6 +120,17 @@ Use it for content sections, dashboard widgets, and list items.
       description:
         '3.29: layout of the `[card-footer]` slot. `equal`: its children share the row at equal width once the card is at least 480 px (30rem) wide, and stack full width, 8 px apart, below that (the card\'s own width, at any viewport). Put `<lc-button variant="outline" size="lg" [fullWidth]="true">` in it, primary answer first; the card adds layout only. The card becomes a size container and takes its parent\'s full width.',
       table: { defaultValue: { summary: 'default' } },
+    },
+    collapsible: {
+      control: 'boolean',
+      description:
+        '3.36: the head (icon, title, subtitle) becomes one toggle, a button inside the heading with `aria-expanded` and `aria-controls`, its hit area the whole head (at least 44 px); body and footer hide when closed. `[card-header-action]` stays its own control. Needs `title`; wins over `clickable`, `href` and `route`; ignored on `dashed`',
+      table: { defaultValue: { summary: 'false' } },
+    },
+    expanded: {
+      control: 'boolean',
+      description: '3.36: open state of a `collapsible` card, two-way (`[(expanded)]`, `expandedChange`). Closed: only the head shows',
+      table: { defaultValue: { summary: 'true' } },
     },
   },
 };
@@ -697,6 +709,48 @@ export const EqualFooterLinkCard: Story = {
             <lc-button variant="outline" size="lg" [fullWidth]="true">Stimmt</lc-button>
             <lc-button variant="outline" size="lg" [fullWidth]="true">Kein Vertrag</lc-button>
           </div>
+        </lc-card>
+      </div>`,
+  }),
+};
+
+/** The rules of the *Collapsible* story (request 056, regeln row 1). */
+const allocationRules = [
+  { term: 'Verwaltung', value: '38 %' },
+  { term: 'Vertrieb', value: '27 %' },
+  { term: 'Produktion', value: '35 %' },
+];
+
+/** 3.36 (request 056, regeln row 1): rule cards whose rules close on a phone. */
+export const Collapsible: Story = {
+  name: 'Collapsible',
+  decorators: [moduleMetadata({ imports: [ButtonComponent] })],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.36 (request 056, finance-intelligence regeln row 1): `collapsible` with `[(expanded)]`. The head (icon tile, title, subtitle) is one toggle: a button inside the title\'s heading (`aria-expanded`, `aria-controls` on the body, described by the subtitle) whose hit area is the whole head, at least 44 px high. Enter, Space or a tap open and close the body and the footer and emit `expandedChange`. The chevron at the end turns up while open (no motion with reduced motion). Closed, only the head shows: the body is `hidden`, the footer is not displayed. The `[card-header-action]` „Regel hinzufügen“ (third card) stays its own control beside the toggle. Tab: toggle, header action, then the body. The ring is drawn on the head. Default `expanded` is `true`; here the first card is open and the other two start closed, also in prerendered HTML. Long German titles hyphenate.',
+      },
+    },
+  },
+  render: () => ({
+    props: { rules: allocationRules, first: true, second: false, third: false },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px; max-width: 480px;">
+        <lc-card variant="outlined" title="Umlageschlüssel nach Kostenstellenverantwortung" subtitle="13 Regeln · Verteilung nach Verantwortung"
+                 icon="file-text" iconSize="sm" [headingLevel]="2" [collapsible]="true" [(expanded)]="first">
+          <lc-description-list [items]="rules" />
+        </lc-card>
+        <lc-card variant="outlined" title="Direkte Zuordnung" subtitle="4 Regeln"
+                 icon="file-text" iconSize="sm" [headingLevel]="2" [collapsible]="true" [(expanded)]="second">
+          <lc-description-list [items]="rules" />
+        </lc-card>
+        <lc-card variant="outlined" title="Verteilung nach Leistungsverrechnungsschlüssel" subtitle="7 Regeln · Verteilung nach Leistung"
+                 icon="file-text" iconSize="sm" [headingLevel]="2" [collapsible]="true" [(expanded)]="third">
+          <lc-button card-header-action variant="ghost" [iconOnly]="true" ariaLabel="Regel hinzufügen">
+            <lc-icon name="plus" size="sm" [decorative]="true" />
+          </lc-button>
+          <lc-description-list [items]="rules" />
         </lc-card>
       </div>`,
   }),

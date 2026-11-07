@@ -71,7 +71,15 @@ describe('DescriptionListComponent shared row width (3.26, request 041)', () => 
 
   it('AC-10/11: every other rule compiles exactly as in 3.25.2', () => {
     expect([count(LINK_RING), count(LINK_FORCED)]).toEqual([1, 1]);
-    const rest = css.replace(SHARE, '').replace(TERM, '').replace(LEADER, '').replace(LINK_RING, '').replace(LINK_FORCED, '');
+    // 3.36 (request 056) appended the badge and total rules at the end of the
+    // file; they are cut off whole first (description-list.badge-total.spec.ts
+    // pins them), so the pinned length and hash below stay those of 3.25.2.
+    const at = css.search(/\s*\nlc-badge\.lc-dl__badge \{/);
+    expect(at).toBeGreaterThan(css.indexOf(LINK_FORCED));
+    const appended = css.slice(at);
+    const selectors = [...appended.matchAll(/\n([^\s@}][^{\n]*) \{/g)].map((m) => m[1]);
+    expect(selectors.every((s) => /lc-dl__badge|lc-dl__row--total|lc-dl__sr-only/.test(s))).toBe(true);
+    const rest = css.slice(0, at).replace(SHARE, '').replace(TERM, '').replace(LEADER, '').replace(LINK_RING, '').replace(LINK_FORCED, '');
     expect(rest.length).toBe(3081);
     expect(createHash('sha1').update(rest).digest('hex')).toBe('10ed437796904c83d6889fdb044524cf8981feb3');
   });

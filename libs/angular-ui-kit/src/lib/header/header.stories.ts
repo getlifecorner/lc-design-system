@@ -19,7 +19,11 @@ const meta: Meta<HeaderComponent> = {
     profileClick: fn(),
   },
   argTypes: {
-    hamburgerClick: { action: 'hamburgerClick', description: 'Emitted when the hamburger menu is clicked' },
+    hamburgerClick: {
+      action: 'hamburgerClick',
+      description:
+        'Emitted when the hamburger menu is clicked. 3.36: carries the hamburger\'s native `<button>`, e.g. for `lc-sidenav [returnFocusTo]="$event"`; handlers without `$event` work as before',
+    },
     themeToggleClick: { action: 'themeToggleClick', description: 'Emitted when the theme toggle is clicked' },
     logoutClick: { action: 'logoutClick', description: 'Emitted when logout is clicked' },
     profileClick: { action: 'profileClick', description: 'Emitted when the profile item is clicked' },
@@ -99,6 +103,12 @@ const meta: Meta<HeaderComponent> = {
       description:
         '3.33 (app-shell row 1): where the context button sits up to 640 px. `inline`: in the end group, hidden up to 640 px (as before). `below`: up to 640 px a row of its own under the title, as wide as the header and at least 44 px high; title, `end` slot and account menu stay in the first row. From 641 px both render the button inline. No second row without `contextName`',
       table: { defaultValue: { summary: 'inline' } },
+    },
+    contextBadge: {
+      control: 'object',
+      description:
+        '3.36 (app-shell row 1): `{ label, variant? }`, the state of the context as an `lc-badge` (`sm`, rounded) inside the context button after `contextName`. Its label ends the button\'s accessible name unless `contextAriaLabel` holds it; the button may grow to 340 px, a long name ends with "…" and the badge stays whole',
+      table: { defaultValue: { summary: 'undefined' } },
     },
     theme: {
       control: 'select',
@@ -203,6 +213,9 @@ AppHeaderComponent - Global application header for the LifeCorner shell
 - The account menu is at most \`min(18rem, 100vw − 2rem)\` wide; name and email wrap.
 - 3.34: \`focusContext()\` moves the focus to the context button after the next render, e.g. after a
   choice in the sheet it opened; it does nothing while the button is not shown (see *Focus Context*).
+- 3.36: \`contextBadge\` shows the context's state as a badge inside the context button, part of its name (see
+  *Context Badge*); \`hamburgerClick\` emits the hamburger's \`<button>\` for \`lc-sidenav [returnFocusTo]\` (see
+  *Hamburger Focus Return*).
 
 **Labels** (English defaults, one input each): \`homeAriaLabel\`, \`hamburgerAriaLabel\`,
 \`userMenuAriaLabel\`, \`navAriaLabel\`, \`themeToDarkAriaLabel\`, \`themeToLightAriaLabel\`,
@@ -581,6 +594,104 @@ export const ContextBelow: Story = {
         <lc-header [sticky]="false" title="LifeCorner" titleTag="span" contextPlacement="below"
                    contextLabel="Tenant" contextName="Acme Corporation Europe · Shared Services Centre, Fiscal 2026"
                    userName="Sarah Connor" userEmail="sarah@example.com" (contextClick)="contextClick()" />
+      </div>`,
+  }),
+};
+
+/**
+ * 3.36 (request 056, finance-intelligence app-shell row 1): the state of the
+ * chosen snapshot as a badge inside the context button.
+ */
+export const ContextBadge: Story = {
+  name: 'Context Badge',
+  args: { contextClick: fn() },
+  argTypes: { contextClick: { action: 'contextClick', description: 'Emitted when the context button is clicked' } },
+  parameters: {
+    layout: 'fullscreen',
+    controls: { include: ['contextClick'] },
+    docs: {
+      description: {
+        story:
+          '3.36 (request 056, finance-intelligence app-shell row 1): `contextBadge` puts the state of the context into the context button, as an `lc-badge` (`sm`, rounded) after `contextName`. Its word ends the button\'s accessible name: „Monatsstand wählen, Monatsstand Oktober 2026 · Fassung 1, Freigegeben“, so the visible text is part of the name (WCAG 2.5.3). One button, one tab stop, at least 44 px; `contextClick` and `focusContext()` as before. With a badge the button may grow to 340 px; a long name ends with "…" (full text in its `title`) and the badge stays whole. First the requester\'s header (`contextPlacement="below"`, `success`), then the default bar (`inline`, shown from 641 px, `default`), then a long German name (`below`, `warning`).',
+      },
+    },
+  },
+  render: (args) => ({
+    props: {
+      ...args,
+      released: { label: 'Freigegeben', variant: 'success' },
+      replaced: { label: 'Ersetzt' },
+      draft: { label: 'Entwurf', variant: 'warning' },
+    },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 24px; padding-bottom: 24px; background: var(--color-background);">
+        <lc-header size="sm" variant="transparent" [sticky]="false" [showLogo]="false"
+                   title="Finance Intelligence" titleTag="span" contextPlacement="below"
+                   contextLabel="Monatsstand" contextName="Oktober 2026 · Fassung 1" contextAriaLabel="Monatsstand wählen"
+                   [contextBadge]="released"
+                   userMenuTrigger="avatar" userAvatarFallback="person" userMenuAriaLabel="Menü für Johanna Müller"
+                   profileLabel="Einstellungen" logoutLabel="Abmelden" (contextClick)="contextClick()" />
+        <lc-header [sticky]="false" title="Finance Intelligence" titleTag="span"
+                   contextLabel="Monatsstand" contextName="September 2026 · Fassung 1" contextAriaLabel="Monatsstand wählen"
+                   [contextBadge]="replaced"
+                   userName="Johanna Müller" userMenuAriaLabel="Menü für Johanna Müller"
+                   profileLabel="Einstellungen" logoutLabel="Abmelden" (contextClick)="contextClick()" />
+        <lc-header size="sm" variant="transparent" [sticky]="false" [showLogo]="false"
+                   title="Finance Intelligence" titleTag="span" contextPlacement="below"
+                   contextLabel="Monatsstand" contextName="Oktober 2026 · Fassung 2 · Kostenstellenrechnung Verwaltung" contextAriaLabel="Monatsstand wählen"
+                   [contextBadge]="draft"
+                   userMenuTrigger="avatar" userAvatarFallback="person" userMenuAriaLabel="Menü für Johanna Müller"
+                   profileLabel="Einstellungen" logoutLabel="Abmelden" (contextClick)="contextClick()" />
+      </div>`,
+  }),
+};
+
+/**
+ * 3.36 (request 056, 055-n3): `hamburgerClick` carries the hamburger's
+ * `<button>`, so the drawer hands the focus back to it.
+ */
+export const HamburgerFocusReturn: Story = {
+  name: 'Hamburger Focus Return',
+  parameters: {
+    layout: 'fullscreen',
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.36 (request 056, 055-n3): `hamburgerClick` emits the hamburger\'s native `<button>`, the element that has the focus. The page passes it to `lc-sidenav` as `returnFocusTo`: `(hamburgerClick)="navTrigger = $event; navOpen = true"` and `[returnFocusTo]="navTrigger"`. After „Navigation schließen“, Escape or the backdrop the focus is on the hamburger again, also in WebKit, where a tap doesn\'t focus a button. Handlers without `$event` work as before.',
+      },
+      source: {
+        code: `<lc-header title="Finance Intelligence" [showHamburger]="true" hamburgerAriaLabel="Navigation öffnen"
+           [sidenavOpen]="navOpen" sidenavId="app-nav"
+           (hamburgerClick)="navTrigger = $event; navOpen = true" />
+<lc-sidenav id="app-nav" mode="drawer" [isOpen]="navOpen" [items]="items"
+            closeAriaLabel="Navigation schließen"
+            [returnFocusTo]="navTrigger" (closed)="navOpen = false" />`,
+        language: 'html',
+      },
+      story: { inline: false, height: '480px' },
+    },
+  },
+  decorators: [moduleMetadata({ imports: [SidenavComponent] })],
+  render: () => ({
+    props: {
+      navOpen: false,
+      navTrigger: null,
+      items: [
+        { id: 'cockpit', icon: 'chart-bar', label: 'Cockpit', route: '/cockpit', displayOrder: 1 },
+        { id: 'month', icon: 'calendar', label: 'Monatsstand', route: '/monatsstand', displayOrder: 2 },
+        { id: 'sources', icon: 'folder', label: 'Quellen', route: '/quellen', displayOrder: 3 },
+      ],
+    },
+    template: `
+      <div lang="de" style="min-height: 100vh; background: var(--color-background);">
+        <lc-header [sticky]="false" title="Finance Intelligence" titleTag="span" [showUserMenu]="false"
+                   [showHamburger]="true" hamburgerAriaLabel="Navigation öffnen"
+                   [sidenavOpen]="navOpen" sidenavId="story-drawer-nav"
+                   (hamburgerClick)="navTrigger = $event; navOpen = true" />
+        <lc-sidenav id="story-drawer-nav" mode="drawer" [isOpen]="navOpen" [items]="items" activeRoute="/monatsstand"
+                    ariaLabel="Hauptnavigation" closeAriaLabel="Navigation schließen"
+                    [returnFocusTo]="navTrigger" (closed)="navOpen = false" />
       </div>`,
   }),
 };

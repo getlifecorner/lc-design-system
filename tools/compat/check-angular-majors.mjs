@@ -286,6 +286,36 @@ const EXPECT_IN_HTML = [
   // 3.35 (request 055, 054-n1): an inline button action takes its own row from
   // 16rem to 30rem by a container query in the page CSS, so before JS too
   ['alert inline button band in the page CSS before JS (054-n1)', /@container\s+lc-alert\s*\(\s*16rem\s*<=\s*width\s*<\s*30rem\s*\)\s*\{\s*\.lc-alert:not\(\.lc-alert--actions-stacked\)\s+\.lc-alert__container:has\(\s*>\s*\.lc-alert__action:not\(:empty\)\s*\):not\(:has\(\s*>\s*\.lc-alert__action\s*>\s*a:where\(:not\(\.btn\)\)\s*\)\s*\)\s*\{\s*flex-wrap:\s*wrap/],
+  // 3.36 (request 056, probe-336.ts): the new parts in the server HTML, before JS
+  ['state strip: a named grid with ten cells (AC-5)', (html) => {
+    const strip = html.match(/<lc-state-strip[^>]*\sid="compat-strip-336"[^]*?<\/lc-state-strip>/)?.[0] ?? '';
+    return /<div(?=[^>]*\srole="grid")(?=[^>]*\saria-label="Letzte 10 Ladeläufe, 9 geladen, 1 fehlgeschlagen")[^>]*>/.test(strip)
+      && (strip.match(/\srole="gridcell"/g) ?? []).length === 10
+      && (strip.match(/\stabindex="0"/g) ?? []).length === 1
+      && /lc-state-strip__mark--error/.test(strip);
+  }],
+  ['collapsible card: closed by its input, body hidden (AC-24)', (html) => {
+    const card = html.match(/<lc-card[^>]*\sid="compat-card-336"[^]*?<\/lc-card>/)?.[0] ?? '';
+    const body = card.match(/<div(?=[^>]*\sclass="card__body")[^>]*>/)?.[0] ?? '';
+    const bodyId = body.match(/\sid="([^"]+)"/)?.[1];
+    return !!bodyId && emptyAttr('hidden').test(body)
+      && new RegExp(`<h3[^>]*class="card__title"[^>]*>(?:<!--[^]*?-->|\\s)*<button(?=[^>]*\\sclass="card__toggle")(?=[^>]*\\saria-expanded="false")(?=[^>]*\\saria-controls="${bodyId}")[^>]*>Direkte Zuordnung</button>`).test(card);
+  }],
+  ['band: parts as % of the width, no axes (AC-15)', (html) => {
+    const band = html.match(/<lc-stacked-bar-chart[^>]*\sid="compat-band-336"[^]*?<\/lc-stacked-bar-chart>/)?.[0] ?? '';
+    return /<rect(?=[^>]*\sx="0%")(?=[^>]*\swidth="41\.2%")(?=[^>]*\sheight="100%")[^>]*>/.test(band)
+      && /<rect(?=[^>]*\sx="93\.2%")(?=[^>]*\swidth="6\.8%")[^>]*>/.test(band)
+      && !/lc-stacked-bar-chart__axis/.test(band) && !/viewBox=/.test(band);
+  }],
+  ['table footer row in tfoot, first cell the row header (AC-17)', /<lc-table[^>]*\sid="compat-table-336"[^]*?<\/tbody>(?:<!--[^]*?-->|\s)*<tfoot[^>]*\sclass="lc-table__footer"[^>]*>(?:<!--[^]*?-->|\s)*<tr[^>]*>(?:<!--[^]*?-->|\s)*<th(?=[^>]*\sscope="row")[^>]*>(?:<!--[^]*?-->|\s)*Gesamtkosten Ist/],
+  ['header context badge inside the button, in its name (AC-9)', /<lc-header[^>]*\sid="compat-header-336"[^]*?<button(?=[^>]*\sclass="lc-header__context-info lc-header__context-info--badge")(?=[^>]*\saria-label="Monatsstand wählen, Monatsstand Oktober 2026 · Fassung 1, Freigegeben")[^>]*>[^]*?<lc-badge[^>]*\sclass="lc-header__context-badge"[^>]*>[^]*?Freigegeben[^]*?<\/button>/],
+  ['hero title as h2, inverse-outline link in it (AC-13, AC-27)', /<lc-hero[^>]*\sid="compat-hero-336"[^]*?<h2[^>]*\sclass="hero__title"[^>]*>522\.530,00 €<\/h2>[^]*?<a(?=[^>]*\sid="compat-inverse-outline-336")(?=[^>]*\sclass="btn btn-inverse-outline btn-lg")[^>]*>/],
+  ['description list: badge value and total with its hidden label (AC-7, AC-11)', (html) => {
+    const dl = html.match(/<lc-description-list[^>]*\sid="compat-dl-336"[^]*?<\/lc-description-list>/)?.[0] ?? '';
+    return /<lc-badge[^>]*\sclass="lc-dl__badge"[^>]*>/.test(dl)
+      && /<div(?=[^>]*\sclass="lc-dl__row lc-dl__row--total")[^>]*>(?:<!--[^]*?-->|\s)*<dt[^>]*>(?:<!--[^]*?-->|\s)*<span[^>]*\sclass="lc-dl__sr-only"[^>]*>Summe, <\/span>(?:<!--[^]*?-->|\s)*Gesamtkosten Ist<\/dt>/.test(dl);
+  }],
+  ['list chevron on the clickable row, decorative (AC-8)', /<lc-list[^>]*\sid="compat-list-336"[^]*?<lc-icon(?=[^>]*\sclass="lc-list__chevron")(?=[^>]*\sname="chevron-right")[^>]*>/],
   // 3.13 (request 017): the inverse link in the hero band and its rule before JS
   // (G-WL1, probe-313.ts); lc-input's error state is `input-invalid` (G-WL3, probe-312.ts)
   ['inverse link in the hero band, class before JS (G-WL1)', /<lc-hero(?=[^>]*\sid="compat-band")[^>]*>[^]*?<a(?=[^>]*\sid="compat-inverse")(?=[^>]*\shref="#warteliste")(?=[^>]*\sclass="btn btn-inverse btn-lg")[^>]*>(?:<!--[^]*?-->|\s)*Trag dich jetzt in die Warteliste ein/],

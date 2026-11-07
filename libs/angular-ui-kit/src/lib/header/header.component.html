@@ -118,6 +118,7 @@
         #contextButton
         type="button"
         class="lc-header__context-info"
+        [class.lc-header__context-info--badge]="!!contextBadge()"
         [attr.aria-label]="contextButtonAriaLabel()"
         (click)="contextClick.emit()"
       >
@@ -127,7 +128,15 @@
         @if (contextLabel()) {
           <span class="lc-header__context-label">{{ contextLabel() }}</span>&ngsp;
         }
-        <span class="lc-header__context-name" [attr.title]="contextName()">{{ contextName() }}</span>
+        @if (contextBadge(); as badge) {
+          <!-- 3.36: name and state badge on one row; the name keeps its ellipsis. -->
+          <span class="lc-header__context-row">
+            <span class="lc-header__context-name" [attr.title]="contextName()">{{ contextName() }}</span>&ngsp;
+            <lc-badge class="lc-header__context-badge" size="sm" [rounded]="true" [variant]="badge.variant ?? 'default'">{{ badge.label }}</lc-badge>
+          </span>
+        } @else {
+          <span class="lc-header__context-name" [attr.title]="contextName()">{{ contextName() }}</span>
+        }
       </button>
     }
 

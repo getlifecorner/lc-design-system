@@ -202,6 +202,9 @@ export * from '@lifecorner/angular-ui-kit/badge';
 // Status Dot Component
 export * from '@lifecorner/angular-ui-kit/status-dot';
 
+// State Strip Component (the states of the last runs, 3.36)
+export * from '@lifecorner/angular-ui-kit/state-strip';
+
 // ToggleGroup Component
 export * from '@lifecorner/angular-ui-kit/toggle-group';
 

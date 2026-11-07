@@ -137,6 +137,11 @@
     <span class="lc-combobox__helper" [id]="inputId + '-helper'">{{ helperText() }}</span>
   }
   @if (error()) {
-    <span class="lc-combobox__error" [id]="inputId + '-error'" role="alert">{{ error() }}</span>
+    @if (announceError()) {
+      <span class="lc-combobox__error" [id]="inputId + '-error'" role="alert">{{ error() }}</span>
+    } @else {
+      <!-- 3.36 (announceError=false): read with the field through aria-describedby, not announced. -->
+      <span class="lc-combobox__error" [id]="inputId + '-error'">{{ error() }}</span>
+    }
   }
 </div>
