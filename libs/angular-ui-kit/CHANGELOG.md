@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.36.0] - 2026-11-07
+
+Finance Intelligence's model pages without workarounds: a state strip for load runs, badges and a sum row in fact lists, chevrons on list rows, the snapshot state in the header, a quieter action and a focusable title on the hero stage, a distribution band, a table footer row with row-specific action names, and cards that close. No API breaks.
+
+### Added
+
+- **`lc-state-strip`** (new entry `@lifecorner/angular-ui-kit/state-strip`; quellen-2026-11-06 row 1): the states of the last runs, one segment per run, oldest first (`segments: { state: 'success' | 'warning' | 'error' | 'neutral'; label }[]`). The state is a shape (upper block, lower block, centred block, flat dash) in the state inks, so it reads without hue and in forced colours; every ink keeps 3:1 on every page and surface (light ≥ 4.39, dark ≥ 5.56). An APG grid with one Tab stop: arrows, Home and End move between the runs, each named „label, state“; the strip is named `ariaLabel` plus the counts („Letzte 10 Ladeläufe, 9 geladen, 1 fehlgeschlagen“, words from `stateLabels`, English defaults). Ten runs are 240 × 32 px; 30 or 60 runs share a 328 px column without overflow; without segments nothing renders. Prerendered. Hooks `--lc-state-strip-height` (2rem), `--lc-state-strip-segment-max-width` (1.5rem).
+- **`lc-description-list` `badge`, `badgeVariant`** (quellen row 2): an item's value as an `lc-badge` (rounded, `sm`; `xs` in `size="sm"` lists), still one `dt`/`dd` pair. A value equal to the badge (or empty) is not shown; another value stays as text before it. Badge rows are 38.5 px (md).
+- **`lc-description-list` `total`, `totalAriaLabel`** (app-shell-2026-11-07 row 2): the sum item, with a 1 px rule above and a 3 px double rule below (`--color-field-border`, 4.39:1 light, 5.56:1 dark), semibold, tabular figures; `totalAriaLabel="Summe"` is read before its term.
+- **`lc-list` `showChevron`** (quellen row 3): a decorative `chevron-right` (20 px) ends every `clickable` or `href` row; row height, target, focus ring, badge and `actionClick` unchanged.
+- **`lc-header` `contextBadge`** (app-shell row 1): `{ label, variant? }` as an `lc-badge` inside the context button after the name; its word ends the button's name („Monatsstand wählen, Monatsstand Oktober 2026 · Fassung 1, Freigegeben“). The button stays 49.61 px high and may grow to 340 px; a long name ends with „…“.
+- **`lc-hero` `headingLevel`** (cockpit-2026-11-07 row 1): the title as `h1`–`h6`, the same look at every level, size and breakpoint (measured on all nine bands). Use 2 under an `lc-page-header`.
+- **`lc-hero` `focusTitle()`** (monatsstand-2026-11-07 row 1): focuses the title (`tabindex="-1"`) after an action replaced the stage; with a `label` it is read „label title“. Two-tone ring (white over `#111827`, ≥ 4.23:1 on every band).
+- **`lc-stacked-bar-chart` `variant="band"`** (cockpit row 2): one horizontal bar edge to edge (0 px gaps at 360 and 928 px), `height` thick, scaled 0 … sum, parts split by a 2 px surface gap (`--lc-stacked-bar-chart-band-gap`, `-gap-color`); exact in prerendered HTML. One category only.
+- **`lc-table` `footerRow`** (services-2026-11-07 row 1): one `<tfoot>` row below all data rows, with the columns, formatters and `lcTableCell` templates (`footer: true`); never sorted, filtered, paged, selected or counted; first cell is the row header; ledger rules as the list total.
+- **`TableAction.ariaLabel`** (services row 2): a string or `(row, rowIndex) => string`, so each row's button names its object („Herkunft von Demo Netz“) while the visible label stays.
+- **`lc-card` `collapsible`, `[(expanded)]`** (regeln-2026-11-07 row 1): the head becomes one toggle (a button in the heading, `aria-expanded`, `aria-controls`, at least 44 px, the whole head clickable); body and footer close; `[card-header-action]` stays its own control; a chevron shows the state. Open by default; `[expanded]="false"` is closed in prerendered HTML too.
+- **`lc-button` / `a[lcButton]` `variant="inverse-outline"`** (monatsstand row 2): the quieter action beside `inverse` on the hero bands: text ≥ 4.66:1, border and ring ≥ 3.56:1 on all nine bands; same heights (48.5 / 42 / 35.5 px).
+- **`lc-combobox` `announceError`** (055-n4): `false` drops `role="alert"` (error stays visible and in `aria-describedby`), for a focus moved to the field after a 422 under an error summary.
+
+### Changed
+
+- **`inverse` focus ring**: a 2 px `#111827` band inside the white ring; the white ring alone was 2.01:1 on the warning band (now ≥ 3.56). At rest unchanged.
+- **`lc-header` `hamburgerClick`** (055-n3) emits the hamburger's `<button>`, e.g. `(hamburgerClick)="trigger = $event"` with `lc-sidenav [returnFocusTo]="trigger"`.
+
+### Compatibility
+
+- No API breaks: optional inputs, a method, a variant and a model; defaults render as 3.35.0 (DOM identical apart from Angular comment anchors). `hamburgerClick` changes from `output<void>` to `output<HTMLElement>`: template handlers with or without `$event` compile unchanged under strictTemplates; only TypeScript code that types the subscriber's parameter as `void` needs updating.
+
+### Known
+
+- **`lc-state-strip` with 30 or more runs:** cells are 10.92 px (30 runs) or 5.45 px (60 runs) wide, below the 24 px pointer target of WCAG 2.5.8; hover and click show the run's caption. Keyboard and screen reader access is unaffected (one Tab stop, arrows). Up to 10 runs (24 × 32 px) pass. Planned: document it in the `segments` JSDoc and decide on a different pointer path for dense strips.
+- **`lc-list` with `clickable` and a built-in `action`:** the action button sits inside the `role="button"` row (axe `nested-interactive`, WCAG 4.1.2); unchanged since 3.3, now visible in the *Chevron Rows* story. Planned fix.
+- **Chart palette:** `--color-success-default` (2.47–2.72:1) and `--color-warning-default` (2.05–2.26:1) are below 3:1 as chart parts on light pages in 13 charts. Planned fix; the parts of the new `band` variant are asserted at ≥ 3:1 in `theme-contrast.spec.ts`.
+
 ## [3.35.0] - 2026-11-06
 
 Forms can put the focus into a textarea or combobox, the drawer and the sidenav drawer give the focus back to their trigger, and an alert with a button stays readable at 360 px (Finance Intelligence „Monat einfrieren“, „Freigeben“; backlog). No API breaks.

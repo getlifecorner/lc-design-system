@@ -1,6 +1,7 @@
 # Design 056: lc-state-strip, dl badge/total, list chevron, header contextBadge, hero headingLevel/focusTitle, band chart, table footerRow/action ariaLabel, card collapsible, inverse-outline, backlog
 
 - **Status:** ready
+- **Change note (review r1, 2026-11-07):** the build exposed four inconsistencies in this design, now corrected: D-11 (fallbacks in `render`, no meta args), §3 card head (`cursor: pointer`), §4 strip numbers (they now follow §3's `min(3px, 25%)`), and §6 (tree-mode footer `rowheader`; strip cells *are* pointer targets, review S-1).
 - **Spec:** [spec.md](spec.md), AC-1 … AC-34. Kit 3.35.0 (main 6dd4cdc); release 3.36.0 (minor).
 - **Prototypes (Chromium, story-shots `--measure`, logs in `tmp/story-shots/056/`):** `proto-math` (all contrast below), `proto-dl`, `proto-header2`, `proto-card2`, `proto-strip`, `proto-btn`.
 
@@ -29,7 +30,7 @@
 - **D-8 (AC-21–23):** `collapsible` needs the built-in `title` (else ignored, dev warning) and wins over `clickable`, `href`, `route` (ignored, dev warning); ignored on `dashed`. No `role="region"` on the body (five cards on a page = landmark noise).
 - **D-9 (AC-27):** **`inverse-outline`, not `inverse-ghost`.** A ghost (white text, no fill) measures 2.26:1 on the warning band (2.72 success, 3.04 orange, 3.12 secondary) and has no boundary. The outline form carries a `#111827` scrim at 50 % (text ≥ 4.66 on every band under the body's .85 opacity) and a two-tone keyline (1 px white border + 1 px `#111827` shadow, ≥ 3.56). The **existing `inverse` ring gets the same dark inner band**: its white-only ring measures 2.01 (warning), 2.39 (success), 2.61 (orange), 2.70 (secondary) at .85, a measured AA failure on the same element pair (AC-28); now ≥ 3.56. At rest `inverse` is unchanged.
 - **D-10 (AC-31):** `hamburgerClick` emits the hamburger's native `<button>` (not the `<lc-button>` host), the element that gets focus.
-- **D-11 (AC-29):** *Keyboard Focus* binds the five args; *Touch Targets (DE)* and *Long Tags* bind them too and `controls.exclude` `label`, `placeholder`, `removeTagAriaLabel` (fixed German texts). The meta `args` must hold the five component defaults, so the 3 stories stay hash-identical (12 shots).
+- **D-11 (AC-29):** *Keyboard Focus* binds the five args; *Touch Targets (DE)* and *Long Tags* bind them too and `controls.exclude` `label`, `placeholder`, `removeTagAriaLabel` (fixed German texts). ~~The meta `args` must hold the five component defaults~~ (r1: each `render` falls back to the component defaults, since meta args would bind the 6 other stories and `maxTags: Infinity` doesn't survive the args round trip), so the 3 stories stay hash-identical (12 shots).
 
 **Follow-up found (release.md → Open items, queue):** F-1 the default chart palette (`CHART_PALETTE`, 13 charts) has `--color-success-default` 2.47–2.72 and `--color-warning-default` 2.05–2.26 against the light pages and surfaces (1.4.11). The band story uses passing tokens (§5).
 
@@ -122,14 +123,14 @@ TABLE (800 / 1280):                                                      legend 
 | hero title ring | `outline: 2px solid currentColor; outline-offset: 2px; box-shadow: 0 0 0 2px #111827` (`$color-neutral-900`); light variant shadow `#fff`; r sm | — | palette (bands are theme-independent) |
 | band | `<svg width=100% height=…>`, `rect x/width` in %, y 0 h 100%; gap = `<line>` at each inner boundary, `stroke-width: var(--…-band-gap, 2px)`; svg `overflow: hidden` | — | parts: `legends[].color` / palette |
 | tfoot cells | padding as tbody td per size; `text-align: start`; 600; tabular; `:where()` font size/colour as tbody | 14 (sm 12, lg 16) | rules `--color-field-border`; bordered: column lines `--color-divider` |
-| card head (collapsible) | `position: relative; isolation: isolate; min-height: 44px; align-items: center`; toggle reset (font/colour inherit, no padding/border/bg, `text-align: start`) + `::after { inset: 0; z-index: 1 }`; header action `position: relative; z-index: 2`; chevron `lc-icon chevron-down sm` last, rotates −180° when open (200 ms) | title as today | chevron `--color-text-secondary`, hover `--color-text-primary` |
+| card head (collapsible) | `position: relative; isolation: isolate; min-height: 44px; align-items: center; cursor: pointer` (r1); toggle reset (font/colour inherit, no padding/border/bg, `text-align: start`) + `::after { inset: 0; z-index: 1 }`; header action `position: relative; z-index: 2`; chevron `lc-icon chevron-down sm` last, rotates −180° when open (200 ms) | title as today | chevron `--color-text-secondary`, hover `--color-text-primary` |
 | inverse-outline | `.btn` box (1 px border) → same heights as `inverse` (lg 48.5, icon-only 45.59, measured) | as `.btn` | bg `rgba($color-neutral-900, .5)`, border + ink `--color-neutral-white`, `box-shadow: 0 0 0 1px $color-neutral-900` |
 
 ## 4. States
 
 | Component | hover | focus-visible | active | disabled / loading | empty / error / overflow |
 |---|---|---|---|---|---|
-| state strip | cell bg surface-hover, caption shows its name | cell ring 2 px primary-500 offset −2, caption shows; Esc hides it | — | — | empty: nothing; > 10: cells shrink (30 → 9.8 px, mark 3.8), never overflow; long label: caption wraps |
+| state strip | cell bg surface-hover, caption shows its name | cell ring 2 px primary-500 offset −2, caption shows; Esc hides it | — | — | empty: nothing; > 10: cells shrink (r1, 328 px: 30 → 10.92 px, mark 5.48; 60 → 5.45 / 2.73 = cell − 2 × `min(3px, 25%)`), never overflow; long label: caption wraps |
 | dl badge / total | clickable row as today | as today | — | — | long value + badge: value wraps (`anywhere`), badge stays one line |
 | list chevron | row hover as today | inset ring as today (chevron inside) | — | disabled row: chevron dims with the row (.5) | DE long label wraps beside it |
 | header badge | button hover as today | ring as today (2 px offset 2) | — | — | long name: ellipsis, badge stays (360 below: 252 of 431 px, no overflow) |
@@ -167,12 +168,12 @@ No new token. Hero values use SCSS palette values as `inverse` does (bands don't
 | header | badge inside the button; name = `nameWithText(contextAriaLabel, label + name)` + `, <badge>` unless already contained; `&ngsp;` between name and badge | unchanged (one stop, 44 px, `focusContext()`) | lc-badge border |
 | hero | `h1`…`h6`; label read first via D-5 | `focusTitle()`: tabindex −1, not in Tab order | `outline-color: Highlight; box-shadow: none` |
 | band | svg `role="img"` + `<title>` as today | none | parts keep author colours (SVG paint isn't forced); gaps `stroke: Canvas` |
-| table | `tfoot` rowgroup, `th scope="row"`, in tree mode `role="row"` + gridcells; not in the roving model | no stops of its own | borders forced |
+| table | `tfoot` rowgroup, `th scope="row"`, in tree mode `role="row"`, the `th` `rowheader` and the `td`s gridcells (r1, as §9 and AC-19); not in the roving model | no stops of its own | borders forced |
 | table action | `[ariaLabel]` = fn result | unchanged | — |
 | card | heading keeps level; `button aria-expanded aria-controls=<body id> aria-describedby=<subtitle id>`; closed body `hidden`, footer `display: none` | Tab: toggle → header action → body; Enter/Space native | head ring `outline-color: Highlight` (ancestor ring, 037 r1); chevron `transition: none` under reduced motion |
 | inverse-outline | as `inverse` | ring above; focused loading opacity 1 | border `ButtonText` / `LinkText`, ring `Highlight` |
 | combobox | `role="alert"` only with `announceError` | unchanged | — |
-| targets | strip cells and the hero title are no pointer controls; card head ≥ 44 (58.58 with icon md + subtitle); all others unchanged | | |
+| targets | the hero title is no pointer control. ~~Strip cells are none~~ (r1: hover and click show the caption, so they are pointer targets: 24 × 32 up to 13 runs per 328 px, narrower beyond, review S-1); card head ≥ 44 (58.58 with icon md + subtitle); all others unchanged | | |
 
 ## 7. Texts
 
