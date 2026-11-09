@@ -142,21 +142,23 @@ describe('lc-button styles', () => {
     const hoverFill = rule('.btn-inverse:hover:not(:disabled, .btn-loading)').match(/background-color:\s*(#[0-9a-f]{6})/i)?.[1] ?? '';
     const activeFill = rule('.btn-inverse:active:not(:disabled, .btn-loading)').match(/background-color:\s*(#[0-9a-f]{6})/i)?.[1] ?? '';
     const hero = compile(resolve(__dirname, '../hero/hero.component.scss')).css;
-    // The default body (the light variant's own `.hero--light .hero__body` is .75).
-    const bodyOpacity = Number(hero.match(/\n\.hero__body \{[^}]*?opacity:\s*([\d.]+)/)?.[1]);
+    // The body opacity of 3.36 (`.hero__body { opacity: .85 }`). Since 3.37
+    // (request 057, D-5) the body softens only its text colour and a button in
+    // it is at full opacity, so the values below are a lower bound.
+    const bodyOpacity = 0.85;
     function band(name: string): [Rgb, Rgb] {
       const m = hero.match(new RegExp(`\\.hero--${name} \\{\\s*background: linear-gradient\\(135deg, (#[0-9a-f]{6}) 0%, (#[0-9a-f]{6}) 100%\\)`, 'i'));
       expect(m).not.toBeNull();
       return [parse(m?.[1] ?? ''), parse(m?.[2] ?? '')];
     }
 
-    /** Text, fill and ring ratios of one state at one band colour, under the body's opacity. */
-    function at(fill: string, bandRgb: Rgb) {
-      const f = mix(parse(fill), bandRgb, bodyOpacity);
+    /** Text, fill and ring ratios of one state at one band colour, under an opacity (the 3.36 body's by default). */
+    function at(fill: string, bandRgb: Rgb, opacity = bodyOpacity) {
+      const f = mix(parse(fill), bandRgb, opacity);
       return {
-        text: ratio(mix(parse(ink), bandRgb, bodyOpacity), f),
+        text: ratio(mix(parse(ink), bandRgb, opacity), f),
         fill: ratio(f, bandRgb),
-        ring: ratio(mix(parse('#ffffff'), bandRgb, bodyOpacity), bandRgb),
+        ring: ratio(mix(parse('#ffffff'), bandRgb, opacity), bandRgb),
       };
     }
     /** The minimum of each ratio over the whole band, t = 0 … 1 in 0.01 steps. */
@@ -187,14 +189,22 @@ describe('lc-button styles', () => {
       expect(css.indexOf('\n.btn-inverse:focus-visible {')).toBeGreaterThan(css.indexOf('\n.btn:focus-visible {'));
     });
 
-    it('measures the design values on the teal band at its light end #208497 under the body opacity .85', () => {
-      expect(bodyOpacity).toBe(0.85);
+    it('measures the design values on the teal band at its light end #208497 under the 3.36 body opacity .85', () => {
+      // 3.37: the hero body no longer has an opacity (a button in it is opaque).
+      expect(hero).not.toMatch(/\n\.hero__body \{[^}]*?opacity/);
       const end = band('primary')[1];
       expect(end).toEqual(parse('#208497'));
       const states = ['#ffffff', hoverFill, activeFill].map((fill) => at(fill, end));
       expect(states.map((s) => r2(s.text))).toEqual([9.28, 8.69, 8.11]);
       expect(states.map((s) => r2(s.fill))).toEqual([3.62, 3.39, 3.16]);
       expect(r2(states[0].ring)).toBe(3.62);
+      // At full opacity (the hero since 3.37) every ratio is higher.
+      const opaque = ['#ffffff', hoverFill, activeFill].map((fill) => at(fill, end, 1));
+      opaque.forEach((s, i) => {
+        expect(s.fill).toBeGreaterThan(states[i].fill);
+        expect(s.ring).toBeGreaterThan(states[i].ring);
+        expect(s.text).toBeGreaterThan(states[i].text);
+      });
     });
 
     it('meets 4.5:1 text and 3:1 fill and ring over the whole teal band in every state', () => {

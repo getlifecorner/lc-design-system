@@ -91,6 +91,7 @@
     [cdkConnectedOverlayHasBackdrop]="true"
     [cdkConnectedOverlayBackdropClass]="'cdk-overlay-transparent-backdrop'"
     (backdropClick)="onClickOutside()"
+    (overlayKeydown)="onOverlayKeydown($event)"
     (detach)="close()"
   >
     <div

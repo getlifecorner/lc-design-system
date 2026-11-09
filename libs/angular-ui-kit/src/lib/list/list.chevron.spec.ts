@@ -83,8 +83,12 @@ describe('ListComponent — showChevron (3.36, request 056)', () => {
       expect(icon.hasAttribute('aria-label')).toBe(false);
     }
     const row = rows(el)[0];
-    expect(row.getAttribute('role')).toBe('button');
-    expect(row.getAttribute('tabindex')).toBe('0');
+    // 3.37 (request 057, F-2): a row with an action is no role="button" any
+    // more; its native button (a Tab stop, named by the row) is the control.
+    const rowButton = row.querySelector(':scope > .lc-list__item-button') as HTMLButtonElement;
+    expect(row.hasAttribute('role')).toBe(false);
+    expect(rowButton.getAttribute('aria-labelledby')).toBe(row.id);
+    expect(rowButton.tabIndex).toBe(0);
     expect(row.querySelector('.lc-list__action-area button')?.getAttribute('aria-label')).toBe('SAP-Ist laden');
   });
 

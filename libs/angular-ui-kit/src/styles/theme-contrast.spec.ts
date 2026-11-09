@@ -1,6 +1,7 @@
 import { compile } from 'sass';
 import { readFileSync, readdirSync } from 'fs';
 import { resolve } from 'path';
+import { CHART_PALETTE } from '../lib/internal/chart/chart-palette';
 
 /**
  * Contrast contract of the semantic color tokens, measured on the compiled
@@ -2030,5 +2031,48 @@ describe('Component pairings of 3.36 (request 056)', () => {
     const surface = color(tokens, '--color-surface');
     const parts = ['--color-primary-700', '--color-primary-500', '--color-info-default', '--color-secondary-700', '--color-neutral-500'];
     for (const part of parts) expect([part, ratio(over(color(tokens, part), surface), surface) >= 3]).toEqual([part, true]);
+  });
+});
+
+/**
+ * 3.37 (request 057, 056 F-1, design D-8, AC-20): the chart family's default
+ * palette is a graphical object (WCAG 1.4.11): every entry keeps 3:1 against
+ * the page and the surface in both themes. Entries 3 and 4 moved from the
+ * status fills to the status inks.
+ */
+describe('Component pairings of 3.37 (request 057)', () => {
+  const PALETTE: readonly string[] = CHART_PALETTE;
+  const floor = (n: number) => Math.floor(n * 100) / 100;
+  const pages = ['--color-background', '--color-surface'];
+
+  it('AC-20: the palette reads tokens only; entries 3 and 4 are the success and warning inks', () => {
+    expect(PALETTE).toHaveLength(8);
+    expect(PALETTE.every((entry) => /^var\(--color-[\w-]+\)$/.test(entry))).toBe(true);
+    expect(PALETTE[2]).toBe('var(--color-text-success)');
+    expect(PALETTE[3]).toBe('var(--color-text-warning)');
+  });
+
+  // [light, dark], the minimum over page and surface, floored; design 057 §5
+  // quotes them rounded (5.30 and 6.03 light).
+  const expected: Record<string, [number, number]> = {
+    '--color-text-success': [5.29, 8.4],
+    '--color-text-warning': [6.02, 7.65],
+  };
+
+  it.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('AC-20: %s palette: all 8 entries reach 3:1 on the page and the surface', (_palette, tokens, i) => {
+    const lowest = (name: string) =>
+      floor(Math.min(...pages.map((page) => ratio(over(color(tokens, name), color(tokens, page)), color(tokens, page)))));
+    for (const entry of PALETTE) {
+      const name = (entry.match(/^var\((--[\w-]+)\)$/) as RegExpMatchArray)[1];
+      expect([name, lowest(name) >= 3]).toEqual([name, true]);
+      if (expected[name]) expect([name, lowest(name)]).toEqual([name, expected[name][i]]);
+    }
+  });
+
+  it('why: the 3.36 entries 3 and 4 stay below 3:1 on the light page and surface', () => {
+    const light = palettes[0][1];
+    for (const old of ['--color-success-default', '--color-warning-default']) {
+      for (const page of pages) expect([old, page, ratio(color(light, old), color(light, page)) < 3]).toEqual([old, page, true]);
+    }
   });
 });

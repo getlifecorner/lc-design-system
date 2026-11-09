@@ -729,7 +729,7 @@ export const Collapsible: Story = {
     docs: {
       description: {
         story:
-          '3.36 (request 056, finance-intelligence regeln row 1): `collapsible` with `[(expanded)]`. The head (icon tile, title, subtitle) is one toggle: a button inside the title\'s heading (`aria-expanded`, `aria-controls` on the body, described by the subtitle) whose hit area is the whole head, at least 44 px high. Enter, Space or a tap open and close the body and the footer and emit `expandedChange`. The chevron at the end turns up while open (no motion with reduced motion). Closed, only the head shows: the body is `hidden`, the footer is not displayed. The `[card-header-action]` „Regel hinzufügen“ (third card) stays its own control beside the toggle. Tab: toggle, header action, then the body. The ring is drawn on the head. Default `expanded` is `true`; here the first card is open and the other two start closed, also in prerendered HTML. Long German titles hyphenate.',
+          '3.36 (request 056, finance-intelligence regeln row 1): `collapsible` with `[(expanded)]`. The head (icon tile, title, subtitle) is one toggle: a button inside the title\'s heading (`aria-expanded`, `aria-controls` on the body, described by the subtitle) whose hit area is the whole head, at least 44 px high. Enter, Space or a tap open and close the body and the footer and emit `expandedChange`. The chevron at the end turns up while open (no motion with reduced motion). Closed, only the head shows: the body is `hidden`, the footer is not displayed. The `[card-header-action]` „Regel hinzufügen“ (third card) stays its own control beside the toggle. Tab: toggle, header action, then the body. The ring is drawn on the head. Default `expanded` is `true`; here the first card is open and the other two start closed, also in prerendered HTML. Long German titles hyphenate. 3.37 (056-n2): the second card has a `[card-footer]` („Regeln bearbeiten“): hidden while it is closed, shown when it opens.',
       },
     },
   },
@@ -744,6 +744,7 @@ export const Collapsible: Story = {
         <lc-card variant="outlined" title="Direkte Zuordnung" subtitle="4 Regeln"
                  icon="file-text" iconSize="sm" [headingLevel]="2" [collapsible]="true" [(expanded)]="second">
           <lc-description-list [items]="rules" />
+          <div card-footer><lc-button variant="outline" size="sm">Regeln bearbeiten</lc-button></div>
         </lc-card>
         <lc-card variant="outlined" title="Verteilung nach Leistungsverrechnungsschlüssel" subtitle="7 Regeln · Verteilung nach Leistung"
                  icon="file-text" iconSize="sm" [headingLevel]="2" [collapsible]="true" [(expanded)]="third">

@@ -329,14 +329,19 @@ export class SelectComponent implements ControlValueAccessor {
   /**
    * Close dropdown. Idempotent: the overlay's `detach` re-enters here after
    * `isOpen` flips, and that second call must not emit `closed` again.
+   *
+   * `returnFocus` (3.37, request 057, services row 2): a single-select choice
+   * and `Escape` also hand the focus back to the trigger when it is on `<body>`
+   * (a tap on an option, which has no `tabindex`, moves it there). Without it
+   * (backdrop click, detach) only focus inside the panel returns, as before.
    */
-  close(): void {
+  close(returnFocus = false): void {
     if (!this.isOpen()) {
       return;
     }
     // If focus is inside the panel (search input) it would fall to <body> when the
     // overlay is torn down; hand it back to the trigger first.
-    this.restoreFocusFromPanel();
+    this.restoreFocusFromPanel(returnFocus);
     this.isOpen.set(false);
     this.searchQuery.set('');
     this.highlightedIndex.set(-1);
@@ -368,7 +373,7 @@ export class SelectComponent implements ControlValueAccessor {
       this.value.set(option.value);
       this.onChange(option.value);
       this.selectionChange.emit(option.value);
-      this.close();
+      this.close(true);
     }
   }
 
@@ -426,7 +431,7 @@ export class SelectComponent implements ControlValueAccessor {
 
       case 'Escape':
         if (this.isOpen()) {
-          this.close();
+          this.close(true);
           event.preventDefault();
           // Only this select should react; keep the key from reaching enclosing overlays.
           event.stopPropagation();
@@ -488,6 +493,18 @@ export class SelectComponent implements ControlValueAccessor {
     this.close();
   }
 
+  /**
+   * Keys that reach the open overlay while the focus is outside the field and
+   * the panel, e.g. on `<body>` after a tap (3.37, request 057): `Escape`
+   * closes and returns the focus. It runs before the overlay's own `Escape`
+   * detach, which then finds the select closed.
+   */
+  onOverlayKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+      this.close(true);
+    }
+  }
+
   // ControlValueAccessor implementation
   writeValue(value: SelectValue): void {
     this.value.set(value);
@@ -510,10 +527,13 @@ export class SelectComponent implements ControlValueAccessor {
     return target instanceof HTMLInputElement;
   }
 
-  private restoreFocusFromPanel(): void {
+  private restoreFocusFromPanel(fromBody = false): void {
     const panel = this.dropdownPanel()?.nativeElement;
     const active = this.document.activeElement;
-    if (panel && active && panel.contains(active)) {
+    const inPanel = !!panel && !!active && panel.contains(active);
+    // Never take the focus from an element a `selectionChange` handler focused.
+    const lost = !active || active === this.document.body || active === this.document.documentElement;
+    if (inPanel || (fromBody && lost)) {
       this.selectTrigger()?.nativeElement.focus();
     }
   }

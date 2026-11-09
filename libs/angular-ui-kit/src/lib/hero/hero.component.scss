@@ -48,6 +48,24 @@ $hero-colors: (
   width: 100%;
 }
 
+// 3.37 (request 057, cockpit row 1, design D-6): `fill` takes the height a
+// stretching grid or flex row gives the host. The band grows; `.hero__inner`
+// (flex 1) takes the extra height, so the content stays at the top and the
+// footer sits at the bottom. The media grid from 1024 px keeps its rows at
+// the top instead of centring them in the taller box.
+:host(.lc-hero--fill) {
+  display: flex;
+  flex-direction: column;
+
+  > .hero {
+    flex: 1 1 auto;
+  }
+
+  .hero__inner {
+    align-content: start;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Base
 // ---------------------------------------------------------------------------
@@ -199,8 +217,9 @@ $hero-colors: (
       opacity: 0.7;
     }
 
+    // 3.37 (D-5): the 75 % ink as a colour, not `opacity` (see `.hero__body`).
     .hero__body {
-      opacity: 0.75;
+      color: rgba(colors.$color-neutral-800, 0.75);
     }
 
     ::ng-deep [hero-footer] {
@@ -367,11 +386,17 @@ $hero-colors: (
   }
 }
 
+// 3.37 (request 057, monatsstand row 1, design D-5): the body text is softened
+// through its colour, 85 % white (the same composite as the `opacity: 0.85`
+// before), so components in the slot (badges, buttons, links with their own
+// colours) keep full opacity. Badges in a hero take the light palette in both
+// themes (`_theme-light.scss`): `sm` and `xs` measure 4.85:1 or more on every
+// band.
 .hero__body {
   margin-top: 1rem;
   font-size: 0.875rem;
   line-height: 1.6;
-  opacity: 0.85;
+  color: rgba(#fff, 0.85);
   max-width: 48rem;
 
   @media (min-width: 640px) {
@@ -392,7 +417,8 @@ $hero-colors: (
 // ---------------------------------------------------------------------------
 // Media slot (`[hero-media]`: a visual, an illustration)
 // ---------------------------------------------------------------------------
-// Outside `.hero__body`, so never under its 85 % opacity. Below 1024 px it
+// Outside `.hero__body` (before 3.37 that kept it out of the body's 85 %
+// opacity; the body now softens only its text colour). Below 1024 px it
 // follows the text with the footer's spacing and rule, at most
 // `--lc-hero-media-width` wide; from 1024 px it sits beside the text.
 .hero__media {

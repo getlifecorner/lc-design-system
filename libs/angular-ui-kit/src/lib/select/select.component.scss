@@ -72,6 +72,18 @@
     padding: var(--size-interactive-lg-padding);
     padding-right: var(--spacing-12);
     font-size: var(--size-interactive-lg-font-size);
+
+    // 3.37 (request 057, services row 1, design D-1): with a clear button the
+    // text ends where its 44 px tap area starts: 12 px + 20 px chevron + 4 px
+    // gap + the button's right margin + 24 px button + 10 px of the area
+    // (76 px at 100 %). Also with `--lc-select-clear-display: none`, because
+    // the button is still in the DOM.
+    &:has(.lc-select__clear) {
+      padding-right: calc(
+        var(--spacing-3) + 1.25rem + var(--spacing-1) + max(-0.125rem, (44px - 1.5rem) / 2 - 0.25rem) + 1.5rem +
+          max(0px, (44px - 1.5rem) / 2)
+      );
+    }
   }
 
   // Variant styles
@@ -156,7 +168,9 @@
 }
 
 // Public theming hooks (stable API — set them on the host or any ancestor):
-//   --lc-select-clear-display   e.g. `none` to hide the clear button
+//   --lc-select-clear-display   e.g. `none` to hide the clear button (at `lg`
+//                               with a value the text still ends 76 px before
+//                               the field's right edge, 3.37)
 //   --lc-select-clear-fg / --lc-select-clear-hover-fg / --lc-select-clear-hover-bg
 //
 // A 24 × 24 px button (WCAG 2.5.8 by size, request 043 F-22, design D-3,
@@ -195,6 +209,23 @@
   svg {
     width: 1rem;
     height: 1rem;
+  }
+}
+
+// 3.37 (request 057, services row 1, design D-1): at `lg` (a 44 px field) the
+// button takes taps on 44 × 44 px. It moves 8 px toward the text (right margin
+// 6 px instead of −2 px), so the unpainted `::before`, centred on the 24 px
+// box, ends exactly at the chevron's left edge and covers none of it. The box,
+// its hover fill and its focus ring stay 24 px (axe `target-size` reads the
+// box). 44 is CSS px, not the rem touch token: at 200 % text the box is 48 px
+// and both terms fall back to today's −2 px margin and no extra area.
+.lc-select--lg .lc-select__clear {
+  margin-right: max(-0.125rem, (44px - 1.5rem) / 2 - 0.25rem);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: min(0px, (100% - 44px) / 2);
   }
 }
 

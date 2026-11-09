@@ -46,7 +46,8 @@ const STATES: readonly StateStripState[] = ['success', 'warning', 'error', 'neut
  * state word. One Tab stop (the newest run first), Arrow Left/Right, Home and
  * End move between the runs, Escape hides the caption. Hovering or focusing a
  * segment shows its name below the strip (hidden from screen readers, which
- * read the cell).
+ * read the cell). 3.37: the pointer uses the whole strip (one layer over the
+ * row picks the run under it), so dense strips need no 24 px cells.
  *
  * Without segments it renders nothing. The segments are in the prerendered
  * HTML. CSS hooks: `--lc-state-strip-height` (default `2rem`) and
@@ -77,6 +78,11 @@ export class StateStripComponent {
   /**
    * The runs, in order, oldest first: one segment each. Empty renders nothing
    * (no box, no accessibility node).
+   *
+   * More runs than fit at 24 px (13 and more in 328 px) narrow the cells below
+   * 24 px; the pointer then uses the whole strip: pointing at it, or sliding a
+   * pressed finger along it, shows that run; the keyboard moves with the
+   * arrows (3.37).
    * @default []
    */
   readonly segments = input<readonly StateStripSegment[]>([]);
@@ -126,7 +132,7 @@ export class StateStripComponent {
   protected readonly current = linkedSignal(() => Math.max(0, this.cells().length - 1));
 
   /** The segment under the pointer, the one with focus, and whether Escape hid the caption. */
-  private readonly hovered = signal<number | null>(null);
+  protected readonly hovered = signal<number | null>(null);
   private readonly focused = signal<number | null>(null);
   private readonly dismissed = signal(false);
 
@@ -159,6 +165,41 @@ export class StateStripComponent {
 
   protected onPointerLeave(): void {
     this.hovered.set(null);
+  }
+
+  /** The run the scrub layer last picked; a move within it changes nothing (as entering a cell). */
+  private scrubbed: number | null = null;
+
+  /**
+   * The pointer over the strip (3.37, request 057, 056 S-1): the run whose
+   * cell spans the pointer's x shows in the caption; outside every cell none.
+   */
+  protected onScrubMove(event: PointerEvent): void {
+    const index = this.cellAt(event.clientX);
+    if (index === this.scrubbed) return;
+    this.scrubbed = index;
+    this.hovered.set(index);
+  }
+
+  /** Releasing the pointer (a click, a lifted finger) focuses the run under it. */
+  protected onScrubUp(event: PointerEvent): void {
+    const index = this.cellAt(event.clientX);
+    if (index !== null) this.cellEls()[index]?.nativeElement.focus();
+  }
+
+  protected onScrubLeave(): void {
+    this.scrubbed = null;
+    this.hovered.set(null);
+  }
+
+  /** The index of the cell whose box spans `x`, any writing direction. */
+  private cellAt(x: number): number | null {
+    const cells = this.cellEls();
+    for (let i = 0; i < cells.length; i++) {
+      const box = cells[i].nativeElement.getBoundingClientRect();
+      if (x >= box.left && x < box.right) return i;
+    }
+    return null;
   }
 
   /** Arrow Left/Right, Home, End move between the runs (no wrap); Escape hides the caption. */

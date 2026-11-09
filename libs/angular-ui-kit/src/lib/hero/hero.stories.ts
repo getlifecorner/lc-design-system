@@ -6,6 +6,9 @@ import { ButtonLinkComponent } from '../button/button-link.component';
 import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
 import { PageHeaderComponent } from '../page-header/page-header.component';
+import { BadgeComponent, type BadgeVariant } from '../badge/badge.component';
+import { CardComponent } from '../card/card.component';
+import { DescriptionListComponent } from '../description-list/description-list.component';
 
 const meta: Meta<HeroComponent> = {
   title: 'Layout/Hero',
@@ -22,10 +25,11 @@ Use it at the top of pages to introduce content, highlight key information, or s
 - 3 visual variants: default (dark gradient), slim (compact banner), light (soft pastel with dark text)
 - 3 size variants (sm, md, lg) with mobile-first responsive padding and typography
 - Content projection for body text and a footer slot for metadata / stats
-- A media slot (\`[hero-media]\`) for a visual: below the text on small screens, beside it from 1024 px, outside the body's 85 % opacity
+- A media slot (\`[hero-media]\`) for a visual: below the text on small screens, beside it from 1024 px
 - \`contentWidth="lg"\`: a full-bleed band whose content sits on the 1024 px page column, so its text lines up with the page below
 - Configurable border radius
 - 3.36: \`headingLevel\` (\`h1\`–\`h6\`, the same look) and \`focusTitle()\`, which moves focus to the title after an action replaced the stage (see *Heading Level*, *Focus Title*); \`inverse-outline\` buttons beside \`inverse\` ones (see *Stage Actions*)
+- 3.37: components in the default slot keep full opacity (the body softens only its text colour), and badges in a hero take the light palette in both themes (see *Badges in the Body*); \`fill\` takes the height of a stretching grid or flex row (see *Fill*)
         `,
       },
     },
@@ -86,6 +90,12 @@ Use it at the top of pages to introduce content, highlight key information, or s
       description:
         '3.36: element of the title (`h1`–`h6`); the look is the same at every level, size and breakpoint. Use 2 under an `lc-page-header`, which holds the page\'s `h1`',
       table: { defaultValue: { summary: '1' } },
+    },
+    fill: {
+      control: 'boolean',
+      description:
+        '3.37: fill the height the container gives the hero. In a grid or flex row that stretches its items the band ends at the row\'s bottom edge; the content stays at the top and `[hero-footer]` sits at the bottom. Without it the hero is as tall as its content',
+      table: { defaultValue: { summary: 'false' } },
     },
   },
 };
@@ -345,7 +355,7 @@ export const WithMedia: Story = {
     docs: {
       description: {
         story:
-          'A visual in the `[hero-media]` slot: below the text with the footer rule on small screens, beside it from 1024 px. It is not under the body\'s 85 % opacity. `--lc-hero-media-width` sets its column (default 23rem).',
+          'A visual in the `[hero-media]` slot: below the text with the footer rule on small screens, beside it from 1024 px. It is outside the body, at full opacity. `--lc-hero-media-width` sets its column (default 23rem).',
       },
     },
   },
@@ -591,7 +601,7 @@ export const StageActions: Story = {
     docs: {
       description: {
         story:
-          '3.36 (request 056, finance-intelligence monatsstand row 2): the main action „Freigeben“ (`inverse`) and the quieter „Herkunft“ (`inverse-outline`) side by side on all nine bands, `size="lg"`: both 48.5 px high in one row, the outline clearly the quieter one. Its text keeps at least 4.66:1 and its border at least 3.56:1 on every band under the body\'s 85 % opacity. Last, the pair at `sm`, `md` and `lg`: the same height at every size.',
+          '3.36 (request 056, finance-intelligence monatsstand row 2): the main action „Freigeben“ (`inverse`) and the quieter „Herkunft“ (`inverse-outline`) side by side on all nine bands, `size="lg"`: both 48.5 px high in one row, the outline clearly the quieter one. Its text keeps at least 4.66:1 and its border at least 3.56:1 on every band, measured under the body\'s 85 % opacity of 3.36 (since 3.37 the body dims only its text colour, so the buttons are at full opacity). Last, the pair at `sm`, `md` and `lg`: the same height at every size.',
       },
     },
   },
@@ -627,6 +637,116 @@ export const StageActions: Story = {
             </div>
           </div>
         </lc-hero>
+      </div>`,
+  }),
+};
+
+const BADGE_VARIANTS: [BadgeVariant, string][] = [
+  ['default', 'Neutral'],
+  ['primary', 'Primär'],
+  ['success', 'Erfolg'],
+  ['warning', 'Warnung'],
+  ['error', 'Fehler'],
+  ['info', 'Info'],
+];
+
+/** 3.37 (request 057, monatsstand row 1): badges in the default slot at full opacity, on every band. */
+export const BadgesInTheBody: Story = {
+  name: 'Badges in the Body',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.37 (request 057, finance-intelligence monatsstand row 1, WCAG 1.4.3): the seal of the month, `lc-badge` `size="sm"` `rounded` „Entwurf“ (`warning`) and „Freigegeben“ (`success`), in the default slot of all nine bands and one light variant, with the six variants at `xs` below. The body softens only its text, through its colour (85 % white, 75 % neutral-800 in the light variant), instead of `opacity: 0.85` on the whole slot, so the badges keep their opaque fills. In a hero they take the light palette in both themes (the bands don\'t follow the theme): at least default 6.87, primary 8.49, success 4.85, warning 5.52, error 10.98 and info 9.08:1 on every band (before: success 3.83–4.16, warning 4.23–4.67 on the dark bands; down to 1.00 in dark). The body text looks as before.',
+      },
+    },
+  },
+  render: () => ({
+    props: { colors: STAGE_COLORS, variants: BADGE_VARIANTS },
+    moduleMetadata: { imports: [BadgeComponent] },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px;">
+        @for (color of colors; track color) {
+          <lc-hero [label]="'Monatsstand · ' + color" title="522.530,00 €" [color]="color" size="sm" [headingLevel]="2">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+              <span>September 2026</span>
+              <lc-badge size="sm" variant="warning" [rounded]="true">Entwurf</lc-badge>
+              <lc-badge size="sm" variant="success" [rounded]="true">Freigegeben</lc-badge>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
+              @for (v of variants; track v[0]) {
+                <lc-badge size="xs" [variant]="v[0]">{{ v[1] }}</lc-badge>
+              }
+            </div>
+          </lc-hero>
+        }
+        <lc-hero label="Monatsstand · light" title="522.530,00 €" color="primary" variant="light" size="sm" [headingLevel]="2">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+            <span>September 2026</span>
+            <lc-badge size="sm" variant="warning" [rounded]="true">Entwurf</lc-badge>
+            <lc-badge size="sm" variant="success" [rounded]="true">Freigegeben</lc-badge>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
+            @for (v of variants; track v[0]) {
+              <lc-badge size="xs" [variant]="v[0]">{{ v[1] }}</lc-badge>
+            }
+          </div>
+        </lc-hero>
+      </div>`,
+  }),
+};
+
+const distributionItems = [
+  { term: 'Netz', value: '214.300,00 €' },
+  { term: 'Arbeitsplatz', value: '175.730,00 €' },
+  { term: 'Rechenzentrum', value: '98.410,00 €' },
+  { term: 'Anwendungen', value: '61.230,00 €' },
+  { term: 'Telefonie', value: '24.500,00 €' },
+  { term: 'Druck', value: '12.870,00 €' },
+  { term: 'Beratung', value: '9.400,00 €' },
+  { term: 'Ohne Service', value: '132.500,00 €' },
+];
+
+/** 3.37 (request 057, cockpit row 1): the hero fills its grid row beside a taller card. */
+export const Fill: Story = {
+  name: 'Fill',
+  args: {
+    fill: true,
+    size: 'sm',
+    color: 'primary',
+    variant: 'default',
+  },
+  parameters: {
+    controls: { include: ['fill', 'size', 'color', 'variant'] },
+    docs: {
+      description: {
+        story:
+          '3.37 (request 057, finance-intelligence cockpit row 1): `fill` makes the hero take the height its container gives it. In a two-column grid (stretching its items) beside a taller `lc-card` with eight rows, the band ends exactly at the row\'s bottom edge, at every size, colour and variant; the label, title and body stay at the top and the `[hero-footer]` sits at the bottom. Without `fill` (switch it off) the hero is as tall as its content, as before. Content taller than the row makes the row grow.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: { ...args, items: distributionItems },
+    moduleMetadata: { imports: [CardComponent, DescriptionListComponent] },
+    template: `
+      <div lang="de" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: stretch;">
+        <lc-hero label="Oktober 2026" title="Cockpit" [fill]="fill" [size]="size" [color]="color" [variant]="variant" [headingLevel]="2">
+          <p style="margin: 0;">Ist-Kosten aller Services</p>
+          <div hero-footer>
+            <div style="${footerStatStyle}">
+              <span style="${statLabelStyle}">IST</span>
+              <span style="${statValueStyle}">729.940 €</span>
+            </div>
+            <div style="${footerStatStyle}">
+              <span style="${statLabelStyle}">PLAN</span>
+              <span style="${statValueStyle}">810.000 €</span>
+            </div>
+          </div>
+        </lc-hero>
+        <lc-card title="Verteilung" variant="outlined" [headingLevel]="2">
+          <lc-description-list [items]="items" />
+        </lc-card>
       </div>`,
   }),
 };

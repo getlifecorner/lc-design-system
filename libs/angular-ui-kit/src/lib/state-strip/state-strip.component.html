@@ -8,6 +8,7 @@
           #cell
           class="lc-state-strip__cell"
           role="gridcell"
+          [class.lc-state-strip__cell--hovered]="i === hovered()"
           [attr.tabindex]="i === current() ? 0 : -1"
           (focus)="onFocus(i)"
           (blur)="onBlur()"
@@ -18,6 +19,16 @@
           <span class="lc-state-strip__name">{{ cell.name }}</span>
         </div>
       }
+      <!-- 3.37: the pointer path. One layer over the row picks the run under the pointer, so narrow cells need no 24 px target. -->
+      <div
+        class="lc-state-strip__scrub"
+        aria-hidden="true"
+        (pointerdown)="onScrubMove($event)"
+        (pointermove)="onScrubMove($event)"
+        (pointerup)="onScrubUp($event)"
+        (pointerleave)="onScrubLeave()"
+        (pointercancel)="onScrubLeave()"
+      ></div>
     </div>
   </div>
   @if (caption()) {

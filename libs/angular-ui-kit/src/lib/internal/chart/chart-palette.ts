@@ -10,12 +10,18 @@
  *
  * Charts fall back to this list when a series/segment brings no `color` of its
  * own; per-item colours always win.
+ *
+ * 3.37 (request 057, 056 F-1, WCAG 1.4.11): entries 3 and 4 are the status
+ * inks, not the status fills. `--color-success-default` measured 2.47–2.72:1
+ * and `--color-warning-default` 2.05–2.26:1 on light pages; the inks reach
+ * 5.30 and 6.03:1 there (8.40 and 7.65:1 dark). Every entry keeps 3:1 against
+ * `--color-background` and `--color-surface` in both themes.
  */
 export const CHART_PALETTE: readonly string[] = [
   'var(--color-primary-500)',
   'var(--color-secondary-500)',
-  'var(--color-success-default)',
-  'var(--color-warning-default)',
+  'var(--color-text-success)',
+  'var(--color-text-warning)',
   'var(--color-error-default)',
   'var(--color-info-default)',
   'var(--color-primary-700)',

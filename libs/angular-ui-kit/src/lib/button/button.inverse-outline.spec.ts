@@ -41,7 +41,13 @@ const WHITE: Rgb = [255, 255, 255];
 const BANDS = [...hero.matchAll(/\n\.hero--([\w-]+) \{\s*background: linear-gradient\(135deg, (#[0-9a-f]{6}) 0%, (#[0-9a-f]{6}) 100%\)/gi)].map(
   (m) => [m[1], hex(m[2]), hex(m[3])] as const,
 );
-const BODY = Number(hero.match(/\n\.hero__body \{[^}]*?opacity:\s*([\d.]+)/)?.[1]);
+/**
+ * The body opacity of 3.36 (`.hero__body { opacity: .85 }`). Since 3.37
+ * (request 057, D-5) the body softens only its text colour and a button in it
+ * is at full opacity, so the "under the body opacity" values are a lower bound
+ * and the full-opacity ones apply.
+ */
+const BODY = 0.85;
 
 /** min over every band and t = 0 … 1 of `f(band colour)`. */
 const worst = (f: (bg: Rgb) => number) =>
@@ -158,11 +164,11 @@ describe('lc-button inverse-outline (3.36, request 056)', () => {
     /** Two-tone: the better of the two colours against the band. */
     const twoTone = (dark: Rgb, o: number) => worst((bg) => Math.max(ratio(mix(WHITE, bg, o), bg), ratio(mix(dark, bg, o), bg)));
 
-    it('reads nine bands, the body opacity .85 and #111827', () => {
+    it('reads nine bands and #111827; the body has no opacity since 3.37', () => {
       expect(BANDS.map(([name]) => name)).toEqual([
         'primary', 'secondary', 'neutral', 'success', 'info', 'warning', 'accent-orange', 'accent-purple', 'accent-violet',
       ]);
-      expect(BODY).toBe(0.85);
+      expect(hero).not.toMatch(/\n\.hero__body \{[^}]*?opacity/);
       expect(scrim).toEqual(hex('#111827'));
       expect(keyline).toEqual(scrim);
       expect(band).toEqual(scrim);

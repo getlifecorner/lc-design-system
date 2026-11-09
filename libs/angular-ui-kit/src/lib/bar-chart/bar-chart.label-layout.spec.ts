@@ -32,8 +32,14 @@ describe('BarChartComponent labelLayout, valueText and the item formatter (3.21,
     (fixture.componentInstance as unknown as { _containerWidth: { set(n: number): void } })._containerWidth.set(width);
     fixture.detectChanges();
   };
+  // 3.37 (request 057, F-1): palette entries 3 and 4 moved from the status
+  // fills to the status inks; mapped back here, so the pins below stay the
+  // 3.20.0 markup byte for byte apart from that one documented swap.
   const svgHash = () => {
-    const s = one('svg').outerHTML.replace(/ _ngcontent-[a-z0-9-]+=""/g, '');
+    const s = one('svg')
+      .outerHTML.replace(/ _ngcontent-[a-z0-9-]+=""/g, '')
+      .replace(/var\(--color-text-success\)/g, 'var(--color-success-default)')
+      .replace(/var\(--color-text-warning\)/g, 'var(--color-warning-default)');
     return { len: s.length, hash: [...s].reduce((x, c) => (x * 31 + c.charCodeAt(0)) | 0, 0) };
   };
 
@@ -59,6 +65,9 @@ describe('BarChartComponent labelLayout, valueText and the item formatter (3.21,
     // container is measured: attributes, positions, text and comment anchors.
     it('pins the 3.20.0 vertical SVG markup byte for byte', () => {
       set({ data: DATA });
+      // The third bar takes palette entry 3, the success ink since 3.37.
+      expect(one('svg').outerHTML).toContain('var(--color-text-success)');
+      expect(one('svg').outerHTML).not.toContain('var(--color-success-default)');
       expect(svgHash()).toEqual({ len: 2738, hash: 1152392471 });
       measure(328);
       expect(svgHash()).toEqual({ len: 2751, hash: -406093170 });

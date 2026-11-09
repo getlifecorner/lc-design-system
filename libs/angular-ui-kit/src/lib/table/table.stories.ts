@@ -51,6 +51,7 @@ The Table component displays structured data in rows and columns with advanced d
 - A caption (\`caption\`, 3.16) names the table; \`showCaption=false\` keeps it for screen readers only
 - Number columns (\`TableColumn.align: 'end'\`, 3.17): header and cells at the end edge with tabular figures; a sort arrow sits before the label
 - 3.36: \`footerRow\`, a sum row in \`<tfoot>\` outside sorting, filtering, paging and the tree (see *Footer Row*), and \`TableAction.ariaLabel\`, a name per row for a row action (see *Row Action Names*)
+- 3.37: \`TableAction.size\`, the kit size of a row action (default \`xs\`; see *Action Sizes*)
         `,
       },
     },
@@ -1186,6 +1187,62 @@ export const RowActionNames: Story = {
           actionsLabel="Aktionen"
           actionsAlign="end"
           caption="Services"
+          (actionClick)="actionClick($event)"
+        ></lc-table>
+      </div>
+    `,
+  }),
+};
+
+const sizedActions = (size: 'sm' | 'lg') => [
+  {
+    key: 'origin',
+    label: 'Herkunft',
+    icon: 'information-circle',
+    size,
+    ariaLabel: (row: Record<string, unknown>) => `Herkunft von ${row['name']}`,
+  },
+  { key: 'details', icon: 'chevron-right', tooltip: 'Details', size },
+];
+
+/** 3.37 (request 057, services row 3): the row action in another kit size. */
+export const ActionSizes: Story = {
+  name: 'Action Sizes',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.37 (request 057, finance-intelligence services row 3): `TableAction.size` sets the kit size of a row action\'s `lc-button`; without it the action stays `xs` (30 px with a label, 20 px icon-only). `sm` is 38 / 30 px, `lg` 48.5 / 45.6 px, a 44 px touch target. The icon stays 20 px in every size, and text, alignment, the name per row and the row-click isolation are as before. The kit does not switch sizes per breakpoint: pass `lg` below 1024 px and `sm` from 1024 px yourself. Below: one table with `sm`, one with `lg`; „Herkunft“ with an icon and a label, „Details“ icon-only.',
+      },
+    },
+  },
+  args: { actionClick: fn() },
+  render: (args) => ({
+    props: {
+      ...args,
+      columns: serviceColumns,
+      data: serviceData.filter((row) => row.parentId === ''),
+      smActions: sizedActions('sm'),
+      lgActions: sizedActions('lg'),
+    },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 24px;">
+        <lc-table
+          [columns]="columns"
+          [data]="data"
+          [actions]="smActions"
+          actionsLabel="Aktionen"
+          actionsAlign="end"
+          caption="Services, Aktionen sm"
+          (actionClick)="actionClick($event)"
+        ></lc-table>
+        <lc-table
+          [columns]="columns"
+          [data]="data"
+          [actions]="lgActions"
+          actionsLabel="Aktionen"
+          actionsAlign="end"
+          caption="Services, Aktionen lg"
           (actionClick)="actionClick($event)"
         ></lc-table>
       </div>

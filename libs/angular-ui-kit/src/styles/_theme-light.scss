@@ -492,6 +492,13 @@
 // 050-f2). Re-declared on the badge host they match a light page (4.85–10.97:1).
 // Only the badge: the collapsed rail's label tooltip floats over the page and
 // keeps the page palette. A root-level token override does not reach inside.
-.lc-sidenav-container--light .lc-sidenav__nav-badge {
+//
+// `lc-badge` in any slot of `lc-hero` (3.37, request 057, monatsstand row 1):
+// the hero's bands are fixed colours that don't follow the theme, so in dark
+// its badges' translucent dark fills measured 1.00–5.18:1 over them. With the
+// light tokens (opaque fills) every variant reaches 4.85:1 or more on every
+// band, in both themes. A no-op in light.
+.lc-sidenav-container--light .lc-sidenav__nav-badge,
+lc-hero lc-badge {
   @include -light-theme-colors;
 }

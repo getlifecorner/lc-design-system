@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  booleanAttribute,
   input,
   computed,
   viewChild,
@@ -48,7 +49,11 @@ let nextHeroId = 0;
  * - Content projection for body and footer sections
  * - Footer slot for metadata, stats, or CTAs
  * - Media slot (`[hero-media]`) for a visual: below the text on small screens,
- *   beside it from 1024 px, never under the body's 85 % opacity
+ *   beside it from 1024 px
+ * - 3.37: components in the default slot keep full opacity (only the body
+ *   text is softened, through its colour), and badges in a hero take the light
+ *   palette in both themes; `fill` takes the height of a stretching grid or
+ *   flex row
  * - Content width `lg`: a full-bleed band whose text lines up with the page column
  * - `headingLevel` (3.36): the title as `h1`–`h6`, the same look at every level
  * - `focusTitle()` (3.36): moves focus to the title (`tabindex="-1"`, out of the
@@ -73,6 +78,9 @@ let nextHeroId = 0;
   templateUrl: './hero.component.html',
   styleUrls: ['./hero.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '[class.lc-hero--fill]': 'fill()',
+  },
 })
 export class HeroComponent {
   /**
@@ -130,6 +138,15 @@ export class HeroComponent {
    * @default 1
    */
   headingLevel = input<HeroHeadingLevel>(1);
+
+  /**
+   * Fill the height the container gives the hero (3.37, cockpit row 1): in a
+   * grid or flex row that stretches its items, the band ends at the row's
+   * bottom edge; the content stays at the top and `[hero-footer]` sits at the
+   * bottom. Without it the hero is as tall as its content.
+   * @default false
+   */
+  fill = input(false, { transform: booleanAttribute });
 
   private readonly titleEl = viewChild<ElementRef<HTMLElement>>('titleEl');
   private readonly labelEl = viewChild<ElementRef<HTMLElement>>('labelEl');

@@ -190,7 +190,7 @@
                     @if (!isActionHidden(action, dr.row, dr.absIndex)) {
                       <lc-button
                         [variant]="action.variant ?? 'ghost'"
-                        size="xs"
+                        [size]="action.size ?? 'xs'"
                         [iconOnly]="!action.label"
                         [disabled]="isActionDisabled(action, dr.row, dr.absIndex)"
                         [ariaLabel]="actionAriaLabel(action, dr.row, dr.absIndex)"

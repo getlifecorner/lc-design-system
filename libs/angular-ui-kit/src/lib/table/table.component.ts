@@ -18,7 +18,7 @@ import { FormsModule } from '@angular/forms';
 import { TableCellDirective } from './table-cell.directive';
 import { InputComponent } from '@lifecorner/angular-ui-kit/input';
 import { SelectComponent } from '@lifecorner/angular-ui-kit/select';
-import { ButtonComponent, ButtonVariant } from '@lifecorner/angular-ui-kit/button';
+import { ButtonComponent, ButtonSize, ButtonVariant } from '@lifecorner/angular-ui-kit/button';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
 import { ICON_CHEVRON_RIGHT } from '@lifecorner/angular-ui-kit/icons';
 
@@ -96,6 +96,14 @@ export interface TableAction {
   icon?: string;
   /** Button variant (default: 'ghost') */
   variant?: ButtonVariant;
+  /**
+   * Size of the action's `lc-button` (3.37, services row 3). `'lg'` is
+   * 48.5 px high with a label and 45.6 px icon-only, for touch rows; the icon
+   * stays 20 px. Pass another size per breakpoint yourself.
+   *
+   * @default 'xs'
+   */
+  size?: ButtonSize;
   /** Optional tooltip / aria-label, useful for icon-only actions */
   tooltip?: string;
   /**

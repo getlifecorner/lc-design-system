@@ -1,0 +1,15 @@
+# Log 057: lc-select clear target and focus return, lc-description-list whitespace, lc-hero slot contrast and fill, lc-table action size, lc-list nested action, CHART_PALETTE contrast, lc-state-strip dense strips, backlog sweep (3 rows)
+
+## Owner decisions
+
+2026-11-09 23:16: bundle size → the whole queue and the backlog in this one run and one version; the limit of about 8 items does not apply. 054-n2 needs WebKit, which is not installed here: if it can't be checked, keep it in the backlog and say so (bundle item 8).
+
+## Handoffs
+
+Times come from `date '+%Y-%m-%d %H:%M'` when the row is written, never estimated.
+
+| Time | From → to | Status | Reason | Task |
+|---|---|---|---|---|
+| 2026-11-09 23:19 | spec-writer → ui-ux-designer | done | the spec is ready and needs API, anatomy and token decisions before the build. | Design the API and visuals for AC-1…25 in requests/057-select-hero-table-a11y-backlog/spec.md. Key decisions are the lg clear tap area and chevron priority, select focus return, `TableAction.size`, hero `fill` and slot contrast without container opacity, the list nested-interactive markup, the palette colours for entries 3 and 4, and the dense state-strip pointer path. |
+| 2026-11-10 00:00 | ui-ux-designer → web-developer | done | API, anatomy, tokens and contrast are decided and checked against the 3.36.0 build; nothing needs the spec-writer or the owner. | Implement design.md for request 057 (AC-1…25): decisions D-1 to D-10, the 7 new and 3 updated stories in §8, and the expected-build folders named in the design header for your shot comparisons. |
+| 2026-11-10 00:53 | web-developer → ui-ux-designer | done | all 25 AC are built and all gates are green on faf1c15; four small deviations and one new finding (F-4) need the designer's look. | Review request 057 (stories form-select--clear-tap-area, form-select--focus-after-tap, form-select--touch-targets, data-display-table--action-sizes, components-description-list--in-a-labelled-card, layout-hero--badges-in-the-body, layout-hero--fill, data-display-list--german-labels, data-display-state-strip--many-segments, components-card--collapsible); shots in tmp/story-shots/057/build-*, measures in tmp/057/measure-*.log; agree or reject build.md Deviations 1–7 and classify F-4. |

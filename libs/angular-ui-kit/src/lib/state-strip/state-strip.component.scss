@@ -104,6 +104,27 @@
   pointer-events: none;
 }
 
+// The pointer path (3.37, request 057, 056 S-1, design D-9): more runs than
+// fit at 24 px (13 and more in 328 px) narrow the cells below the WCAG 2.5.8
+// target, so the cells are no pointer targets. One transparent layer over the
+// row, hidden from assistive tech, takes the pointer: the run under it shows
+// in the caption (with the hover fill), a pressed finger slides along the
+// strip (vertical scroll and pinch zoom stay), and releasing focuses that run.
+// Beyond the last cell it picks nothing. The keyboard path is unchanged.
+.lc-state-strip__row {
+  position: relative;
+}
+
+.lc-state-strip__cell--hovered {
+  background-color: var(--color-surface-hover);
+}
+
+.lc-state-strip__scrub {
+  position: absolute;
+  inset: 0;
+  touch-action: pan-y pinch-zoom;
+}
+
 // Forced colours: the marks keep their shapes in the text colour (neutral in
 // GrayText), the ring is the system focus colour, the caption gets a border.
 @media (forced-colors: active) {

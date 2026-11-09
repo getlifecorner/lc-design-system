@@ -111,7 +111,10 @@ describe('Theme scope of a themed sidenav rail badge (request 051)', () => {
   const COLOUR = /^--(color-|gradient-|shadow-|elevation-|accent-line$|app-background-image$)/;
   const colours = (tokens: Record<string, string>) =>
     Object.fromEntries(Object.entries(tokens).filter(([name]) => COLOUR.test(name)));
-  const LIGHT_RAIL = '.lc-sidenav-container--light .lc-sidenav__nav-badge {';
+  // 3.37 (request 057, design D-5): the light rule's selector list also takes
+  // `lc-hero lc-badge` (badges on the hero's fixed bands), so the light rule
+  // ends in it; the declarations are the same single block.
+  const LIGHT_RAIL = '.lc-sidenav-container--light .lc-sidenav__nav-badge,\nlc-hero lc-badge {';
   const DARK_RAIL = '.lc-sidenav-container--dark .lc-sidenav__nav-badge {';
 
   it('AC-3/AC-4: the light rail badge declares exactly the colour tokens of the light root (172), with the same values', () => {
@@ -136,9 +139,21 @@ describe('Theme scope of a themed sidenav rail badge (request 051)', () => {
   });
 
   it('scopes the badge host only, not the rail or its label tooltip', () => {
-    for (const css of [light, dark]) {
-      const selectors = [...css.matchAll(/(^|\n)([^\n{}]*lc-sidenav[^\n{}]*)\{/g)].map((m) => m[2].trim());
-      expect(selectors).toEqual([expect.stringMatching(/^\.lc-sidenav-container--(light|dark) \.lc-sidenav__nav-badge$/)]);
-    }
+    // Whole selector lists, the text before each `{` (3.37: the light one spans two lines).
+    const selectorLists = (css: string) =>
+      css
+        .replace(/\/\*[^]*?\*\//g, '')
+        .split('{')
+        .slice(0, -1)
+        .map((chunk) => chunk.slice(chunk.lastIndexOf('}') + 1).trim());
+    expect(selectorLists(light).filter((s) => s.includes('lc-sidenav'))).toEqual([
+      '.lc-sidenav-container--light .lc-sidenav__nav-badge,\nlc-hero lc-badge',
+    ]);
+    expect(selectorLists(dark).filter((s) => s.includes('lc-sidenav'))).toEqual(['.lc-sidenav-container--dark .lc-sidenav__nav-badge']);
+  });
+
+  it('3.37: badges in lc-hero take the light palette in both themes, from the light file only', () => {
+    expect(light.match(/lc-hero lc-badge/g)).toHaveLength(1);
+    expect(dark.includes('lc-hero')).toBe(false);
   });
 });

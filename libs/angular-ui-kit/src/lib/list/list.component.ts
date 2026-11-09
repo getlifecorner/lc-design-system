@@ -21,6 +21,9 @@ import { ButtonComponent, ButtonSize, ButtonVariant } from '@lifecorner/angular-
 import { ListItemTemplateDirective } from './list-item-template.directive';
 import type { AvatarColor } from '@lifecorner/angular-ui-kit/avatar';
 
+/** Counter for generated row ids: they follow creation order, so prerendered HTML is the same in every build. */
+let nextListId = 0;
+
 /**
  * List orientation type
  */
@@ -130,6 +133,9 @@ export type ListItemPart = 'row' | 'action';
  *   (WCAG 2.4.3)
  * - `showChevron` (3.36): a decorative chevron at the end of every
  *   `clickable` or `href` row
+ * - 3.37: a `clickable` row with an `action` holds a native button stretched
+ *   over the row (named by the row) beside its action, so no control sits
+ *   inside another (WCAG 4.1.2); one Tab stop for the row, then the action
  *
  * @example
  * ```html
@@ -265,12 +271,23 @@ export class ListComponent {
         const target = row?.querySelector<HTMLElement>(
           part === 'action'
             ? '.lc-list__action-area button'
-            : 'a.lc-list__item, .lc-list__item[role=button]:not([aria-disabled=true])',
+            : 'a.lc-list__item, .lc-list__item[role=button]:not([aria-disabled=true]), .lc-list__item-button:not([aria-disabled=true])',
         );
         target?.focus();
       },
       { injector: this.injector },
     );
+  }
+
+  /** Generated id prefix, taken once per instance (module counter, the same in every prerender). */
+  private readonly uid = `lc-list-${nextListId++}`;
+
+  /**
+   * Id of row `index` of a `clickable` row with an `action` (3.37): the
+   * row's button is named by it (`aria-labelledby`).
+   */
+  protected rowId(index: number): string {
+    return `${this.uid}-row-${index}`;
   }
 
   /** Whether a row renders as a link: `href` set and not disabled. */

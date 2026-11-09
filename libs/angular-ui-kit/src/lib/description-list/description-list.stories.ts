@@ -32,6 +32,8 @@ Description list for key/value metadata (a styled \`<dl>\`).
   the first line, next to the value
 - 3.36 (056): an item's value as a badge (\`badge\`, \`badgeVariant\`), and a sum item (\`total\`) with a rule
   above and a double rule below, announced with \`totalAriaLabel\` (see *Badge Values*, *Total Row*)
+- 3.37 (057): spaces between term and value and between rows, so the list's text has word breaks
+  (\`textContent\`, accessible names, copied text); the look is unchanged (see *In a Labelled Card*)
 `,
       },
     },
@@ -449,3 +451,43 @@ export const TotalRow: Story = {
   }),
 };
 
+/** 3.37 (request 057, regeln row 1): the ways of maintenance of a rule tile. */
+const labelledCardItems = [
+  { term: 'aus USM übernommen', value: '1' },
+  { term: 'im Modul gepflegt', value: '2' },
+  { term: 'Fassung', value: '1', badge: 'Freigegeben', badgeVariant: 'success' as const },
+  { term: 'Letzter Abgleich', value: 'heute 06:00', datetime: '2026-11-09T06:00:00+01:00', valueSuffix: 'automatisch' },
+  { term: 'Regeln', value: '3', total: true },
+];
+
+/** 3.37 (request 057, regeln row 1): a list inside a clickable card named by its visible text. */
+export const InALabelledCard: Story = {
+  name: 'In a Labelled Card',
+  decorators: [moduleMetadata({ imports: [CardComponent] })],
+  args: {
+    items: labelledCardItems,
+    totalAriaLabel: 'Summe',
+  },
+  parameters: {
+    controls: { include: ['items', 'totalAriaLabel'] },
+    docs: {
+      description: {
+        story:
+          '3.37 (request 057, finance-intelligence regeln row 1, WCAG 2.5.3): the list renders a space between term, leader and value, after each row, after the hidden total prefix and at the start of a badge\'s text, and a 0 px wide space before a suffix that follows a time, a link or a badge. The text now reads „aus USM übernommen 1 im Modul gepflegt 2 …“ instead of „aus USM übernommen1im Modul gepflegt2“, in `textContent`, accessible names and copied text, so a clickable `lc-card` whose `ariaLabel` is its visible text passes axe `label-content-name-mismatch`. Nothing visible changes: the spaces fall in flex rows, at line starts or in the 0 px span. Rows: plain values, a badge after a value, a time with a suffix and a total. (A link inside a clickable card would nest one control in another; the link path is covered by the unit test.)',
+      },
+    },
+  },
+  render: (args) => ({
+    props: {
+      ...args,
+      cardLabel: 'aus USM übernommen 1 im Modul gepflegt 2 Fassung 1 Freigegeben Letzter Abgleich heute 06:00 automatisch Regeln 3',
+    },
+    template: `
+      <div lang="de" style="max-width: 360px;">
+        <lc-card variant="outlined" borderRadius="xl" padding="lg" [clickable]="true" [ariaLabel]="cardLabel">
+          <lc-description-list [items]="items" [totalAriaLabel]="totalAriaLabel" size="sm" />
+        </lc-card>
+      </div>
+    `,
+  }),
+};

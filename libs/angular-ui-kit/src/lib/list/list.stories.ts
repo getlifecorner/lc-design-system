@@ -93,6 +93,9 @@ List component for displaying structured item collections.
   (\`'action'\`) after the next render, e.g. when the sheet that action opened closes; it does nothing for an
   unknown id or a row without that part (see *Focus Item*)
 - 3.36: \`showChevron\` ends every \`clickable\` or \`href\` row with a decorative chevron (see *Chevron Rows*)
+- 3.37: a \`clickable\` row with an \`action\` holds a native button beside the action, so no control is nested in
+  another (axe \`nested-interactive\`); the look, the names and the keys are unchanged. Labels hyphenate long
+  (German) compounds in the page's \`lang\` (see *German Labels*)
 `,
       },
     },
@@ -687,6 +690,30 @@ export const ChevronRows: Story = {
         <lc-list [items]="sources" [clickable]="true" [showDividers]="true" [showChevron]="showChevron" />
         <lc-list [items]="links" size="sm" [showDividers]="true" [showChevron]="showChevron" />
         <lc-list [items]="plain" [showDividers]="true" [showChevron]="showChevron" />
+      </div>`,
+  }),
+};
+
+/** 3.37 (request 057, 056-n1): long German labels hyphenate instead of breaking inside a word. */
+export const GermanLabels: Story = {
+  name: 'German Labels',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.37 (request 057, backlog 056-n1): the label hyphenates long compounds in the page\'s `lang` (`hyphens: auto`, as the card title) before it breaks anywhere, so „USM-Leistungsverrechnung“ no longer breaks as „USM-Leistungsverre / chnung“ at 360 px. Words under 12 letters never hyphenate (`hyphenate-limit-chars: 12 4 3`), so English labels keep their breaks. `sm` and `md`, with and without the chevron, in a `lang="de"` page. The first row is `clickable` with an action.',
+      },
+    },
+  },
+  render: () => ({
+    props: { sources: chevronSources.slice(0, 2) },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 24px; max-width: 480px;">
+        <lc-list [items]="sources" size="md" [clickable]="true" [showDividers]="true" [showChevron]="true" />
+        <lc-list [items]="sources" size="md" [clickable]="true" [showDividers]="true" />
+        <lc-list [items]="sources" size="sm" [clickable]="true" [showDividers]="true" [showChevron]="true" />
+        <lc-list [items]="sources" size="sm" [clickable]="true" [showDividers]="true" />
       </div>`,
   }),
 };

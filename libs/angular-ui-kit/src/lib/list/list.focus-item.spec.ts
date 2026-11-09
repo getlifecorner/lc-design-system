@@ -25,6 +25,13 @@ class TemplateHost {
   readonly items = signal<ListItem[]>([{ id: 'sep', label: 'September 2026 · Fassung 1', action: 'Details' }]);
 }
 
+/**
+ * A clickable row's button: the `role="button"` row, or (3.37, request 057,
+ * F-2) the native button of a row with an action, which is no longer nested
+ * in a `role="button"`.
+ */
+const ROW_BUTTON = '[role="button"], .lc-list__item-button';
+
 const history: ListItem[] = [
   { id: 'sep', label: 'September 2026 · Fassung 1', selected: true, badge: 'Gewählt', badgeVariant: 'primary', action: 'Details', actionAriaLabel: 'Details zu September 2026 · Fassung 1' },
   { id: 'aug2', label: 'August 2026 · Fassung 2', action: 'Details', actionAriaLabel: 'Details zu August 2026 · Fassung 2' },
@@ -86,7 +93,7 @@ describe('ListComponent — focusItem() (3.34, request 054)', () => {
     it("'row' (the default) focuses a clickable row's button", async () => {
       await create({ items: history, clickable: true });
       await focusItem('aug1');
-      const row = rowOf('August 2026 · Fassung 1').querySelector('[role="button"]');
+      const row = rowOf('August 2026 · Fassung 1').querySelector(ROW_BUTTON);
       expect(document.activeElement).toBe(row);
     });
 
@@ -107,7 +114,7 @@ describe('ListComponent — focusItem() (3.34, request 054)', () => {
     it.each(['sm', 'md', 'lg'] as ListSize[])('size %s with dividers, badges and selected', async (size) => {
       await create({ items: history, size, showDividers: true, clickable: true });
       await focusItem('sep');
-      expect(document.activeElement).toBe(rowOf('September 2026 · Fassung 1').querySelector('[role="button"]'));
+      expect(document.activeElement).toBe(rowOf('September 2026 · Fassung 1').querySelector(ROW_BUTTON));
       await focusItem('aug1', 'action');
       expect(document.activeElement).toBe(actionOf('August 2026 · Fassung 1'));
     });
@@ -115,20 +122,20 @@ describe('ListComponent — focusItem() (3.34, request 054)', () => {
     it('horizontal and card lists use the same lookup', async () => {
       await create({ items: history, orientation: 'horizontal', variant: 'card', clickable: true });
       await focusItem('aug2');
-      expect(document.activeElement).toBe(rowOf('August 2026 · Fassung 2').querySelector('[role="button"]'));
+      expect(document.activeElement).toBe(rowOf('August 2026 · Fassung 2').querySelector(ROW_BUTTON));
     });
 
     it('items replaced, then called in the same tick: resolved against the new rows', async () => {
       await create({ items: history, clickable: true });
       fixture.componentRef.setInput('items', [{ id: 'okt', label: 'Oktober 2026 · Fassung 1' }, ...history]);
       await focusItem('okt');
-      expect(document.activeElement).toBe(rowOf('Oktober 2026 · Fassung 1').querySelector('[role="button"]'));
+      expect(document.activeElement).toBe(rowOf('Oktober 2026 · Fassung 1').querySelector(ROW_BUTTON));
     });
 
     it('duplicate ids: the first item', async () => {
       await create({ items: [...history, { id: 'aug2', label: 'Doppelt' }], clickable: true });
       await focusItem('aug2');
-      expect(document.activeElement).toBe(rowOf('August 2026 · Fassung 2').querySelector('[role="button"]'));
+      expect(document.activeElement).toBe(rowOf('August 2026 · Fassung 2').querySelector(ROW_BUTTON));
     });
 
     it('a second call before the render replaces the first', async () => {

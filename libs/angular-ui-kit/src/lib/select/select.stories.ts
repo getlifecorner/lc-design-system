@@ -195,7 +195,7 @@ export const TouchTargets: Story = {
     docs: {
       description: {
         story:
-          '3.27.1 (request 043, F-22): every size with a value, so the clear button shows. The button is 24 × 24 px: a 2 px padding that its −2 px margin takes back, so the layout, the 20 px hover fill and the focus ring are as before, and WCAG 2.5.8 (and axe `target-size`) is met by size. A 44 px target would be taller than the md field (40 px), leave the xs and sm fields by 10 and 6 px and cover 8 px of the chevron, which opens the list; at 24 px it stays 2 px clear of the chevron and inside every field.',
+          '3.27.1 (request 043, F-22): every size with a value, so the clear button shows. The button is 24 × 24 px: a 2 px padding that its −2 px margin takes back, so the layout, the 20 px hover fill and the focus ring are as before, and WCAG 2.5.8 (and axe `target-size`) is met by size. A 44 px target would be taller than the md field (40 px), leave the xs and sm fields by 10 and 6 px and cover 8 px of the chevron, which opens the list; at 24 px it stays 2 px clear of the chevron and inside every field. 3.37 (request 057): at `lg` (a 44 px field) the button takes taps on a 44 × 44 px area; the 24 px button sits 8 px further from the chevron, so the area ends at the chevron\'s left edge, and the text ends where the area starts (see *Clear Tap Area*). xs, sm and md are unchanged.',
       },
     },
   },
@@ -210,6 +210,87 @@ export const TouchTargets: Story = {
       </div>
     `,
   }),
+};
+
+const sourceOptions = [
+  { value: 'ist', label: 'SAP-Ist' },
+  { value: 'ist-lang', label: 'SAP-Ist (Kostenstellen-Einzelposten, Buchungskreis 1000)' },
+  { value: 'plan', label: 'SAP-Plan' },
+  { value: 'usm', label: 'USM-Leistungsverrechnung' },
+];
+
+/** 3.37 (request 057, services row 1): the lg clear button takes taps on 44 × 44 px. */
+export const ClearTapArea: Story = {
+  name: 'Clear Tap Area',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.37 (request 057, finance-intelligence services row 1, WCAG 2.5.8 and the 44 px phone rule): `size="lg"` with a value. The clear button takes taps on a 44 × 44 px area centred on its 24 px box (an unpainted `::before`, the field\'s full height). The box sits 8 px further from the chevron (right margin 6 px instead of −2 px), so the area ends exactly at the chevron\'s left edge: a tap on the chevron still opens the list. The value text ends where the area starts (76 px before the field\'s right edge), also a long German value, with an ellipsis. The box, its 20 px hover fill and its focus ring are unchanged, and axe `target-size` reads the 24 px box. xs, sm, md and a select without a value are as before.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [SelectComponent, FormsModule] },
+    props: { options: sourceOptions },
+    template: `
+      <div lang="de" style="max-width: 320px; display: flex; flex-direction: column; gap: 16px;">
+        <lc-select size="lg" placeholder="Quelle wählen" ariaLabel="Quelle" clearAriaLabel="Auswahl löschen" [options]="options" [ngModel]="'ist'"></lc-select>
+        <lc-select size="lg" placeholder="Quelle wählen" ariaLabel="Quelle (lang)" clearAriaLabel="Auswahl löschen" [options]="options" [ngModel]="'ist-lang'"></lc-select>
+      </div>
+    `,
+  }),
+};
+
+/** 3.37 (request 057, services row 2): a tap on an option hands the focus back to the trigger. */
+export const FocusAfterTap: Story = {
+  name: 'Focus After Tap',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.37 (request 057, finance-intelligence services row 2): options have no `tabindex`, so a tap or click on one moves the focus to `<body>` before the choice. A single select now hands the focus back to the trigger after a choice, and `Escape` does so too when the focus is on `<body>`; keyboard choice and the search field behave as before. A click on the backdrop outside closes without moving the focus, and a multi-select keeps its panel open and the focus where it is. The play test (in the story view) opens the list, clicks an option without focusing it (as a WebKit tap does), and expects the trigger to have the focus; then it reopens, moves the focus to `<body>` and presses `Escape`.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [SelectComponent, FormsModule] },
+    props: {
+      options: [
+        { value: 'name', label: 'Name' },
+        { value: 'level', label: 'Stufe' },
+        { value: 'cost', label: 'Kosten' },
+      ],
+    },
+    template: `
+      <div lang="de" style="max-width: 320px;">
+        <lc-select size="lg" placeholder="Sortieren nach" ariaLabel="Sortieren nach" clearAriaLabel="Auswahl löschen" [options]="options" [ngModel]="'name'"></lc-select>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const trigger = canvasElement.querySelector<HTMLElement>('[role="combobox"]') as HTMLElement;
+    const pause = () => new Promise((resolve) => setTimeout(resolve, 300));
+    trigger.click();
+    await pause();
+    const option = document.querySelectorAll<HTMLElement>('.cdk-overlay-container [role="option"]')[1];
+    (document.activeElement as HTMLElement | null)?.blur();
+    option.click();
+    await pause();
+    await expect(document.activeElement).toBe(trigger);
+    await expect(trigger.textContent?.trim()).toBe('Stufe');
+
+    trigger.click();
+    await pause();
+    trigger.blur();
+    await expect(document.activeElement).toBe(document.body);
+    await userEvent.keyboard('{Escape}');
+    await pause();
+    await expect(document.querySelector('.cdk-overlay-container [role="listbox"]')).toBeNull();
+    await expect(document.activeElement).toBe(trigger);
+  },
 };
 
 /** 3.27.2 (request 044, F-31): the filled field's boundary in every size and state, in German. */

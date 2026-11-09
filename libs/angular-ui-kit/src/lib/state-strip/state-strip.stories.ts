@@ -38,6 +38,8 @@ The states of the last runs at a glance (3.36, finance-intelligence quellen row 
 - Ten runs are 240 px wide; more runs share a narrower strip and never overflow. Without segments nothing renders
 - The segments are in the prerendered HTML. CSS hooks \`--lc-state-strip-height\` (2rem),
   \`--lc-state-strip-segment-max-width\` (1.5rem)
+- 3.37: the pointer uses the whole strip (one layer picks the run under it, a finger slides along it), so dense
+  strips with cells under 24 px keep a pointer path (see *Many Segments*)
 `,
       },
     },
@@ -157,7 +159,7 @@ export const ManySegments: Story = {
     docs: {
       description: {
         story:
-          'More runs than fit at 24 px share the strip: 30 and 60 runs at 360 px make narrower cells (marks inset by at most a quarter of a cell), and nothing overflows the 328 px column.',
+          'More runs than fit at 24 px share the strip: 30 and 60 runs at 360 px make narrower cells (marks inset by at most a quarter of a cell), and nothing overflows the 328 px column. 3.37 (request 057, 056 S-1): from 13 runs in 328 px the cells are narrower than the 24 px target of WCAG 2.5.8 (10.92 and 5.45 px here), so they are no pointer targets. The pointer uses the whole strip (328 × 32 px), like a slider track: one transparent layer over the row, hidden from screen readers, picks the run under the pointer and shows it in the caption with the hover fill; a pressed finger slides along the strip (vertical scrolling and zoom stay), and lifting it, or a click, focuses that run. The keyboard keeps the grid: one Tab stop, the arrows, Home and End.',
       },
     },
   },

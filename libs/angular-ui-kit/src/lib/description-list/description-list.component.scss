@@ -287,3 +287,10 @@ lc-badge.lc-dl__badge {
   white-space: nowrap;
   border: 0;
 }
+
+// ── word breaks (3.37, request 057, regeln row 1, D-4) ──────────────────────
+// A space between a link or a time and its suffix, for the text only: 0 px
+// wide, so the suffix keeps its 6 px margin as its only gap.
+.lc-dl__sep {
+  font-size: 0;
+}

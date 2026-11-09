@@ -78,7 +78,9 @@ describe('DescriptionListComponent shared row width (3.26, request 041)', () => 
     expect(at).toBeGreaterThan(css.indexOf(LINK_FORCED));
     const appended = css.slice(at);
     const selectors = [...appended.matchAll(/\n([^\s@}][^{\n]*) \{/g)].map((m) => m[1]);
-    expect(selectors.every((s) => /lc-dl__badge|lc-dl__row--total|lc-dl__sr-only/.test(s))).toBe(true);
+    // 3.37 (request 057) appended `.lc-dl__sep` after them (pinned in
+    // description-list.whitespace.spec.ts); the rules before stay pinned here.
+    expect(selectors.every((s) => /lc-dl__badge|lc-dl__row--total|lc-dl__sr-only|lc-dl__sep/.test(s))).toBe(true);
     const rest = css.slice(0, at).replace(SHARE, '').replace(TERM, '').replace(LEADER, '').replace(LINK_RING, '').replace(LINK_FORCED, '');
     expect(rest.length).toBe(3081);
     expect(createHash('sha1').update(rest).digest('hex')).toBe('10ed437796904c83d6889fdb044524cf8981feb3');
