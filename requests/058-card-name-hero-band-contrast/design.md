@@ -2,6 +2,7 @@
 
 - **Status:** ready. **Q1 decided** by the owner on 2026-11-10 11:28 (log.md): **1a = option H1**, darker success and warning bands with white text, like the other seven. H2 is rejected (§5.4).
 - **Change note (2026-11-10):** settled on H1 after the owner's answer; §1 flag, §5.4 and §8 N-1 updated, N-1 added to `requests/BACKLOG.md` as `058-n1`. No value in §2–§9 changed.
+- **Change note (review r1, 2026-11-10):** the hero reference shots are now the build's (`058/build-hero*`), not `proto-hero*`. The 12 shots that differ do so only on the rounded pill ends of badges and buttons, because of how the prototype was rendered (review.md, Deviation 2). The values are unchanged.
 - **Spec:** [spec.md](spec.md) — AC-1 … AC-12
 - **Measured on:** main f7c3684 (3.37.0), static Storybook built 2026-11-10. Contrast = WCAG formula in `story-shots --measure` (8-bit sRGB composite, min over the band t 0–1 in 0.01 steps, floored to 2 decimals). Measures: `tmp/story-shots/058/design-{contrast,final}-measure.js`.
 

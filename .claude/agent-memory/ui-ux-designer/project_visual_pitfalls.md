@@ -15,6 +15,7 @@ metadata:
 - `charts-scatter-plot--compact` uses `Math.random()` data: it differs on every run (057), so a palette-change compare must exclude it.
 - Icon size grids (label + 16/20/24/32/40 px) overflow 328 px at 360 with a 24 px column gap; use an 8 px gap and labels of at most 18 monospace characters.
 - 057 design: `opacity` → an alpha colour is the same composite but changes every hash (glyph anti-aliasing), so keep the prototype shots as the expected build (`tmp/story-shots/057/proto-*`). Add-class-then-read in one `--measure` task gave stale layout: wait 300 ms. A transparent non-focusable overlay makes axe pass the cells beneath as `obscured`. A leading space inside an inline-flex badge collapses; a `font-size: 0` span is a 0 px separator that axe still reads. `--compare` prints every shot: grep `different`.
+- 058 r1: an injected-CSS prototype on the old build differs from the real build only at the **rounded ends of pills** (lc-badge, inverse buttons) inside a slot (≤ 15 px per end, Δ ≤ 69 at 360, Δ ≤ 2 in FC), although their CSS is unchanged. Re-injecting the rule or forcing a repaint on the build doesn't reproduce it. Accept it after measuring colours and geometry, and make the build shots the new reference. Don't promise "build = prototype by hash" for stories with pills.
 
 **Why:** a hash diff on an unstable story wastes a shot opening in review.
 **How to apply:** do a quick stability re-run when capturing baselines (`--compare` against the fresh baseline).

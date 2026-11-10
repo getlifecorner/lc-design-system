@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.38.0] - 2026-11-10
+
+The two accessibility limits listed as Known in 3.37.0 are closed: a clickable `lc-card` with a `title` can be named by its visible text (regeln page, WCAG 2.5.3), and the text of `lc-hero` reaches 4.5:1 on every default band (monatsstand page, WCAG 1.4.3). Gap IDs: 057-s1, 057-s2. No API breaks. Two hero bands, success and warning, look visibly darker.
+
+### Fixed
+
+- **`lc-card` with a `title`: word breaks** (3.37 Known, 057-s1, regeln row 1, WCAG 2.5.3): the text reads „Regeln 3 aus USM übernommen 1 im Modul gepflegt 2“ (was „Regeln3aus USM …“) in `textContent`, accessible names and copied text; one space separates title, badge, subtitle, header action, `[card-header]`, body and footer. A clickable card with a `title` whose `ariaLabel` is its visible text passes axe `label-content-name-mismatch` (Chromium, 360 and 1280 px, light and dark). Nothing visible changes (140 card shots identical); toggle and link names are as before.
+- **`lc-hero` text contrast** (3.37 Known, 057-s2, monatsstand row 1, WCAG 1.4.3): label, title and body are white at full strength on every default band (were 80 % and 85 %), and five bands are darker at their light end: primary `#1f8092` (was primary-500), secondary `secondary-600` (was 500), accent-orange `#b06024`; success (`#46543b → #697957`) and warning (`#68481d → warning-dark`) at both ends, so these two look visibly darker. Minimum over each band: primary 4.60, secondary 4.61, success 4.69, warning 4.63, orange 4.62, purple 4.58:1 (body before 3.63, 2.69, 2.38, 2.01, 2.60, 3.82; title on success and warning 2.72 and 2.25). Neutral, info and violet bands and the `light` variant (4.68:1 or more) are unchanged. White content on a band gains too: the `inverse` pill stands out at 4.58:1 or more (was 2.25), `inverse-outline` text reaches 9.3:1 or more, the title's focus ring 4.58 (was 4.23). Sizes and positions are unchanged.
+
+### Compatibility
+
+- No API breaks. Defaults render as 3.37.0 apart from the fixes: one-space text nodes in `lc-card`'s DOM (no visual change), the colours of five hero bands and full-strength label and body text on default bands.
+
 ## [3.37.0] - 2026-11-10
 
 Finance Intelligence's toolbars, tiles and stages without workarounds: a 44 px clear target and focus that stays on the select, a size for table actions, word breaks in description lists, badges at full contrast on the hero and a hero that fills its row, plus the three open items of 3.36 (list row actions, chart palette, dense state strips). No API breaks.
