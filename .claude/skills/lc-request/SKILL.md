@@ -10,6 +10,8 @@ You (the main session) are the dispatcher. Run a request in a fresh session, suc
 
 The agents decide the route: each one ends with a HANDOFF block (format in `CLAUDE.md` → *Agent pipeline*) that names the next agent and its task. You carry out these handoffs and keep the log. Don't do the agents' work yourself, and don't rewrite their tasks. Pass them on. The release needs nobody's go: once the review is approved and every gate is green, the `release-manager` ships it through the pipeline.
 
+**Stay in this repository.** Read a requester's files by their absolute path and never `cd` into its directory (`--add-dir` already makes it readable). The shell keeps a `cd` into an added directory for the rest of the run, and every relative path after it (agent memory, `tmp/`, `requests/`) lands in the requester's project (057 left designer notes in finance-intelligence).
+
 Arguments: `$ARGUMENTS`
 
 - `--from <project>`: the requester. Without it: the name of the directory a file path points into, else `owner`.
@@ -48,6 +50,7 @@ Start with `next: spec-writer`, task "Write the spec for this request". Then rep
    Task: <the task from the last handoff, verbatim>
    From: <previous agent> — <its reason>
    Owner decisions: <from log.md, or "none">
+   Stay in this repository: read files of other projects by absolute path, never cd into them.
    End your reply with the HANDOFF block from CLAUDE.md.
    ```
 
