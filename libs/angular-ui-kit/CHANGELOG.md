@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.37.0] - 2026-11-10
+
+Finance Intelligence's toolbars, tiles and stages without workarounds: a 44 px clear target and focus that stays on the select, a size for table actions, word breaks in description lists, badges at full contrast on the hero and a hero that fills its row, plus the three open items of 3.36 (list row actions, chart palette, dense state strips). No API breaks.
+
+### Added
+
+- **`TableAction.size`** (services-2026-11-09 row 3): `ButtonSize`, default `xs`. `lg` is 48.5 px high with a label and 45.6 px icon-only (a 44 px target), `sm` 38 / 30 px; the icon stays 20 px. Pass the size per breakpoint yourself.
+- **`lc-hero` `fill`** (cockpit-2026-11-09 row 1): in a grid or flex row that stretches its items the band ends at the row's bottom edge (0 px difference over every size, colour and variant at 360, 1024 and 1280 px); content stays at the top, `[hero-footer]` at the bottom. Without it the hero is as tall as its content.
+
+### Fixed
+
+- **`lc-select` `size="lg"` clear button** (services-2026-11-09 row 1): takes taps on 44 × 44 px; the area ends at the chevron's left edge, so the chevron still opens the list. The × sits 8 px further from the chevron and the text ends 76 px before the field's edge. The 24 px button, its ring and axe `target-size` are as before; xs, sm, md and a select without a value are unchanged.
+- **`lc-select` focus after a tap** (services row 2): a tap or click on an option of a single select returns the focus to the trigger (it fell to `<body>`), and so does `Escape` when the focus is on `<body>`. Keyboard choice, the search field, a backdrop click and multi-select behave as before; `selectionChange` still comes before `closed`.
+- **`lc-description-list` word breaks** (regeln-2026-11-09 row 1, WCAG 2.5.3): the text reads „aus USM übernommen 1 im Modul gepflegt 2“ (was „…übernommen1im Modul gepflegt2“) in `textContent`, accessible names and copied text, also with badges, suffixes, links, times and totals. A clickable card without a `title` whose `ariaLabel` is its visible text passes axe `label-content-name-mismatch` (a card with a `title` does not yet, see Known). Nothing visible changes.
+- **`lc-hero` default slot** (monatsstand-2026-11-09 row 1, WCAG 1.4.3): the body softens its text through its colour (85 % white; 75 % neutral-800 in `light`) instead of `opacity: .85`, so badges, buttons and links in it keep full opacity, and `lc-badge` in a hero takes the light palette in both themes. Every badge variant reaches 4.85:1 or more on all nine bands (success 4.85, warning 5.52; before 3.83–4.67 in light, down to 1.00 in dark). The body text looks as before.
+- **`lc-list` `clickable` row with an `action`** (3.36 Known, WCAG 4.1.2): the action is no longer inside the row's `role="button"`; the row holds a native button, named by the row, beside the action. axe `nested-interactive` passes; one Tab stop for the row, then the action; names, keys and look unchanged.
+- **`lc-state-strip` with 13 or more runs** (3.36 Known, WCAG 2.5.8): the pointer uses the whole strip: pointing at it or sliding a pressed finger along it shows that run, releasing focuses it; vertical scroll and zoom stay. axe `target-size` no longer reports the 90 narrow cells of the 30 / 60 run strips.
+- **`lc-list` labels** hyphenate long German compounds in the page's `lang` instead of breaking inside a word at 360 px.
+
+### Changed
+
+- **Chart palette** (3.36 Known, WCAG 1.4.11): entries 3 and 4 are now `--color-text-success` and `--color-text-warning` (light 5.29 and 6.02:1, dark 8.40 and 7.65:1 on page and surface; were 2.47–2.72 and 2.05–2.26:1 in light). The third and fourth default series of the chart family change colour; series with their own colour don't.
+
+### Compatibility
+
+- No API breaks: an optional field and an optional input. Defaults render as 3.36.0, apart from the fixes: spaces in the description list's DOM (no visual change), the native button of a clickable list row with an action, the state strip's pointer layer, the hero body's text colour instead of opacity (same look), the lg select clear position with a value, and the two palette entries. A table action's `<lc-button>` no longer carries a static `size="xs"` attribute.
+
+### Known
+
+- **`lc-card` with a `title`** runs the title and the body together in its text („Kostenstellenaus USM …“), so a clickable card with a `title` and an `ariaLabel` equal to its visible text still fails axe `label-content-name-mismatch` (2.5.3). Measured in Chromium. Use a card without a `title` for now; queued for the next release.
+- **`lc-hero` body text** on the `primary`, `purple`, `secondary`, `orange`, `success` and `warning` bands is below 4.5:1 (2.01–3.81:1; the title on `success` and `warning` is 2.72 and 2.26:1, below 3:1). Not new in 3.37; queued for the next release.
+- WebKit is not automated here: the focus return of the select and the *Focus return (3.34)* stories are checked in Chromium only.
+
 ## [3.36.0] - 2026-11-07
 
 Finance Intelligence's model pages without workarounds: a state strip for load runs, badges and a sum row in fact lists, chevrons on list rows, the snapshot state in the header, a quieter action and a focusable title on the hero stage, a distribution band, a table footer row with row-specific action names, and cards that close. No API breaks.

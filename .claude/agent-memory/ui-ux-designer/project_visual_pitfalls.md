@@ -12,6 +12,7 @@ metadata:
 - `layout-app-shell--toasts-in-the-shell` dark shots flip by hash between runs (053: 360/1024 D in one run, 1280 D in the next, 0 in r1) with identical stack geometry: check the rects, not the hash.
 - `navigation-sidenav--drawer-mode` 1280 **dark** (050 r1): baseline differs from 3 later re-shoots that are byte-equal to each other, with an unchanged DOM (close button auto-focused at open). Also flaky: sidenav sidebar-first-layout 1024/1280, prominent-brand 1024/1280 L, collapsed-rail-badges 360. Shots taken after a `.focus()`/`.blur()` pass in `--measure` differ in bytes from at-rest shots (floating bar, sidenav at 1024+) with no computed-style change: keep focus passes out of compare runs.
 - 051: also flaky `navigation-sidenav--collapsed-icon-rail` 360 D; `--docked` 360 D differed only with a 13 kB injected `<style>`. `collapsed-rail-badges` at 360 renders two overlapping drawers (the light one on top), so the dark rail is invisible there.
+- `charts-scatter-plot--compact` uses `Math.random()` data: it differs on every run (057), so a palette-change compare must exclude it.
 - Icon size grids (label + 16/20/24/32/40 px) overflow 328 px at 360 with a 24 px column gap; use an 8 px gap and labels of at most 18 monospace characters.
 
 **Why:** a hash diff on an unstable story wastes a shot opening in review.

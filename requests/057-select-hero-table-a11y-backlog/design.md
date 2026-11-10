@@ -1,6 +1,6 @@
 # Design 057: select clear area and focus, table action size, dl whitespace, hero slot colour and fill, list action, chart palette, dense strip, backlog
 
-- **Status:** ready (2026-11-09 23:57)
+- **Status:** ready (2026-11-09 23:57) · change notes 2026-11-10 (review r1): §3 D1 separator also after a badge, §8 *In a Labelled Card* time + suffix instead of link + suffix
 - **Spec:** [spec.md](spec.md) — AC-1 … AC-25 · target **3.37.0** (minor)
 - **Shots (3.36.0 `main` build, 360/1024/1280 × L/D):** `tmp/story-shots/057/baseline` (173 stories, 1038 shots). Prototypes injected into that build, kept as the **expected build** where the hash must change: `proto-select` (select, 66), `proto-hero` (hero + inverse buttons + character, 126), `proto-list` (list + header focus-context, 150). `proto-dl` (120) and `proto-strip` (36) are hash-identical to the baseline. Measures: `tmp/story-shots/057/*.js`.
 
@@ -79,7 +79,7 @@ Prototyped exactly so (`proto-list-btn`: 6/6 identical, name unchanged, `nested-
 
 **SS1:** `.lc-state-strip__row { position: relative }` + last child `<div class="lc-state-strip__scrub" aria-hidden="true">` (`position: absolute; inset: 0; touch-action: pan-y pinch-zoom`). At 360: 328 × 32 over 30 cells of 10.92 px and 60 of 5.45 px; 10 runs: 240 px of cells, the rest of the row picks nothing (as today).
 
-**D1 separators:** `<dt>…</dt>&ngsp;<span leader>&ngsp;<dd>`, `&ngsp;` after each row `div`, `<span sr-only>…</span>&ngsp;{{ term }}` (line start, collapsed), `<lc-badge>&ngsp;{{ badge }}</lc-badge>` (flex item start, collapsed), `<span class="lc-dl__sep"> </span>` (`font-size: 0`, 0 px) before `.lc-dl__value-suffix` only after `<a>`/`<time>`.
+**D1 separators:** `<dt>…</dt>&ngsp;<span leader>&ngsp;<dd>`, `&ngsp;` after each row `div`, `<span sr-only>…</span>&ngsp;{{ term }}` (line start, collapsed), `<lc-badge>&ngsp;{{ badge }}</lc-badge>` (flex item start, collapsed), `<span class="lc-dl__sep"> </span>` (`font-size: 0`, 0 px) before `.lc-dl__value-suffix` after `<a>`, `<time>` **or a badge** (change note, review r1: without it a badge + suffix read „Geladenvollständig“; build Deviation 1).
 
 ## 4. States
 
@@ -129,7 +129,7 @@ No new built-in strings. `clearAriaLabel`: EN „Clear selection“, DE „Auswa
 | Focus After Tap (new) | `form-select--focus-after-tap` | play: `trigger.click()`, option `.click()` (no focus, as a WebKit tap), `expect(activeElement).toBe(trigger)`; reopen, `body.focus()`, Escape on `body`, expect the trigger | AC-5, AC-6 |
 | Touch Targets (text) | `form-select--touch-targets` | description: lg 44 × 44 area, × 8 px further from the chevron | AC-2 |
 | Action Sizes (new) | `data-display-table--action-sizes` | DE rows; actions „Herkunft“ (icon + label, `ariaLabel: row => 'Herkunft von ' + row.name`) and icon-only „Details“, one table `size: 'sm'`, one `size: 'lg'` | AC-9 at 360/1024 |
-| In a Labelled Card (new) | `components-description-list--in-a-labelled-card` | `[clickable]="true"` card, `ariaLabel` = the visible text; rows: plain, badge after a value, link + suffix, total | AC-11, AC-12 |
+| In a Labelled Card (new) | `components-description-list--in-a-labelled-card` | `[clickable]="true"` card, `ariaLabel` = the visible text; rows: plain, badge after a value, **time + suffix**, total (change note, review r1: a link inside a `role="button"` card nests a control, so the link + suffix path is a unit test only; build Deviation 2). No card `title`: see review F-4 | AC-11, AC-12 |
 | Badges in the Body (new) | `layout-hero--badges-in-the-body` | 9 colours + one light variant, `size="sm"`; body „September 2026“ + seal `rounded` sm warning „Entwurf“ / success „Freigegeben“ + the 6 variants at xs | AC-14, AC-15 |
 | Fill (new) | `layout-hero--fill` | args `fill` (true), `size`, `color`, `variant` bound; 2-column grid beside a card with 8 rows | AC-17, AC-18 |
 | German Labels (new) | `data-display-list--german-labels` | `lang="de"`, sm and md × `showChevron` on/off, labels „USM-Leistungsverrechnung“, „SAP-Ist (Kostenstellen-Einzelposten, Buchungskreis 1000)“ | AC-23 at 360 |
