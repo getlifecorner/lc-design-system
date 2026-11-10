@@ -1,0 +1,55 @@
+// lc-picture (3.39, request 059, G-SS2, design D-3). No border, radius or
+// shadow of its own; the hooks are read at the img only and never declared
+// here, so a hook set on an ancestor (lc-device-frame's screen, a card) wins.
+
+:host {
+  display: block;
+}
+
+.lc-picture__picture {
+  display: block;
+}
+
+// The width/height attributes reserve the ratio before load; the image is at
+// most as wide as its container and keeps that ratio (AC-11).
+.lc-picture__img {
+  display: block;
+  max-inline-size: 100%;
+  block-size: auto;
+  min-inline-size: var(--lc-picture-min-width, 0px);
+  border-radius: var(--lc-picture-radius, 0px);
+}
+
+// Light/dark pair: both pictures are rendered and the ROOT THEME picks one,
+// with exactly the selectors of lc-logo and the theme stylesheets
+// (_theme-dark.scss):
+// - dark: `:root.dark`, a root without a theme class (dark-first default), and
+//   `:root.system` while the OS is dark;
+// - light: `:root.light`, and `:root.system` while the OS is light.
+// A lazy img in the hidden picture is not fetched.
+.lc-picture__picture--dark {
+  display: none;
+}
+
+:host-context(:root.dark),
+:host-context(:root:not(.light):not(.system)) {
+  .lc-picture__picture--light {
+    display: none;
+  }
+
+  .lc-picture__picture--dark {
+    display: block;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :host-context(:root.system:not(.light)) {
+    .lc-picture__picture--light {
+      display: none;
+    }
+
+    .lc-picture__picture--dark {
+      display: block;
+    }
+  }
+}

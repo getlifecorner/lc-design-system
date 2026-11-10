@@ -308,6 +308,7 @@
         [options]="pageSizeSelectOptions()"
         [ngModel]="internalPageSize()"
         [ariaLabel]="rowsPerPageAriaLabel()"
+        [clearable]="false"
         (ngModelChange)="onPageSizeModelChange($event)"
       />
       <div class="lc-table-pagination__pager">

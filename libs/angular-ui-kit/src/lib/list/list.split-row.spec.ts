@@ -82,7 +82,10 @@ describe('lc-list — clickable row with an action (3.37, request 057, F-2)', ()
       expect(row.firstElementChild).toBe(button);
       expect(button.type).toBe('button');
       expect(button.textContent).toBe('');
-      expect(button.getAttribute('aria-labelledby')).toBe(row.id);
+      // 3.39 (request 059, AC-14, 057-n5): named by aria-label (the row's parts
+      // joined by ", "), no longer aria-labelledby the row, which read the action too.
+      expect(button.getAttribute('aria-label')).toBe('SAP-Ist (Kostenstellen-Einzelposten, Buchungskreis 1000), Geladen, Heute, 06:00');
+      expect(button.hasAttribute('aria-labelledby')).toBe(false);
       expect(button.hasAttribute('tabindex')).toBe(false);
       expect(button.getAttribute('aria-current')).toBe('true');
       expect(button.hasAttribute('aria-disabled')).toBe(false);
@@ -122,11 +125,11 @@ describe('lc-list — clickable row with an action (3.37, request 057, F-2)', ()
   });
 
   describe('AC-19: names and axe', () => {
-    it('the row button is named by the row text, as the role="button" row was', () => {
-      // The same string as the 3.36 role="button" row in jsdom (compared once
-      // against the 3.36 template, build.md). jsdom has no layout, so the badge
-      // and the metadata spans run together; a browser separates the blocks.
-      expect(computedName(el(), buttonOf(0))).toBe('SAP-Ist (Kostenstellen-Einzelposten, Buchungskreis 1000) GeladenHeute, 06:00 Laden');
+    it('the row button is named by the row text, its parts separated and without the action', () => {
+      // 3.39 (request 059, AC-14, folds 057-n5): 3.37 named it by the row
+      // (aria-labelledby), so the parts ran together and the action's „Laden“
+      // was read too ('… 1000) GeladenHeute, 06:00 Laden' in jsdom).
+      expect(computedName(el(), buttonOf(0))).toBe('SAP-Ist (Kostenstellen-Einzelposten, Buchungskreis 1000), Geladen, Heute, 06:00');
       expect(computedName(el(), actionOf(1))).toBe('USM-Leistungsverrechnung laden');
     });
 

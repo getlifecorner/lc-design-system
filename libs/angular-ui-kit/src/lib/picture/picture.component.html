@@ -1,0 +1,32 @@
+<!-- 3.39 (request 059, D-3): one picture, or a light and a dark one that the root theme picks between (CSS, no JS). -->
+@for (picture of pictures(); track picture.modifier) {
+  <picture
+    class="lc-picture__picture"
+    [class.lc-picture__picture--light]="picture.modifier === 'light'"
+    [class.lc-picture__picture--dark]="picture.modifier === 'dark'"
+  >
+    @for (source of picture.sources; track $index) {
+      <source
+        [attr.type]="source.type || null"
+        [attr.media]="source.media || null"
+        [attr.sizes]="source.sizes || sizes() || null"
+        [attr.srcset]="source.srcset"
+      />
+    }
+    <!-- In an @if after the @for: its bindings run after the sources' ones, so every srcset is written before the src. -->
+    @if (picture.img; as img) {
+      <img
+        class="lc-picture__img"
+        [attr.loading]="loading()"
+        [attr.decoding]="decoding()"
+        [attr.fetchpriority]="fetchpriority() === 'auto' ? null : fetchpriority()"
+        [attr.width]="width() ?? null"
+        [attr.height]="height() ?? null"
+        [attr.alt]="alt()"
+        [attr.sizes]="sizes() || null"
+        [attr.srcset]="img.srcset || null"
+        [attr.src]="img.src"
+      />
+    }
+  </picture>
+}

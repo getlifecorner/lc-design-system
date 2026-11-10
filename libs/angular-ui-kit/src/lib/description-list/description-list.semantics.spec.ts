@@ -147,13 +147,16 @@ describe('DescriptionListComponent clickable row semantics (F-17)', () => {
     const html = lists()[1].outerHTML.replace(/\s_ng(content|host)-[\w-]+=""/g, '').replace(/<!--[^]*?-->/g, '');
     // 3.37 (request 057, D-4): plus one space between dt, leader and dd and
     // after each row, for word breaks in the text; they render nothing.
+    // 3.39 (request 059, AC-17, D-7): one space per break, so none between
+    // the leader and the dd and none at the dd's edges; a plain value keeps
+    // the space before its suffix.
     expect(html).toBe(
       '<dl class="lc-dl lc-dl--md lc-dl--rows lc-dl--sep-line">' +
-        '<div class="lc-dl__row"><dt class="lc-dl__term">Repository</dt> <span aria-hidden="true" class="lc-dl__leader"></span> ' +
+        '<div class="lc-dl__row"><dt class="lc-dl__term">Repository</dt> <span aria-hidden="true" class="lc-dl__leader"></span>' +
         '<dd class="lc-dl__value lc-dl__value--primary"><a class="lc-dl__link" href="#">example/project</a></dd></div> ' +
-        '<div class="lc-dl__row"><dt class="lc-dl__term">Access</dt> <span aria-hidden="true" class="lc-dl__leader"></span> ' +
-        '<dd class="lc-dl__value lc-dl__value--default"> Token stored · read only <span class="lc-dl__value-suffix">x</span></dd></div> ' +
-        '<div class="lc-dl__row"><dt class="lc-dl__term">Beigetreten</dt> <span aria-hidden="true" class="lc-dl__leader"></span> ' +
+        '<div class="lc-dl__row"><dt class="lc-dl__term">Access</dt> <span aria-hidden="true" class="lc-dl__leader"></span>' +
+        '<dd class="lc-dl__value lc-dl__value--default">Token stored · read only <span class="lc-dl__value-suffix">x</span></dd></div> ' +
+        '<div class="lc-dl__row"><dt class="lc-dl__term">Beigetreten</dt> <span aria-hidden="true" class="lc-dl__leader"></span>' +
         '<dd class="lc-dl__value lc-dl__value--mono"><time datetime="2026-10-12T18:05:00+02:00">heute 18:05</time></dd></div> ' +
         '</dl>',
     );

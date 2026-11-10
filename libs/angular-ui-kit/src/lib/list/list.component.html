@@ -20,23 +20,27 @@
     }
 
     <!-- Content: Label, Subtitle, Description -->
+    <!-- 3.39 (request 059, AC-14): with an `ariaLabel` each text part starts with a space (wordBreak), so the
+         row's visible text has word breaks („Lücken 3 offen“, not „Lücken3 offen“) and a name that holds it
+         passes axe label-content-name-mismatch. The space starts a flex item's line and renders nothing.
+         Without `ariaLabel` it is '' in the same text node, so the markup is that of 3.38. -->
     <div class="lc-list__content">
-      <span class="lc-list__label">{{ item.label }}</span>
+      <span class="lc-list__label">{{ wordBreak(item) }}{{ item.label }}</span>
       @if (item.subtitle) {
-        <span class="lc-list__subtitle">{{ item.subtitle }}</span>
+        <span class="lc-list__subtitle">{{ wordBreak(item) }}{{ item.subtitle }}</span>
       }
       @if (item.description) {
-        <span class="lc-list__description">{{ item.description }}</span>
+        <span class="lc-list__description">{{ wordBreak(item) }}{{ item.description }}</span>
       }
     </div>
 
     <!-- Trailing: Badge, Metadata, Action -->
     <div class="lc-list__trailing">
       @if (item.badge) {
-        <span class="lc-list__badge lc-list__badge--{{ item.badgeVariant || 'default' }}">{{ item.badge }}</span>
+        <span class="lc-list__badge lc-list__badge--{{ item.badgeVariant || 'default' }}">{{ wordBreak(item) }}{{ item.badge }}</span>
       }
       @if (item.metadata) {
-        <span class="lc-list__metadata">{{ item.metadata }}</span>
+        <span class="lc-list__metadata">{{ wordBreak(item) }}{{ item.metadata }}</span>
       }
       @if (item.action && !isLinkRow(item)) {
         <!-- The action is its own control: its click must not also activate the row. -->
@@ -71,6 +75,7 @@
           [class]="getItemClasses(item) + ' lc-list__item--link'"
           [href]="item.href"
           [attr.aria-current]="item.selected ? 'true' : null"
+          [attr.aria-label]="ariaLabelOf(item)"
           (click)="onLinkClick($event, item)"
         >
           <ng-container *ngTemplateOutlet="rowContent; context: { $implicit: item }"></ng-container>
@@ -79,15 +84,17 @@
     } @else if (clickable() && item.action && !itemTemplate()) {
       <!-- 3.37 (request 057, 056 F-2): a clickable row with an action keeps the
            action out of the row's button. The row's native button is stretched
-           over the row and named by it; the action area sits above it. -->
+           over the row and named by it; the action area sits above it.
+           3.39 (request 059, AC-14, 057-n5): named by aria-label, `ariaLabel` or
+           the row's parts joined by ", ", so the action's name drops out. -->
       <div class="lc-list__item-wrapper" role="listitem">
         <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- the row's native button is the control; its Enter/Space click bubbles here -->
         <div [class]="getItemClasses(item) + ' lc-list__item--split'" [id]="rowId(i)" (click)="onItemClick(item)">
-          <!-- eslint-disable-next-line @angular-eslint/template/elements-content -- named by aria-labelledby (the row's text); text inside would repeat it -->
+          <!-- Named by aria-label (the row's text parts, 3.39); text inside would repeat it. -->
           <button
             type="button"
             class="lc-list__item-button"
-            [attr.aria-labelledby]="rowId(i)"
+            [attr.aria-label]="splitRowName(item)"
             [attr.tabindex]="item.disabled ? -1 : null"
             [attr.aria-disabled]="item.disabled ? 'true' : null"
             [attr.aria-current]="item.selected ? 'true' : null"
@@ -103,6 +110,7 @@
           [attr.tabindex]="item.disabled ? -1 : 0"
           [attr.aria-disabled]="item.disabled ? 'true' : null"
           [attr.aria-current]="item.selected ? 'true' : null"
+          [attr.aria-label]="ariaLabelOf(item)"
           (click)="onItemClick(item)"
           (keydown)="onItemKeydown($event, item)"
         >

@@ -29,6 +29,12 @@ const meta: Meta<SelectComponent> = {
       description: 'Select field size',
       table: { defaultValue: { summary: 'md' } },
     },
+    clearable: {
+      control: 'boolean',
+      description:
+        'Whether a selected value shows the clear (×) button (3.39). `false` for selects that always have a value (sort, level, page size): no button is rendered, the value text gets its room and the tab order loses that stop',
+      table: { defaultValue: { summary: 'true' } },
+    },
   },
   parameters: {
     docs: {
@@ -46,6 +52,8 @@ Select component for dropdown option selection.
 - Keyboard navigation support
 - CDK overlay positioning
 - ControlValueAccessor integration for reactive forms
+- 3.39: \`clearable="false"\` leaves out the clear button for selects that always have a value; xs, sm and md
+  reserve the button's room only while it is shown (see *Without Clear Button*)
 `,
       },
     },
@@ -374,4 +382,55 @@ export const PanelLanguage: Story = {
     await new Promise((resolve) => setTimeout(resolve, 50));
     canvasElement.querySelector<HTMLElement>('[lang="de"] lc-select [role="combobox"]')?.click();
   },
+};
+
+/** 3.39 (request 059, finance-intelligence services-prove row 1): selects that always have a value. */
+export const WithoutClearButton: Story = {
+  name: 'Without Clear Button',
+  args: { clearable: false },
+  parameters: {
+    controls: { include: ['clearable'] },
+    docs: {
+      description: {
+        story:
+          '3.39 (request 059, finance-intelligence services-prove row 1): `clearable` (default `true`). In each pair the first select keeps the default, the second takes the control (`false`): no clear button is rendered, so the value text runs to the chevron and the tab order loses that stop. In the 280 px `lg` field „Mit enthaltenen Services“ is whole instead of „Mit enthaltenen Se…“; in the 192 px `sm` field „Sortierung: Kosten“ no longer runs under the ×. The last three (xs, sm, md, 320 px, default) show the 057-n1 fix: with the × shown the text ends 4 px before it, with an ellipsis; without a value the field keeps its 3.36 padding. Escape and the name are unchanged.',
+      },
+    },
+  },
+  render: (args) => ({
+    moduleMetadata: { imports: [SelectComponent, FormsModule] },
+    props: {
+      clearable: args.clearable,
+      levels: [
+        { value: 'own', label: 'Nur eigene Kosten' },
+        { value: 'services', label: 'Mit enthaltenen Services' },
+      ],
+      sorts: [
+        { value: 'cost', label: 'Sortierung: Kosten' },
+        { value: 'name', label: 'Sortierung: Name' },
+      ],
+      centres: [
+        { value: '4711', label: 'Kostenstelle 4711 Rechenzentrum' },
+        { value: '4712', label: 'Kostenstelle 4712 Arbeitsplatz' },
+      ],
+      sizes: ['xs', 'sm', 'md'],
+    },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="max-width: 280px; display: flex; flex-direction: column; gap: 8px;">
+          <lc-select size="lg" ariaLabel="Ebene" clearAriaLabel="Auswahl löschen" [options]="levels" [ngModel]="'services'"></lc-select>
+          <lc-select size="lg" ariaLabel="Ebene" clearAriaLabel="Auswahl löschen" [clearable]="clearable" [options]="levels" [ngModel]="'services'"></lc-select>
+        </div>
+        <div style="max-width: 192px; display: flex; flex-direction: column; gap: 8px;">
+          <lc-select size="sm" ariaLabel="Sortierung" clearAriaLabel="Auswahl löschen" [options]="sorts" [ngModel]="'cost'"></lc-select>
+          <lc-select size="sm" ariaLabel="Sortierung" clearAriaLabel="Auswahl löschen" [clearable]="clearable" [options]="sorts" [ngModel]="'cost'"></lc-select>
+        </div>
+        <div style="max-width: 320px; display: flex; flex-direction: column; gap: 8px;">
+          @for (size of sizes; track size) {
+            <lc-select [size]="size" [ariaLabel]="'Kostenstelle (' + size + ')'" clearAriaLabel="Auswahl löschen" [options]="centres" [ngModel]="'4711'"></lc-select>
+          }
+        </div>
+      </div>
+    `,
+  }),
 };

@@ -86,6 +86,20 @@
     }
   }
 
+  // 3.39 (request 059, folds 057-n1, design D-5): xs/sm/md reserve the
+  // button's room only while the button is in the DOM, as lg does: 12 px +
+  // 20 px chevron + 4 px gap + the 24 px box less its 2 px margin + 4 px, so a
+  // long value's ellipsis ends 4 px before the × (62 px at 100 %). Without a
+  // value, with `clearable="false"`, disabled or multiple the 3.36 padding
+  // stays.
+  &.lc-select--xs,
+  &.lc-select--sm,
+  &.lc-select--md {
+    &:has(.lc-select__clear) {
+      padding-right: calc(var(--spacing-3) + 1.25rem + var(--spacing-1) + 1.5rem - 0.125rem + var(--spacing-1));
+    }
+  }
+
   // Variant styles
   // Request 044 (F-31): the filled field keeps the 3:1 field boundary of the
   // outline variant (it was transparent at rest and --color-border on hover,
@@ -168,9 +182,10 @@
 }
 
 // Public theming hooks (stable API — set them on the host or any ancestor):
-//   --lc-select-clear-display   e.g. `none` to hide the clear button (at `lg`
-//                               with a value the text still ends 76 px before
-//                               the field's right edge, 3.37)
+//   --lc-select-clear-display   `none` hides the × but keeps its room at every
+//                               size (since 3.39; lg since 3.37), because the
+//                               button stays in the DOM. Use
+//                               `clearable="false"` instead (3.39).
 //   --lc-select-clear-fg / --lc-select-clear-hover-fg / --lc-select-clear-hover-bg
 //
 // A 24 × 24 px button (WCAG 2.5.8 by size, request 043 F-22, design D-3,

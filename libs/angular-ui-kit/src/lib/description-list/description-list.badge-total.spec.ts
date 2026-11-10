@@ -35,14 +35,16 @@ describe('DescriptionListComponent — badge and total (3.36, request 056)', () 
       ]);
       // 3.37 (request 057, D-4): one space between dt, leader and dd and after
       // each row (word breaks in the text); they render nothing. Otherwise the 3.35 rows.
+      // 3.39 (request 059, AC-17, D-7): one space per break: none between the
+      // leader and the dd, none at the dd's edges.
       expect(strip(root.innerHTML)).toBe(
         '<dl class="lc-dl lc-dl--md lc-dl--rows lc-dl--sep-line">' +
-          '<div class="lc-dl__row"><dt class="lc-dl__term">Quelle</dt> <span aria-hidden="true" class="lc-dl__leader"></span> ' +
+          '<div class="lc-dl__row"><dt class="lc-dl__term">Quelle</dt> <span aria-hidden="true" class="lc-dl__leader"></span>' +
           '<dd class="lc-dl__value lc-dl__value--default"><a class="lc-dl__link" href="#sap">SAP-Ist</a></dd></div> ' +
-          '<div class="lc-dl__row"><dt class="lc-dl__term">Stand</dt> <span aria-hidden="true" class="lc-dl__leader"></span> ' +
+          '<div class="lc-dl__row"><dt class="lc-dl__term">Stand</dt> <span aria-hidden="true" class="lc-dl__leader"></span>' +
           '<dd class="lc-dl__value lc-dl__value--default"><time datetime="2026-11-07T06:00:00+01:00">heute 06:00</time></dd></div> ' +
-          '<div class="lc-dl__row"><dt class="lc-dl__term">Zeilen</dt> <span aria-hidden="true" class="lc-dl__leader"></span> ' +
-          '<dd class="lc-dl__value lc-dl__value--strong"> 12.408 </dd></div> </dl>',
+          '<div class="lc-dl__row"><dt class="lc-dl__term">Zeilen</dt> <span aria-hidden="true" class="lc-dl__leader"></span>' +
+          '<dd class="lc-dl__value lc-dl__value--strong">12.408</dd></div> </dl>',
       );
       expect(fixture.componentInstance.totalAriaLabel()).toBe('');
     });
@@ -131,9 +133,10 @@ describe('DescriptionListComponent — badge and total (3.36, request 056)', () 
       render(ITEMS, { totalAriaLabel: 'Summe', clickable: true });
       const dt = rows()[2].querySelector('dt') as HTMLElement;
       const hidden = dt.querySelector('.lc-dl__sr-only') as HTMLElement;
-      expect(hidden.textContent).toBe('Summe, ');
-      // 3.37 (request 057, D-4): a space after the hidden prefix too (it collapses at the line start).
-      expect(dt.textContent).toBe('Summe,  Gesamtkosten Ist');
+      // 3.39 (request 059, AC-17): the prefix ends at its comma; the space
+      // after it (3.37, D-4, it collapses at the line start) is the only one.
+      expect(hidden.textContent).toBe('Summe,');
+      expect(dt.textContent).toBe('Summe, Gesamtkosten Ist');
       const button = rows()[2].querySelector('.lc-dl__action') as HTMLButtonElement;
       expect(computedName(root, button)).toBe('Summe, Gesamtkosten Ist 522.530,00 €');
       // Only the total gets it.
@@ -143,7 +146,8 @@ describe('DescriptionListComponent — badge and total (3.36, request 056)', () 
     it('stacked layout and sm size keep it', () => {
       render(ITEMS, { layout: 'stacked', size: 'sm', totalAriaLabel: 'Summe' });
       expect(rows()[2].classList).toContain('lc-dl__row--total');
-      expect(rows()[2].querySelector('.lc-dl__sr-only')?.textContent).toBe('Summe, ');
+      // 3.39 (request 059, AC-17): no trailing space in the prefix.
+      expect(rows()[2].querySelector('.lc-dl__sr-only')?.textContent).toBe('Summe,');
     });
 
     it('styles: field-border rules (1 px solid above, 3 px double below), on the separator line, semibold term', () => {

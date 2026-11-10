@@ -67,8 +67,11 @@ describe('TableComponent pagination (3.19, request 024)', () => {
     expect(trigger().getAttribute('tabindex')).toBe('0');
     expect(trigger().classList).toContain('lc-select--md');
     expect(text('.lc-select__value', trigger())).toBe('10 / page');
-    // The clear control stays in lc-select's DOM; the table hides it through --lc-select-clear-display.
-    expect(el().querySelector('.lc-table-pagination__size .lc-select__clear')).toBeTruthy();
+    // 3.39 (request 059, D-5): the page-size select always has a value, so it
+    // renders no clear control (`clearable` false). Before, the control was in
+    // the DOM, hidden by --lc-select-clear-display, and a click blanked the field.
+    expect(el().querySelector('.lc-table-pagination__size .lc-select__clear')).toBeNull();
+    expect(el().querySelectorAll('.lc-table-pagination__size button')).toHaveLength(0);
   });
 
   it.each([

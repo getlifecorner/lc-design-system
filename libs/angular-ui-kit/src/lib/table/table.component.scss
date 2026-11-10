@@ -520,6 +520,8 @@
   }
 
   // A page size cannot be empty: no clear (×) control (it sat over the value).
+  // Since 3.39 the template also sets `[clearable]="false"` (request 059,
+  // D-5), so no control is rendered at all.
   &__size {
     --lc-select-clear-display: none;
 

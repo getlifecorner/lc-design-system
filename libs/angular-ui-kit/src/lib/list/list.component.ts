@@ -70,6 +70,17 @@ export interface ListItem {
    */
   actionAriaLabel?: string;
   /**
+   * Accessible name of the row's control (3.39): the `<a>` of an `href` row,
+   * the `role="button"` row, or the split row's native button (a `clickable`
+   * row with an `action`). Include all the row's visible text in order (WCAG
+   * 2.5.3; axe `label-content-name-mismatch`), e.g. „Zu Lücken, 3 offen“ for
+   * a row that shows „Lücken“ and „3 offen“. Ignored on rows that are neither
+   * `href` nor `clickable` (a dev warning). Unset, the row's text names it;
+   * a split row then reads its parts joined by „, “ (label, subtitle,
+   * description, badge, metadata), without the action's name.
+   */
+  ariaLabel?: string;
+  /**
    * URL of the row link (3.16, TD-4). The row renders as an `<a>` over its
    * full area (at least 44 px high) with real link semantics (middle click,
    * "open in new tab"). Not rendered with `href`: `action` (no control inside
@@ -245,6 +256,10 @@ export class ListComponent {
         if (this.isLinkRow(item) && item.action) {
           console.warn(`[lc-list] item "${item.label}" has href and action: the action is not rendered inside a link`);
         }
+        // 3.39 (request 059, AC-16): a plain row has no control to name.
+        if (this.ariaLabelOf(item) && !item.href && !this.clickable()) {
+          console.warn(`lc-list: ariaLabel names only href or clickable rows; "${item.label}" is neither.`);
+        }
       }
     });
   }
@@ -283,11 +298,43 @@ export class ListComponent {
   private readonly uid = `lc-list-${nextListId++}`;
 
   /**
-   * Id of row `index` of a `clickable` row with an `action` (3.37): the
-   * row's button is named by it (`aria-labelledby`).
+   * Id of row `index` of a `clickable` row with an `action` (3.37). Since
+   * 3.39 the row's button is named by `aria-label` (`splitRowName`), not by
+   * this id; the id stays on the row.
    */
   protected rowId(index: number): string {
     return `${this.uid}-row-${index}`;
+  }
+
+  /** The item's `ariaLabel`, trimmed; null (no attribute) when unset or blank (3.39). */
+  protected ariaLabelOf(item: ListItem): string | null {
+    return typeof item.ariaLabel === 'string' ? item.ariaLabel.trim() || null : null;
+  }
+
+  /**
+   * The space each text part of a row starts with when the row has an
+   * `ariaLabel` (3.39, AC-14): it gives the row's visible text word breaks
+   * („Lücken 3 offen“), so a name that holds that text passes axe
+   * `label-content-name-mismatch` (WCAG 2.5.3). It starts a flex item's line
+   * and renders nothing. `''` without `ariaLabel`: the text is that of 3.38.
+   */
+  protected wordBreak(item: ListItem): string {
+    return this.ariaLabelOf(item) ? ' ' : '';
+  }
+
+  /**
+   * Name of a split row's button (3.39, AC-14, folds 057-n5): `ariaLabel`, or
+   * the row's text parts joined by „, “, so they don't run together and the
+   * action (its own control) is not part of it.
+   */
+  protected splitRowName(item: ListItem): string {
+    return (
+      this.ariaLabelOf(item) ??
+      [item.label, item.subtitle, item.description, item.badge, item.metadata]
+        .map((part) => (typeof part === 'string' ? part.trim() : ''))
+        .filter(Boolean)
+        .join(', ')
+    );
   }
 
   /** Whether a row renders as a link: `href` set and not disabled. */

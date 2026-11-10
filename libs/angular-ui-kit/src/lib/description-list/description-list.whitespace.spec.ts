@@ -114,19 +114,25 @@ describe('lc-description-list — word breaks in the text (3.37, request 057)', 
       const leader = row.querySelector('.lc-dl__leader') as Element;
       const dd = row.querySelector('dd') as Element;
       expect(between(dt, leader)).toEqual(['text:" "']);
-      expect(between(leader, dd)).toEqual(['text:" "']);
+      // 3.39 (request 059, AC-17): the dt–leader space is the term's only break; a second one doubled it.
+      expect(between(leader, dd)).toEqual([]);
       expect(row.nextSibling?.textContent).toBe(' ');
       const seps = Array.from(dl().querySelectorAll('.lc-dl__sep'));
       expect(seps.map((s) => s.textContent)).toEqual([' ', ' ', ' ']);
       expect(seps.map((s) => s.previousElementSibling?.nodeName)).toEqual(['A', 'TIME', 'LC-BADGE']);
       expect(seps.every((s) => s.nextElementSibling?.className === 'lc-dl__value-suffix')).toBe(true);
-      // A badge's text starts with a space; at the start of its flex box it renders nothing.
-      expect(dl().querySelector('lc-badge')?.textContent).toBe(' Geladen');
+      // 3.39 (request 059, AC-17): a badge's text starts with a space only after
+      // a shown value (it renders nothing at the start of its flex box); a badge
+      // alone follows the dt–leader space, so a second one doubled it.
+      expect(dl().querySelector('lc-badge')?.textContent).toBe('Geladen');
     });
 
     it('the 0 px separator: font-size 0, appended after the 3.36 rules', () => {
       const css = compile(resolve(__dirname, 'description-list.component.scss')).css;
-      expect(css).toMatch(/\n\.lc-dl__sep \{\s*font-size: 0;\s*\}\s*$/);
+      // 3.39 (request 059, D-8): the narrow-row rules follow it at the file end
+      // (description-list.narrow-row.spec.ts); it is still the last 3.37 rule.
+      expect(css).toMatch(/\n\.lc-dl__sep \{\s*font-size: 0;\s*\}\s*\n\.lc-dl--rows > \.lc-dl__row \{/);
+      expect(css.indexOf('\n.lc-dl__sep {')).toBeGreaterThan(css.indexOf('\n.lc-dl__sr-only {'));
     });
   });
 

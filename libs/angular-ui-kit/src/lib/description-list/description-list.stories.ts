@@ -34,6 +34,9 @@ Description list for key/value metadata (a styled \`<dl>\`).
   above and a double rule below, announced with \`totalAriaLabel\` (see *Badge Values*, *Total Row*)
 - 3.37 (057): spaces between term and value and between rows, so the list's text has word breaks
   (\`textContent\`, accessible names, copied text); the look is unchanged (see *In a Labelled Card*)
+- 3.39 (059): one space per word break (the total row read „Summe,  Gesamtkosten Ist“ with two). \`rows\`: when
+  term and value can't each keep \`min(100%, 6em)\` side by side, the value moves onto its own line, right-aligned,
+  so an amount doesn't break inside; terms hyphenate long compounds (see *Narrow Column*)
 `,
       },
     },
@@ -487,6 +490,56 @@ export const InALabelledCard: Story = {
         <lc-card variant="outlined" borderRadius="xl" padding="lg" [clickable]="true" [ariaLabel]="cardLabel">
           <lc-description-list [items]="items" [totalAriaLabel]="totalAriaLabel" size="sm" />
         </lc-card>
+      </div>
+    `,
+  }),
+};
+
+/** 3.39 (request 059, 057-n3): the cost distribution of the hero *Fill* story, German and English. */
+const narrowItemsDe = [
+  { term: 'Netz', value: '214.300,00 €' },
+  { term: 'Arbeitsplatz', value: '175.730,00 €' },
+  { term: 'Rechenzentrum', value: '98.410,00 €' },
+  { term: 'Anwendungen', value: '61.230,00 €' },
+  { term: 'Telefonie', value: '24.500,00 €' },
+  { term: 'Druck', value: '12.870,00 €' },
+  { term: 'Beratung', value: '9.400,00 €' },
+  { term: 'Ohne Service', value: '132.500,00 €' },
+];
+const narrowItemsEn = [
+  { term: 'Network', value: '214,300.00 €' },
+  { term: 'Data centre', value: '98,410.00 €' },
+  { term: 'Workplace', value: '175,730.00 €' },
+  { term: 'Telephony', value: '24,500.00 €' },
+];
+
+/** 3.39 (request 059, 057-n3): amounts in a 156 px card column. */
+export const NarrowColumn: Story = {
+  name: 'Narrow Column',
+  decorators: [moduleMetadata({ imports: [CardComponent] })],
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.39 (request 059, backlog 057-n3): two outlined cards 156 px wide at every width, as the card column of the hero *Fill* story at 360 px (the list is 122 px). In the `rows` layout a row whose term and value can\'t each keep `min(100%, 6em)` beside each other (84 px at `md`, or their whole text) puts the value on its own line, right-aligned, so „214.300,00 €“ no longer breaks inside the number. The term hyphenates long compounds in the page\'s `lang` („Rechenzen-trum“); words under 12 letters never do. Rows that fit keep term and value on one line, so wider columns are unchanged. German (`lang="de"`) and English (`lang="en"`).',
+      },
+    },
+  },
+  render: () => ({
+    props: { de: narrowItemsDe, en: narrowItemsEn },
+    template: `
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start;">
+        <div lang="de" style="width: 156px;">
+          <lc-card title="Verteilung" variant="outlined" [headingLevel]="2">
+            <lc-description-list [items]="de" />
+          </lc-card>
+        </div>
+        <div lang="en" style="width: 156px;">
+          <lc-card title="Distribution" variant="outlined" [headingLevel]="2">
+            <lc-description-list [items]="en" />
+          </lc-card>
+        </div>
       </div>
     `,
   }),

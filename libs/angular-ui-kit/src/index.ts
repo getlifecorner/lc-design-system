@@ -59,6 +59,12 @@ export * from '@lifecorner/angular-ui-kit/logo';
 export * from '@lifecorner/angular-ui-kit/character';
 export * from '@lifecorner/angular-ui-kit/character-svg';
 
+// Picture Component (responsive image with sources and theme variants, 3.39)
+export * from '@lifecorner/angular-ui-kit/picture';
+
+// Device Frame Component (a phone bezel around media, 3.39)
+export * from '@lifecorner/angular-ui-kit/device-frame';
+
 // Menu Component
 export * from '@lifecorner/angular-ui-kit/menu';
 

@@ -9,7 +9,8 @@
       (keydown)="onRowKeydown($event, item)"
     >
       <!-- 3.37 (request 057, regeln row 1, D-4): the &ngsp; spaces put word breaks into the text (textContent, names, copy); in the flex row they render nothing. -->
-      <dt class="lc-dl__term" [attr.id]="clickable() ? termId(i) : null">@if (item.total && totalPrefix()) {<span class="lc-dl__sr-only">{{ totalPrefix() }}</span>&ngsp;}{{ item.term }}</dt>&ngsp;<span class="lc-dl__leader" aria-hidden="true"></span>&ngsp;<dd [class]="valueClass(item)" [attr.id]="clickable() ? valueId(i) : null">
+      <!-- 3.39 (request 059, AC-17, D-7): one space per break: none between the leader and the dd, none at the dd's edges. -->
+      <dt class="lc-dl__term" [attr.id]="clickable() ? termId(i) : null">@if (item.total && totalPrefix()) {<span class="lc-dl__sr-only">{{ totalPrefix() }}</span>&ngsp;}{{ item.term }}</dt>&ngsp;<span class="lc-dl__leader" aria-hidden="true"></span><dd [class]="valueClass(item)" [attr.id]="clickable() ? valueId(i) : null">
         @if (item.badge) {
           <!-- 3.36: the value as a badge; another value stays as text before it (D-2). -->
           @if (badgeShowsValue(item)) {
@@ -27,15 +28,13 @@
             [size]="size() === 'sm' ? 'xs' : 'sm'"
             [rounded]="true"
             [variant]="item.badgeVariant ?? 'default'"
-            >&ngsp;{{ item.badge }}</lc-badge
+            >{{ badgeShowsValue(item) ? ' ' + item.badge : item.badge }}</lc-badge
           >
         } @else if (item.href) {
           <a class="lc-dl__link" [href]="item.href">{{ item.value }}</a>
         } @else if (item.datetime) {
           <time [attr.datetime]="item.datetime">{{ item.value }}</time>
-        } @else {
-          {{ item.value }}
-        }
+        } @else {{{ plainValue(item) }}}
         @if (item.valueSuffix) {
           @if (item.badge || item.href || item.datetime) {
             <!-- After a link, a time or a badge the suffix had no space before it; this one renders 0 px wide. -->

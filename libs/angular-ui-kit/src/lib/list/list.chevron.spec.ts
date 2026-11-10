@@ -87,7 +87,9 @@ describe('ListComponent — showChevron (3.36, request 056)', () => {
     // more; its native button (a Tab stop, named by the row) is the control.
     const rowButton = row.querySelector(':scope > .lc-list__item-button') as HTMLButtonElement;
     expect(row.hasAttribute('role')).toBe(false);
-    expect(rowButton.getAttribute('aria-labelledby')).toBe(row.id);
+    // 3.39 (request 059, AC-14, 057-n5): named by aria-label, not by the row's id.
+    expect(rowButton.getAttribute('aria-label')).toBe('SAP-Ist, Heute, 06:00, Geladen');
+    expect(rowButton.hasAttribute('aria-labelledby')).toBe(false);
     expect(rowButton.tabIndex).toBe(0);
     expect(row.querySelector('.lc-list__action-area button')?.getAttribute('aria-label')).toBe('SAP-Ist laden');
   });

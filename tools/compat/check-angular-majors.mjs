@@ -310,12 +310,28 @@ const EXPECT_IN_HTML = [
   ['table footer row in tfoot, first cell the row header (AC-17)', /<lc-table[^>]*\sid="compat-table-336"[^]*?<\/tbody>(?:<!--[^]*?-->|\s)*<tfoot[^>]*\sclass="lc-table__footer"[^>]*>(?:<!--[^]*?-->|\s)*<tr[^>]*>(?:<!--[^]*?-->|\s)*<th(?=[^>]*\sscope="row")[^>]*>(?:<!--[^]*?-->|\s)*Gesamtkosten Ist/],
   ['header context badge inside the button, in its name (AC-9)', /<lc-header[^>]*\sid="compat-header-336"[^]*?<button(?=[^>]*\sclass="lc-header__context-info lc-header__context-info--badge")(?=[^>]*\saria-label="Monatsstand wählen, Monatsstand Oktober 2026 · Fassung 1, Freigegeben")[^>]*>[^]*?<lc-badge[^>]*\sclass="lc-header__context-badge"[^>]*>[^]*?Freigegeben[^]*?<\/button>/],
   ['hero title as h2, inverse-outline link in it (AC-13, AC-27)', /<lc-hero[^>]*\sid="compat-hero-336"[^]*?<h2[^>]*\sclass="hero__title"[^>]*>522\.530,00 €<\/h2>[^]*?<a(?=[^>]*\sid="compat-inverse-outline-336")(?=[^>]*\sclass="btn btn-inverse-outline btn-lg")[^>]*>/],
+  // 3.39 (request 059, AC-17): the prefix ends at its comma, and one space follows it.
   ['description list: badge value and total with its hidden label (AC-7, AC-11)', (html) => {
     const dl = html.match(/<lc-description-list[^>]*\sid="compat-dl-336"[^]*?<\/lc-description-list>/)?.[0] ?? '';
     return /<lc-badge[^>]*\sclass="lc-dl__badge"[^>]*>/.test(dl)
-      && /<div(?=[^>]*\sclass="lc-dl__row lc-dl__row--total")[^>]*>(?:<!--[^]*?-->|\s)*<dt[^>]*>(?:<!--[^]*?-->|\s)*<span[^>]*\sclass="lc-dl__sr-only"[^>]*>Summe, <\/span>(?:<!--[^]*?-->|\s)*Gesamtkosten Ist<\/dt>/.test(dl);
+      && /<div(?=[^>]*\sclass="lc-dl__row lc-dl__row--total")[^>]*>(?:<!--[^]*?-->|\s)*<dt[^>]*>(?:<!--[^]*?-->|\s)*<span[^>]*\sclass="lc-dl__sr-only"[^>]*>Summe,<\/span>(?:<!--[^]*?-->)* (?:<!--[^]*?-->)*Gesamtkosten Ist<\/dt>/.test(dl);
   }],
   ['list chevron on the clickable row, decorative (AC-8)', /<lc-list[^>]*\sid="compat-list-336"[^]*?<lc-icon(?=[^>]*\sclass="lc-list__chevron")(?=[^>]*\sname="chevron-right")[^>]*>/],
+  // 3.39 (request 059, probe-339.ts): the device frame and the picture in the server HTML, before JS
+  ['device frame: size and notch classes, the decorative notch, the media in the screen (AC-8)', (html) => {
+    const frame = html.match(/<lc-device-frame[^>]*\sid="compat-device-frame"[^]*?<\/lc-device-frame>/)?.[0] ?? '';
+    return /^<lc-device-frame(?=[^>]*\sclass="lc-device-frame lc-device-frame--phone lc-device-frame--md lc-device-frame--notch")(?![^>]*\s(?:role|tabindex)=)[^>]*>/.test(frame)
+      && /<span(?=[^>]*\sclass="lc-device-frame__notch")(?=[^>]*\saria-hidden="true")[^>]*><\/span>(?:<!--[^]*?-->|\s)*<div(?=[^>]*\sclass="lc-device-frame__screen")[^>]*>(?:<!--[^]*?-->|\s)*<lc-picture(?=[^>]*\sid="compat-picture")/.test(frame);
+  }],
+  ['picture: a light and a dark picture, the dark source first, the size reserved (AC-9b, AC-11)', (html) => {
+    const picture = html.match(/<lc-picture[^>]*\sid="compat-picture"[^]*?<\/lc-picture>/)?.[0] ?? '';
+    const pictures = picture.match(/<picture[^>]*>[^]*?<\/picture>/g) ?? [];
+    const img = (p) => /<img(?=[^>]*\sclass="lc-picture__img")(?=[^>]*\sloading="lazy")(?=[^>]*\sdecoding="async")(?=[^>]*\swidth="100")(?=[^>]*\sheight="100")(?=[^>]*\salt="Edu")(?=[^>]*\ssrc="\/compat-logo\/character\/hello-light\.svg")(?![^>]*\sfetchpriority=)[^>]*>/.test(p);
+    return pictures.length === 2
+      && /^<picture(?=[^>]*\sclass="lc-picture__picture lc-picture__picture--light")[^>]*>/.test(pictures[0]) && !/<source/.test(pictures[0]) && img(pictures[0])
+      && /^<picture(?=[^>]*\sclass="lc-picture__picture lc-picture__picture--dark")[^>]*>(?:<!--[^]*?-->|\s)*<source(?=[^>]*\stype="image\/svg\+xml")(?=[^>]*\ssrcset="\/compat-logo\/character\/hello-dark\.svg")[^>]*>/.test(pictures[1]) && img(pictures[1]);
+  }],
+  ['picture: the theme pair rule in the page CSS (AC-9b)', /\.lc-picture__picture--dark\[_ngcontent-[^\]]*\]\s*\{\s*display:\s*none;?\s*\}/],
   // 3.13 (request 017): the inverse link in the hero band and its rule before JS
   // (G-WL1, probe-313.ts); lc-input's error state is `input-invalid` (G-WL3, probe-312.ts)
   ['inverse link in the hero band, class before JS (G-WL1)', /<lc-hero(?=[^>]*\sid="compat-band")[^>]*>[^]*?<a(?=[^>]*\sid="compat-inverse")(?=[^>]*\shref="#warteliste")(?=[^>]*\sclass="btn btn-inverse btn-lg")[^>]*>(?:<!--[^]*?-->|\s)*Trag dich jetzt in die Warteliste ein/],

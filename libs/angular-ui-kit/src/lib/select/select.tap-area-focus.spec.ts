@@ -262,7 +262,10 @@ describe('lc-select — lg clear tap area and focus return (3.37, request 057)',
       expect(rule('.lc-select.lc-select--xs')).toMatch(/padding-right: var\(--spacing-8\);/);
       expect(rule('.lc-select.lc-select--sm')).toMatch(/padding-right: var\(--spacing-9\);/);
       expect(rule('.lc-select.lc-select--md')).toMatch(/padding-right: var\(--spacing-10\);/);
-      expect(css.match(/:has\(\.lc-select__clear\)/g)?.length).toBe(1);
+      // 3.39 (request 059, D-5, folds 057-n1): xs/sm/md got their own
+      // `:has(.lc-select__clear)` padding (select.clearable.spec.ts pins it);
+      // the base paddings above stay those of 3.36.
+      expect(css.match(/:has\(\.lc-select__clear\)/g)?.length).toBe(4);
       expect(css.match(/\.lc-select__clear::before/g)?.length).toBe(1);
     });
   });

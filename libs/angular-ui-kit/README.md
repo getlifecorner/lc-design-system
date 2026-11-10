@@ -139,6 +139,7 @@ and the CSP notes.
 | Badge | `lc-badge` | Status badge |
 | Chip | `lc-chip` | Tag/label chip |
 | Description List | `lc-description-list` | Key/value metadata (`<dl>`) with rows/stacked layout, optional dotted leaders and per-row emphasis/links |
+| Device Frame | `lc-device-frame` | A phone bezel around projected media (app screenshots): sizes, optional notch, a 3:1 rim in both themes, CSS hooks (3.39) |
 | Empty State | `lc-empty-state` | Placeholder for empty content |
 | Field Group | `lc-field-group` | Grouped form fields |
 | Filter Bar | `lc-filter-bar` | Filter controls |
@@ -146,6 +147,7 @@ and the CSP notes.
 | Log Viewer | `lc-log-viewer` | Streaming log/terminal viewer with virtualization |
 | Metric Card | `lc-metric-card` | KPI/metric display |
 | Money | `lc-money` | An amount in minor units: locale, ISO 4217 minor units, U+2212 minus, tabular figures, spoken text; `formatMoney()` for formatters (3.16) |
+| Picture | `lc-picture` | Responsive image: `<picture>` with AVIF/WebP sources, light/dark variants without JS, `srcset`/`sizes`, required `alt`, `width` and `height` (3.39) |
 | Pipeline | `lc-pipeline` | Status timeline of connected process nodes; per-node status (complete/current/pending/warning/error) with captions, horizontal/vertical |
 | Skeleton | `lc-skeleton` | Loading placeholder |
 | Spinner | `lc-spinner` | Loading indicator |

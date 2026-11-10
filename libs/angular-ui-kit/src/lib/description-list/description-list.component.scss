@@ -294,3 +294,30 @@ lc-badge.lc-dl__badge {
 .lc-dl__sep {
   font-size: 0;
 }
+
+// ── narrow rows (3.39, request 059, D-8, AC-18) ─────────────────────────────
+// A rows-layout row wraps its value onto its own line, right-aligned, when
+// term and value can't each keep min(100%, 6em) (or their whole text, as
+// `max-width: max-content` clamps the basis) beside each other: „214.300,00 €“
+// in a 156 px card no longer breaks inside. Only the basis of the 3.26 share
+// changes; a row that fits keeps its boxes. `row-gap: 0` puts the value line
+// right under the term. Terms hyphenate compounds of 12+ letters (Chromium
+// honours the limit). Appended, so the rules above compile as in 3.38.
+.lc-dl--rows > .lc-dl__row {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+
+.lc-dl--rows > .lc-dl__row > .lc-dl__term,
+.lc-dl--rows > .lc-dl__row > .lc-dl__value {
+  flex-basis: min(100%, 6em);
+}
+
+.lc-dl--rows > .lc-dl__row > .lc-dl__term {
+  hyphens: auto;
+  hyphenate-limit-chars: 12 4 3;
+}
+
+.lc-dl--rows > .lc-dl__row > .lc-dl__value {
+  margin-inline-start: auto;
+}

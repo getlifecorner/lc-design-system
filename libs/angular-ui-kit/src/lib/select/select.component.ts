@@ -1,4 +1,5 @@
 import {
+  booleanAttribute,
   Component,
   input,
   output,
@@ -139,6 +140,14 @@ export class SelectComponent implements ControlValueAccessor {
    * Select options (flat list or groups)
    */
   readonly options = input<SelectOption[] | SelectOptionGroup[]>([]);
+
+  /**
+   * Whether a selected value shows the clear (×) button (3.39). `false` for
+   * selects that always have a value (sort, level, page size): no button is
+   * rendered, the value text gets its room and the tab order loses that stop.
+   * @default true
+   */
+  readonly clearable = input(true, { transform: booleanAttribute });
 
   /** Accessible name of the clear button. */
   readonly clearAriaLabel = input('Clear selection');

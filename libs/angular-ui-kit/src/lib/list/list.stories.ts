@@ -96,6 +96,8 @@ List component for displaying structured item collections.
 - 3.37: a \`clickable\` row with an \`action\` holds a native button beside the action, so no control is nested in
   another (axe \`nested-interactive\`); the look, the names and the keys are unchanged. Labels hyphenate long
   (German) compounds in the page's \`lang\` (see *German Labels*)
+- 3.39: \`ListItem.ariaLabel\` names the control of an \`href\` or \`clickable\` row (jump marks such as „Zu Lücken,
+  3 offen“); a row with an action is named by its parts joined by commas, without the action (see *Jump Marks*)
 `,
       },
     },
@@ -714,6 +716,39 @@ export const GermanLabels: Story = {
         <lc-list [items]="sources" size="md" [clickable]="true" [showDividers]="true" />
         <lc-list [items]="sources" size="sm" [clickable]="true" [showDividers]="true" [showChevron]="true" />
         <lc-list [items]="sources" size="sm" [clickable]="true" [showDividers]="true" />
+      </div>`,
+  }),
+};
+
+/** 3.39 (request 059, finance-intelligence stammdaten-prove row 1): jump marks named by `ariaLabel`. */
+const jumpLinks = [
+  { id: 'gaps', label: 'Lücken', badge: '3 offen', badgeVariant: 'warning' as const, href: '#luecken', ariaLabel: 'Zu Lücken, 3 offen' },
+  { id: 'maps', label: 'Zuordnungen', badge: 'keine', href: '#zuordnungen', ariaLabel: 'Zu Zuordnungen, keine' },
+];
+const jumpRows = [
+  { id: 'rules', label: 'Prüfregeln', badge: '2 offen', badgeVariant: 'warning' as const, ariaLabel: 'Zu Prüfregeln, 2 offen' },
+  { id: 'sap', label: 'SAP-Ist', subtitle: 'Heute, 06:00', badge: 'Geladen', badgeVariant: 'success' as const, action: 'Laden' },
+];
+const jumpPlain = [{ id: 'master', label: 'Stammdaten', badge: 'vollständig', badgeVariant: 'success' as const, ariaLabel: 'Zu Stammdaten, vollständig' }];
+
+export const JumpMarks: Story = {
+  name: 'Jump Marks',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.39 (request 059, finance-intelligence stammdaten-prove row 1): `ListItem.ariaLabel` names the row\'s control, for jump marks whose name says where they lead. First list: `href` rows, the `<a>` is named „Zu Lücken, 3 offen“ and „Zu Zuordnungen, keine“. Second list (`clickable`): the `role="button"` row „Zu Prüfregeln, 2 offen“, and a row with an action, whose native button has no `ariaLabel` and is named by its parts joined by commas, „SAP-Ist, Heute, 06:00, Geladen“, without the action „Laden“ (057-n5). Third list: a plain row; its `ariaLabel` is not rendered (it has no control) and a dev warning names it. Put all the visible text of the row into the name, in order (WCAG 2.5.3). Nothing changes visually; without `ariaLabel` a row renders as in 3.38.',
+      },
+    },
+  },
+  render: () => ({
+    props: { links: jumpLinks, rows: jumpRows, plain: jumpPlain },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 24px; max-width: 480px;">
+        <lc-list [items]="links" size="md" [showDividers]="true" [showChevron]="true" />
+        <lc-list [items]="rows" size="md" [clickable]="true" [showDividers]="true" [showChevron]="true" />
+        <lc-list [items]="plain" size="md" [showDividers]="true" />
       </div>`,
   }),
 };

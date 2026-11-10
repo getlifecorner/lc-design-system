@@ -88,6 +88,10 @@ let nextUniqueId = 0;
  *   their width up to half of the free width (row − 32 px); the longer one
  *   wraps in the rest: the term at spaces, the value at spaces or inside an
  *   unbroken string (3.26).
+ * - `rows` (3.39): when term and value can't each keep `min(100%, 6em)` (or
+ *   their whole text) side by side, the value moves onto its own line,
+ *   right-aligned, so an amount like „214.300,00 €“ doesn't break inside.
+ *   Terms hyphenate compounds of 12 letters or more (set `lang`).
  * - `stacked` layout: term above value, for narrow columns.
  * - Per-row value emphasis and optional links.
  * - Semantic markup (`<dl>`/`<dt>`/`<dd>`) for accessibility; `clickable`
@@ -164,11 +168,23 @@ export class DescriptionListComponent {
   /** Emitted when a row is clicked (or activated via keyboard when `clickable`). */
   readonly itemClick = output<DescriptionListItem>();
 
-  /** The visually hidden start of a total's term: „Summe, “ (3.36). */
+  /**
+   * The visually hidden start of a total's term: „Summe,“ (3.36). The space
+   * after it is the template's (3.39, AC-17: one space, not two).
+   */
   protected readonly totalPrefix = computed(() => {
     const label = this.totalAriaLabel().trim();
-    return label ? `${label}, ` : '';
+    return label ? `${label},` : '';
   });
+
+  /**
+   * A plain value's text (3.39, AC-17): with no space at the dd's edges, and
+   * one before a suffix (the space the suffix always had).
+   */
+  protected plainValue(item: DescriptionListItem): string {
+    const value = item.value ?? '';
+    return item.valueSuffix ? `${value} ` : value;
+  }
 
   /**
    * Whether a badge item also shows its `value` as text (3.36, D-2): not when
