@@ -14,6 +14,7 @@ metadata:
 - 051: also flaky `navigation-sidenav--collapsed-icon-rail` 360 D; `--docked` 360 D differed only with a 13 kB injected `<style>`. `collapsed-rail-badges` at 360 renders two overlapping drawers (the light one on top), so the dark rail is invisible there.
 - `charts-scatter-plot--compact` uses `Math.random()` data: it differs on every run (057), so a palette-change compare must exclude it.
 - Icon size grids (label + 16/20/24/32/40 px) overflow 328 px at 360 with a 24 px column gap; use an 8 px gap and labels of at most 18 monospace characters.
+- 057 design: `opacity` → an alpha colour is the same composite but changes every hash (glyph anti-aliasing), so keep the prototype shots as the expected build (`tmp/story-shots/057/proto-*`). Add-class-then-read in one `--measure` task gave stale layout: wait 300 ms. A transparent non-focusable overlay makes axe pass the cells beneath as `obscured`. A leading space inside an inline-flex badge collapses; a `font-size: 0` span is a 0 px separator that axe still reads. `--compare` prints every shot: grep `different`.
 
 **Why:** a hash diff on an unstable story wastes a shot opening in review.
 **How to apply:** do a quick stability re-run when capturing baselines (`--compare` against the fresh baseline).
