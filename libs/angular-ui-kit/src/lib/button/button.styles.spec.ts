@@ -189,15 +189,20 @@ describe('lc-button styles', () => {
       expect(css.indexOf('\n.btn-inverse:focus-visible {')).toBeGreaterThan(css.indexOf('\n.btn:focus-visible {'));
     });
 
-    it('measures the design values on the teal band at its light end #208497 under the 3.36 body opacity .85', () => {
+    // 3.38 (request 058, 057-s2, design H1 §5.3): the teal band ends at
+    // #1f8092 (primary-500 × 0.97, was #208497), so every value rises a little:
+    // text 9.28 / 8.69 / 8.11 → 9.32 / 8.72 / 8.14, fill 3.62 / 3.39 / 3.16 →
+    // 3.80 / 3.55 / 3.32, ring 3.62 → 3.80. Rounded, as this spec does; design
+    // §5.3 quotes them floored (9.31 / 8.72 / 8.13, 3.79 / 3.55 / 3.31, 3.79).
+    it('measures the design values on the teal band at its light end #1f8092 under the 3.36 body opacity .85', () => {
       // 3.37: the hero body no longer has an opacity (a button in it is opaque).
       expect(hero).not.toMatch(/\n\.hero__body \{[^}]*?opacity/);
       const end = band('primary')[1];
-      expect(end).toEqual(parse('#208497'));
+      expect(end).toEqual(parse('#1f8092'));
       const states = ['#ffffff', hoverFill, activeFill].map((fill) => at(fill, end));
-      expect(states.map((s) => r2(s.text))).toEqual([9.28, 8.69, 8.11]);
-      expect(states.map((s) => r2(s.fill))).toEqual([3.62, 3.39, 3.16]);
-      expect(r2(states[0].ring)).toBe(3.62);
+      expect(states.map((s) => r2(s.text))).toEqual([9.32, 8.72, 8.14]);
+      expect(states.map((s) => r2(s.fill))).toEqual([3.8, 3.55, 3.32]);
+      expect(r2(states[0].ring)).toBe(3.8);
       // At full opacity (the hero since 3.37) every ratio is higher.
       const opaque = ['#ffffff', hoverFill, activeFill].map((fill) => at(fill, end, 1));
       opaque.forEach((s, i) => {
@@ -214,8 +219,8 @@ describe('lc-button styles', () => {
         expect(min.fill).toBeGreaterThanOrEqual(3);
         expect(min.ring).toBeGreaterThanOrEqual(3);
       }
-      // The worst point is the light end (t = 1), so the values above are the minimum.
-      expect(r2(worst('#ffffff', 'primary').fill)).toBe(3.62);
+      // The worst point is the light end (t = 1), so the values above are the minimum (3.62 before 3.38).
+      expect(r2(worst('#ffffff', 'primary').fill)).toBe(3.8);
     });
 
     it.each(['neutral', 'info', 'accent-purple', 'accent-violet'])(

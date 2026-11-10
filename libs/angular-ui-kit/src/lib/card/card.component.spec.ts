@@ -3,6 +3,7 @@ import { CardComponent, CardHeadingLevel, CardVariant } from './card.component';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { compile } from 'sass';
 import { join } from 'path';
+import { LABEL_IN_NAME, axe, installFakeCanvas, outcome } from '../../testing/axe-jsdom';
 
 @Component({
   selector: 'lc-test-wrapper',
@@ -545,6 +546,154 @@ describe('CardComponent', () => {
         expect(dashed).toMatch(/border:\s*1px dashed var\(--color-muted-tile-border,/);
         expect(dashed).toMatch(/color:\s*var\(--color-text-secondary\)/);
         expect(css).toMatch(/\.card-dashed lc-icon\s*{[^}]*--color-muted-tile-icon/);
+      });
+    });
+  });
+
+  /**
+   * 3.38 (request 058, follow-up 057-s1, design §3): one-space text nodes
+   * between the card's parts (title, projected badge, badge, subtitle,
+   * header action, `[card-header]`, body, footer), so its text has word breaks
+   * (textContent, accessible names, copied text). Each sits between flex
+   * items and renders nothing; the look is proven by the story shots.
+   */
+  describe('3.38: word breaks between the parts (request 058, AC-1, AC-2, AC-4)', () => {
+    type Mode = 'plain' | 'collapsible' | 'link';
+
+    @Component({
+      standalone: true,
+      imports: [CardComponent],
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      template: `
+        @for (mode of modes; track mode) {
+          <lc-card
+            lang="de"
+            title="Regeln"
+            badge="3"
+            subtitle="Fassung 1"
+            [collapsible]="mode === 'collapsible'"
+            [href]="mode === 'link' ? '#regeln' : undefined"
+          >
+            <span card-badge>Neu</span>
+            <span card-header-action>Bearbeiten</span>
+            <div card-header>Kopf</div>
+            <p>aus USM übernommen 1</p>
+            <div card-footer>Stand heute</div>
+          </lc-card>
+        }
+      `,
+    })
+    class PartsHost {
+      readonly modes: Mode[] = ['plain', 'collapsible', 'link'];
+    }
+
+    const normalised = (el: Element) => (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+
+    it.each<[Mode, number]>([
+      ['plain', 0],
+      ['collapsible', 1],
+      ['link', 2],
+    ])('AC-1: the %s card reads „Regeln Neu 3 Fassung 1 Bearbeiten Kopf aus USM übernommen 1 Stand heute“', (_mode, index) => {
+      const f = TestBed.createComponent(PartsHost);
+      f.detectChanges();
+      const card = (f.nativeElement as HTMLElement).querySelectorAll('lc-card')[index];
+      expect(normalised(card)).toBe('Regeln Neu 3 Fassung 1 Bearbeiten Kopf aus USM übernommen 1 Stand heute');
+      // Plain spaces only, and none inside the title, the toggle or the link.
+      expect(card.textContent).not.toContain(String.fromCharCode(0xa0));
+      expect(card.querySelector('.card__title')?.textContent).toBe('Regeln');
+      f.destroy();
+    });
+
+    it('AC-4: the toggle and the link keep their names; the badge slot stays empty-able', () => {
+      const f = TestBed.createComponent(PartsHost);
+      f.detectChanges();
+      const [, collapsible, link] = Array.from((f.nativeElement as HTMLElement).querySelectorAll('lc-card'));
+      expect(collapsible.querySelector('.card__toggle')?.textContent).toBe('Regeln');
+      expect(link.querySelector('a.card__link')?.textContent).toBe('Regeln');
+      f.destroy();
+
+      const bare = TestBed.createComponent(CardComponent);
+      bare.componentRef.setInput('title', 'Ohne Abzeichen');
+      bare.detectChanges();
+      // The separators sit outside the slot, so `:empty` still hides it.
+      expect((bare.nativeElement as HTMLElement).querySelector('.card__badge-slot')?.childNodes.length).toBe(0);
+      bare.destroy();
+    });
+
+    it('the separators are seven text nodes of one space, all between flex items', () => {
+      const f = TestBed.createComponent(PartsHost);
+      f.detectChanges();
+      const card = (f.nativeElement as HTMLElement).querySelector('lc-card') as HTMLElement;
+      const spaces: string[] = [];
+      const walker = document.createTreeWalker(card, NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        if (!(n.textContent ?? '').trim()) spaces.push(`${(n.parentElement as Element).className.split(' ')[0]}:${JSON.stringify(n.textContent)}`);
+      }
+      expect(spaces).toEqual([
+        'card__title-row:" "', // S1 title ↔ projected badge
+        'card__title-row:" "', // S2 projected badge ↔ badge
+        'card__title-row:" "', // S3 badge ↔ subtitle
+        'card__header:" "', // S4 subtitle ↔ header action
+        'card:" "', // S5 head ↔ [card-header]
+        'card:" "', // S6 [card-header] ↔ body
+        'card:" "', // S7 body ↔ footer
+      ]);
+      f.destroy();
+    });
+
+    it('a card without a title has only the spaces around the body', () => {
+      const f = TestBed.createComponent(CardComponent);
+      f.detectChanges();
+      const card = (f.nativeElement as HTMLElement).querySelector('.card') as HTMLElement;
+      const texts = Array.from(card.childNodes).filter((n) => n.nodeType === Node.TEXT_NODE).map((n) => n.textContent);
+      expect(texts).toEqual([' ', ' ']);
+      f.destroy();
+    });
+
+    describe('AC-2: a clickable card named by its visible text', () => {
+      let restoreCanvas: () => void;
+      beforeAll(() => (restoreCanvas = installFakeCanvas()));
+      afterAll(() => restoreCanvas());
+
+      @Component({
+        standalone: true,
+        imports: [CardComponent],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `
+          <lc-card lang="de" variant="outlined" [clickable]="true" title="Regeln" badge="3" badgeVariant="primary"
+            ariaLabel="Regeln 3 aus USM übernommen 1 im Modul gepflegt 2">
+            <dl><div><dt>aus USM übernommen</dt>&ngsp;<dd>1</dd></div>&ngsp;<div><dt>im Modul gepflegt</dt>&ngsp;<dd>2</dd></div></dl>
+          </lc-card>
+        `,
+      })
+      class NamedHost {}
+
+      const run = (root: Element) => axe.run(root, { runOnly: [LABEL_IN_NAME, 'nested-interactive'] });
+
+      it('passes label-content-name-mismatch and nested-interactive', async () => {
+        const f = TestBed.createComponent(NamedHost);
+        f.detectChanges();
+        const card = (f.nativeElement as HTMLElement).querySelector('[role="button"]') as HTMLElement;
+        expect(normalised(card)).toBe('Regeln 3 aus USM übernommen 1 im Modul gepflegt 2');
+        const results = await run(f.nativeElement as Element);
+        expect(outcome(results, LABEL_IN_NAME)).toBe('pass');
+        expect(outcome(results, 'nested-interactive')).toBe('pass');
+        f.destroy();
+      });
+
+      it('negative control: without the separators (3.37) title and body run together and the rule fails', async () => {
+        const f = TestBed.createComponent(NamedHost);
+        f.detectChanges();
+        const card = (f.nativeElement as HTMLElement).querySelector('[role="button"]') as HTMLElement;
+        const blanks: Text[] = [];
+        const walker = document.createTreeWalker(card, NodeFilter.SHOW_TEXT);
+        for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+          if (!(n.textContent ?? '').trim() && (n.parentElement as Element).className.startsWith('card')) blanks.push(n as Text);
+        }
+        blanks.forEach((n) => n.remove());
+        expect(card.textContent).toMatch(/^Regeln3aus USM/);
+        expect(outcome(await run(f.nativeElement as Element), LABEL_IN_NAME)).toBe('violation');
+        f.destroy();
       });
     });
   });

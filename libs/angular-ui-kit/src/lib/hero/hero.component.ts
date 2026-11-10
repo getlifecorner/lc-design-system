@@ -50,10 +50,11 @@ let nextHeroId = 0;
  * - Footer slot for metadata, stats, or CTAs
  * - Media slot (`[hero-media]`) for a visual: below the text on small screens,
  *   beside it from 1024 px
- * - 3.37: components in the default slot keep full opacity (only the body
- *   text is softened, through its colour), and badges in a hero take the light
- *   palette in both themes; `fill` takes the height of a stretching grid or
- *   flex row
+ * - 3.37: components in the default slot keep full opacity (no `opacity` on
+ *   the slot), and badges in a hero take the light palette in both themes;
+ *   `fill` takes the height of a stretching grid or flex row
+ * - 3.38: label, title and body are white at full strength on every default
+ *   band (4.58:1 or more); five bands are darker at their light end
  * - Content width `lg`: a full-bleed band whose text lines up with the page column
  * - `headingLevel` (3.36): the title as `h1`–`h6`, the same look at every level
  * - `focusTitle()` (3.36): moves focus to the title (`tabindex="-1"`, out of the

@@ -297,15 +297,27 @@ describe('lc-card link mode (3.24, request 037)', () => {
   describe('AC-11: default rendering unchanged', () => {
     // The 3.23.1 template rendered side by side with this one over 86 input
     // combinations gave the same DOM (build 037); these two pin it.
+    // 3.38 (request 058, 057-s1, AC-1): the one-space text nodes between the
+    // card's parts are new (word breaks in the card's text; they render
+    // nothing); without them the markup is the 3.23.1 one, element for element.
+    const titled =
+      '<div class="card card-outlined card-padding-md card-radius-md" role="article">' +
+      '<div class="card__header"><div class="card__header-left"><div class="card__title-row">' +
+      '<h3 class="card__title">SAP-Ist</h3><span class="card__badge-slot"></span></div></div>' +
+      '<div class="card__header-action"></div></div>' +
+      '<div class="card__body"><p class="body">Geladen</p><button type="button" class="action">Aktion</button></div></div>';
+    const withSpaces = (html: string) =>
+      html
+        .replace('</h3><span class="card__badge-slot"></span></div>', '</h3> <span class="card__badge-slot"></span> </div>')
+        .replace('</div><div class="card__header-action">', '</div> <div class="card__header-action">')
+        .replace('</div></div><div class="card__body">', '</div></div>  <div class="card__body">')
+        .replace(/<\/div><\/div>$/, '</div> </div>');
+
     it('renders a titled card as in 3.23.1', () => {
       fixture.detectChanges();
-      expect(plain(fixture.nativeElement.querySelector('lc-card'))).toBe(
-        '<div class="card card-outlined card-padding-md card-radius-md" role="article">' +
-          '<div class="card__header"><div class="card__header-left"><div class="card__title-row">' +
-          '<h3 class="card__title">SAP-Ist</h3><span class="card__badge-slot"></span></div></div>' +
-          '<div class="card__header-action"></div></div>' +
-          '<div class="card__body"><p class="body">Geladen</p><button type="button" class="action">Aktion</button></div></div>',
-      );
+      const html = plain(fixture.nativeElement.querySelector('lc-card'));
+      expect(html).toBe(withSpaces(titled));
+      expect(html.replace(/> +</g, '><')).toBe(titled);
     });
 
     it('renders a clickable, selected, labelled card as in 3.23.1', () => {
@@ -313,13 +325,13 @@ describe('lc-card link mode (3.24, request 037)', () => {
       host.selected.set(true);
       host.ariaLabel.set('Karte');
       fixture.detectChanges();
-      expect(plain(fixture.nativeElement.querySelector('lc-card'))).toBe(
-        '<div class="card card-clickable card-outlined card-padding-md card-radius-md card-selected" role="button" aria-label="Karte" tabindex="0">' +
-          '<div class="card__header"><div class="card__header-left"><div class="card__title-row">' +
-          '<h3 class="card__title">SAP-Ist</h3><span class="card__badge-slot"></span></div></div>' +
-          '<div class="card__header-action"></div></div>' +
-          '<div class="card__body"><p class="body">Geladen</p><button type="button" class="action">Aktion</button></div></div>',
+      const html = plain(fixture.nativeElement.querySelector('lc-card'));
+      const labelled = titled.replace(
+        '<div class="card card-outlined card-padding-md card-radius-md" role="article">',
+        '<div class="card card-clickable card-outlined card-padding-md card-radius-md card-selected" role="button" aria-label="Karte" tabindex="0">',
       );
+      expect(html).toBe(withSpaces(labelled));
+      expect(html.replace(/> +</g, '><')).toBe(labelled);
     });
   });
 

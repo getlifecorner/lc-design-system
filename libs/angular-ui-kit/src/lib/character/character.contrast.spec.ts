@@ -42,8 +42,16 @@ function ratio(a: number[], b: number[]): number {
 /** The body colour: the head's fill (the ellipse rx 22) of a drawing. */
 const body = (svg: string) => svg.match(/<ellipse cx="50" cy="38" rx="22" ry="20" fill="(#[0-9a-f]{6})"/)?.[1] ?? '';
 
-/** The hero band (`lc-hero` primary): primary-800 → primary-500, sRGB, at t = (x + y) / (w + h). */
-const band = (t: number) => rgb(ColorPrimary800).map((from, i) => from + (rgb(ColorPrimary500)[i] - from) * t);
+/**
+ * The hero band (`lc-hero` primary), read from the hero's stylesheet, sRGB, at
+ * t = (x + y) / (w + h). 3.38 (request 058, 057-s2, design H1 §5.3): it ends
+ * at #1f8092 (primary-500 × 0.97), no longer at primary-500.
+ */
+const heroPrimary = compile(resolve(__dirname, '../hero/hero.component.scss')).css.match(
+  /\n\.hero--primary \{\s*background: linear-gradient\(135deg, (#[0-9a-f]{6}) 0%, (#[0-9a-f]{6}) 100%\)/i,
+);
+const [bandFrom, bandTo] = [heroPrimary?.[1] ?? '', heroPrimary?.[2] ?? ''];
+const band = (t: number) => rgb(bandFrom).map((from, i) => from + (rgb(bandTo)[i] - from) * t);
 
 describe('Edu: contrast on his surfaces (AC-11)', () => {
   const light = themeTokens('_theme-light.scss');
@@ -74,11 +82,19 @@ describe('Edu: contrast on his surfaces (AC-11)', () => {
     expect(value).toBeGreaterThanOrEqual(4.5);
   });
 
+  it('reads the hero band: primary-800 → #1f8092', () => {
+    expect([bandFrom, bandTo.toLowerCase()]).toEqual([ColorPrimary800, '#1f8092']);
+    expect(ColorPrimary500).toBe('#208497');
+  });
+
+  // 3.38: 6.97 / 3.55 / 3.01 / 2.31 on the 3.37 band (light end primary-500).
+  // This spec interpolates without 8-bit rounding; design §5.3 measured 8-bit
+  // composites, floored (6.96 / 3.67 / 3.13 / 2.43).
   it.each([
     [0, 6.97],
-    [0.6, 3.55],
-    [0.75, 3.01],
-    [1, 2.31],
+    [0.6, 3.68],
+    [0.75, 3.14],
+    [1, 2.43],
   ])('on-dark Hallo on the hero band at t %s: %s:1', (t, expected) => {
     expect(ratio(rgb(body(CHARACTER_SVG_HELLO.dark)), band(t))).toBeCloseTo(expected, 2);
   });

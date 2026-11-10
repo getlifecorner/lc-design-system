@@ -757,3 +757,38 @@ export const Collapsible: Story = {
   }),
 };
 
+/** The rule sources of the *Clickable Named by Its Text* story (request 058, regeln row 1). */
+const ruleSources = [
+  { term: 'aus USM übernommen', value: '1' },
+  { term: 'im Modul gepflegt', value: '2' },
+];
+
+/** 3.38 (request 058, 057-s1): clickable cards whose `ariaLabel` is their visible text. */
+export const ClickableNamedByItsText: Story = {
+  name: 'Clickable Named by Its Text',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.38 (request 058, finance-intelligence regeln row 1, WCAG 2.5.3): the card\'s text has a word break between each of its parts (title, badge, subtitle, header action, body, footer), so a clickable card can be named by exactly what it shows: `ariaLabel` „Regeln 3 aus USM übernommen 1 im Modul gepflegt 2“ contains the visible text, and axe `label-content-name-mismatch` passes (before, title and body ran together, „Regeln3aus USM …“). The breaks are spaces between flex items: nothing moves. The second card has a long German title with a badge, a subtitle, a body and a footer; at 360 px the title wraps and hyphenates.',
+      },
+    },
+  },
+  render: () => ({
+    props: { rules: ruleSources },
+    template: `
+      <div lang="de" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; max-width: 640px;">
+        <lc-card variant="outlined" [clickable]="true" padding="md" title="Regeln" badge="3" badgeVariant="primary"
+                 ariaLabel="Regeln 3 aus USM übernommen 1 im Modul gepflegt 2">
+          <lc-description-list size="sm" [items]="rules" />
+        </lc-card>
+        <lc-card variant="outlined" [clickable]="true" padding="md" title="Umlageschlüssel nach Kostenstellenverantwortung"
+                 badge="Entwurf" badgeVariant="warning" subtitle="Fassung 1"
+                 ariaLabel="Umlageschlüssel nach Kostenstellenverantwortung Entwurf Fassung 1 4 Regeln Stand heute 06:00">
+          <p style="margin: 0;">4 Regeln</p>
+          <div card-footer><span>Stand heute 06:00</span></div>
+        </lc-card>
+      </div>`,
+  }),
+};
+

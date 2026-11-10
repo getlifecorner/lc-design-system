@@ -88,7 +88,16 @@ describe('CardComponent — collapsible (3.36, request 056)', () => {
     expect(plain.componentInstance.collapsible()).toBe(false);
     expect(plain.componentInstance.expanded()).toBe(true);
     const html = (plain.nativeElement as HTMLElement).innerHTML.replace(/<!--[\s\S]*?-->/g, '').replace(/\s_ngcontent-[\w-]+=""/g, '');
+    // 3.38 (request 058, 057-s1, AC-1): the one-space text nodes between the
+    // card's parts are new (word breaks in the card's text; they render
+    // nothing); elements and attributes are as in 3.35.
     expect(html).toBe(
+      '<div class="card card-elevated card-padding-md card-radius-md" role="article"><div class="card__header">' +
+        '<div class="card__header-left"><div class="card__title-row"><h3 class="card__title">Direkte Zuordnung</h3> ' +
+        '<span class="card__badge-slot"></span> </div><p class="card__subtitle">4 Regeln</p></div> ' +
+        '<div class="card__header-action"></div></div>  <div class="card__body"></div> </div>',
+    );
+    expect(html.replace(/> +</g, '><')).toBe(
       '<div class="card card-elevated card-padding-md card-radius-md" role="article"><div class="card__header">' +
         '<div class="card__header-left"><div class="card__title-row"><h3 class="card__title">Direkte Zuordnung</h3>' +
         '<span class="card__badge-slot"></span></div><p class="card__subtitle">4 Regeln</p></div>' +

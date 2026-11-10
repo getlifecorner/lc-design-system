@@ -29,7 +29,8 @@ Use it at the top of pages to introduce content, highlight key information, or s
 - \`contentWidth="lg"\`: a full-bleed band whose content sits on the 1024 px page column, so its text lines up with the page below
 - Configurable border radius
 - 3.36: \`headingLevel\` (\`h1\`–\`h6\`, the same look) and \`focusTitle()\`, which moves focus to the title after an action replaced the stage (see *Heading Level*, *Focus Title*); \`inverse-outline\` buttons beside \`inverse\` ones (see *Stage Actions*)
-- 3.37: components in the default slot keep full opacity (the body softens only its text colour), and badges in a hero take the light palette in both themes (see *Badges in the Body*); \`fill\` takes the height of a stretching grid or flex row (see *Fill*)
+- 3.37: components in the default slot keep full opacity, and badges in a hero take the light palette in both themes (see *Badges in the Body*); \`fill\` takes the height of a stretching grid or flex row (see *Fill*)
+- 3.38: label, title and body are white at full strength on every default band, at least 4.58:1 at both ends (WCAG 1.4.3; before 1.93:1 for the label on warning). Five bands are darker at their light end: primary (#1f8092), secondary (secondary-600) and accent-orange (#b06024) by about one shade step; success (#46543b → #697957) and warning (#68481d → warning-dark) at both ends, so they look visibly darker (see *All Colors*). The light variant is unchanged
         `,
       },
     },
@@ -105,8 +106,9 @@ type Story = StoryObj<HeroComponent>;
 
 const footerStatStyle =
   'display: flex; flex-direction: column; gap: 4px;';
+// 3.38 (request 058): no `opacity` — stat labels at 60 % fell below 4.5:1 on every band.
 const statLabelStyle =
-  'font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.6;';
+  'font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;';
 const statValueStyle = 'font-size: 14px; font-weight: 500;';
 
 export const Default: Story = {
@@ -422,7 +424,7 @@ export const BandLink: StoryObj<HeroComponent & { linkLabel: string }> = {
     docs: {
       description: {
         story:
-          '3.13 (G-WL1): one link button in the default body of a page band, as on the life-os home band. `<a lcButton variant="inverse" size="lg">` is a white pill with dark ink whose fill and white focus ring stay at 3.62:1 or more against the teal band, with the label at 9.28:1 (under the body\'s 85 % opacity, at the band\'s light end). The long German label wraps onto two lines at 360 px and stays on one from 1024 px; the link is 48.5 px high on one line. A flex row with `align-items: flex-start` keeps the link as wide as its label.',
+          '3.13 (G-WL1): one link button in the default body of a page band, as on the life-os home band. `<a lcButton variant="inverse" size="lg">` is a white pill with dark ink whose fill and white focus ring stay at 4.60:1 or more against the teal band (at its light end, #1f8092 since 3.38), with the label at 13.17:1 on the pill. The long German label wraps onto two lines at 360 px and stays on one from 1024 px; the link is 48.5 px high on one line. A flex row with `align-items: flex-start` keeps the link as wide as its label.',
       },
     },
   },
@@ -569,7 +571,7 @@ export const FocusTitle: StoryObj<HeroComponent> = {
     docs: {
       description: {
         story:
-          '3.36 (request 056, finance-intelligence monatsstand row 1): „Freigeben“ releases the draft; the stage shows the new state and the button is gone. The page calls `afterNextRender(() => this.hero().focusTitle(), { injector })`: the title gets `tabindex="-1"` (it stays out of the Tab order) and the focus, so it doesn\'t fall back to the page (WCAG 2.4.3). With a `label`, the title is named „label title“ (`aria-labelledby`), so a screen reader reads „Monatsstand Oktober 2026 · Fassung 1 freigegeben 522.530,00 €“. The ring is two-tone, a white outline over a 2 px `#111827` band (at least 4.23:1 on every `color`), shown after a keyboard action. Without the call nothing changes. In the story view „Freigeben“ is pressed with Enter on load.',
+          '3.36 (request 056, finance-intelligence monatsstand row 1): „Freigeben“ releases the draft; the stage shows the new state and the button is gone. The page calls `afterNextRender(() => this.hero().focusTitle(), { injector })`: the title gets `tabindex="-1"` (it stays out of the Tab order) and the focus, so it doesn\'t fall back to the page (WCAG 2.4.3). With a `label`, the title is named „label title“ (`aria-labelledby`), so a screen reader reads „Monatsstand Oktober 2026 · Fassung 1 freigegeben 522.530,00 €“. The ring is two-tone, a white outline over a 2 px `#111827` band (at least 4.58:1 on every `color` since the 3.38 bands), shown after a keyboard action. Without the call nothing changes. In the story view „Freigeben“ is pressed with Enter on load.',
       },
       source: { code: FOCUS_TITLE_SNIPPET, language: 'typescript' },
     },
@@ -601,7 +603,7 @@ export const StageActions: Story = {
     docs: {
       description: {
         story:
-          '3.36 (request 056, finance-intelligence monatsstand row 2): the main action „Freigeben“ (`inverse`) and the quieter „Herkunft“ (`inverse-outline`) side by side on all nine bands, `size="lg"`: both 48.5 px high in one row, the outline clearly the quieter one. Its text keeps at least 4.66:1 and its border at least 3.56:1 on every band, measured under the body\'s 85 % opacity of 3.36 (since 3.37 the body dims only its text colour, so the buttons are at full opacity). Last, the pair at `sm`, `md` and `lg`: the same height at every size.',
+          '3.36 (request 056, finance-intelligence monatsstand row 2): the main action „Freigeben“ (`inverse`) and the quieter „Herkunft“ (`inverse-outline`) side by side on all nine bands, `size="lg"`: both 48.5 px high in one row, the outline clearly the quieter one. Its text keeps at least 9.36:1 and its border at least 4.58:1 on every band, and the white `inverse` pill stands out from every band at 4.58:1 or more (3.38 bands, buttons at full opacity). Last, the pair at `sm`, `md` and `lg`: the same height at every size.',
       },
     },
   },
@@ -658,7 +660,7 @@ export const BadgesInTheBody: Story = {
     docs: {
       description: {
         story:
-          '3.37 (request 057, finance-intelligence monatsstand row 1, WCAG 1.4.3): the seal of the month, `lc-badge` `size="sm"` `rounded` „Entwurf“ (`warning`) and „Freigegeben“ (`success`), in the default slot of all nine bands and one light variant, with the six variants at `xs` below. The body softens only its text, through its colour (85 % white, 75 % neutral-800 in the light variant), instead of `opacity: 0.85` on the whole slot, so the badges keep their opaque fills. In a hero they take the light palette in both themes (the bands don\'t follow the theme): at least default 6.87, primary 8.49, success 4.85, warning 5.52, error 10.98 and info 9.08:1 on every band (before: success 3.83–4.16, warning 4.23–4.67 on the dark bands; down to 1.00 in dark). The body text looks as before.',
+          '3.37 (request 057, finance-intelligence monatsstand row 1, WCAG 1.4.3): the seal of the month, `lc-badge` `size="sm"` `rounded` „Entwurf“ (`warning`) and „Freigegeben“ (`success`), in the default slot of all nine bands and one light variant, with the six variants at `xs` below. The slot has no `opacity` (before 3.37 it was 0.85 on the whole slot), so the badges keep their opaque fills; its text is white at full strength on the dark bands (since 3.38, 4.58:1 or more) and 75 % neutral-800 in the light variant. In a hero they take the light palette in both themes (the bands don\'t follow the theme): at least default 6.87, primary 8.49, success 4.85, warning 5.52, error 10.98 and info 9.08:1 on every band (before 3.37: success 3.83–4.16, warning 4.23–4.67 on the dark bands; down to 1.00 in dark).',
       },
     },
   },

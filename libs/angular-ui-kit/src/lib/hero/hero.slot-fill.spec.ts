@@ -75,14 +75,19 @@ function badgeTokens(variant: string): [string, string] {
 }
 
 describe('lc-hero — slot contrast (3.37, request 057, monatsstand row 1)', () => {
-  it('AC-15: the body softens its text through its colour, not through opacity', () => {
+  // 3.38 (request 058, 057-s2, design H1): on a default band the body and the
+  // label are white at full strength (the 85 % body and 80 % label fell to
+  // 1.93:1), so the body has no colour of its own and `.hero__label` left the
+  // dimmed list; the light variant still softens both. The contrast values are
+  // in `hero.contrast.spec.ts`.
+  it('AC-15: the body never dims through opacity; since 3.38 it inherits the band ink (light variant: 75 % through its colour)', () => {
     const body = rule(heroCss, '.hero__body');
-    expect(body).toMatch(/color: rgba\(255, 255, 255, 0\.85\);/);
+    expect(body).not.toMatch(/color/);
     expect(body).not.toMatch(/opacity/);
     expect(rule(heroCss, '.hero--light .hero__body')).toMatch(/^\s*color: rgba\(31, 41, 55, 0\.75\);\s*$/);
-    // No rule of the hero dims the body (or anything) through opacity, apart from the label.
+    // No rule of the hero dims the body (or anything) through opacity, apart from the light variant's label.
     const dimmed = [...heroCss.matchAll(/\n([^{}\n]+) \{[^{}]*opacity:/g)].map((m) => m[1]);
-    expect(dimmed).toEqual(['.hero--light .hero__label', '.hero__label']);
+    expect(dimmed).toEqual(['.hero--light .hero__label']);
   });
 
   it('badges in lc-hero take the light palette, in both themes (a rule of the light file)', () => {

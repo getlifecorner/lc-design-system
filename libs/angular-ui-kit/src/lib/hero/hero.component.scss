@@ -4,34 +4,46 @@
 // ---------------------------------------------------------------------------
 // Color map – each entry produces a gradient from darker to lighter shade
 // ---------------------------------------------------------------------------
+// 3.38 (request 058, 057-s2, design H1): white text reaches 4.5:1 on every
+// band, at both ends. Five bands are darker at their light end: the lightest
+// shade of the same hue that carries white at 4.6:1 (the channels scaled by a
+// factor, the kit's recipe: secondary-600 = secondary-500 × 0.8). Success and
+// warning scale both ends, so they keep their light-to-dark run. Each stop
+// stays a 6-digit hex (the specs read the bands as such).
 $hero-colors: (
   'primary': (
     from: colors.$color-primary-800,
-    to: colors.$color-primary-500,
+    // primary-500 × 0.97: white 4.60:1 (primary-500: 4.36).
+    to: #1f8092,
   ),
   'secondary': (
     from: colors.$color-secondary-800,
-    to: colors.$color-secondary-500,
+    // One step down from secondary-500: white 4.61:1 (was 3.11).
+    to: colors.$color-secondary-600,
   ),
   'neutral': (
     from: colors.$color-neutral-900,
     to: colors.$color-neutral-600,
   ),
   'success': (
-    from: colors.$color-success-dark,
-    to: colors.$color-success-default,
+    // The 3.37 band (success-dark → success-default) × 0.74: white 4.69:1 (was 2.72).
+    from: #46543b,
+    to: #697957,
   ),
   'info': (
     from: colors.$color-info-dark,
     to: colors.$color-info-default,
   ),
   'warning': (
-    from: colors.$color-warning-dark,
-    to: colors.$color-warning-default,
+    // The 3.37 band × 0.67, one step down: warning-dark at the light end,
+    // white 4.63:1 (was 2.25).
+    from: #68481d,
+    to: colors.$color-warning-dark,
   ),
   'accent-orange': (
     from: #7a3a10,
-    to: colors.$color-accent-orange,
+    // accent-orange × 0.79: white 4.62:1 (was 3.03).
+    to: #b06024,
   ),
   'accent-purple': (
     from: #3a2a52,
@@ -309,7 +321,6 @@ $hero-colors: (
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  opacity: 0.8;
   margin-bottom: 0.75rem;
 
   @media (min-width: 640px) {
@@ -364,8 +375,9 @@ $hero-colors: (
 // 3.36 (request 056, monatsstand row 1): the title takes focus only through
 // `focusTitle()`. A two-tone ring (WCAG technique C40): the white outline
 // (the title's own colour) 2 px out, and a 2 px #111827 band between it and
-// the text, so one of the two keeps 3:1 on every band (min 4.23, computed;
-// white alone 2.26 on warning). The bands don't follow the theme, so neither
+// the text, so one of the two keeps 3:1 on every band (min 4.58 since the
+// 3.38 bands, computed; 4.23 before, white alone 2.26 on the 3.37 warning
+// band). The bands don't follow the theme, so neither
 // does the ring. The light variant swaps the band to white (ink neutral-800,
 // 10.57). Only in the focused state: at rest nothing changes.
 .hero__title:focus-visible {
@@ -386,17 +398,17 @@ $hero-colors: (
   }
 }
 
-// 3.37 (request 057, monatsstand row 1, design D-5): the body text is softened
-// through its colour, 85 % white (the same composite as the `opacity: 0.85`
-// before), so components in the slot (badges, buttons, links with their own
-// colours) keep full opacity. Badges in a hero take the light palette in both
-// themes (`_theme-light.scss`): `sm` and `xs` measure 4.85:1 or more on every
-// band.
+// 3.37 (request 057, monatsstand row 1, design D-5): components in the slot
+// (badges, buttons, links with their own colours) keep full opacity. Badges in
+// a hero take the light palette in both themes (`_theme-light.scss`): `sm` and
+// `xs` measure 4.85:1 or more on every band.
+// 3.38 (request 058, 057-s2, design H1): label, title and body are white at
+// full strength on a default band (4.58:1 or more on all nine); the 85 % body
+// and the 80 % label of 3.37 fell to 1.93:1. The body inherits the band's ink.
 .hero__body {
   margin-top: 1rem;
   font-size: 0.875rem;
   line-height: 1.6;
-  color: rgba(#fff, 0.85);
   max-width: 48rem;
 
   @media (min-width: 640px) {
@@ -418,7 +430,7 @@ $hero-colors: (
 // Media slot (`[hero-media]`: a visual, an illustration)
 // ---------------------------------------------------------------------------
 // Outside `.hero__body` (before 3.37 that kept it out of the body's 85 %
-// opacity; the body now softens only its text colour). Below 1024 px it
+// opacity; since 3.38 the body text is full white). Below 1024 px it
 // follows the text with the footer's spacing and rule, at most
 // `--lc-hero-media-width` wide; from 1024 px it sits beside the text.
 .hero__media {

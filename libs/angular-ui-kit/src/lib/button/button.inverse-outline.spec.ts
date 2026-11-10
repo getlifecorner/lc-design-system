@@ -174,17 +174,22 @@ describe('lc-button inverse-outline (3.36, request 056)', () => {
       expect(band).toEqual(scrim);
     });
 
-    it('text 4.5:1: min 4.66 under the body opacity, 6.19 at full opacity; hover and active higher', () => {
+    // 3.38 (request 058, 057-s2, design H1 §5.3): five bands are darker at
+    // their light end (success and warning at both), so every minimum rises:
+    // text 4.66 / 6.19 → 6.96 / 9.37, keyline and ring 3.56 / 4.23 → 3.80 /
+    // 4.58, white alone 2.01 / 2.26 → 3.80 / 4.58 (now on accent-purple).
+    // Rounded, as this spec does; design §5.3 quotes them floored (6.95 / 9.36, 3.79).
+    it('text 4.5:1: min 6.96 under the body opacity, 9.37 at full opacity; hover and active higher', () => {
       expect(alpha).toBe(0.5);
-      expect([r2(text(alpha, BODY)), r2(text(alpha, 1))]).toEqual([4.66, 6.19]);
+      expect([r2(text(alpha, BODY)), r2(text(alpha, 1))]).toEqual([6.96, 9.37]);
       expect(text(0.62, BODY)).toBeGreaterThan(text(alpha, BODY));
       expect(text(0.74, BODY)).toBeGreaterThan(text(0.62, BODY));
     });
 
-    it('keyline and ring 3:1: min 3.56 / 4.23 (white alone 2.01 / 2.26)', () => {
-      expect([r2(twoTone(keyline, BODY)), r2(twoTone(keyline, 1))]).toEqual([3.56, 4.23]);
-      expect([r2(twoTone(band, BODY)), r2(twoTone(band, 1))]).toEqual([3.56, 4.23]);
-      expect([r2(twoTone(WHITE, BODY)), r2(twoTone(WHITE, 1))]).toEqual([2.01, 2.26]);
+    it('keyline and ring 3:1: min 3.80 / 4.58 (white alone 3.80 / 4.58)', () => {
+      expect([r2(twoTone(keyline, BODY)), r2(twoTone(keyline, 1))]).toEqual([3.8, 4.58]);
+      expect([r2(twoTone(band, BODY)), r2(twoTone(band, 1))]).toEqual([3.8, 4.58]);
+      expect([r2(twoTone(WHITE, BODY)), r2(twoTone(WHITE, 1))]).toEqual([3.8, 4.58]);
     });
   });
 });

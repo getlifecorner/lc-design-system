@@ -212,14 +212,18 @@ describe('HeroComponent — headingLevel and focusTitle() (3.36, request 056)', 
       expect(css).not.toMatch(/hero__title[^{]*:focus(?!-visible)/);
     });
 
-    it('meets 3:1 on all 9 bands (min 4.23) and on the light variant (min 10.57); white alone would be 2.26', () => {
+    // 3.38 (request 058, 057-s2, design H1 §4): the darker success, warning,
+    // secondary, primary and orange bands raise the minimum from 4.23 (white
+    // alone 2.26 on the 3.37 warning band) to 4.58, on accent-purple, where the
+    // white outline is the better of the two colours. The ring is unchanged.
+    it('meets 3:1 on all 9 bands (min 4.58, white alone too) and on the light variant (min 10.57)', () => {
       const dark = bands(false);
       const light = bands(true);
       expect(dark).toHaveLength(9);
       expect(light).toHaveLength(9);
       const white = hex('#ffffff');
-      expect(r2(worst(dark, white, hex('#111827')))).toBe(4.23);
-      expect(r2(worst(dark, white, white))).toBe(2.26);
+      expect(r2(worst(dark, white, hex('#111827')))).toBe(4.58);
+      expect(r2(worst(dark, white, white))).toBe(4.58);
       expect(r2(worst(light, hex('#1f2937'), white))).toBe(10.57);
     });
   });

@@ -22,6 +22,14 @@
       }
       <div class="card__header-left">
         <div class="card__title-row">
+          <!-- 3.38 (request 058, 057-s1): the &ngsp; spaces of this template put
+               word breaks between the card's parts in its text (textContent,
+               accessible name, copy), so title, badge, subtitle, body and footer
+               don't run together. Each sits between flex items, where a
+               whitespace-only run renders nothing; none is inside .card__title,
+               the toggle, the link or the :empty badge slot. The one after the
+               title ends each branch: right after an @if chain Angular drops a
+               whitespace-only text while it looks for @else. -->
           @if (isCollapsible()) {
             <!-- Collapsible card (3.36): the heading stays a heading and holds the toggle. -->
             @switch (headingLevel()) {
@@ -40,7 +48,7 @@
               @default {
                 <h3 class="card__title"><ng-container [ngTemplateOutlet]="cardToggle" /></h3>
               }
-            }
+            }&ngsp;
           } @else if (linkMode()) {
             <!-- Link card (3.24): the heading stays a heading and holds the link. -->
             @switch (headingLevel()) {
@@ -59,7 +67,7 @@
               @default {
                 <h3 class="card__title"><ng-container [ngTemplateOutlet]="cardLink" /></h3>
               }
-            }
+            }&ngsp;
           } @else {
             @switch (headingLevel()) {
               @case (2) {
@@ -77,35 +85,35 @@
               @default {
                 <h3 class="card__title">{{ title() }}</h3>
               }
-            }
+            }&ngsp;
           }
           <!-- Rich status badge: project an lc-badge here (takes visual
                precedence over the `badge` string). Wrapper hides when empty. -->
-          <span class="card__badge-slot"><ng-content select="[card-badge]"></ng-content></span>
+          <span class="card__badge-slot"><ng-content select="[card-badge]"></ng-content></span>&ngsp;
           @if (badge()) {
-            <span class="card__badge card__badge--{{ badgeVariant() }}">{{ badge() }}</span>
+            <span class="card__badge card__badge--{{ badgeVariant() }}">{{ badge() }}</span>&ngsp;
           }
         </div>
         @if (subtitle()) {
           <p class="card__subtitle" [attr.id]="isCollapsible() ? subtitleId : null">{{ subtitle() }}</p>
         }
-      </div>
+      </div>&ngsp;
       <div class="card__header-action">
         <ng-content select="[card-header-action]"></ng-content>
       </div>
       @if (isCollapsible()) {
         <lc-icon name="chevron-down" class="card__chevron" size="sm" [decorative]="true" />
       }
-    </div>
+    </div>&ngsp;
   }
-  <ng-content select="[card-header]"></ng-content>
+  <ng-content select="[card-header]"></ng-content>&ngsp;
   <div
     class="card__body"
     [attr.id]="isCollapsible() ? bodyId : null"
     [attr.hidden]="isCollapsible() && !expanded() ? '' : null"
   >
     <ng-content></ng-content>
-  </div>
+  </div>&ngsp;
   <ng-content select="[card-footer]"></ng-content>
 </div>
 
