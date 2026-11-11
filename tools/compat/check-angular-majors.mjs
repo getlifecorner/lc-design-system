@@ -332,6 +332,18 @@ const EXPECT_IN_HTML = [
       && /^<picture(?=[^>]*\sclass="lc-picture__picture lc-picture__picture--dark")[^>]*>(?:<!--[^]*?-->|\s)*<source(?=[^>]*\stype="image\/svg\+xml")(?=[^>]*\ssrcset="\/compat-logo\/character\/hello-dark\.svg")[^>]*>/.test(pictures[1]) && img(pictures[1]);
   }],
   ['picture: the theme pair rule in the page CSS (AC-9b)', /\.lc-picture__picture--dark\[_ngcontent-[^\]]*\]\s*\{\s*display:\s*none;?\s*\}/],
+  // 3.40 (request 060, probe-340.ts, AC-5): the area map in the server HTML, before JS
+  ['area map: one named role="list", 3 anchors, the layer group, 3 aria-hidden lines, no inline style (AC-5)', (html) => {
+    const map = html.match(/<lc-area-map[^>]*\sid="compat-area-map"[^]*?<\/lc-area-map>/)?.[0] ?? '';
+    const cls = (name) => `(?=[^>]*\\sclass="[^"]*\\b${name}\\b[^"]*")`;
+    const links = map.match(new RegExp(`<span${cls('lc-area-map__link')}(?=[^>]*\\saria-hidden="true")[^>]*><\\/span>`, 'g')) ?? [];
+    return new RegExp(`<ul${cls('lc-area-map__list')}(?=[^>]*\\srole="list")(?=[^>]*\\saria-label="Bereiche und ihr Stand")[^>]*>`).test(map)
+      && (map.match(/\blc-area-map__area--anchor-[1-3]\b/g) ?? []).length === 3
+      && new RegExp(`<div${cls('lc-area-map__layer')}${cls('lc-area-map__row-3')}(?=[^>]*\\srole="group")(?=[^>]*\\saria-label="Verbunden, für dich und KI nutzbar")[^>]*>`).test(map)
+      && links.length === 3
+      && !/\sstyle="/.test(map);
+  }],
+  ['area map: the anchor rules in the page CSS (AC-5, AC-9)', /\.lc-area-map__link--1\[_ngcontent-[^\]]*\]\s*\{\s*position-anchor:\s*--lc-area-map-a1;?\s*\}/],
   // 3.13 (request 017): the inverse link in the hero band and its rule before JS
   // (G-WL1, probe-313.ts); lc-input's error state is `input-invalid` (G-WL3, probe-312.ts)
   ['inverse link in the hero band, class before JS (G-WL1)', /<lc-hero(?=[^>]*\sid="compat-band")[^>]*>[^]*?<a(?=[^>]*\sid="compat-inverse")(?=[^>]*\shref="#warteliste")(?=[^>]*\sclass="btn btn-inverse btn-lg")[^>]*>(?:<!--[^]*?-->|\s)*Trag dich jetzt in die Warteliste ein/],

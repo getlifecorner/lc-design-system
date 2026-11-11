@@ -28,15 +28,24 @@ describe('@lifecorner/angular-ui-kit/icons (AS-17)', () => {
   // 3.16 (TD-3) appended wallet, building-bank and shield-lock (+ its filled
   // glyph) to the Tabler keys: 133 → 137; the 133 of 3.5.1 keep their order.
   // 3.22 (BA-6, BA-7) appended 7 keys with 6 filled glyphs: 137 → 150; the 137 keep their order.
-  it('BUNDLED_ICONS holds the 150 glyphs of the maps (3.5.1 + 3.16 + 3.22), in order, with identical markup', () => {
-    expect(GLYPHS_351).toHaveLength(150);
+  // 3.40 (G-HV1) appended shopping-bag, target, heart and gift with 2 filled glyphs: 150 → 156; the 150 keep their order.
+  it('BUNDLED_ICONS holds the 156 glyphs of the maps (3.5.1 + 3.16 + 3.22 + 3.40), in order, with identical markup', () => {
+    expect(GLYPHS_351).toHaveLength(156);
     expect(GLYPHS_351.slice(133, 137).map(({ name, variant }) => `${variant}:${name}`)).toEqual([
       'outline:wallet',
       'outline:building-bank',
       'outline:shield-lock',
       'solid:shield-lock',
     ]);
-    expect(GLYPHS_351.slice(137).map(({ name, variant }) => `${variant}:${name}`)).toEqual([
+    expect(GLYPHS_351.slice(150).map(({ name, variant }) => `${variant}:${name}`)).toEqual([
+      'outline:shopping-bag',
+      'outline:target',
+      'outline:heart',
+      'solid:heart',
+      'outline:gift',
+      'solid:gift',
+    ]);
+    expect(GLYPHS_351.slice(137, 150).map(({ name, variant }) => `${variant}:${name}`)).toEqual([
       'outline:search',
       'solid:search',
       'outline:lock',
@@ -60,7 +69,7 @@ describe('@lifecorner/angular-ui-kit/icons (AS-17)', () => {
     const exported = ICONS as unknown as Record<string, unknown>;
     for (const icon of BUNDLED_ICONS) expect(exported[iconConstantName(icon.name, icon.variant)]).toBe(icon);
     const names = Object.keys(exported).filter((n) => n.startsWith('ICON_'));
-    expect(names).toHaveLength(150);
+    expect(names).toHaveLength(156);
     expect(Object.keys(exported).filter((n) => !n.startsWith('ICON_'))).toEqual(['BUNDLED_ICONS']);
     expect(exported['ICON_X_MARK']).toMatchObject({ name: 'x-mark', variant: 'outline' });
     expect(exported['ICON_BARS_3_SOLID']).toMatchObject({ name: 'bars-3', variant: 'solid' });
@@ -70,7 +79,7 @@ describe('@lifecorner/angular-ui-kit/icons (AS-17)', () => {
   it('ships plain object literals only, so a bundler keeps just the imported constants', () => {
     const source = readFileSync(join(__dirname, 'icons.data.ts'), 'utf-8');
     const constants = source.split('\n').filter((line) => line.startsWith('export const ICON_'));
-    expect(constants).toHaveLength(150);
+    expect(constants).toHaveLength(156);
     for (const line of constants) {
       expect(line).toMatch(/^export const ICON_[A-Z0-9_]+: LcIconDefinition = \{ name: '[a-z0-9-]+', variant: '(outline|solid)', svg: '<svg [^']*<\/svg>' \};$/);
     }

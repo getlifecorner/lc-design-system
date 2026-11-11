@@ -110,3 +110,104 @@
     background: Canvas;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Laptop (3.40, request 060, G-SS1 extended, design D-6): the host keeps the
+// screen and its padding; the lid (`::before`) and the base (`::after`) are
+// drawn behind it, so there is no new DOM and the phone rules above stay as
+// they are. The lid has the phone's rim, bezel and radius (top corners); the
+// base is wider by the overhang on each side and carries a hinge notch.
+// ---------------------------------------------------------------------------
+@property --_lc-device-frame-overhang {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --_lc-device-frame-base-height {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@mixin laptop-lengths {
+  --_lc-device-frame-overhang: var(--lc-device-frame-overhang, var(--_lc-device-frame-default-overhang));
+  --_lc-device-frame-base-height: var(--lc-device-frame-base-height, var(--_lc-device-frame-default-base-height));
+}
+
+// Per-size defaults (md); the bezel stays the phone's (6 / 8 / 10 px).
+:host(.lc-device-frame--laptop) {
+  --_lc-device-frame-default-width: 480px;
+  --_lc-device-frame-default-radius: var(--border-radius-md);
+  --_lc-device-frame-default-overhang: var(--spacing-4);
+  --_lc-device-frame-default-base-height: var(--spacing-3);
+  @include laptop-lengths;
+
+  isolation: isolate;
+  padding: var(--_lc-device-frame-bezel) calc(var(--_lc-device-frame-overhang) + var(--_lc-device-frame-bezel))
+    calc(var(--_lc-device-frame-base-height) + var(--_lc-device-frame-bezel));
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+:host(.lc-device-frame--laptop.lc-device-frame--sm) {
+  --_lc-device-frame-default-width: 320px;
+  --_lc-device-frame-default-radius: var(--border-radius-sm);
+  --_lc-device-frame-default-overhang: var(--spacing-3);
+  --_lc-device-frame-default-base-height: var(--spacing-2);
+}
+
+:host(.lc-device-frame--laptop.lc-device-frame--lg) {
+  --_lc-device-frame-default-width: 640px;
+  --_lc-device-frame-default-radius: var(--border-radius-lg);
+  --_lc-device-frame-default-overhang: var(--spacing-6);
+  --_lc-device-frame-default-base-height: var(--spacing-4);
+}
+
+:host(.lc-device-frame--laptop)::before,
+:host(.lc-device-frame--laptop)::after {
+  @include lengths;
+  @include laptop-lengths;
+
+  content: '';
+  position: absolute;
+  z-index: -1;
+  box-sizing: border-box;
+  border: 1px solid var(--lc-device-frame-rim-color, var(--color-field-border));
+  box-shadow: var(--lc-device-frame-shadow, var(--elevation-2));
+}
+
+// The lid: rim and bezel on three sides, the base below it.
+:host(.lc-device-frame--laptop)::before {
+  inset: 0 var(--_lc-device-frame-overhang) var(--_lc-device-frame-base-height);
+  border-bottom: 0;
+  border-radius: var(--_lc-device-frame-radius) var(--_lc-device-frame-radius) 0 0;
+  background: var(--lc-device-frame-bezel-color, #{colors.$color-neutral-900});
+}
+
+// The base: full width, rounded below, a darker notch where the lid opens.
+:host(.lc-device-frame--laptop)::after {
+  inset: auto 0 0;
+  block-size: var(--_lc-device-frame-base-height);
+  border-radius: 0 0 var(--_lc-device-frame-base-height) var(--_lc-device-frame-base-height);
+  background:
+    radial-gradient(farthest-side at 50% 0, #{colors.$color-neutral-800} 98%, transparent) 50% 0 / 14% 50% no-repeat,
+    var(--lc-device-frame-base-color, #{colors.$color-neutral-700});
+}
+
+// The screen's lower corners sit on the lid's bottom bezel: square.
+:host(.lc-device-frame--laptop) .lc-device-frame__screen {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+@media (forced-colors: active) {
+  :host(.lc-device-frame--laptop)::before,
+  :host(.lc-device-frame--laptop)::after {
+    border-color: CanvasText;
+    background: Canvas;
+    box-shadow: none;
+  }
+}

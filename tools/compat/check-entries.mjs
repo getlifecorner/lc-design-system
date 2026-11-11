@@ -155,8 +155,9 @@ numbers.entries = { total: entries.length, public: publicEntries.length, interna
 // 119 since 3.11.5 (request 015): + internal/a11y;
 // 120 since 3.16 (request 022): + money;
 // 121 since 3.36 (request 056): + state-strip;
-// 123 since 3.39 (request 059): + device-frame, picture.
-check('AC-15', `${entries.length} subpaths (${publicEntries.length} public, ${entries.length - publicEntries.length} internal), each with types and default`, entries.length === 123 &&subpaths.every((k) => existsSync(join(next.root, next.pkg.exports[k].types)) && existsSync(join(next.root, next.pkg.exports[k].default))));
+// 123 since 3.39 (request 059): + device-frame, picture;
+// 124 since 3.40 (request 060): + area-map.
+check('AC-15', `${entries.length} subpaths (${publicEntries.length} public, ${entries.length - publicEntries.length} internal), each with types and default`, entries.length === 124 &&subpaths.every((k) => existsSync(join(next.root, next.pkg.exports[k].types)) && existsSync(join(next.root, next.pkg.exports[k].default))));
 const declaredIn = [];
 const entryExports = exportsOf(subpaths.map((k) => join(next.root, next.pkg.exports[k].types)), declaredIn);
 const unresolved = subpaths.filter((_, i) => !entryExports[i]);

@@ -65,6 +65,9 @@ export * from '@lifecorner/angular-ui-kit/picture';
 // Device Frame Component (a phone bezel around media, 3.39)
 export * from '@lifecorner/angular-ui-kit/device-frame';
 
+// Area Map Component (status groups with lines into one layer, 3.40)
+export * from '@lifecorner/angular-ui-kit/area-map';
+
 // Menu Component
 export * from '@lifecorner/angular-ui-kit/menu';
 

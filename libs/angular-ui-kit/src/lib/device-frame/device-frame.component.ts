@@ -1,14 +1,18 @@
 import { booleanAttribute, ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-/** The device drawn around the media (3.39). Only `'phone'` today; more may follow. */
-export type DeviceFrameDevice = 'phone';
+/** The device drawn around the media: `'phone'` (3.39) or `'laptop'` (3.40). */
+export type DeviceFrameDevice = 'phone' | 'laptop';
 
-/** Width step of `lc-device-frame` (3.39): `sm` 200 px, `md` 248 px, `lg` 320 px. */
+/**
+ * Width step of `lc-device-frame`: phone `sm` 200 px, `md` 248 px, `lg`
+ * 320 px (3.39); laptop `sm` 320 px, `md` 480 px, `lg` 640 px (3.40).
+ */
 export type DeviceFrameSize = 'sm' | 'md' | 'lg';
 
 /**
- * A phone bezel around projected media (3.39, request 059, G-SS1): app
- * screenshots on a website, a `<video>` of a flow, any element.
+ * A phone bezel (3.39, request 059, G-SS1) or a laptop (3.40, request 060,
+ * G-SS1 extended) around projected media: app screenshots on a website, a
+ * `<video>` of a flow, any element.
  *
  * Features:
  * - The host is the frame: black glass (`$color-neutral-900` in both themes)
@@ -33,6 +37,13 @@ export type DeviceFrameSize = 'sm' | 'md' | 'lg';
  *   `--lc-device-frame-shadow` (`--elevation-2`; `none` turns it off) and
  *   `--lc-device-frame-screen-bg` (`--color-surface`, shows until the media
  *   has loaded).
+ * - `device="laptop"` (3.40): a lid with the same rim, bezel and screen over
+ *   a wider base with a hinge notch, drawn by the host's `::before`/`::after`
+ *   (no extra DOM). Widths 320 / 480 / 640 px, lid radius 10 / 12 / 18 px.
+ *   More hooks: `--lc-device-frame-base-color` (#374151, both themes),
+ *   `--lc-device-frame-overhang` (the base's overhang per side: 12 / 16 /
+ *   24 px) and `--lc-device-frame-base-height` (8 / 12 / 16 px); both lengths
+ *   take a bare `0`. `notch` is phone only and ignored on a laptop.
  *
  * @example
  * ```html
@@ -51,23 +62,27 @@ export type DeviceFrameSize = 'sm' | 'md' | 'lg';
   host: {
     class: 'lc-device-frame',
     '[class.lc-device-frame--phone]': "device() === 'phone'",
+    '[class.lc-device-frame--laptop]': "device() === 'laptop'",
     '[class.lc-device-frame--sm]': "size() === 'sm'",
     '[class.lc-device-frame--md]': "size() === 'md'",
     '[class.lc-device-frame--lg]': "size() === 'lg'",
-    '[class.lc-device-frame--notch]': 'notch()',
+    '[class.lc-device-frame--notch]': "notch() && device() === 'phone'",
   },
 })
 export class DeviceFrameComponent {
   /**
-   * The device drawn around the media. Only `'phone'` today; more may follow.
+   * The device drawn around the media. `'phone'`: a bezel with rounded
+   * corners. `'laptop'` (3.40): a lid with bezel over a wider base with a hinge
+   * notch; the media fills the screen the same way.
    * @default 'phone'
    */
   readonly device = input<DeviceFrameDevice>('phone');
 
   /**
-   * Width step: `sm` 200 px, `md` 248 px, `lg` 320 px (never wider than the
-   * container). Bezel (6 / 8 / 10 px) and corner radius (24 / 32 / 42 px)
-   * grow with it.
+   * Width step (never wider than the container). Phone: `sm` 200 px, `md`
+   * 248 px, `lg` 320 px; bezel (6 / 8 / 10 px) and corner radius (24 / 32 /
+   * 42 px) grow with it. Laptop: `sm` 320 px, `md` 480 px, `lg` 640 px, the
+   * same bezels, lid radius 10 / 12 / 18 px.
    * @default 'md'
    */
   readonly size = input<DeviceFrameSize>('md');
@@ -75,6 +90,7 @@ export class DeviceFrameComponent {
   /**
    * Draws a decorative camera pill in a deeper top bezel (three times the
    * bezel). It never covers the media and is hidden from assistive technology.
+   * Phone only: ignored on `device="laptop"`.
    * @default false
    */
   readonly notch = input(false, { transform: booleanAttribute });

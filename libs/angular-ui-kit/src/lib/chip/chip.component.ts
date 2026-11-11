@@ -1,8 +1,14 @@
-import { Component, ChangeDetectionStrategy, input, output, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, booleanAttribute, input, output, computed } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { IconComponent } from '@lifecorner/angular-ui-kit/icon';
 
-export type ChipVariant = 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+/**
+ * Colour of a chip. 3.40 (G-HV4) adds `emphasis` (solid fill, white ink) and
+ * `quiet` (transparent fill, thin border); inside `lc-hero` they follow the
+ * band (emphasis: the band's dark stop; quiet: the band's ink), and every
+ * other variant takes the light, opaque palette.
+ */
+export type ChipVariant = 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info' | 'emphasis' | 'quiet';
 export type ChipSize = 'sm' | 'md' | 'lg';
 
 /**
@@ -17,6 +23,11 @@ export type ChipSize = 'sm' | 'md' | 'lg';
  *   clickable + removable renders two sibling buttons (activate / remove) so
  *   no interactive control is ever nested in another
  * - Disabled state support
+ * - `wrap` (3.40): a long label wraps onto centred lines (WCAG 1.4.10)
+ * - In `lc-hero` (3.40): an on-band palette, opaque fills in both themes
+ * - CSS hooks `--lc-chip-bg`, `--lc-chip-fg`, `--lc-chip-border` and
+ *   `--lc-chip-gap`, set on the chip or any ancestor (since 3.40 an ancestor
+ *   wins over the variant too)
  *
  * @example
  * ```html
@@ -38,29 +49,60 @@ export type ChipSize = 'sm' | 'md' | 'lg';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChipComponent {
-  /** Visual variant of the chip */
+  /**
+   * Visual variant of the chip. `emphasis`: a solid fill with white ink (the
+   * primary fill; in `lc-hero` the band's dark stop). `quiet`: a transparent
+   * fill with a thin border and secondary ink (white on a band, dark on a light
+   * hero). In `lc-hero` the other variants take the light palette with opaque
+   * fills, in both themes.
+   * @default 'default'
+   */
   variant = input<ChipVariant>('default');
 
-  /** Size of the chip */
+  /**
+   * Size of the chip
+   * @default 'md'
+   */
   size = input<ChipSize>('md');
 
-  /** Icon name from Tabler Icons */
+  /**
+   * Icon name from Tabler Icons
+   * @default undefined
+   */
   icon = input<string>();
 
-  /** Whether the chip can be removed */
+  /**
+   * Whether the chip can be removed
+   * @default false
+   */
   removable = input<boolean>(false);
 
-  /** Accessible name of the remove button (`removable`). */
+  /**
+   * Accessible name of the remove button (`removable`).
+   * @default 'Remove chip'
+   */
   removeAriaLabel = input('Remove chip');
 
   /**
    * Whether the chip acts as a button (e.g. for navigation). Renders the chip
    * as a `<button type="button">` with hover / active / focus-visible states.
+   * @default false
    */
   clickable = input<boolean>(false);
 
-  /** Whether the chip is disabled */
+  /**
+   * Whether the chip is disabled
+   * @default false
+   */
   disabled = input<boolean>(false);
+
+  /**
+   * Lets a long label wrap onto centred lines instead of overflowing its
+   * container (WCAG 1.4.10 at 320 px and 200 % text). A one-line chip keeps
+   * its height; the icon and the remove button stay on the first line.
+   * @default false
+   */
+  wrap = input(false, { transform: booleanAttribute });
 
   /** Emitted when the chip is removed */
   readonly remove = output<void>();
@@ -87,6 +129,10 @@ export class ChipComponent {
 
     if (this.disabled()) {
       classes.push('lc-chip--disabled');
+    }
+
+    if (this.wrap()) {
+      classes.push('lc-chip--wrap');
     }
 
     return classes.join(' ');

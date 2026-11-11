@@ -88,6 +88,15 @@ $hero-colors: (
   justify-content: space-between;
   color: #fff;
   overflow: hidden;
+  // 3.40 (request 060, design D-5): a kit-internal contract, not a public
+  // hook. Components in the slots (lc-chip, lc-area-map) read the band from
+  // these: its ink, a dark glass that keeps the ink at 6.40:1 or more on
+  // every band, the gap colour of the two-tone focus ring (as the title's)
+  // and the band's dark stop. They paint nothing here, so a hero renders as
+  // before. The light variant swaps the first three.
+  --_lc-hero-ink: #fff;
+  --_lc-hero-glass: rgba(17, 24, 39, 0.24);
+  --_lc-hero-ring-gap: #{colors.$color-neutral-900};
 
   // -------------------------------------------------------------------------
   // Color variants (gradient backgrounds)
@@ -95,6 +104,7 @@ $hero-colors: (
   @each $name, $shades in $hero-colors {
     &--#{$name} {
       background: linear-gradient(135deg, map.get($shades, from) 0%, map.get($shades, to) 100%);
+      --_lc-hero-band-from: #{map.get($shades, from)};
     }
   }
 
@@ -224,6 +234,10 @@ $hero-colors: (
     // ink turned near-white on them under the dark root. Same principle as
     // the dark gradients pinning #fff.
     color: colors.$color-neutral-800;
+    // 3.40: the private band contract (see `.hero`) for the pastel bands.
+    --_lc-hero-ink: #{colors.$color-neutral-800};
+    --_lc-hero-glass: rgba(255, 255, 255, 0.5);
+    --_lc-hero-ring-gap: #fff;
 
     .hero__label {
       opacity: 0.7;

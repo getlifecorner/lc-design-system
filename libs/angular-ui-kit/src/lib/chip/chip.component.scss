@@ -1,3 +1,5 @@
+@use 'sass:math';
+
 /**
  * Chip Component Styles
  *
@@ -14,14 +16,16 @@
   transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
   cursor: default;
   user-select: none;
-  // Gap between content, action and remove button (per-size below).
-  --lc-chip-gap: 0.375rem;
-  gap: var(--lc-chip-gap);
+  // Gap between content, action and remove button (per-size below). 3.40:
+  // the defaults are private, so --lc-chip-gap set on the chip or any
+  // ancestor wins (020).
+  --_lc-chip-gap: 0.375rem;
+  gap: var(--lc-chip-gap, var(--_lc-chip-gap));
 
   &__content {
     display: inline-flex;
     align-items: center;
-    gap: var(--lc-chip-gap);
+    gap: var(--lc-chip-gap, var(--_lc-chip-gap));
   }
 
   // Activate button of a clickable + removable chip: a sibling of the remove
@@ -88,7 +92,7 @@
     padding: 0.25rem 0.625rem;
     font-size: var(--typography-font-size-sm, 0.875rem);
     height: 1.5rem;
-    --lc-chip-gap: 0.25rem;
+    --_lc-chip-gap: 0.25rem;
   }
 
   &--md {
@@ -101,59 +105,80 @@
     padding: 0.5rem 1rem;
     font-size: var(--typography-font-size-base, 1rem);
     height: 2.5rem;
-    --lc-chip-gap: 0.5rem;
+    --_lc-chip-gap: 0.5rem;
   }
 
-  // DS2.0: tinted fill + hairline border. Variants only set the theming hooks,
-  // which the base rule consumes — set --lc-chip-bg / -fg / -border on a chip
-  // or an ancestor to restyle it without touching the variant classes.
+  // DS2.0: tinted fill + hairline border. Variants only set private colours,
+  // which the base rule consumes after the public hooks. 3.40 (G-HV4, design
+  // D-5): --lc-chip-bg / -fg / -border set on a chip or any ancestor win over
+  // the variant (before, a hook on an ancestor lost to the variant class).
   //
   // Ink comes from --color-on-*-subtle, never from the plain --color-* fill:
   // as text on a light tint those measure around 2:1, under the 4.5:1 minimum.
-  background-color: var(--lc-chip-bg);
-  color: var(--lc-chip-fg);
-  border: 1px solid var(--lc-chip-border, transparent);
+  background-color: var(--lc-chip-bg, var(--_lc-chip-bg));
+  color: var(--lc-chip-fg, var(--_lc-chip-fg));
+  border: 1px solid var(--lc-chip-border, var(--_lc-chip-border, transparent));
 
   // Variant styles - default (neutral)
   &--default {
-    --lc-chip-bg: var(--color-surface-hover);
-    --lc-chip-fg: var(--color-text-secondary);
-    --lc-chip-border: var(--color-border);
+    --_lc-chip-bg: var(--color-surface-hover);
+    --_lc-chip-fg: var(--color-text-secondary);
+    --_lc-chip-border: var(--color-border);
   }
 
   // Variant styles - primary
   &--primary {
-    --lc-chip-bg: var(--color-primary-subtle);
-    --lc-chip-fg: var(--color-on-primary-subtle);
-    --lc-chip-border: var(--color-border-strong);
+    --_lc-chip-bg: var(--color-primary-subtle);
+    --_lc-chip-fg: var(--color-on-primary-subtle);
+    --_lc-chip-border: var(--color-border-strong);
   }
 
   // Variant styles - success
   &--success {
-    --lc-chip-bg: var(--color-success-subtle);
-    --lc-chip-fg: var(--color-on-success-subtle);
-    --lc-chip-border: rgba(142, 164, 117, 0.4);
+    --_lc-chip-bg: var(--color-success-subtle);
+    --_lc-chip-fg: var(--color-on-success-subtle);
+    --_lc-chip-border: rgba(142, 164, 117, 0.4);
   }
 
   // Variant styles - warning
   &--warning {
-    --lc-chip-bg: var(--color-warning-subtle);
-    --lc-chip-fg: var(--color-on-warning-subtle);
-    --lc-chip-border: rgba(225, 160, 64, 0.4);
+    --_lc-chip-bg: var(--color-warning-subtle);
+    --_lc-chip-fg: var(--color-on-warning-subtle);
+    --_lc-chip-border: rgba(225, 160, 64, 0.4);
   }
 
   // Variant styles - error
   &--error {
-    --lc-chip-bg: var(--color-error-subtle);
-    --lc-chip-fg: var(--color-on-error-subtle);
-    --lc-chip-border: rgba(157, 14, 14, 0.4);
+    --_lc-chip-bg: var(--color-error-subtle);
+    --_lc-chip-fg: var(--color-on-error-subtle);
+    --_lc-chip-border: rgba(157, 14, 14, 0.4);
   }
 
   // Variant styles - info
   &--info {
-    --lc-chip-bg: var(--color-info-subtle);
-    --lc-chip-fg: var(--color-on-info-subtle);
-    --lc-chip-border: rgba(59, 101, 136, 0.42);
+    --_lc-chip-bg: var(--color-info-subtle);
+    --_lc-chip-fg: var(--color-on-info-subtle);
+    --_lc-chip-border: rgba(59, 101, 136, 0.42);
+  }
+
+  // 3.40 (G-HV4, design D-4): a solid fill with white ink (6.21:1 in both
+  // themes); in lc-hero the band's dark stop (rules at the end).
+  &--emphasis {
+    --_lc-chip-bg: var(--color-primary-fill);
+    --_lc-chip-fg: var(--color-on-primary);
+    --_lc-chip-border: transparent;
+  }
+
+  // 3.40 (G-HV4): transparent with a thin border and secondary ink. An
+  // interactive one draws its boundary in the field border (3:1).
+  &--quiet {
+    --_lc-chip-bg: transparent;
+    --_lc-chip-fg: var(--color-text-secondary);
+    --_lc-chip-border: var(--color-border);
+  }
+
+  &--quiet.lc-chip--clickable {
+    --_lc-chip-border: var(--color-field-border);
   }
 
   // Removable state — the wrapper itself is not interactive (only the remove
@@ -189,6 +214,12 @@
     }
   }
 
+  // A hovered quiet chip gets a fill; its border stays.
+  &--quiet.lc-chip--clickable:hover:not(:disabled) {
+    background-color: var(--color-surface-hover);
+    border-color: var(--lc-chip-border, var(--_lc-chip-border));
+  }
+
   // Disabled state
   &--disabled {
     opacity: 0.5;
@@ -201,5 +232,99 @@
     display: inline-flex;
     align-items: center;
     flex-shrink: 0;
+  }
+
+  // Wrapping label (3.40, G-HV3; WCAG 1.4.10), as lc-badge `wrap` (3.11): a
+  // long label ("Gesundheit, Fitness, Ernährung" at 320 px and 200 % text)
+  // wraps onto centred lines inside its container. Height, padding and radius
+  // per size are below; icon and remove button stay on the first line.
+  &--wrap {
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
+    line-height: var(--line-height-tight, 1.25);
+    overflow-wrap: anywhere;
+    hyphens: auto;
+    hyphenate-limit-chars: 12 4 3;
+    align-items: flex-start;
+  }
+}
+
+.lc-chip--wrap .lc-chip__content,
+.lc-chip--wrap .lc-chip__action {
+  min-width: 0;
+  align-items: flex-start;
+}
+
+.lc-chip--wrap .lc-chip__label {
+  display: block;
+  min-width: 0;
+}
+
+// The 20 px icon on the first line's centre: it takes one line box of room.
+.lc-chip--wrap .lc-chip__icon {
+  margin-block: calc((var(--line-height-tight, 1.25) * 1em - 20px) / 2);
+}
+
+// The 1em × on the first line's centre.
+.lc-chip--wrap .lc-chip__delete {
+  margin-block-start: calc((var(--line-height-tight, 1.25) - 1) * 0.5em);
+}
+
+// Wrap mode per size (0,2,0, so `height: auto` beats the size rule): the
+// one-line height becomes the minimum, and the block padding centres one
+// 1.25 line box in it (minus the 1 px borders), so a label that fits is as
+// tall as before (sm: 2.25 + 17.5 + 2.25 + 2 = 24 px). The radius is half
+// that height: the same pill on one line, no half-circle ends on two.
+$_chip-wrap-heights: (
+  sm: 1.5rem,
+  md: 2rem,
+  lg: 2.5rem,
+);
+
+@each $size, $height in $_chip-wrap-heights {
+  .lc-chip--wrap.lc-chip--#{$size} {
+    height: auto;
+    min-height: $height;
+    padding-block: max(0px, calc((#{$height} - 2px) / 2 - var(--line-height-tight, 1.25) * 0.5em));
+    border-radius: math.div($height, 2);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// In lc-hero (3.40, G-HV4, design D-5): the bands are fixed colours that
+// don't follow the theme. Every variant but these two takes the light palette
+// (`lc-hero lc-chip` in `_theme-light.scss`: opaque fills, 4.85:1 or more).
+// `emphasis` fills with the band's dark stop and white ink (8.10:1 or more),
+// `quiet` is the band's ink on the band itself (4.58:1 or more) with a 32 %
+// border (100 % when interactive). The hero publishes its band through private
+// properties on `.hero` (`--_lc-hero-*`, kit-internal); nothing is guessed.
+// ---------------------------------------------------------------------------
+:host-context(lc-hero) {
+  .lc-chip--emphasis {
+    --_lc-chip-bg: var(--_lc-hero-band-from);
+    --_lc-chip-fg: #fff;
+    --_lc-chip-border: color-mix(in srgb, var(--_lc-hero-ink) 24%, transparent);
+  }
+
+  .lc-chip--quiet {
+    --_lc-chip-bg: transparent;
+    --_lc-chip-fg: var(--_lc-hero-ink);
+    --_lc-chip-border: color-mix(in srgb, var(--_lc-hero-ink) 32%, transparent);
+  }
+
+  .lc-chip--quiet.lc-chip--clickable {
+    --_lc-chip-border: var(--_lc-hero-ink);
+  }
+
+  .lc-chip--quiet.lc-chip--clickable:hover:not(:disabled) {
+    background-color: var(--_lc-hero-glass);
+  }
+
+  // The hero title's two-tone ring: the ink 2 px out, the ring gap between.
+  .lc-chip--clickable:focus-visible,
+  .lc-chip__action:focus-visible {
+    outline-color: var(--_lc-hero-ink);
+    box-shadow: 0 0 0 2px var(--_lc-hero-ring-gap);
   }
 }

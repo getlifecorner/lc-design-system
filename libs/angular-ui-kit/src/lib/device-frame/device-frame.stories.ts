@@ -51,6 +51,9 @@ A phone bezel around projected media (3.39, life-os website-screenshots G-SS1), 
 - CSS hooks: \`--lc-device-frame-width\`, \`-bezel\`, \`-radius\`, \`-bezel-color\`, \`-rim-color\`, \`-notch-color\`,
   \`-shadow\` (\`--elevation-2\`), \`-screen-bg\` (\`--color-surface\`); set them on the host or any ancestor
 - Forced colours: a \`CanvasText\` border, no shadow
+- \`device="laptop"\` (3.40, G-SS1 extended): a lid with the same rim, bezel and screen over a wider base with a hinge notch,
+  drawn by the host's pseudo-elements (no extra DOM). \`sm\` 320, \`md\` 480, \`lg\` 640 px; more hooks
+  \`--lc-device-frame-base-color\` (#374151), \`-overhang\` (12 / 16 / 24 px) and \`-base-height\` (8 / 12 / 16 px). \`notch\` is phone only
 `,
       },
     },
@@ -58,19 +61,22 @@ A phone bezel around projected media (3.39, life-os website-screenshots G-SS1), 
   argTypes: {
     device: {
       control: 'select',
-      options: ['phone'],
-      description: "The device drawn around the media. Only `'phone'` today; more may follow",
+      options: ['phone', 'laptop'],
+      description:
+        "The device drawn around the media. `'phone'`: a bezel with rounded corners. `'laptop'` (3.40): a lid with bezel over a wider base with a hinge notch; the media fills the screen the same way",
       table: { defaultValue: { summary: "'phone'" } },
     },
     size: {
       control: 'select',
       options: ['sm', 'md', 'lg'],
-      description: 'Width step: `sm` 200 px, `md` 248 px, `lg` 320 px (never wider than the container); bezel and radius grow with it',
+      description:
+        'Width step (never wider than the container). Phone: `sm` 200 px, `md` 248 px, `lg` 320 px; bezel and radius grow with it. Laptop: `sm` 320 px, `md` 480 px, `lg` 640 px, lid radius 10 / 12 / 18 px',
       table: { defaultValue: { summary: "'md'" } },
     },
     notch: {
       control: 'boolean',
-      description: 'Draws a decorative camera pill in a deeper top bezel; it never covers the media and is hidden from assistive technology',
+      description:
+        'Draws a decorative camera pill in a deeper top bezel; it never covers the media and is hidden from assistive technology. Phone only: ignored on a laptop',
       table: { defaultValue: { summary: 'false' } },
     },
   },
@@ -317,6 +323,128 @@ export const AnyMedia: Story = {
             <h3 style="margin: 0 0 8px;">Heute</h3>
             <p style="margin: 0;">Nichts zu tun. Alle Konten sind auf dem Stand von heute, 06:00.</p>
           </div>
+        </lc-device-frame>
+      </div>`,
+  }),
+};
+
+/** A labelled stand-in desktop screenshot, 1280 × 800 (an SVG data URI): sidebar, title, three cards. */
+function desktopShot(label: string, theme: 'light' | 'dark' = 'light'): string {
+  const c =
+    theme === 'light'
+      ? { bg: '#f9fafb', fg: '#111827', card: '#ffffff', line: '#d1d5db', side: '#ffffff' }
+      : { bg: '#0a121b', fg: '#f1f6f8', card: '#1a2c3a', line: '#374151', side: '#101c26' };
+  const cards = [320, 640, 960]
+    .map((x) => `<rect x="${x}" y="220" width="280" height="240" rx="24" fill="${c.card}"/><rect x="${x + 40}" y="270" width="180" height="20" rx="10" fill="${c.line}"/>`)
+    .join('');
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800">` +
+    `<rect width="1280" height="800" fill="${c.bg}"/>` +
+    `<rect width="260" height="800" fill="${c.side}"/>` +
+    [120, 180, 240, 300].map((y) => `<rect x="32" y="${y}" width="180" height="20" rx="10" fill="${c.line}"/>`).join('') +
+    `<text x="320" y="140" font-family="sans-serif" font-size="56" font-weight="700" fill="${c.fg}">Übersicht</text>` +
+    cards +
+    `<rect x="320" y="500" width="920" height="220" rx="24" fill="${c.card}"/>` +
+    `<text x="320" y="770" font-family="sans-serif" font-size="28" fill="${c.fg}">${label}</text></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+const DESKTOP = { light: desktopShot('hell · 1280 × 800'), dark: desktopShot('dunkel · 1280 × 800', 'dark') };
+const DESKTOP_ALT = 'Übersicht der App am Laptop: links die Navigation, rechts drei Karten mit Konten, Verträgen und Terminen.';
+
+export const Laptop: Story = {
+  args: { device: 'laptop', size: 'md' },
+  parameters: {
+    controls: { include: ['device', 'size', 'notch'] },
+    docs: {
+      description: {
+        story:
+          '3.40 (G-SS1 extended): `device="laptop"` with an `lc-picture` of a 1280 × 800 shot (light and dark file). At `md` the frame is 480 × 298 px: the lid with an 8 px bezel and the rim in `--color-field-border` (4.83:1 light, 7.31:1 dark on the page), the screen 432 × 270 px, the base 12 px high with a 16 px overhang per side and a hinge notch, in #374151 in both themes. Lid and base are the host\'s pseudo-elements: the DOM is the phone\'s without the notch. At 360 px the frame scales down to the 328 px column.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: { ...args, shot: DESKTOP, alt: DESKTOP_ALT },
+    template: `
+      <div lang="de">
+        <lc-device-frame [device]="device" [size]="size" [notch]="notch">
+          <lc-picture [src]="shot.light" [darkSrc]="shot.dark" [alt]="alt" width="1280" height="800" />
+        </lc-device-frame>
+      </div>`,
+  }),
+};
+
+export const LaptopSizes: Story = {
+  name: 'Laptop Sizes',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '`sm` (320 px, bezel 6, overhang 12, base 8, lid radius 10, screen 284 × 177.5), `md` (480 px, 8, 16, 12, 12, screen 432 × 270) and `lg` (640 px, 10, 24, 16, 18, screen 572 × 357.5), bottom-aligned in a wrapping row. A frame is never wider than its container: at 360 px `md` and `lg` take the 328 px column (screens 280 × 175 and 260 × 162.5).',
+      },
+    },
+  },
+  render: () => ({
+    props: { shot: DESKTOP, alt: DESKTOP_ALT, sizes: ['sm', 'md', 'lg'] },
+    template: `
+      <div lang="de" style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px;">
+        @for (size of sizes; track size) {
+          <lc-device-frame device="laptop" [size]="size">
+            <lc-picture [src]="shot.light" [darkSrc]="shot.dark" [alt]="alt" width="1280" height="800" />
+          </lc-device-frame>
+        }
+      </div>`,
+  }),
+};
+
+export const LaptopAndPhone: Story = {
+  name: 'Laptop and Phone',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          'The laptop `md` and the phone `sm` with its notch, bottom-aligned in a wrapping row: the same rim, bezel colour and shadow, so the two read as one family. `notch` on the laptop is ignored (no span, no class).',
+      },
+    },
+  },
+  render: () => ({
+    props: { shot: DESKTOP, alt: DESKTOP_ALT, home: HOME, homeAlt: HOME_ALT },
+    template: `
+      <div lang="de" style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px;">
+        <lc-device-frame device="laptop" notch>
+          <lc-picture [src]="shot.light" [darkSrc]="shot.dark" [alt]="alt" width="1280" height="800" />
+        </lc-device-frame>
+        <lc-device-frame size="sm" notch>
+          <lc-picture [src]="home.light" [darkSrc]="home.dark" [alt]="homeAlt" width="360" height="780" />
+        </lc-device-frame>
+      </div>`,
+  }),
+};
+
+export const LaptopHooks: Story = {
+  name: 'Laptop Hooks',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          'The hooks on a laptop. Left: set on a wrapper (an ancestor wins over the size defaults): base `--lc-device-frame-base-color: var(--color-neutral-500)`, overhang 32px, base height 20px, light glass `--lc-device-frame-bezel-color: var(--color-surface-2)`, rim `var(--color-text-secondary)`, shadow `none`. Right: on the host, `--lc-device-frame-overhang: 0` and `--lc-device-frame-base-height: 0` (bare zeros work): the lid alone.',
+      },
+    },
+  },
+  render: () => ({
+    props: { shot: DESKTOP, alt: DESKTOP_ALT },
+    template: `
+      <div lang="de" style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;">
+        <div style="--lc-device-frame-base-color: var(--color-neutral-500); --lc-device-frame-overhang: 32px; --lc-device-frame-base-height: 20px; --lc-device-frame-bezel-color: var(--color-surface-2); --lc-device-frame-rim-color: var(--color-text-secondary); --lc-device-frame-shadow: none;">
+          <lc-device-frame device="laptop" size="sm">
+            <lc-picture [src]="shot.light" [darkSrc]="shot.dark" [alt]="alt" width="1280" height="800" />
+          </lc-device-frame>
+        </div>
+        <lc-device-frame device="laptop" size="sm" style="--lc-device-frame-overhang: 0; --lc-device-frame-base-height: 0;">
+          <lc-picture [src]="shot.light" [darkSrc]="shot.dark" [alt]="alt" width="1280" height="800" />
         </lc-device-frame>
       </div>`,
   }),

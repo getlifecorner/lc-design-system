@@ -1,0 +1,185 @@
+// lc-area-map (3.40, request 060, life-os G-HV2, design D-2/D-3). One grid
+// column; the list of groups is a subgrid over 12 row tracks, and the layer
+// takes the row after the `above` groups, so groups and layer stack in one
+// column although the layer is outside the list (DOM order: list, layer).
+// The lines are absolutely positioned against the host and anchored to their
+// chip's list item and to the layer: CSS only, in the prerendered HTML too.
+
+// The host is the lines' containing block and scopes the fixed anchor names
+// (`--lc-area-map-a1` … `-a8`, `--lc-area-map-layer`), so two maps on a page
+// never bind to each other's anchors (AC-9). Keep `anchor-scope` static.
+:host {
+  position: relative;
+  anchor-scope: all;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.lc-area-map__list {
+  grid-column: 1;
+  grid-row: 1 / span 12;
+  display: grid;
+  grid-template-rows: subgrid;
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@for $row from 1 through 12 {
+  .lc-area-map__row-#{$row} {
+    grid-row: $row;
+  }
+}
+
+.lc-area-map__group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-1-5);
+  min-width: 0;
+}
+
+.lc-area-map__group + .lc-area-map__group {
+  margin-top: var(--spacing-2-5);
+}
+
+// The first `below` group draws the divider. Same weight as the rule above
+// (the encapsulation attribute goes on each compound), so it wins by order.
+.lc-area-map__list > .lc-area-map__group--divided {
+  margin-top: var(--spacing-3-5);
+  padding-top: var(--spacing-3);
+  border-top: 1px solid var(--lc-area-map-divider-color, color-mix(in srgb, currentColor 20%, transparent));
+}
+
+// A flex host: a block host added a line-box strut per group (601 → 581 px).
+.lc-area-map__status {
+  display: flex;
+  justify-content: center;
+  max-width: 100%;
+}
+
+.lc-area-map__areas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-1-5);
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// The anchor is the list item; the chip inside fills it.
+.lc-area-map__area,
+.lc-area-map__chip {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+}
+
+@for $n from 1 through 8 {
+  .lc-area-map__area--anchor-#{$n} {
+    anchor-name: --lc-area-map-a#{$n};
+  }
+
+  .lc-area-map__link--#{$n} {
+    position-anchor: --lc-area-map-a#{$n};
+  }
+}
+
+.lc-area-map__layer {
+  grid-column: 1;
+  position: relative;
+  z-index: 2;
+  anchor-name: --lc-area-map-layer;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3-5);
+  margin-top: var(--spacing-3-5);
+  padding: var(--spacing-3) var(--spacing-3-5);
+  border: 1px solid var(--lc-area-map-layer-border, color-mix(in srgb, currentColor 32%, transparent));
+  border-radius: var(--border-radius-lg);
+  // In lc-hero a dark glass (white 6.40:1 or more on all nine bands; the
+  // light variant: white 50 %, neutral-800 12.51:1 or more); else a surface.
+  background: var(--lc-area-map-layer-bg, var(--_lc-hero-glass, var(--color-surface-secondary)));
+}
+
+// The figure (`[area-map-figure]`, e.g. lc-character) keeps its size.
+.lc-area-map__layer > ::ng-deep [area-map-figure] {
+  flex: none;
+}
+
+.lc-area-map__text {
+  min-width: 0;
+}
+
+.lc-area-map__title {
+  margin: 0;
+  font-size: var(--typography-font-size-base);
+  font-weight: var(--typography-font-weight-bold);
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.lc-area-map__line {
+  margin: var(--spacing-0-5) 0 0;
+  font-size: var(--typography-font-size-sm);
+  line-height: 1.45;
+}
+
+// From the bottom centre of its chip to the layer's top edge. Under the list
+// (z 0 < 1): the opaque chips and badges of the lined groups cover it.
+.lc-area-map__link {
+  position: absolute;
+  z-index: 0;
+  left: anchor(center);
+  top: anchor(bottom);
+  bottom: anchor(--lc-area-map-layer top);
+  width: 1.5px;
+  margin-left: -0.75px;
+  border-radius: 1px;
+  background: var(--lc-area-map-line-color, color-mix(in srgb, currentColor 50%, transparent));
+  pointer-events: none;
+}
+
+// Without anchor positioning the lines are hidden; nothing else moves (AC-7).
+@supports not (anchor-name: --a) {
+  .lc-area-map__link {
+    display: none;
+  }
+}
+
+// A viewport step, like the hero's media column beside the text.
+@media (min-width: 1024px) {
+  .lc-area-map__group,
+  .lc-area-map__areas {
+    gap: var(--spacing-2);
+  }
+
+  .lc-area-map__list > .lc-area-map__group--divided {
+    margin-top: var(--spacing-7);
+    padding-top: var(--spacing-5);
+  }
+
+  .lc-area-map__layer {
+    margin-top: var(--spacing-7);
+    padding: var(--spacing-3-5) var(--spacing-4);
+  }
+
+  .lc-area-map__title {
+    font-size: var(--typography-font-size-lg);
+  }
+}
+
+@media (forced-colors: active) {
+  .lc-area-map__link {
+    display: none;
+  }
+
+  .lc-area-map__layer {
+    border-color: CanvasText;
+  }
+}

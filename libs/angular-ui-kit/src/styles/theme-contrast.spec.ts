@@ -2076,3 +2076,114 @@ describe('Component pairings of 3.37 (request 057)', () => {
     }
   });
 });
+
+/**
+ * 3.40 (request 060, life-os G-HV2 / G-HV4, AC-8, AC-13, AC-14, AC-18,
+ * design §5): lc-chip on a hero band, the lc-area-map layer, the laptop base.
+ * The bands are the hero's own gradients (the same in both themes); a chip
+ * in lc-hero takes the light palette in both themes (`lc-hero lc-chip` in the
+ * light file); off the band the variants read theme tokens.
+ */
+describe('Component pairings of 3.40 (request 060)', () => {
+  const lib = (path: string) => resolve(__dirname, '../lib', path);
+  const heroCss = '\n' + compile(lib('hero/hero.component.scss')).css;
+  const floor = (n: number) => Math.floor(n * 100) / 100;
+  const body = (selector: string) => {
+    const at = heroCss.indexOf(`\n${selector} {`);
+    expect([selector, at > -1]).toEqual([selector, true]);
+    return heroCss.slice(at, heroCss.indexOf('}', at));
+  };
+  const BANDS = ['primary', 'secondary', 'neutral', 'success', 'info', 'warning', 'accent-orange', 'accent-purple', 'accent-violet'];
+  const ends = (band: string, light: boolean): Rgba[] => {
+    const m = body(light ? `.hero--light.hero--${band}` : `.hero--${band}`).match(/linear-gradient\(135deg, (#[0-9a-f]{6}) 0%, (#[0-9a-f]{6}) 100%\)/i);
+    return [parse((m as RegExpMatchArray)[1]), parse((m as RegExpMatchArray)[2])];
+  };
+  /** A private hero property as the hero rule declares it. */
+  const heroVar = (selector: string, name: string) => parse((body(selector).match(new RegExp(`${name}: ([^;]+);`)) as RegExpMatchArray)[1]);
+  /** `color-mix(in srgb, <ink> N%, transparent)`: the ink at N % alpha. */
+  const mix = (ink: Rgba, percent: number): Rgba => [ink[0], ink[1], ink[2], percent / 100];
+  const dark = { ink: heroVar('.hero', '--_lc-hero-ink'), glass: heroVar('.hero', '--_lc-hero-glass') };
+  const pastel = { ink: heroVar('.hero--light', '--_lc-hero-ink'), glass: heroVar('.hero--light', '--_lc-hero-glass') };
+  const range = (values: number[]) => [floor(Math.min(...values)), floor(Math.max(...values))];
+  const darkEnds = BANDS.flatMap((band) => ends(band, false));
+  const lightEnds = BANDS.flatMap((band) => ends(band, true));
+
+  it('the hero publishes white ink and a 24 % neutral-900 glass on dark bands, neutral-800 and white 50 % on light ones', () => {
+    expect(dark).toEqual({ ink: [255, 255, 255, 1], glass: [17, 24, 39, 0.24] });
+    expect(pastel).toEqual({ ink: [31, 41, 55, 1], glass: [255, 255, 255, 0.5] });
+    expect([darkEnds.length, lightEnds.length]).toEqual([18, 18]);
+  });
+
+  it('AC-13, AC-14: emphasis on a band: white on the band\'s dark stop, 8.10 (success) to 17.74 (neutral)', () => {
+    const fills = BANDS.map((band) => parse((body(`.hero--${band}`).match(/--_lc-hero-band-from: (#[0-9a-f]{6});/) as RegExpMatchArray)[1]));
+    const ratios = fills.map((fill) => ratio(dark.ink, fill));
+    // Floored (design §5 rounds: 8.10, 17.74).
+    expect(range(ratios)).toEqual([8.1, 17.73]);
+    expect(floor(ratios[BANDS.indexOf('success')])).toBe(8.1);
+    expect(floor(ratios[BANDS.indexOf('neutral')])).toBe(17.73);
+  });
+
+  it('AC-14: quiet on a band: white text 4.58:1 or more on all 18 dark band ends; the 32 % border is decorative, the interactive one is the ink', () => {
+    expect(floor(Math.min(...darkEnds.map((end) => ratio(dark.ink, end))))).toBe(4.58);
+    // Floored (design §5 rounds: 1.73 to 2.90).
+    expect(range(darkEnds.map((end) => ratio(over(mix(dark.ink, 32), end), end)))).toEqual([1.72, 2.89]);
+  });
+
+  it('AC-14: quiet in a light hero: neutral-800 10.57:1 or more on all 18 pastel ends', () => {
+    expect(floor(Math.min(...lightEnds.map((end) => ratio(pastel.ink, end))))).toBe(10.57);
+  });
+
+  it('AC-8: the layer\'s glass: white 6.40:1 or more on every dark band end; light hero: neutral-800 on white 50 %, 12.51:1 or more', () => {
+    const onDark = darkEnds.map((end) => ratio(dark.ink, over(dark.glass, end)));
+    expect(range(onDark)).toEqual([6.4, 17.73]);
+    expect(floor(Math.min(...lightEnds.map((end) => ratio(pastel.ink, over(pastel.glass, end)))))).toBe(12.51);
+  });
+
+  // Floored; design §5 quotes them rounded (6.87, 8.49, 10.98).
+  const IN_HERO: Record<string, [string, string, number]> = {
+    default: ['--color-surface-hover', '--color-text-secondary', 6.86],
+    primary: ['--color-primary-subtle', '--color-on-primary-subtle', 8.48],
+    success: ['--color-success-subtle', '--color-on-success-subtle', 4.85],
+    warning: ['--color-warning-subtle', '--color-on-warning-subtle', 5.52],
+    error: ['--color-error-subtle', '--color-on-error-subtle', 10.97],
+    info: ['--color-info-subtle', '--color-on-info-subtle', 9.08],
+  };
+
+  it.each(Object.entries(IN_HERO))('AC-13, AC-14: %s in a hero takes the light palette: opaque fill, the same ratio on all 36 band ends', (_variant, [bg, fg, expected]) => {
+    const light = palettes[0][1];
+    expect(color(light, bg)[3]).toBe(1);
+    const ratios = [...darkEnds, ...lightEnds].map((end) => ratio(color(light, fg), over(color(light, bg), end)));
+    expect(range(ratios)).toEqual([expected, expected]);
+    expect(expected).toBeGreaterThanOrEqual(4.5);
+  });
+
+  // [light, dark], floored; design §5 (rounded): emphasis 6.21 / 6.21; quiet
+  // text 7.56 / 12.17 (dark surface 11.16), field border 4.83 / 7.31 (6.71);
+  // off-band layer 16.12 / 16.60; laptop base on the page 10.31 / 1.83.
+  // Each is the lower of page and surface (dark: the surface).
+  const OFF_BAND = {
+    emphasis: [6.21, 6.21],
+    quietText: [7.55, 11.15],
+    quietBorder: [4.83, 6.7],
+    layer: [16.11, 16.6],
+    laptopRim: [4.83, 7.31],
+    laptopBase: [10.3, 1.82],
+  };
+
+  it.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('AC-14, AC-8, AC-18: %s palette: off the band', (_palette, tokens, i) => {
+    const c = (name: string) => color(tokens, name);
+    const lowest = (ink: Rgba) => floor(Math.min(...['--color-background', '--color-surface'].map((page) => ratio(over(ink, c(page)), c(page)))));
+    const got = {
+      emphasis: floor(ratio(c('--color-on-primary'), c('--color-primary-fill'))),
+      quietText: lowest(c('--color-text-secondary')),
+      quietBorder: lowest(c('--color-field-border')),
+      layer: floor(ratio(c('--color-text-primary'), over(c('--color-surface-secondary'), c('--color-surface')))),
+      laptopRim: floor(ratio(c('--color-field-border'), c('--color-background'))),
+      laptopBase: floor(ratio(parse('#374151'), c('--color-background'))),
+    };
+    expect(got).toEqual(Object.fromEntries(Object.entries(OFF_BAND).map(([key, pair]) => [key, pair[i]])));
+    // Text 4.5:1; the interactive quiet border and the rim (the frame's outer edge) 3:1.
+    for (const key of ['emphasis', 'quietText', 'layer'] as const) expect(got[key]).toBeGreaterThanOrEqual(4.5);
+    for (const key of ['quietBorder', 'laptopRim'] as const) expect(got[key]).toBeGreaterThanOrEqual(3);
+  });
+});

@@ -68,9 +68,11 @@ describe('secondary entries (AS-15)', () => {
   // 3.11.5 (request 015, AS-33) the internal `a11y` entry (Label in Name);
   // 3.16 (request 022, BA-4) the public `money` entry; 3.36 (request 056,
   // quellen row 1) the public `state-strip` entry; 3.39 (request 059, G-SS1,
-  // G-SS2) the public `device-frame` and `picture` entries.
-  it('has one entry per folder: 117 public and 6 internal', () => {
-    expect(publicEntries).toHaveLength(117);
+  // G-SS2) the public `device-frame` and `picture` entries; 3.40 (request 060,
+  // G-HV2) the public `area-map` entry.
+  it('has one entry per folder: 118 public and 6 internal', () => {
+    expect(publicEntries).toHaveLength(118);
+    expect(publicEntries).toContain('area-map');
     expect(publicEntries).toContain('money');
     expect(publicEntries).toContain('state-strip');
     expect(publicEntries).toContain('device-frame');

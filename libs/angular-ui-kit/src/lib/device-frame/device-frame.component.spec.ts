@@ -130,8 +130,11 @@ describe('DeviceFrameComponent (3.39, request 059)', () => {
       return at < 0 ? '' : css.slice(at + selector.length + 3, css.indexOf('}', at)).trim().replace(/\s+/g, ' ');
     };
 
-    it('no raw colours outside the two token defaults (neutral 900 bezel, neutral 700 notch)', () => {
-      expect(css.match(/#[0-9a-f]{3,8}\b/gi)).toEqual(['#111827', '#374151']);
+    // 3.40 (request 060, design D-6): the laptop adds three, after the phone's
+    // two: the lid bezel (neutral 900), the hinge notch (neutral 800) and the
+    // base (neutral 700). All are token values; the phone's stay first.
+    it('no raw colours outside the token defaults (neutral 900 bezel, neutral 700 notch; laptop: bezel, hinge, base)', () => {
+      expect(css.match(/#[0-9a-f]{3,8}\b/gi)).toEqual(['#111827', '#374151', '#111827', '#1f2937', '#374151']);
       expect(css).not.toMatch(/rgba?\(/);
       expect(rule(':host')).toContain('background: var(--lc-device-frame-bezel-color, #111827);');
       expect(rule('.lc-device-frame__notch')).toContain('background: var(--lc-device-frame-notch-color, #374151);');

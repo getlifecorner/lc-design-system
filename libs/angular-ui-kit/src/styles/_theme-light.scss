@@ -498,7 +498,12 @@
 // its badges' translucent dark fills measured 1.00–5.18:1 over them. With the
 // light tokens (opaque fills) every variant reaches 4.85:1 or more on every
 // band, in both themes. A no-op in light.
+//
+// `lc-chip` in `lc-hero` (3.40, request 060, G-HV4): the same, for the same
+// reason (1.78–10.29:1 in dark before). `emphasis` and `quiet` follow the
+// band itself (chip styles).
 .lc-sidenav-container--light .lc-sidenav__nav-badge,
-lc-hero lc-badge {
+lc-hero lc-badge,
+lc-hero lc-chip {
   @include -light-theme-colors;
 }

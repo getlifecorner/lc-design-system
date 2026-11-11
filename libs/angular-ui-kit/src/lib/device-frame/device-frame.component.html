@@ -1,4 +1,4 @@
-@if (notch()) {
+@if (notch() && device() === 'phone') {
   <span class="lc-device-frame__notch" aria-hidden="true"></span>
 }
 <div class="lc-device-frame__screen"><ng-content></ng-content></div>

@@ -1,0 +1,29 @@
+<ul class="lc-area-map__list" role="list" [attr.aria-label]="ariaLabel()">
+  @for (group of view().groups; track $index) {
+    <li [class]="group.classes">
+      <lc-badge class="lc-area-map__status" size="xs" [variant]="group.statusVariant" [rounded]="true" [dot]="true" [wrap]="true">{{ group.status }}</lc-badge>
+      <ul class="lc-area-map__areas" role="list">
+        @for (area of group.areas; track $index) {
+          <li [class]="area.classes">
+            <lc-chip class="lc-area-map__chip" size="sm" [wrap]="true" [variant]="group.chipVariant" [icon]="area.icon">{{ area.label }}</lc-chip>
+          </li>
+        }
+      </ul>
+    </li>
+  }
+</ul>
+<div [class]="view().layer" role="group" [attr.aria-label]="layerAriaLabel() ?? layerTitle()">
+  <ng-content select="[area-map-figure]"></ng-content>
+  <div class="lc-area-map__text">
+    <p class="lc-area-map__title">{{ layerTitle() }}</p>
+    @if (layerText()) {
+      <p class="lc-area-map__line">{{ layerText() }}</p>
+    }
+    <ng-content></ng-content>
+  </div>
+</div>
+@if (lines()) {
+  @for (link of view().links; track link) {
+    <span [class]="link" aria-hidden="true"></span>
+  }
+}

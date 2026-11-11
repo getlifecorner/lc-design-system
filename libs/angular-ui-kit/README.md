@@ -134,12 +134,13 @@ and the CSP notes.
 
 | Component | Selector | Description |
 |-----------|----------|-------------|
+| Area Map | `lc-area-map` | Status groups of areas (a badge and wrapping chips each) with CSS-only lines into one layer bar with a figure, title and line; quieter groups under a divider; for a hero's media slot, no JS, no inline style (3.40) |
 | Avatar | `lc-avatar` | User avatar; six member colours and a ring |
 | Avatar Group | `lc-avatar-group` | Stacked avatars, e.g. a household's member row |
 | Badge | `lc-badge` | Status badge |
-| Chip | `lc-chip` | Tag/label chip |
+| Chip | `lc-chip` | Tag/label chip; `wrap` for long labels, `emphasis` / `quiet` variants and an on-band palette in `lc-hero` (3.40) |
 | Description List | `lc-description-list` | Key/value metadata (`<dl>`) with rows/stacked layout, optional dotted leaders and per-row emphasis/links |
-| Device Frame | `lc-device-frame` | A phone bezel around projected media (app screenshots): sizes, optional notch, a 3:1 rim in both themes, CSS hooks (3.39) |
+| Device Frame | `lc-device-frame` | A phone bezel (3.39) or a laptop (3.40) around projected media (app screenshots): sizes, optional notch, a 3:1 rim in both themes, CSS hooks |
 | Empty State | `lc-empty-state` | Placeholder for empty content |
 | Field Group | `lc-field-group` | Grouped form fields |
 | Filter Bar | `lc-filter-bar` | Filter controls |

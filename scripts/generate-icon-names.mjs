@@ -88,6 +88,8 @@ const INLINE_TABLER_NAMES = [
   // search fields, the health lock line, Settings → devices (3.22, BA-6, BA-7), and the
   // glyphs log-viewer, code-block, copy-field and kanban-board draw (registered by them)
   'search', 'lock', 'device-tablet', 'player-play', 'player-pause', 'clipboard', 'arrow-down',
+  // life areas on a public website: shopping, goals, health, people who matter (3.40, G-HV1)
+  'shopping-bag', 'target', 'heart', 'gift',
 ];
 
 /** One Tabler SVG as a compact, class-free string (CSS sizes it, like the other inline icons). */

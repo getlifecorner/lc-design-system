@@ -90,8 +90,9 @@ describe('lc-hero — slot contrast (3.37, request 057, monatsstand row 1)', () 
     expect(dimmed).toEqual(['.hero--light .hero__label']);
   });
 
+  // 3.40 (request 060, G-HV4): the list goes on with `lc-hero lc-chip`.
   it('badges in lc-hero take the light palette, in both themes (a rule of the light file)', () => {
-    expect(lightCss).toMatch(/\.lc-sidenav-container--light \.lc-sidenav__nav-badge,\nlc-hero lc-badge \{/);
+    expect(lightCss).toMatch(/\.lc-sidenav-container--light \.lc-sidenav__nav-badge,\nlc-hero lc-badge,\nlc-hero lc-chip \{/);
   });
 
   it('the badge fills are opaque in the light palette, so the band never shows through', () => {

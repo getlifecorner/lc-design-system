@@ -11,11 +11,18 @@ import {
   ICON_CHECK_CIRCLE,
   ICON_CHECK_CIRCLE_SOLID,
   ICON_DEVICE_TABLET,
+  ICON_GIFT,
+  ICON_GIFT_SOLID,
+  ICON_HEART,
+  ICON_HEART_SOLID,
   ICON_HOME,
   ICON_HOME_SOLID,
   ICON_LOCK,
   ICON_MAIL,
+  ICON_SHOPPING_BAG,
+  ICON_TARGET,
 } from '@lifecorner/angular-ui-kit/icons';
+import { HeroComponent } from '@lifecorner/angular-ui-kit/hero';
 // The package's exports map only exposes ./icons/*, so the catalogue JSON has to be
 // reached by path.
 // eslint-disable-next-line @nx/enforce-module-boundaries
@@ -552,6 +559,67 @@ export const RegisteredWithPlaceholderMode: Story = {
   }),
 };
 
+/**
+ * 3.40 (request 060, life-os G-HV1): the glyphs of the life areas on a public
+ * website, registered as constants, at 20 and 24 px, labelled; on the page
+ * and on a hero band (the icon takes the text colour).
+ */
+export const AreaIcons: Story = {
+  name: 'Area Icons',
+  decorators: [
+    applicationConfig({
+      providers: [
+        provideLcIcons([ICON_SHOPPING_BAG, ICON_TARGET, ICON_HEART, ICON_HEART_SOLID, ICON_GIFT, ICON_GIFT_SOLID], { unregistered: 'placeholder' }),
+      ],
+    }),
+  ],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`shopping-bag` (shopping), `target` (goals), `heart` (health) and `gift` (people who matter) are in the inline set since 3.40: no request, prerendered. Register them with `ICON_SHOPPING_BAG`, `ICON_TARGET`, `ICON_HEART` and `ICON_GIFT`; Tabler has filled `heart` and `gift`, so `ICON_HEART_SOLID` and `ICON_GIFT_SOLID` exist too. ' +
+          'Each glyph at `sm` (20 px) and `md` (24 px), labelled (`role="img"` with its name; without a label pass `decorative`). On the band the glyphs take the white text colour.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [HeroComponent] },
+    props: {
+      glyphs: [
+        { name: 'shopping-bag', variant: 'outline', label: 'Einkäufe', constant: 'ICON_SHOPPING_BAG' },
+        { name: 'target', variant: 'outline', label: 'Ziele', constant: 'ICON_TARGET' },
+        { name: 'heart', variant: 'outline', label: 'Gesundheit', constant: 'ICON_HEART' },
+        { name: 'gift', variant: 'outline', label: 'Wichtige Menschen', constant: 'ICON_GIFT' },
+        { name: 'heart', variant: 'solid', label: 'Gesundheit', constant: 'ICON_HEART_SOLID' },
+        { name: 'gift', variant: 'solid', label: 'Wichtige Menschen', constant: 'ICON_GIFT_SOLID' },
+      ],
+      caption,
+    },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 24px; color: var(--color-text-primary);">
+        <ul style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px;">
+          @for (g of glyphs; track g.constant) {
+            <li style="display: flex; align-items: center; gap: 8px;">
+              <lc-icon [name]="g.name" [variant]="g.variant" size="sm" [ariaLabel]="g.label" />
+              <lc-icon [name]="g.name" [variant]="g.variant" size="md" [ariaLabel]="g.label" />
+              <div style="font: 12px monospace; color: var(--color-text-secondary);">{{ g.constant }}<div [style]="caption">{{ g.label }}</div></div>
+            </li>
+          }
+        </ul>
+        <lc-hero title="Lebensbereiche" size="sm" [headingLevel]="2">
+          <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 16px;">
+            @for (g of glyphs; track g.constant) {
+              <li style="display: flex; align-items: center; gap: 6px;">
+                <lc-icon [name]="g.name" [variant]="g.variant" size="sm" [ariaLabel]="g.label" />
+                <lc-icon [name]="g.name" [variant]="g.variant" size="md" [ariaLabel]="g.label" />
+              </li>
+            }
+          </ul>
+        </lc-hero>
+      </div>`,
+  }),
+};
+
 /** Upper snake case of the 3.5.1 key, `_SOLID` for the solid glyph. */
 const constantOf = (name: string, variant: string) =>
   `ICON_${name.toUpperCase().replace(/-/g, '_')}${variant === 'solid' ? '_SOLID' : ''}`;
@@ -567,7 +635,7 @@ export const IconConstants: Story = {
     docs: {
       description: {
         story:
-          'All 150 constants (`BUNDLED_ICONS` registers them all — for tests or a page that really shows every glyph; an app that imports it bundles all of them). A name that is an alias finds the constant of its target: `x-circle` → `ICON_CIRCLE_X`, `envelope` → `ICON_MAIL`, `cog-6-tooth` → `ICON_SETTINGS`.',
+          'All 156 constants (`BUNDLED_ICONS` registers them all — for tests or a page that really shows every glyph; an app that imports it bundles all of them). A name that is an alias finds the constant of its target: `x-circle` → `ICON_CIRCLE_X`, `envelope` → `ICON_MAIL`, `cog-6-tooth` → `ICON_SETTINGS`.',
       },
     },
   },
