@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.39.0] - 2026-11-11
+
+Two new components for website screenshots, `lc-device-frame` and `lc-picture` (life-os home page, G-SS1, G-SS2), a `clearable` switch for `lc-select` and an `ariaLabel` for `ListItem` (finance-intelligence services page, stammdaten page), and two fixes in `lc-description-list` (double spaces in the total row, values breaking inside a number in narrow columns). Gap IDs: G-SS1, G-SS2, 057-n1, 057-n3, 057-n5. No API breaks; the exact `textContent` of description lists changes (see Compatibility).
+
+### Added
+
+- **`lc-device-frame`** (`@lifecorner/angular-ui-kit/device-frame`; life-os website screenshots, G-SS1): a phone bezel around any projected media. `size` `sm`/`md`/`lg` = 200/248/320 px (never wider than the container; bezel 6/8/10, radius 24/32/42), `notch` (a decorative camera pill in a deeper top bezel, never over the media), `device` (`'phone'`). Black glass in both themes inside a 1 px `--color-field-border` rim (3:1 or more on every page and surface: light 4.39–4.83, dark 5.56–7.31); forced colours draw a `CanvasText` border. The media keeps its ratio (a 360 × 780 image: screen 232 × 502.67 at `md`); markup and size are in prerendered HTML. Hooks `--lc-device-frame-width`, `-bezel` (a bare `0` works), `-radius`, `-bezel-color`, `-rim-color`, `-notch-color`, `-shadow`, `-screen-bg`. No role, no Tab stop.
+- **`lc-picture`** (`@lifecorner/angular-ui-kit/picture`; G-SS2): a native `<picture>` with `sources` (`{ srcset, type?, sizes?, media?, theme? }`) before the `<img>`, required `src`, `alt` (`''` = decorative), `width`, `height`; `loading` (`lazy`), `decoding` (`async`), `fetchpriority`, `srcset`, `sizes`. `darkSrc`, `darkSrcset` or a `theme: 'dark'` source render a second picture that the root theme shows (as `lc-logo`): no flash in prerendered HTML, and with `lazy` only the visible one is fetched. The box is reserved before load (248 × 537.33 in a 248 px column, loaded or failed). Hooks `--lc-picture-radius`, `--lc-picture-min-width`.
+- **`lc-select` `clearable`** (finance-intelligence services-prove-2026-11-10 row 1): `false` renders no clear button for selects that always have a value: one Tab stop fewer, and the text gets the room (280 px `lg` field: „Mit enthaltenen Services“ whole instead of „Mit enthaltenen Se…“; 192 px `sm`: „Sortierung: Kosten“ no longer under the ×). Default `true` renders as 3.38.
+- **`ListItem.ariaLabel`** (stammdaten-prove-2026-11-10 row 1): the accessible name of an `href` row's link, a `clickable` row, or a row action's row button, for jump marks („Zu Lücken, 3 offen“). The row's text parts then get word breaks, so a name holding the visible text passes axe `label-content-name-mismatch`. Ignored on plain rows (dev warning).
+
+### Fixed
+
+- **`lc-description-list` spaces** (services-prove bug, 3.37/3.38): one space per break in `textContent` and names: „Summe, Gesamtkosten Ist 522.530,00 €“ (was two spaces after the comma and three before the amount); compare it without normalising.
+- **`lc-description-list` narrow columns** (057-n3): in `rows`, a value that can't keep 6em beside its term moves onto its own line, right-aligned; „214.300,00 €“ no longer breaks inside the number in a 156 px card. Long terms hyphenate (12+ letters). Rows that fit are unchanged (1280 px identical).
+- **`lc-select` xs/sm/md** (057-n1): a long value ends 4 px before the × (it ran under it).
+- **`lc-list` row with an action** (057-n5): its row button is named by the parts joined by commas, without the action („SAP-Ist, Heute, 06:00, Geladen“).
+- **`lc-table` page size**: no clear button in the DOM any more (`clearable="false"`).
+
+### Compatibility
+
+- No API breaks; peer range unchanged. Exact `textContent` of description lists changes (single spaces). `rows` lists in narrow parents wrap values (min-content is the larger part, not the sum). `--lc-select-clear-display: none` now keeps the ×'s room at xs/sm/md too (22 px less text); use `clearable="false"`. An existing `ariaLabel` key in `ListItem` data now names the row.
+
 ## [3.38.0] - 2026-11-10
 
 The two accessibility limits listed as Known in 3.37.0 are closed: a clickable `lc-card` with a `title` can be named by its visible text (regeln page, WCAG 2.5.3), and the text of `lc-hero` reaches 4.5:1 on every default band (monatsstand page, WCAG 1.4.3). Gap IDs: 057-s1, 057-s2. No API breaks. Two hero bands, success and warning, look visibly darker.

@@ -7,6 +7,7 @@ metadata:
 
 The agent's cwd is outside lc-design-system. Run as `cd /Users/eric/Documents/Projekte/life-cockpit/lc-design-system && node tools/agents/story-shots.mjs …` and `cd … && npx nx run angular-ui-kit:build-storybook` (~20 s). Absolute-path invocation, `2>&1 |`, redirects after `cd`, `${…}` and `node -e` need approval; `| wc -l` is fine (baseline runs print one line per shot).
 **037 r2:** when cwd is the repo, `node tools/agents/story-shots.mjs … --measure='<file pasted inline>' > tmp/story-shots/<NNN>/x.log` (no `cd`, `run_in_background`) ran without a prompt; `--measure="$(cat file)"` is refused. Wait with `until grep -q '^{"identical"' log; do sleep 3; done` (a bare `"identical"` matches each shot's compare key). With `--axe`, any violation makes the run exit 1 (a "failed" background task): read the log, not the status. `$(…)` inside an until-loop is refused; wait on the last shot's file name instead.
+**059 r2:** a run can exit 1 with `ENOTEMPTY` (rmSync of its temp dir, l. 305) after the last shot: the shot lines are complete, only the summary lines are missing. `node -e` and Bash `grep -o` patterns with `{` need approval; use the Grep tool with `-o` on the log.
 
 Reference values (3.22.0, 360 px): Storybook canvas padding 16 px (card 328 wide); lc-card padding md 16 + border 1; stat-trend label 12 px / 18 px line, row 31.38 px, column gap 4 px, sparkline 28 px.
 
