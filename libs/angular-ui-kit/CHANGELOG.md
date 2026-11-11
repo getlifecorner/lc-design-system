@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.40.0] - 2026-11-12
+
+The pieces of the life-os home-page vision band: `lc-area-map` (status groups with lines into one layer bar), a laptop for `lc-device-frame`, wrapping chips with an on-band palette in `lc-hero`, and four area icons. Gap IDs: G-HV1, G-HV2, G-HV3, G-HV4, G-SS1 (extended). No API breaks; chips inside `lc-hero` look different (see Changed).
+
+### Added
+
+- **`lc-area-map`** (`@lifecorner/angular-ui-kit/area-map`; G-HV2): status groups (badge plus wrapping, centred chips), straight lines from the upper groups' chips into one layer bar (`[area-map-figure]`, `layerTitle`, `layerText`, free content), quieter groups under a divider. CSS anchor positioning only: no JS, no inline `style`, all in prerendered HTML. Lines are `aria-hidden`; the map is one named `<ul role="list">` (`ariaLabel`, default „Areas and their status“). Several maps per page work (`anchor-scope`). German reference at 360 px: 320 × 581 px; the lines meet chip centre and layer edge within 0.01 px at 320 to 1280 px. On the nine hero bands the layer is a dark glass with white text at 6.91:1 or more; on a light hero a white glass at 13.63:1. `lines="false"`, browsers without anchor positioning and forced colours hide the lines and keep the layout. Hooks `--lc-area-map-line-color`, `-layer-bg`, `-layer-border`, `-divider-color`.
+- **`lc-device-frame` `device="laptop"`** (G-SS1 extended): a lid with bezel over a wider base, `sm`/`md`/`lg` = 320/480/640 px, never wider than the container (`md` in a 328 px column: screen 280 × 175). Rims 4.83:1 (light) and 7.31:1 (dark) or more; forced colours draw `CanvasText`. Hooks `--lc-device-frame-base-color`, `-overhang`, `-base-height`; `notch` stays phone only.
+- **`lc-chip` `wrap`** (G-HV3, WCAG 1.4.10): a long label wraps onto centred lines. One-line chips keep 24/32/40 px; no chip overflows at 320 px and 200 % text.
+- **`lc-chip` `variant="emphasis"` and `"quiet"`** (G-HV4): emphasis is a solid fill with white ink; quiet is transparent with a thin border.
+- **Icons** `ICON_SHOPPING_BAG`, `ICON_TARGET`, `ICON_HEART`, `ICON_GIFT`, `ICON_HEART_SOLID`, `ICON_GIFT_SOLID` (G-HV1; 156 glyphs). Apps with `unregistered: 'placeholder'` now get the four outline glyphs.
+
+### Changed
+
+- **Chips in `lc-hero`** take an on-band palette in both themes (G-HV4): emphasis the band's dark stop (text 8.10:1 or more), status variants the light palette (4.85:1 or more), quiet white ink (4.86:1 or more). Before, they measured 1.78 to 10.29:1 in the dark theme.
+- **`--lc-chip-bg/-fg/-border` set on an ancestor** now apply, as the chip's style comment always promised (before, the variant class won).
+
+### Known
+
+- The *Hooks On An Ancestor* chip story shows values that reach only 4.01 to 4.85:1 in the dark theme over a band; the component is fine, pick your own pair by measuring it in both themes (queued).
+- `lc-hero` with `lc-area-map` and root text zoom of 200 % at 1024 px and more: the media column (`--lc-hero-media-width: 34rem`) can exceed the viewport. Page zoom holds (hero, pre-existing).
+
+### Compatibility
+
+- No API breaks; peer range unchanged. Chips outside a hero, phone frames and all other stories render as in 3.39 (330 screenshots identical).
+
 ## [3.39.0] - 2026-11-11
 
 Two new components for website screenshots, `lc-device-frame` and `lc-picture` (life-os home page, G-SS1, G-SS2), a `clearable` switch for `lc-select` and an `ariaLabel` for `ListItem` (finance-intelligence services page, stammdaten page), and two fixes in `lc-description-list` (double spaces in the total row, values breaking inside a number in narrow columns). Gap IDs: G-SS1, G-SS2, 057-n1, 057-n3, 057-n5. No API breaks; the exact `textContent` of description lists changes (see Compatibility).
