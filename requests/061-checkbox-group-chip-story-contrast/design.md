@@ -3,6 +3,7 @@
 - **Status:** ready
 - **Spec:** [spec.md](spec.md) — AC-1 … AC-19
 - **Measured on:** Storybook build of `main` 39173f2 (3.40.0); logs in `tmp/story-shots/061/`
+- **Change note (review r1, 2026-11-13):** §3/§9 md row values corrected. I had taken the 26 px label for the row; the unchanged block host of `lc-checkbox` is 27 px (the inline-flex label sits on a line box), so md rows are 35 px apart: y73/108/143, error y178, horizontal row 2 +35. `lg` is unchanged. The build matches the corrected values (build.md deviation 1).
 
 ## 1. Approach
 
@@ -59,15 +60,15 @@ x16                                   x344     md (Default)        lg (Phone Lar
 │   8                                        │
 │ Mehrere Rollen sind möglich.               │ help 14/400/20       y45–65
 │   8                                        │
-│ [ ] Administration                         │ row md 26 / lg 44    y73–99   | y73–117
+│ [ ] Administration                         │ row md 27 / lg 44    y73–100  | y73–117
 │   8                                        │ box md 20 / lg 24 at row top +3 / +10
-│ [x] Controlling                            │                      y107–133 | y125–169
+│ [x] Controlling                            │                      y108–135 | y125–169
 │   8                                        │ label text x44 (md) / x48 (lg)
-│ [ ] CFO                                    │                      y141–167 | y177–221
+│ [ ] CFO                                    │                      y143–170 | y177–221
 │   8                                        │
-│ Wählen Sie mindestens eine Rolle.          │ error 14/400/20      y175–195 | y229–249
+│ Wählen Sie mindestens eine Rolle.          │ error 14/400/20      y178–198 | y229–249
 └────────────────────────────────────────────┘
-Horizontal md 360/320: row 1 Administration 132.52 + 24 + Controlling 107.06 = 263.58; CFO on row 2 (+34)
+Horizontal md 360/320: row 1 Administration 132.52 + 24 + Controlling 107.06 = 263.58; CFO on row 2 (+35)
 Horizontal lg 360: 147.73 + 24 + 119.47 = 291.2, CFO row 2 · 320: Administration / Controlling + CFO (211.14)
 ```
 
@@ -92,7 +93,7 @@ Horizontal lg 360: 147.73 + 24 + 119.47 = 291.2, CFO row 2 · 320: Administratio
 | options vertical | flex column, gap 8 | — | `--lc-density-gap-sm` |
 | options horizontal | flex row wrap, column-gap 24, row-gap 8 | — | `--lc-density-gap-lg`, `--lc-density-gap-sm` |
 | error | margin 8 0 0 | 14/400/20 | as help |
-| child rows | md 26, lg 44 in a group (29 alone), sm 23 | md 16, lg 18 | unchanged `lc-checkbox` |
+| child rows | host md 27 (label 26), lg 44 in a group (29 alone), sm 23 (label) | md 16, lg 18 | unchanged `lc-checkbox` |
 
 ## 4. States
 
@@ -130,7 +131,7 @@ No new tokens. **Chip story (item A), C1:** `--lc-chip-bg: var(--color-surface)`
 - **Semantics:** `fieldset` = `role=group`, named by the legend ("Rollen Pflichtfeld" when required); `aria-describedby` = help id, then error id (only rendered ones). Children: native checkboxes, unchanged.
 - **Error:** `role="alert"` inserted with its text → announced once; changing the text re-announces; the group's description repeats it on entry; no per-checkbox message.
 - **Keyboard:** Tab visits each enabled checkbox in DOM order, Space toggles, no roving tabindex, no trap; disabled group = no stop.
-- **Targets:** `lg` rows 44 px (label = target, e.g. Administration 147.73 × 44), rows 8 apart; `md` 26-px rows with 8 gap meet 2.5.8 by spacing.
+- **Targets:** `lg` rows 44 px (label = target, e.g. Administration 147.73 × 44), rows 8 apart; `md` 26-px labels in 27-px rows with 8 gap meet 2.5.8 by spacing.
 - **forced-colors:** no backgrounds of its own; legend/help/error become `CanvasText`, the error stays readable as text; child boxes as today.
 - **Reduced motion:** the group adds no motion.
 
@@ -172,12 +173,12 @@ Review shots: new stories at 320 (overflow only), 360, 1024, 1280, L/D, `--axe`.
 | 1 | unit: one `fieldset`, legend text; axe; AX name (dom-accessibility-api) | name `Rollen` |
 | 2 | unit + *Hidden Legend*: legend clipped 1×1, name kept | help top y16 at 360 |
 | 3 | unit: help once, id in `aria-describedby` | description starts with the help |
-| 4 | unit: 1 node `.lc-checkbox-group__error[role=alert]`, 0 `.checkbox-error-message`, 3× `aria-invalid="true"`, error id in `aria-describedby`; *With Error* 360 | error y = options end + 8 (175 at 360) |
+| 4 | unit: 1 node `.lc-checkbox-group__error[role=alert]`, 0 `.checkbox-error-message`, 3× `aria-invalid="true"`, error id in `aria-describedby`; *With Error* 360 | error y = options end + 8 (178 at 360) |
 | 5 | unit: child `errorMessage`/`helpText` alone and in a group, ids unchanged | existing assertions pass |
 | 6 | unit: `*` `aria-hidden`, hidden text = `requiredAriaLabel`, none when `requiredIndicator=false`; no child `required`/`aria-required`/`.checkbox-required` from the group; child's own `required` keeps its `*` | name "Rollen Pflichtfeld" (story) |
 | 7 | unit: fieldset `disabled`, every input `disabled`, `.checkbox-disabled` | opacity .5 |
 | 8 | unit: group `lg` → children `checkbox-lg`; child bound `md` stays `md`; *Phone (lg)* 360 measured | rows 44, y 73/125/177, box 24 at +10 |
-| 9 | *Horizontal* 360/320/1280 measured, `scrollWidth` | 360: CFO on row 2 (+34); 1280: one row 347.6; overflow 0 |
+| 9 | *Horizontal* 360/320/1280 measured, `scrollWidth` | 360: CFO on row 2 (+35); 1280: one row 347.6; overflow 0 |
 | 10 | unit: Tab order, Space toggles; ring at 360 | ring 4.37 L / 9.95 D |
 | 11 | unit: `[(value)]`, `FormControl` (write, toggle emits ordered array, disabled, touched on blur, unknown written values kept); *Form Control* play | `administration, controlling` |
 | 12 | stories §8 at 320/360/1280 L/D | DE strings, no overflow |

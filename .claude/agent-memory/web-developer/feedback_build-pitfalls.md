@@ -19,7 +19,8 @@ metadata:
 - **Icons:** a kit component that renders a glyph itself needs `viewProviders: [ɵprovideKitIcons([ICON_X])]` (scoped, parent registry still used).
 - **theme-contrast:** pin floored values; design §5 quotes rounded ones (0.01 apart), note it.
 - **Shared tree:** commit early on the branch (WIP, amend later); stage by name; `requests/BACKLOG.md`/`README.md` edits belong to the release commit.
-- **Designer hypotheses / measured values can differ** (proto CSS not stored): measure first, record the difference as a deviation.
+- **Designer hypotheses / measured values can differ** (proto CSS not stored): measure first, record the difference as a deviation. Designers often measure the inner label; measure the host too (`lc-checkbox` md: label 26, block host 27 from the line box; 061).
+- **Group/child signal sync:** an effect that sets a child's `checked` from the group only reruns on its own deps; to make the group win over a later `[checked]` binding, read `checked()` in the effect too (061). A story export named like an imported class (`FormControl`) needs an import alias to keep the story id.
 
 **Why:** none of these show in the code; each cost a debug round.
 **How to apply:** check this list before debugging a spec, story or shot diff; add new traps compactly.

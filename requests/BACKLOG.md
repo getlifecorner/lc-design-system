@@ -17,3 +17,6 @@ Open findings that don't need a request of their own: nits, known limits, wordin
 | 060-n3 | device-frame | *Laptop Hooks* right frame: story says „the lid alone“ at base height 0, but the base stays a 2 px strip (its borders); hide the base or reword. | 060 review finding 4 |
 | 060-n4 | chip | `.lc-chip--clickable { font: inherit }` makes clickable sm/md chips use the parent font size (16 px, not 14 px). Pre-existing. | 060 build.md |
 | 060-n5 | chip | The 44 px target premise (design §6) for chips is unsettled. | 060 build.md |
+| 061-n1 | checkbox | `lc-checkbox` help/error indent `margin-left: calc(var(--checkbox-size) + .5rem)` computes 0; should sit under the label text. | 061 review F-4 |
+| 061-n2 | checkbox | Standalone `lc-checkbox size="lg"` row is 29 px, not 44 px as in `lc-radio lg` (in a group it is 44). | 061 review F-5 |
+| 061-n3 | radio | `lc-radio-group`: `*` is an `aria-label` on a bare span (axe incomplete) and the error sits above the options; the checkbox group does both the other way. | 061 review F-6 |

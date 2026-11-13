@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.41.0] - 2026-11-13
+
+`lc-checkbox-group`, the group that `lc-checkbox` was missing for a multiple choice such as the roles in finance-intelligence „Benutzer anlegen“ and „Rollen ändern“, and a corrected chip story. Gap IDs: benutzer-2026-11-12 row 1, 060-s1. No API breaks.
+
+### Added
+
+- **`lc-checkbox-group`** (`@lifecorner/angular-ui-kit/checkbox`; benutzer-2026-11-12 row 1): a native `<fieldset>` named by its `<legend>` (`legend`, `legendHidden`), `helpText` below the legend and one `error` below the checkboxes: shown and announced once (`role="alert"`), linked by `aria-describedby`; every checkbox is `aria-invalid` with the error border and no message of its own. `required` puts `*` after the legend and adds `requiredAriaLabel` (default `required`) to the group's name, e.g. „Rollen Pflichtfeld“; the checkboxes stay optional, so validate the value (`Validators.required`) and set `error`. `disabled` disables the fieldset and every checkbox, `orientation` is `vertical` or `horizontal` (wraps), and `size` applies to every checkbox (a `size` bound on a checkbox wins). In a group, `lg` rows are 44 px touch targets, 8 px apart. `[(value)]` or a form control on the group holds the `value`s of the checked checkboxes as `string[]`, in the order of the checkboxes; written values that match no checkbox are kept. Same spacing and type as `lc-radio-group`. Legend 17.74:1 (light) / 17.29:1 (dark), help 7.56 / 12.17, error and `*` 12.59 / 9.48; no overflow at 320 px.
+- **`lc-checkbox` `value`**: the value a checkbox adds to its group's value while checked; no effect without a group.
+
+### Changed
+
+- **`lc-checkbox` in an `lc-checkbox-group`** takes the group's size, disabled and invalid state. Outside a group nothing changes: same DOM, 96 of 96 checkbox and chip screenshots identical.
+- **Docs, chip story „Hooks on an Ancestor“** (060-s1): an opaque pair (`--color-surface` fill, `--color-on-info-subtle` ink, `--color-info-default` border) gives chip text 10.16:1 (light) and 10.64:1 (dark), off a hero band and on it (before: 4.01:1 in dark). Theme tokens set in an ancestor hook resolve in the page theme, also inside `lc-hero`: pick an opaque fill. The component is unchanged.
+
+### Known
+
+- A disabled, checked `lc-checkbox` looks like an unchecked one in the light theme (white check on a 1.02:1 fill), so a disabled group hides what is selected (queued, pre-existing).
+- `lc-checkbox` box borders are 2.54:1 at rest (light) and the error border 2.24:1 on the dark page, under the 3:1 of WCAG 1.4.11 (queued, pre-existing; `lc-radio` uses `--color-field-border`).
+- `lc-chip` `quiet` and clickable in `lc-hero`: the hover fill follows the hero glass, not `--lc-chip-bg`, so a custom ink can drop to 1.05:1 on hover (queued, pre-existing).
+
+### Compatibility
+
+- No API breaks: one new component, one new optional input. Peer range and dependencies unchanged.
+
 ## [3.40.0] - 2026-11-12
 
 The pieces of the life-os home-page vision band: `lc-area-map` (status groups with lines into one layer bar), a laptop for `lc-device-frame`, wrapping chips with an on-band palette in `lc-hero`, and four area icons. Gap IDs: G-HV1, G-HV2, G-HV3, G-HV4, G-SS1 (extended). No API breaks; chips inside `lc-hero` look different (see Changed).

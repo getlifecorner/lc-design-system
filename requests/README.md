@@ -104,3 +104,4 @@ Interactively, in this repository: `/lc-request <requirement or path> [--from <p
 | [058](058-card-name-hero-band-contrast/) lc-card accessible name, lc-hero band contrast | bundle (owner) | 057-s1, 057-s2 | 3.38.0 | 3.38.0 |
 | [059](059-device-frame-picture-select-list/) lc-device-frame and lc-picture (new), lc-select clearable, lc-description-list total whitespace, lc-list item ariaLabel | bundle (life-os, finance-intelligence) | G-SS1, G-SS2; services-prove-2026-11-10 row 1 + bug; stammdaten-prove-2026-11-10 row 1 | 3.39.0 | |
 | [060](060-area-icons-area-map-laptop-chip/) area icons, hero area map pattern, lc-device-frame laptop, lc-chip wrap and on-band palette | bundle (life-os) | G-HV1, G-HV2, G-SS1 (extended), G-HV3, G-HV4 | 3.40.0 | |
+| [061](061-checkbox-group-chip-story-contrast/) lc-checkbox-group (new), lc-chip story contrast | bundle (owner, finance-intelligence) | 060-s1; benutzer-2026-11-12 row 1 | 3.41.0 | |
