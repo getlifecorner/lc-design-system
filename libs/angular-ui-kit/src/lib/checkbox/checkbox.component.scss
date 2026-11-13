@@ -171,6 +171,12 @@
   }
 }
 
+// 3.41: in an lc-checkbox-group an lg row is a 44 px touch target (as .radio-lg);
+// a standalone lg checkbox keeps its height.
+.checkbox-lg.checkbox-in-group {
+  min-height: 2.75rem;
+}
+
 // Required indicator
 .checkbox-required .checkbox-label-text::after {
   content: ' *';

@@ -396,7 +396,7 @@ export const HooksOnAnAncestor: Story = {
     docs: {
       description: {
         story:
-          '3.40 (AC-15): `--lc-chip-bg`, `--lc-chip-fg`, `--lc-chip-border` and `--lc-chip-gap` set on a wrapper reach every chip inside, and they win over the variant colours, also over the on-band palette in `lc-hero` (the variants now keep their colours in private properties and only read the hooks). Here the wrapper sets the info pair and its border; each row holds an emphasis, a default and a quiet chip. Before 3.40 a chip declared the hooks itself, so only a value on the chip took effect.',
+          '3.40 (AC-15): `--lc-chip-bg`, `--lc-chip-fg`, `--lc-chip-border` and `--lc-chip-gap` set on a wrapper reach every chip inside, and they win over the variant colours, also over the on-band palette in `lc-hero` (the variants now keep their colours in private properties and only read the hooks). Here the wrapper sets an opaque surface fill with the info ink and border; each row holds an emphasis, a default and a quiet chip. Theme tokens in a hook on an ancestor resolve in the page theme, also inside `lc-hero`: pick an opaque pair, as here (chip text 10.16:1 light, 10.64:1 dark, off the band and on it). A translucent fill such as `--color-info-subtle` lets the band through (4.01:1 in dark, below 4.5:1). Before 3.40 a chip declared the hooks itself, so only a value on the chip took effect.',
       },
     },
   },
@@ -404,13 +404,13 @@ export const HooksOnAnAncestor: Story = {
     moduleMetadata: { imports: [HeroComponent] },
     template: `
       <div style="display: flex; flex-direction: column; gap: 16px;">
-        <div style="--lc-chip-bg: var(--color-info-subtle); --lc-chip-fg: var(--color-on-info-subtle); --lc-chip-border: var(--color-info-default); --lc-chip-gap: 0.5rem; display: flex; flex-wrap: wrap; gap: 8px;">
+        <div style="--lc-chip-bg: var(--color-surface); --lc-chip-fg: var(--color-on-info-subtle); --lc-chip-border: var(--color-info-default); --lc-chip-gap: 0.5rem; display: flex; flex-wrap: wrap; gap: 8px;">
           <lc-chip variant="emphasis" icon="heart">Emphasis</lc-chip>
           <lc-chip variant="default" icon="heart">Default</lc-chip>
           <lc-chip variant="quiet" icon="heart" [clickable]="true">Quiet</lc-chip>
         </div>
         <lc-hero size="sm" title="Hooks in a hero" [headingLevel]="2">
-          <div style="--lc-chip-bg: var(--color-info-subtle); --lc-chip-fg: var(--color-on-info-subtle); --lc-chip-border: var(--color-info-default); --lc-chip-gap: 0.5rem; display: flex; flex-wrap: wrap; gap: 8px;">
+          <div style="--lc-chip-bg: var(--color-surface); --lc-chip-fg: var(--color-on-info-subtle); --lc-chip-border: var(--color-info-default); --lc-chip-gap: 0.5rem; display: flex; flex-wrap: wrap; gap: 8px;">
             <lc-chip variant="emphasis" icon="heart">Emphasis</lc-chip>
             <lc-chip variant="default" icon="heart">Default</lc-chip>
             <lc-chip variant="quiet" icon="heart" [clickable]="true">Quiet</lc-chip>

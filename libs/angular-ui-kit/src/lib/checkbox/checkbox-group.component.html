@@ -1,0 +1,25 @@
+<fieldset class="lc-checkbox-group" [attr.aria-describedby]="describedBy()" [disabled]="groupDisabled()">
+  <legend class="lc-checkbox-group__legend" [class.lc-checkbox-group__legend--hidden]="legendHidden()">
+    {{ legend() }}
+    @if (required() && requiredIndicator()) {
+      <span class="lc-checkbox-group__required" aria-hidden="true">*</span>
+      <span class="lc-checkbox-group__required-text">{{ requiredAriaLabel() }}</span>
+    }
+  </legend>
+
+  @if (helpText()) {
+    <p [id]="helpId" class="lc-checkbox-group__help">{{ helpText() }}</p>
+  }
+
+  <div
+    class="lc-checkbox-group__options"
+    [class.lc-checkbox-group__options--vertical]="orientation() === 'vertical'"
+    [class.lc-checkbox-group__options--horizontal]="orientation() === 'horizontal'"
+  >
+    <ng-content />
+  </div>
+
+  @if (error()) {
+    <p [id]="errorId" class="lc-checkbox-group__error" role="alert">{{ error() }}</p>
+  }
+</fieldset>

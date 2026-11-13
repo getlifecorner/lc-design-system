@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { CheckboxComponent } from './checkbox.component';
+import { CheckboxGroupComponent } from './checkbox-group.component';
 
 const meta: Meta<CheckboxComponent> = {
   title: 'Form/Checkbox',
@@ -33,6 +34,11 @@ Supports validation, help text, and indeterminate state.
     indeterminate: { control: 'boolean', description: 'Partially-checked state, cleared on the next toggle' },
     disabled: { control: 'boolean', description: 'Disables the checkbox' },
     required: { control: 'boolean', description: 'Marks as required' },
+    value: {
+      control: 'text',
+      description: 'The value this checkbox adds to its `lc-checkbox-group`’s value while checked; no effect without a group',
+      table: { defaultValue: { summary: "''" } },
+    },
   },
 };
 
@@ -77,17 +83,22 @@ export const Indeterminate: Story = {
 
 export const CheckboxGroup: Story = {
   parameters: {
-    docs: { description: { story: 'Multiple checkboxes for multi-select scenarios.' } },
+    docs: {
+      description: {
+        story:
+          'Multiple checkboxes for a multi-select, in an `lc-checkbox-group` (3.41): a `<fieldset>` named by its legend. Each checkbox keeps its own help text. See Form/Checkbox Group for errors, `required`, sizes and the array value.',
+      },
+    },
   },
   render: () => ({
+    moduleMetadata: { imports: [CheckboxGroupComponent, CheckboxComponent] },
     template: `
-      <div style="display: flex; flex-direction: column; gap: 4px;">
-        <p style="margin: 0 0 8px; font-weight: 600; font-size: 14px;">Notification Preferences</p>
+      <lc-checkbox-group legend="Notification preferences">
         <lc-checkbox label="Email notifications" helpText="Receive updates via email"></lc-checkbox>
         <lc-checkbox label="Push notifications" helpText="Browser push notifications"></lc-checkbox>
         <lc-checkbox label="SMS alerts" helpText="Text messages for urgent items"></lc-checkbox>
         <lc-checkbox label="Weekly digest" helpText="Summary of activity every Monday"></lc-checkbox>
-      </div>`,
+      </lc-checkbox-group>`,
   }),
 };
 

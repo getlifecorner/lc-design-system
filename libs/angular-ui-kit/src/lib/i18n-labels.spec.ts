@@ -42,6 +42,8 @@ import { VerificationCodeInputComponent } from './verification-code-input/verifi
 import { ColorPickerComponent } from './color-picker/color-picker.component';
 import { FilterBarComponent } from './filter-bar/filter-bar.component';
 import { MoneyComponent } from './money/money.component';
+import { CheckboxGroupComponent } from './checkbox/checkbox-group.component';
+import { computedName } from '../testing/axe-jsdom';
 
 /**
  * Every built-in text of the kit is an input whose default is the text it
@@ -688,5 +690,14 @@ describe('Translatable labels (i18n)', () => {
     expect(text(f.nativeElement, '.lc-money__spoken')).toBe('plus 42,17 Euro');
     set(f, { plusLabel: 'mehr' });
     expect(text(f.nativeElement, '.lc-money__spoken')).toBe('mehr 42,17 Euro');
+  });
+
+  it('lc-checkbox-group: requiredAriaLabel reaches the group name (3.41)', () => {
+    const f = create(CheckboxGroupComponent, { legend: 'Rollen', required: true });
+    const fieldset = (f.nativeElement as HTMLElement).querySelector('fieldset') as HTMLElement;
+    expect(text(f.nativeElement, '.lc-checkbox-group__required-text')).toBe('required');
+    expect(computedName(f.nativeElement, fieldset)).toBe('Rollen required');
+    set(f, { requiredAriaLabel: 'Pflichtfeld' });
+    expect(computedName(f.nativeElement, fieldset)).toBe('Rollen Pflichtfeld');
   });
 });

@@ -205,6 +205,8 @@ const EXPECT_IN_HTML = [
   // 3.3 features, rendered on the server
   ['provider button', /<button(?=[^>]*type="submit")(?=[^>]*class="[^"]*\blc-provider-button--google\b)[^>]*>/],
   ['radio group legend', /<fieldset[^>]*class="lc-radio-group"[^]*?<legend[^>]*>\s*Rolle/],
+  // 3.41 (request 061)
+  ['checkbox group legend', /<fieldset[^>]*class="lc-checkbox-group"[^]*?<legend[^>]*>\s*Rollen/],
   ['copy field', /class="lc-copy-field\b/],
   ['bottom nav current item', /<nav(?=[^>]*aria-label="Hauptnavigation unten")(?=[^>]*class="[^"]*lc-bottom-nav--floating)[^>]*>[^]*?aria-current="page"/],
   ['app page aside', /<main[^>]*id="shell-main"[^]*?<\/main>\s*<aside(?=[^>]*aria-label="Mitglieder")[^>]*>/],

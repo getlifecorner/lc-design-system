@@ -112,6 +112,11 @@
       <lc-radio value="member" label="Mitglied" />
       <lc-radio value="admin" label="Verwalten" />
     </lc-radio-group>
+    <!-- 3.41 (request 061): fieldset, legend and the checkboxes in order before JS. -->
+    <lc-checkbox-group legend="Rollen" [(value)]="roles">
+      <lc-checkbox value="administration" label="Administration" />
+      <lc-checkbox value="controlling" label="Controlling" />
+    </lc-checkbox-group>
     <lc-copy-field label="Einladungslink" value="https://example.org/join/abc" copyLabel="Kopieren" />
     <lc-bottom-nav [items]="bottomNav" activeRoute="/" ariaLabel="Hauptnavigation unten" variant="floating" [fixed]="false"
       [showMore]="true" moreLabel="Mehr" moreRoute="/mehr" [moreBadge]="{ value: 1, variant: 'warning' }" badgeAriaLabel="{value} offen" />

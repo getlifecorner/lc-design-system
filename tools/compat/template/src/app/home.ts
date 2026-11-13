@@ -27,6 +27,7 @@ import {
   AppPageComponent, AppShellComponent, BottomNavComponent, CopyFieldComponent, ProviderButtonComponent,
   RadioComponent, RadioGroupComponent, type BottomNavItem,
 } from '@lifecorner/angular-ui-kit';
+import { CheckboxGroupComponent } from '@lifecorner/angular-ui-kit';
 import { Probe36 } from './probe-36';
 import { Probe38 } from './probe-38';
 import { Probe39 } from './probe-39';
@@ -80,6 +81,8 @@ import { Probe340 } from './probe-340';
     // 3.3
     AppPageComponent, AppShellComponent, BottomNavComponent, CopyFieldComponent, ProviderButtonComponent,
     RadioComponent, RadioGroupComponent,
+    // 3.41 (request 061)
+    CheckboxGroupComponent,
     // 3.6 (request 002)
     Probe36,
     // 3.8 (request 005)
@@ -131,6 +134,7 @@ import { Probe340 } from './probe-340';
 export class HomePage {
   protected readonly checked = signal(true);
   protected readonly role = signal('member');
+  protected readonly roles = signal<string[]>(['controlling']);
   protected readonly bottomNav: BottomNavItem[] = [
     { id: 'today', label: 'Heute', icon: 'home', route: '/' },
     { id: 'household', label: 'Haushalt', icon: 'users', route: '/household' },

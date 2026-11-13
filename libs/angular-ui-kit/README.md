@@ -90,6 +90,7 @@ and the CSP notes.
 | Component | Selector | Description |
 |-----------|----------|-------------|
 | Checkbox | `lc-checkbox` | Checkbox input |
+| Checkbox Group | `lc-checkbox-group` | `<fieldset>` with a legend, one help text and one error around `lc-checkbox`es; `size` for all, 44 px `lg` rows; the checked values as an array via `[(value)]` or a form control (3.41) |
 | Combobox | `lc-combobox` | Async autocomplete with single/multiple selection |
 | Copy Field | `lc-copy-field` | A value to copy (link, token, command): wraps, 48.5 px copy button, one polite announcement |
 | Datepicker | `lc-datepicker` | Date selection |
