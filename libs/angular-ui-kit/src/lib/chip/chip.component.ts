@@ -72,7 +72,11 @@ export class ChipComponent {
   icon = input<string>();
 
   /**
-   * Whether the chip can be removed
+   * Whether the chip can be removed. The remove × has a 24 × 24 px hit area
+   * (3.45, WCAG 2.5.8) without changing the chip's size. Target size: chips
+   * stay 24 / 32 / 40 px high (sm / md / lg) and meet WCAG 2.5.8 (24 px);
+   * a 44 px area would overlap the next row in a wrapping group. For
+   * touch-first rows use `size="lg"` and a row gap of at least 4 px.
    * @default false
    */
   removable = input<boolean>(false);

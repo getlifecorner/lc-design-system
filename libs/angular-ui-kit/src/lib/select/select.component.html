@@ -131,7 +131,7 @@
                  index of each option keeps ids, highlight and keyboard as in a flat list. -->
             @for (group of groups; track group.id) {
               <div class="lc-select__group" role="group" [attr.aria-labelledby]="group.id">
-                <div class="lc-select__group-label" role="presentation" [id]="group.id">{{ group.label }}</div>
+                <div class="lc-select__group-label" role="presentation" [id]="group.id" [attr.title]="group.label">{{ group.label }}</div>
                 @for (item of group.items; track item.option.value) {
                   <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- listbox option: focus stays on the trigger/search, keyboard selection via aria-activedescendant -->
                   <div

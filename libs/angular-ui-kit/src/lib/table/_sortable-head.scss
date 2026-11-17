@@ -1,0 +1,80 @@
+// The header cell look shared by lc-table's head and `th[lcSortableHead]`
+// (3.45, usm-x row 33). lc-table includes these mixins where its rules were,
+// so its compiled CSS stays byte-identical (pinned in sortable-head spec).
+
+// A header cell at rest (md padding; the sizes override it).
+@mixin head-cell {
+  padding: var(--lc-density-padding-sm, var(--spacing-3)) var(--lc-density-padding-md, var(--spacing-4));
+  text-align: left;
+  font-weight: var(--typography-font-weight-semibold);
+  font-size: var(--typography-font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  user-select: none;
+}
+
+// A sortable cell: pointer, room for the arrow at the end (32 px).
+@mixin sortable-cell {
+  cursor: pointer;
+  position: relative;
+  padding-right: var(--spacing-8);
+  transition: background-color 0.2s ease;
+}
+
+// Sortable headers are keyboard stops (tabindex 0): show where focus is.
+@mixin focus-ring {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: -2px;
+}
+
+// Hover on a sortable cell and the sorted state share the fill and ink.
+@mixin active-state {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+// The arrow, 12 px from the end, centred.
+@mixin sort-indicator {
+  position: absolute;
+  right: var(--spacing-3);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: var(--typography-font-size-xs);
+  color: var(--color-primary);
+}
+
+// Padding per table size.
+@mixin size-sm {
+  padding: var(--lc-density-padding-xs, var(--spacing-2)) var(--lc-density-padding-sm, var(--spacing-3));
+}
+
+@mixin size-lg {
+  padding: var(--lc-density-padding-md, var(--spacing-4)) var(--spacing-5);
+}
+
+// End-aligned header: tabular figures at the end edge.
+@mixin end-cell {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+// A sortable end header keeps its 32 px arrow reserve on the start side and
+// the cell's own end padding, so the label ends where the figures end.
+@mixin sortable-end-cell {
+  padding-inline-start: var(--spacing-8);
+  padding-inline-end: var(--lc-density-padding-md, var(--spacing-4));
+}
+
+// The arrow sits 8 px before the label, centred on the label line.
+@mixin end-sort-indicator {
+  right: auto;
+  inset-inline-end: calc(100% + var(--spacing-2));
+}
+
+// The label and the arrow of an end header: the box the arrow is placed against.
+@mixin end-sort-label {
+  position: relative;
+  display: inline-block;
+}

@@ -12,6 +12,7 @@ import {
 import { chartColor } from '@lifecorner/angular-ui-kit/internal/chart';
 import {
   chartDashArray,
+  chartDotArray,
   linearPath,
   smoothPath,
   type ChartPoint,
@@ -40,6 +41,14 @@ export interface LineChartSeries {
    * @default false
    */
   dashed?: boolean;
+  /**
+   * Draws the series as round dots, in its colour (3.45, request 065): each
+   * dot `strokeWidth` wide, one every 2 × `strokeWidth`, in the plot and in
+   * the legend swatch. A non-colour cue next to solid and `dashed` series (a
+   * plan beside actuals and a forecast). Wins over `dashed`.
+   * @default false
+   */
+  dotted?: boolean;
 }
 
 /** viewBox width used until the container has been measured. */
@@ -270,8 +279,13 @@ export class LineChartComponent {
         pathD,
         areaD,
         points,
-        dashed: !!ser.dashed,
-        dashArray: ser.dashed ? chartDashArray(this.strokeWidth()) : null,
+        dashed: !ser.dotted && !!ser.dashed,
+        dotted: !!ser.dotted,
+        dashArray: ser.dotted
+          ? chartDotArray(this.strokeWidth())
+          : ser.dashed
+            ? chartDashArray(this.strokeWidth())
+            : null,
       };
     });
   });
@@ -292,6 +306,9 @@ export class LineChartComponent {
       label: s.label,
       color: s.color,
       dashed: s.dashed,
+      dotted: s.dotted,
+      // 3.45: a patterned swatch takes its colour as `color` (the pattern's currentColor).
+      patterned: s.dashed || s.dotted,
     }));
   });
 

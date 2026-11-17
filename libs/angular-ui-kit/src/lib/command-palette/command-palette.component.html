@@ -1,0 +1,121 @@
+@if (open()) {
+  <lc-modal
+    class="lc-command-palette__modal"
+    [open]="true"
+    size="md"
+    placement="top"
+    [showCloseButton]="false"
+    [ariaLabel]="l().dialogLabel"
+    [returnFocusTo]="returnFocusTo()"
+    (openChange)="onModalOpenChange($event)"
+  >
+    <div slot="header" class="lc-command-palette__header">
+      <lc-search-input
+        class="lc-command-palette__search"
+        size="md"
+        inputRole="combobox"
+        ariaAutocomplete="list"
+        [ariaExpanded]="expanded()"
+        [ariaControls]="listboxId"
+        [ariaActiveDescendant]="active()?.id ?? ''"
+        [ariaLabel]="l().searchLabel"
+        [placeholder]="l().placeholder"
+        [clearAriaLabel]="l().clear"
+        [debounceMs]="debounceMs()"
+        [value]="query()"
+        (valueChange)="onQueryChange($event)"
+        (searchChange)="onSearch($event)"
+        (keydown)="onFieldKeydown($event)"
+      />
+      <lc-button class="lc-command-palette__cancel" variant="ghost" size="lg" (click)="close()">{{ l().cancel }}</lc-button>
+    </div>
+
+    <div slot="body" class="lc-command-palette__body">
+      <div class="lc-command-palette__listbox" role="listbox" #listbox [id]="listboxId" [attr.aria-label]="l().searchLabel">
+        @for (view of views(); track view.group.id) {
+          <div
+            class="lc-command-palette__group"
+            role="group"
+            [attr.aria-labelledby]="view.headingId"
+            [attr.aria-busy]="view.group.loading ? 'true' : null"
+          >
+            <div class="lc-command-palette__heading" role="presentation" [id]="view.headingId">{{ view.group.heading }}</div>
+            @for (option of view.options; track option.key) {
+              @if (option.item; as item) {
+                <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- options are never focused: the field keeps the focus and handles the keys (aria-activedescendant) -->
+                <div
+                  class="lc-command-palette__option"
+                  role="option"
+                  [id]="option.id"
+                  [class.lc-command-palette__option--active]="isActive(option)"
+                  [class.lc-command-palette__option--disabled]="option.disabled"
+                  [attr.aria-selected]="isActive(option) ? 'true' : null"
+                  [attr.aria-disabled]="option.disabled ? 'true' : null"
+                  [attr.aria-labelledby]="labelledBy(option)"
+                  (pointerdown)="$event.preventDefault()"
+                  (click)="onOptionClick(option)"
+                >
+                  <!-- The name is every visible part in DOM order; the spaces keep the parts apart in the DOM text (axe label-content-name-mismatch), a flex container renders none of them. -->
+                  @if (item.icon) {
+                    <lc-icon class="lc-command-palette__icon" [name]="item.icon" size="sm" [decorative]="true" />
+                  }
+                  <span class="lc-command-palette__text">
+                    <span class="lc-command-palette__label" [id]="option.id + '-label'">@for (part of parts(item.label); track $index) {@if (part.mark) {<mark>{{ part.text }}</mark>} @else {<ng-container>{{ part.text }}</ng-container>}}</span>&ngsp;
+                    @if (item.description) {
+                      <span class="lc-command-palette__description" [id]="option.id + '-desc'">{{ item.description }}</span>
+                    }
+                  </span>&ngsp;
+                  @if (hintOf(item); as hint) {
+                    <span
+                      class="lc-command-palette__hint"
+                      [class.lc-command-palette__hint--reason]="isReason(item)"
+                      [id]="option.id + '-hint'"
+                      [attr.title]="hint"
+                    >{{ hint }}</span>&ngsp;
+                  }
+                  @if (item.shortcut) {
+                    <kbd class="lc-command-palette__kbd" [id]="option.id + '-kbd'">{{ item.shortcut }}</kbd>
+                  }
+                </div>
+              }
+            }
+            @if (view.group.loading) {
+              <div class="lc-command-palette__message" aria-hidden="true">
+                <lc-spinner size="xs" [loadingLabel]="l().loading" />
+                <span>{{ l().loading }}</span>
+              </div>
+            }
+            @if (view.retry; as retry) {
+              <div class="lc-command-palette__message lc-command-palette__message--error" [id]="view.errorId">
+                <lc-icon class="lc-command-palette__icon" name="exclamation-circle" size="sm" [decorative]="true" />
+                <span>{{ view.errorText }}</span>
+              </div>
+              <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- an option of the listbox: the field keeps the focus and handles the keys -->
+              <div
+                class="lc-command-palette__option lc-command-palette__option--retry"
+                role="option"
+                [id]="retry.id"
+                [class.lc-command-palette__option--active]="isActive(retry)"
+                [attr.aria-selected]="isActive(retry) ? 'true' : null"
+                [attr.aria-describedby]="view.errorId"
+                (pointerdown)="$event.preventDefault()"
+                (click)="onOptionClick(retry)"
+              >
+                <lc-icon class="lc-command-palette__icon" name="arrow-path" size="sm" [decorative]="true" />
+                <span class="lc-command-palette__text">
+                  <span class="lc-command-palette__label">{{ l().retry }}</span>
+                </span>
+              </div>
+            } @else if (!view.options.length && !view.group.loading && view.group.emptyText) {
+              <div class="lc-command-palette__message">{{ view.group.emptyText }}</div>
+            }
+          </div>
+        }
+      </div>
+      @if (emptyText(); as text) {
+        <p class="lc-command-palette__empty">{{ text }}</p>
+      }
+      <div class="lc-command-palette__status" role="status">{{ status() }}</div>
+    </div>
+  </lc-modal>
+}

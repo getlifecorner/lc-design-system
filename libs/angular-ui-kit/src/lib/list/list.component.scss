@@ -608,3 +608,24 @@ $_list-row-padding: (
   margin-bottom: 0.5rem;
 }
 
+// 3.45 (backlog 064-n4, 064-n5): a heading and its rows are one group
+// (`div.lc-list__group`, `break-inside: avoid` above), so a column starts
+// with its heading; the group's last row has no divider (at the weight of the
+// list's own last-row rule), and the columns are not clipped at the corners.
+.lc-list--vertical.lc-list--columns {
+  overflow: visible;
+}
+
+.lc-list--vertical.lc-list--columns > .lc-list__group > .lc-list__item:last-child,
+.lc-list--vertical.lc-list--columns > .lc-list__group > .lc-list__item-wrapper:last-child .lc-list__item {
+  border-bottom: none;
+}
+
+.lc-list--card.lc-list--columns > .lc-list__group {
+  margin-bottom: 0;
+}
+
+.lc-list--card.lc-list--columns > .lc-list__group > * {
+  margin-bottom: 0.5rem;
+}
+

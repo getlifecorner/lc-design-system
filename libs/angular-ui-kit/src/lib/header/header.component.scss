@@ -615,3 +615,11 @@ html.dark .lc-header:not(.lc-header--light),
   overflow-wrap: anywhere;
   line-height: 1.4;
 }
+
+// 3.45 (backlog 064-n1): `[slot='middle']` content on the brand's row, at its
+// content size; it may shrink (min-width 0), so it never pushes the end group
+// off the row before the brand would.
+.lc-header > [slot='middle'] {
+  flex: 0 1 auto;
+  min-width: 0;
+}

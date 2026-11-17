@@ -28,8 +28,8 @@ Line chart component for visualizing data trends.
     series: {
       control: 'object',
       description:
-        '`LineChartSeries[]`: `{ label, data, color?, dashed? }`. 3.43: a `null` in `data` is no value (no point, the line breaks there; a lone value between gaps is a dot; the scale and the summary skip it). `dashed: true` draws the series 3 × / 2 × `strokeWidth` (6/4 px) in its colour, in the plot and the legend swatch',
-      table: { defaultValue: { summary: 'required (dashed: false)' } },
+        '`LineChartSeries[]`: `{ label, data, color?, dashed?, dotted? }`. 3.43: a `null` in `data` is no value (no point, the line breaks there; a lone value between gaps is a dot; the scale and the summary skip it). `dashed: true` draws the series 3 × / 2 × `strokeWidth` (6/4 px) in its colour, in the plot and the legend swatch. 3.45: `dotted: true` draws round dots `strokeWidth` wide every 2 × `strokeWidth`, also in the legend; it wins over `dashed`',
+      table: { defaultValue: { summary: 'required (dashed: false, dotted: false)' } },
     },
     ariaLabel: {
       control: 'text',
@@ -126,13 +126,13 @@ export const GapsAndForecast: Story = {
     docs: {
       description: {
         story:
-          '3.43 (request 063, finance-intelligence kosten-2026-11-17 row 2): `null` is no value. *Actual* has gaps in April, June, November and December: the line breaks there, and May, alone between two gaps, is still a dot. *Forecast* is `dashed` (6/4 px, butt caps, in its colour, also in the legend) and starts at October with the last actual value, so it joins the actuals. The scale and the generated summary skip the gaps ("8 points, 4 with no value, 38 to 52"). The legend names every series, so the dash is not the only cue.',
+          '3.43 (request 063, finance-intelligence kosten-2026-11-17 row 2): `null` is no value. *Actual* has gaps in April, June, November and December: the line breaks there, and May, alone between two gaps, is still a dot. *Forecast* is `dashed` (6/4 px, butt caps, in its colour, also in the legend) and starts at October with the last actual value, so it joins the actuals. The scale and the generated summary skip the gaps ("8 points, 4 with no value, 38 to 52"). The legend names every series, so the dash is not the only cue. 3.45 (backlog 063-n1): *Plan* is `dotted` (2 px dots every 4 px, also in the legend), so Plan, Actual and Forecast differ by more than colour: dotted, solid, dashed.',
       },
     },
   },
   args: {
     series: [
-      { label: 'Plan', data: PLAN, color: 'var(--color-secondary-500)' },
+      { label: 'Plan', data: PLAN, color: 'var(--color-secondary-500)', dotted: true },
       { label: 'Actual', data: [38, 41, 43, null, 45, null, 44, 49, 50, 52, null, null], color: 'var(--color-primary-500)' },
       {
         label: 'Forecast',
@@ -155,13 +155,13 @@ export const GapsAndForecastDe: Story = {
     docs: {
       description: {
         story:
-          '3.43 (request 063, AC-12): the „Kosten“ chart in German. *Ist* runs through October, *Prognose* is dashed from October to December, *Plan* is solid all year. The chart has no locale input: the German name comes through `ariaLabel`.',
+          '3.43 (request 063, AC-12): the „Kosten“ chart in German. *Ist* runs through October, *Prognose* is dashed from October to December, *Plan* is dotted all year (3.45, backlog 063-n1: before, solid). The chart has no locale input: the German name comes through `ariaLabel`.',
       },
     },
   },
   args: {
     series: [
-      { label: 'Plan', data: PLAN, color: 'var(--color-secondary-500)' },
+      { label: 'Plan', data: PLAN, color: 'var(--color-secondary-500)', dotted: true },
       { label: 'Ist', data: [38, 41, 43, 40, 45, 47, 44, 49, 50, 52, null, null], color: 'var(--color-primary-500)' },
       {
         label: 'Prognose',

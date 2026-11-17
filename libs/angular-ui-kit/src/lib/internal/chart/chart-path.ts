@@ -15,6 +15,15 @@ export function chartDashArray(strokeWidth: number): string {
   return `${3 * strokeWidth} ${2 * strokeWidth}`;
 }
 
+/**
+ * Dash pattern of a dotted series (3.45, request 065): zero-length dashes
+ * every 2 × the stroke width; with round caps each is a dot of the stroke
+ * width's diameter, so `0 4` at the default 2 px.
+ */
+export function chartDotArray(strokeWidth: number): string {
+  return `0 ${2 * strokeWidth}`;
+}
+
 /** `M x,y L x,y …` polyline through the points; '' for fewer than two points. */
 export function linearPath(points: readonly ChartPoint[]): string {
   if (points.length < 2) return '';

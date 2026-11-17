@@ -14,40 +14,49 @@
     cursor: pointer;
   }
 
+  // 3.45: `--_lc-popover-shift` moves the panel along its side into the
+  // viewport and `--_lc-popover-arrow` points the arrow at the trigger's
+  // centre; both are set by the component after opening (0 / 50 % unset).
   &__panel {
     position: absolute;
     z-index: 50;
     min-width: 12rem;
+    // The border box stays 16 px narrower than the viewport (content box +
+    // 2 × 12 px padding + 2 × 1 px border).
+    max-inline-size: calc(100vw - 2.5rem - 2px);
     padding: 0.75rem;
     background-color: var(--color-surface); background-image: var(--gradient-surface);
     border: 1px solid var(--color-border-strong);
     border-radius: var(--border-radius-lg);
     box-shadow: var(--elevation-4);
+    // 3.45: a static `align="end"` / `"center"` on the host is a presentational
+    // hint (`text-align`) in Chrome; the panel content always starts.
+    text-align: start;
     animation: popover-enter 150ms ease-out;
 
     // Positions
     &--bottom {
       top: calc(100% + 0.5rem);
       left: 50%;
-      transform: translateX(-50%);
+      transform: translateX(calc(-50% + var(--_lc-popover-shift, 0px)));
     }
 
     &--top {
       bottom: calc(100% + 0.5rem);
       left: 50%;
-      transform: translateX(-50%);
+      transform: translateX(calc(-50% + var(--_lc-popover-shift, 0px)));
     }
 
     &--left {
       right: calc(100% + 0.5rem);
       top: 50%;
-      transform: translateY(-50%);
+      transform: translateY(calc(-50% + var(--_lc-popover-shift, 0px)));
     }
 
     &--right {
       left: calc(100% + 0.5rem);
       top: 50%;
-      transform: translateY(-50%);
+      transform: translateY(calc(-50% + var(--_lc-popover-shift, 0px)));
     }
 
     // Arrow
@@ -63,7 +72,7 @@
 
     &--arrow.popover__panel--bottom::before {
       top: -0.3rem;
-      left: 50%;
+      left: var(--_lc-popover-arrow, 50%);
       margin-left: -0.25rem;
       border-right: none;
       border-bottom: none;
@@ -71,7 +80,7 @@
 
     &--arrow.popover__panel--top::before {
       bottom: -0.3rem;
-      left: 50%;
+      left: var(--_lc-popover-arrow, 50%);
       margin-left: -0.25rem;
       border-left: none;
       border-top: none;
@@ -79,7 +88,7 @@
 
     &--arrow.popover__panel--left::before {
       right: -0.3rem;
-      top: 50%;
+      top: var(--_lc-popover-arrow, 50%);
       margin-top: -0.25rem;
       border-left: none;
       border-bottom: none;
@@ -87,7 +96,7 @@
 
     &--arrow.popover__panel--right::before {
       left: -0.3rem;
-      top: 50%;
+      top: var(--_lc-popover-arrow, 50%);
       margin-top: -0.25rem;
       border-right: none;
       border-top: none;
@@ -95,13 +104,91 @@
   }
 }
 
+// ── 3.45 (request 065, usm-x row 35) ───────────────────────────────────────
+// `align`: the panel's start / end edge on the trigger's (top and bottom
+// panels); left and right panels line up their top / bottom edges.
+.popover__panel--align-start.popover__panel--bottom,
+.popover__panel--align-start.popover__panel--top {
+  left: auto;
+  inset-inline-start: 0;
+  transform: translateX(var(--_lc-popover-shift, 0px));
+}
+
+.popover__panel--align-end.popover__panel--bottom,
+.popover__panel--align-end.popover__panel--top {
+  left: auto;
+  inset-inline-end: 0;
+  transform: translateX(var(--_lc-popover-shift, 0px));
+}
+
+.popover__panel--align-start.popover__panel--left,
+.popover__panel--align-start.popover__panel--right {
+  top: 0;
+  transform: translateY(var(--_lc-popover-shift, 0px));
+}
+
+.popover__panel--align-end.popover__panel--left,
+.popover__panel--align-end.popover__panel--right {
+  top: auto;
+  bottom: 0;
+  transform: translateY(var(--_lc-popover-shift, 0px));
+}
+
+// Hover and focus panels: a transparent bridge over the 8 px gap, so the
+// pointer can move onto the panel without leaving the popover (WCAG 1.4.13).
+.popover__panel--bridge::after {
+  content: '';
+  position: absolute;
+}
+
+.popover__panel--bridge.popover__panel--bottom::after {
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  height: calc(0.5rem + 1px);
+}
+
+.popover__panel--bridge.popover__panel--top::after {
+  top: 100%;
+  right: 0;
+  left: 0;
+  height: calc(0.5rem + 1px);
+}
+
+.popover__panel--bridge.popover__panel--left::after {
+  top: 0;
+  bottom: 0;
+  left: 100%;
+  width: calc(0.5rem + 1px);
+}
+
+.popover__panel--bridge.popover__panel--right::after {
+  top: 0;
+  right: 100%;
+  bottom: 0;
+  width: calc(0.5rem + 1px);
+}
+
+// A long-press trigger keeps iOS's callout (copy, look up) out of the way.
+.popover--longpress .popover__trigger {
+  -webkit-touch-callout: none;
+}
+
+// The entrance animates `scale` and `opacity`, so it never overrides the
+// position's `transform` (before 3.45, left and right panels jumped).
 @keyframes popover-enter {
   from {
     opacity: 0;
-    transform: translateX(-50%) scale(0.95);
+    scale: 0.95;
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) scale(1);
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .popover__panel {
+    animation: none;
   }
 }

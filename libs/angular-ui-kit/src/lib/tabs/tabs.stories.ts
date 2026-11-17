@@ -35,6 +35,7 @@ Use it for settings pages, multi-section views, and content categorization.
 - Tabs added or removed at runtime (e.g. via \`@for\`) are picked up automatically
 - 3.44: a horizontal tab list that doesn't fit scrolls on its own (WCAG 1.4.10) and keeps the selected tab in view
 - 3.44: \`mode="links"\`: a tab list of links (\`route\` + \`queryParams\`, or \`href\`) for a router outlet; the app marks the \`current\` tab
+- 3.45: \`showIcons\` renders the tabs' icons; an overflowing horizontal list fades out at the side(s) that hide tabs; vertical tabs stack (list above the panel) in a container narrower than 31rem
         `,
       },
     },
@@ -52,6 +53,12 @@ Use it for settings pages, multi-section views, and content categorization.
       description:
         '3.44 (usm-x row 11): `links` renders a tab list of links for content shown elsewhere (a router outlet), no panels. The `lc-tab` with `current` is `aria-selected`; clicks only navigate; arrows move the focus, Enter/Space follow the link. `lc-tab` inputs: `route`, `queryParams`, `queryParamsHandling`, `href`, `current`, `tabId`',
       table: { defaultValue: { summary: 'panels' } },
+    },
+    showIcons: {
+      control: 'boolean',
+      description:
+        '3.45 (backlog 064-n3): renders each `lc-tab` `icon` (16 px, decorative) before its label; a tab grows by 24 px. Off: the `icon` input is not rendered (as before), so existing layouts don\'t move',
+      table: { defaultValue: { summary: 'false' } },
     },
     panelId: {
       control: 'text',
@@ -124,11 +131,16 @@ export const Default: Story = {
 
 export const WithIcons: Story = {
   parameters: {
-    docs: { description: { story: 'Tabs with leading icons for visual context.' } },
+    docs: {
+      description: {
+        story:
+          'Tabs with leading icons for visual context. 3.45 (backlog 064-n3): icons render only with `[showIcons]="true"` on `lc-tabs` (16 px, +24 px per tab); without it the `icon` inputs stay unrendered, as before.',
+      },
+    },
   },
   render: () => ({
     template: `
-      <lc-tabs>
+      <lc-tabs [showIcons]="true">
         <lc-tab label="Dashboard" icon="home">
           <div style="padding: 16px;">
             <p style="margin: 0; color: var(--color-text-secondary);">Dashboard content with analytics and metrics.</p>

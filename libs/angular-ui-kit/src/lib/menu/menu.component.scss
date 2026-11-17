@@ -213,6 +213,43 @@
   }
 }
 
+// ── Checkbox and radio items (3.45, request 065, usm-x row 31) ──
+// A 20 px indicator slot at the start (a 16 px check or a dot of radius 4,
+// both currentColor, so forced colours draw them in the item's ink). In a menu
+// with any toggle every other item starts after the same slot, so all labels
+// share an edge. Long German labels hyphenate in the panel's `lang`.
+.lc-menu__item-indicator {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.lc-menu__item-dot {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.lc-menu__item--toggle .lc-menu__item-label {
+  overflow-wrap: break-word;
+  hyphens: auto;
+  hyphenate-limit-chars: 12 4 3;
+}
+
+.lc-menu__dropdown--has-toggles .lc-menu__item:not(.lc-menu__item--toggle) {
+  padding-inline-start: calc(var(--lc-density-padding-md, var(--spacing-4)) + 1.25rem + var(--spacing-3));
+}
+
+.lc-menu__dropdown--has-toggles.lc-menu__dropdown--sm .lc-menu__item:not(.lc-menu__item--toggle) {
+  padding-inline-start: calc(var(--lc-density-padding-sm, var(--spacing-3)) + 1.25rem + var(--lc-density-gap-sm, var(--spacing-2)));
+}
+
+.lc-menu__dropdown--has-toggles.lc-menu__dropdown--lg .lc-menu__item:not(.lc-menu__item--toggle) {
+  padding-inline-start: calc(var(--spacing-5) + 1.25rem + var(--lc-density-gap-md, var(--spacing-4)));
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;

@@ -1,0 +1,84 @@
+// th[lcSortableHead] (3.45, usm-x row 33): lc-table's header cell on an app's
+// own <th>, from the same mixins as lc-table's head. The thead's surface-2
+// fill and 2 px border-strong rule sit on the cell here.
+@use 'sortable-head';
+
+:host {
+  @include sortable-head.head-cell;
+  background-color: var(--color-surface-2);
+  border-bottom: 2px solid var(--color-border-strong);
+}
+
+:host(.lc-sortable-head--sm) {
+  @include sortable-head.size-sm;
+  font-size: var(--typography-font-size-xs);
+}
+
+:host(.lc-sortable-head--lg) {
+  @include sortable-head.size-lg;
+  font-size: var(--typography-font-size-base);
+}
+
+:host(.lc-sortable-head--sortable) {
+  @include sortable-head.sortable-cell;
+
+  &:focus-visible {
+    @include sortable-head.focus-ring;
+  }
+
+  &:hover {
+    @include sortable-head.active-state;
+  }
+}
+
+:host(.lc-sortable-head--sorted) {
+  @include sortable-head.active-state;
+}
+
+.sort-indicator {
+  @include sortable-head.sort-indicator;
+}
+
+// End-aligned: the arrow is placed before the label against the label box.
+:host(.lc-sortable-head--end) {
+  @include sortable-head.end-cell;
+}
+
+:host(.lc-sortable-head--end.lc-sortable-head--sortable) {
+  @include sortable-head.sortable-end-cell;
+}
+
+:host(.lc-sortable-head--end.lc-sortable-head--sortable.lc-sortable-head--sm) {
+  padding-inline-end: var(--lc-density-padding-sm, var(--spacing-3));
+}
+
+:host(.lc-sortable-head--end.lc-sortable-head--sortable.lc-sortable-head--lg) {
+  padding-inline-end: var(--spacing-5);
+}
+
+:host(.lc-sortable-head--end) .lc-sortable-head__label {
+  @include sortable-head.end-sort-label;
+}
+
+:host(.lc-sortable-head--end) .sort-indicator {
+  @include sortable-head.end-sort-indicator;
+}
+
+// The state, read after the label.
+.lc-sortable-head__state {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (forced-colors: active) {
+  :host(.lc-sortable-head--sortable:focus-visible) {
+    outline-color: Highlight;
+  }
+}

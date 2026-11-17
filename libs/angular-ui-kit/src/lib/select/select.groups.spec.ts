@@ -109,6 +109,8 @@ describe('lc-select option groups (3.42, request 062)', () => {
         expect(group.getAttribute('aria-labelledby')).toBe(header.id);
         expect(group.className).toBe('lc-select__group');
         expect(header.textContent?.trim()).toBe(GROUPS[g].label);
+        // 3.45 (request 065, AC-35): the full text as the tooltip of a clamped header.
+        expect(header.getAttribute('title')).toBe(GROUPS[g].label);
         expect(Array.from(group.querySelectorAll('[role="option"]')).map((o) => o.textContent?.trim())).toEqual(
           GROUPS[g].options.map((o) => o.label),
         );
@@ -281,9 +283,10 @@ describe('lc-select option groups (3.42, request 062)', () => {
       return css.slice(css.indexOf('{', start) + 1, css.indexOf('}', start)).trim().replace(/\s+/g, ' ');
     };
 
-    it('the header has the combobox header look and wraps hyphenated', () => {
+    it('the header has the combobox header look and wraps hyphenated, at most 2 lines (3.45)', () => {
+      // 3.45 (request 065, backlog 062-n1, AC-35): + the 2-line clamp at the end.
       expect(rule('.lc-select__group-label')).toBe(
-        'padding: var(--spacing-1-5) var(--lc-density-padding-sm, var(--spacing-3)); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); line-height: 1.5; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; overflow-wrap: break-word; hyphens: auto; hyphenate-limit-chars: 12 4 3; cursor: default; user-select: none;',
+        'padding: var(--spacing-1-5) var(--lc-density-padding-sm, var(--spacing-3)); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); line-height: 1.5; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; overflow-wrap: break-word; hyphens: auto; hyphenate-limit-chars: 12 4 3; cursor: default; user-select: none; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;',
       );
     });
 

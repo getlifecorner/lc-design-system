@@ -70,6 +70,7 @@
     opacity: 0.6;
     transition: opacity 0.15s ease;
     flex-shrink: 0;
+    position: relative;
 
     &:hover {
       opacity: 1;
@@ -84,6 +85,15 @@
     svg {
       width: 1em;
       height: 1em;
+    }
+
+    // 3.45 (backlog 060-n5, WCAG 2.5.8): a 24 × 24 hit area around the 14 px
+    // ×, without moving anything; it fits the 24 px sm chip and stays 1 px
+    // clear of a split chip's activate button (`position: relative` above).
+    &::before {
+      content: '';
+      position: absolute;
+      inset: -5px;
     }
   }
 

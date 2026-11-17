@@ -377,6 +377,31 @@ const EXPECT_IN_HTML = [
       && links.every((a) => /\saria-controls="compat-tab-panel-344"/.test(a))
       && /\sid="compat-tab-kosten"/.test(links[1]);
   }],
+  // 3.45 (request 065, probe-345.ts, AC-13): before JS
+  ['command palette: closed, only its host (usm-x row 34)', /<lc-command-palette(?=[^>]*\sid="compat-palette-345")[^>]*>(?:<!--[^]*?-->|\s)*<\/lc-command-palette>/],
+  ['popover hover + focus: the trigger, no panel, no listener markup (usm-x row 35)', (html) => {
+    const pop = html.match(/<lc-popover(?=[^>]*\sid="compat-popover-345")[^>]*>([^]*?)<\/lc-popover>/)?.[1] ?? '';
+    return /<button(?=[^>]*\spopover-trigger)[^>]*>Beziehung<\/button>/.test(pop) && !/role="(?:tooltip|dialog)"/.test(pop) && !/Kostenstelle 4711/.test(pop);
+  }],
+  ['timeline selectable: a button per item, one tab stop on the selected, aria-current, no empty title (usm-x row 36)', (html) => {
+    const tl = html.match(/<lc-timeline(?=[^>]*\sid="compat-timeline-345")[^>]*>([^]*?)<\/lc-timeline>/)?.[1] ?? '';
+    const buttons = [...tl.matchAll(/<button(?=[^>]*\sclass="timeline__button")[^>]*>/g)].map(([b]) => b);
+    return buttons.length === 3
+      && buttons.map((b) => b.match(/\stabindex="(-?\d)"/)?.[1]).join() === '-1,0,-1'
+      && /\saria-current="true"/.test(buttons[1]) && !/aria-current/.test(buttons[0] + buttons[2])
+      && /\saria-label="Automatische Prüfung"/.test(buttons[2])
+      && (tl.match(/<h3[^>]*class="timeline__title"/g) ?? []).length === 2;
+  }],
+  ['sortable head on an app th: aria-sort, tab stop, hidden state text (usm-x row 33)', (html) => {
+    const table = html.match(/<table(?=[^>]*\sid="compat-table-345")[^>]*>([^]*?)<\/table>/)?.[1] ?? '';
+    const heads = [...table.matchAll(/<th(?=[^>]*\sclass="[^"]*\blc-sortable-head\b)[^>]*>[^]*?<\/th>/g)].map(([th]) => th);
+    return heads.length === 2
+      && /^<th(?=[^>]*\saria-sort="ascending")(?=[^>]*\stabindex="0")/.test(heads[0]) && /aufsteigend sortiert/.test(heads[0])
+      && /^<th(?![^>]*\saria-sort=)(?=[^>]*\stabindex="0")(?=[^>]*\blc-sortable-head--end\b)/.test(heads[1]);
+  }],
+  // (minified or not: spaces optional, the container longhands or their shorthand)
+  ['vertical tabs stack in a narrow container, pure CSS (backlog 064-n8)', (html) => /\.lc-tabs:has\(\s*>\s*\.lc-tabs__container--vertical\s*\)\s*\{\s*(?:container-name:\s*lc-tabs;\s*container-type:\s*inline-size|container:\s*lc-tabs\s*\/\s*inline-size);?\s*\}/.test(html)
+    && /@container\s+lc-tabs\s*\(\s*(?:width\s*<\s*31rem|max-width:\s*30\.\d+rem)\s*\)\s*\{\s*\.lc-tabs__container--vertical\s*\{\s*flex-direction:\s*column;?\s*\}/.test(html)],
   ['icon size hook: the glyph at size sm, 18 px from a class, no style (usm-x row 18)', (html) => /<div(?=[^>]*\sid="compat-icon-343")[^>]*>(?:<!--[^]*?-->|\s)*<lc-icon(?=[^>]*\sclass="compat-dense-icon")(?![^>]*\sstyle=)[^>]*>(?:<!--[^]*?-->|\s)*<div(?=[^>]*\sclass="[^"]*\bicon-sm\b)[^>]*><svg(?=[^>]*\swidth="20px")[^>]*>/.test(html)
     && /\.compat-dense-icon\[_ngcontent-[^\]]*\]\s*\{\s*--lc-icon-size:\s*18px;?\s*\}/.test(html)
     && /@property\s+--lc-icon-size\s*\{\s*syntax:\s*"\*";\s*inherits:\s*false;?\s*\}/.test(html)

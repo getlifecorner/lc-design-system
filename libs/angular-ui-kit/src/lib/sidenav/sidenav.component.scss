@@ -319,6 +319,24 @@
   border: 0;
 }
 
+// 3.45 (backlog 064-n7): a rail value longer than 2 characters ("56/60" was
+// 36 px wide over a 22 px icon) becomes an 8 px dot in the badge's ink, drawn
+// by its border so forced colours keep it. Same spot and ring as the count;
+// the value stays in the hidden name and the tooltip. After the rule above,
+// at its weight, so it wins.
+:host ::ng-deep .lc-sidenav--collapsed .lc-sidenav__nav-badge--dot .lc-badge {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 4px solid;
+  border-radius: 50%;
+  overflow: hidden;
+  font-size: 0;
+  line-height: 0;
+}
+
 .lc-sidenav__nav-item--expanded .lc-sidenav__nav-chevron {
   transform: rotate(180deg);
 }
@@ -784,6 +802,76 @@
   font-weight: 400;
   line-height: var(--line-height-tight, 1.25);
   color: var(--lc-sidenav-section-fg, var(--_lc-sidenav-t-section-fg));
+}
+
+// ── Foldable sections (3.45, backlog 064-n2) ─────────────────────────────
+// The heading keeps its type; its button is the whole row, at least 44 px
+// high, with a 16 px chevron at the end (turned −90° while folded).
+.lc-sidenav__section-title--foldable {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+}
+
+.lc-sidenav__section-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2, 0.5rem);
+  width: 100%;
+  min-height: var(--size-min-touch-height, 2.75rem);
+  margin: 0;
+  padding: 0 var(--lc-sidenav-item-padding-x);
+  border: 0;
+  border-radius: var(--border-radius-md, 0.375rem);
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--lc-sidenav-hover-bg, var(--_lc-sidenav-t-hover-bg));
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--_lc-sidenav-t-accent, var(--color-primary-500));
+    outline-offset: -2px;
+  }
+}
+
+.lc-sidenav__section-label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.lc-sidenav__section-chevron {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.lc-sidenav__section-toggle--folded .lc-sidenav__section-chevron {
+  transform: rotate(-90deg);
+}
+
+// `hidden` loses to the list's `display: flex` without this.
+.lc-sidenav__section-items[hidden] {
+  display: none;
+}
+
+// 3.45: with `contextMenuOnLongPress` the hold opens the app's menu, not the
+// system callout (iOS link preview) or a text selection.
+.lc-sidenav__nav--long-press .lc-sidenav__nav-item {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 @media (forced-colors: active) {

@@ -125,6 +125,7 @@ and the CSP notes.
 |-----------|----------|-------------|
 | Bottom Nav | `lc-bottom-nav` | Bottom navigation bar for phones and tablets (links, `aria-current`), docked or floating |
 | Breadcrumbs | `lc-breadcrumbs` | Breadcrumb navigation |
+| Command Palette | `lc-command-palette` | A search field over grouped results in a top-anchored dialog: keyboard across groups, async groups (loading, error with retry, empty), highlighted matches, an optional `mod+k` shortcut; shows what the app passes, fetches nothing (3.45) |
 | Footer | `lc-footer` | Site or app footer with labelled link sections |
 | Header | `lc-header` | App shell or public-site header: plain `homeHref`, labelled `navItems`, `[slot='end']`, translatable labels |
 | Pagination | `lc-pagination` | Page navigation |
@@ -157,6 +158,7 @@ and the CSP notes.
 | State Strip | `lc-state-strip` | The states of the last runs at a glance: one segment per run, the state as a shape, a keyboard grid named with the counts per state (3.36) |
 | Stepper | `lc-stepper` | Step-by-step progress |
 | Table | `lc-table` | Data table with sorting, filtering, pagination, formatter callbacks, cell styling hooks and custom cell templates |
+| Sortable Head | `th[lcSortableHead]` | `lc-table`'s sortable header cell on an app's own `<th>`: the look, arrows, `aria-sort`, Enter/Space and translatable state text (3.45, entry `table`) |
 | Timeline | `lc-timeline` | Ordered list of events with times (`<time datetime>`) |
 | Toggle Group | `lc-toggle-group` | Segmented toggle |
 

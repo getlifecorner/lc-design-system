@@ -39,7 +39,9 @@ describe('BarChartComponent labelLayout, valueText and the item formatter (3.21,
     const s = one('svg')
       .outerHTML.replace(/ _ngcontent-[a-z0-9-]+=""/g, '')
       .replace(/var\(--color-text-success\)/g, 'var(--color-success-default)')
-      .replace(/var\(--color-text-warning\)/g, 'var(--color-warning-default)');
+      .replace(/var\(--color-text-warning\)/g, 'var(--color-warning-default)')
+      // 3.45 (request 065, AC-25): palette entry 2 is the secondary graphic token.
+      .replace(/var\(--color-secondary-graphic\)/g, 'var(--color-secondary-500)');
     return { len: s.length, hash: [...s].reduce((x, c) => (x * 31 + c.charCodeAt(0)) | 0, 0) };
   };
 
@@ -68,6 +70,9 @@ describe('BarChartComponent labelLayout, valueText and the item formatter (3.21,
       // The third bar takes palette entry 3, the success ink since 3.37.
       expect(one('svg').outerHTML).toContain('var(--color-text-success)');
       expect(one('svg').outerHTML).not.toContain('var(--color-success-default)');
+      // The second bar takes palette entry 2, the secondary graphic token since 3.45.
+      expect(one('svg').outerHTML).toContain('var(--color-secondary-graphic)');
+      expect(one('svg').outerHTML).not.toContain('var(--color-secondary-500)');
       expect(svgHash()).toEqual({ len: 2738, hash: 1152392471 });
       measure(328);
       expect(svgHash()).toEqual({ len: 2751, hash: -406093170 });

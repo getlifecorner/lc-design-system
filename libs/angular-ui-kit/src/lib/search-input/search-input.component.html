@@ -19,6 +19,7 @@
     [attr.aria-activedescendant]="ariaActiveDescendant() || null"
     [attr.aria-autocomplete]="ariaAutocomplete()"
     [attr.aria-haspopup]="ariaHasPopup()"
+    [attr.aria-describedby]="description() ? descriptionId() : null"
   />
   @if (value()) {
     <button
@@ -30,5 +31,8 @@
     >
       <lc-icon name="x-mark" class="search-input__clear-icon" [decorative]="true"></lc-icon>
     </button>
+  }
+  @if (description()) {
+    <span class="search-input__description" [id]="descriptionId()">{{ description() }}</span>
   }
 </div>

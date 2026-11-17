@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/angular';
-import { AvatarComponent } from './avatar.component';
+import { AvatarComponent, avatarInitials } from './avatar.component';
 
 /**
  * Avatars represent users or entities with initials, images, or status indicators.
@@ -300,6 +300,72 @@ export const PersonFallback: Story = {
           <lc-avatar size="lg" [decorative]="true" [fallback]="fallback" />
         </div>
       </div>`,
+  }),
+};
+
+/**
+ * 3.45 (usm-x row 37): an app's identity colours through `--lc-avatar-bg` and
+ * `--lc-avatar-color`, on the avatar itself or on any ancestor.
+ */
+export const IdentityColours: Story = {
+  name: 'Identity Colours',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Row 1: the hooks on each avatar (`style="--lc-avatar-bg: …; --lc-avatar-color: …"`): `--color-secondary-fill` + `--color-on-secondary` (4.62:1), `--color-surface-selected` + `--color-on-surface-selected` (7.85:1 light, 8.14:1 dark). Row 2: the same pair on a wrapper, so every avatar inside takes it, also one with `color="member-3"` (the hooks win over a member colour). Row 3: no hooks, the defaults (neutral, member-1). The `person` fallback keeps its neutral disc. Pick a pair at 4.5:1 or more.',
+      },
+    },
+    controls: { include: [] },
+  },
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <lc-avatar size="lg" name="Johanna Apfelbaum" style="--lc-avatar-bg: var(--color-secondary-fill); --lc-avatar-color: var(--color-on-secondary);" />
+          <lc-avatar size="lg" name="Tom Ek" style="--lc-avatar-bg: var(--color-surface-selected); --lc-avatar-color: var(--color-on-surface-selected);" />
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; --lc-avatar-bg: var(--color-surface-selected); --lc-avatar-color: var(--color-on-surface-selected);">
+          <lc-avatar size="lg" name="Lena Morgen" />
+          <lc-avatar size="lg" name="Ole Sand" color="member-3" />
+          <lc-avatar size="lg" fallback="person" />
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <lc-avatar size="lg" name="Bea Kraus" />
+          <lc-avatar size="lg" name="Kai Stein" color="member-1" />
+        </div>
+      </div>`,
+  }),
+};
+
+/** 3.45 (usm-x row 37): the one initials rule, `avatarInitials(name)`. */
+export const InitialsRule: Story = {
+  name: 'Initials Rule',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`avatarInitials(name)` (exported from `@lifecorner/angular-ui-kit/avatar`) is the rule of `lc-avatar`, `lc-avatar-group` and `lc-header`: the first letter of the first and of the last whitespace-separated word, upper case; one word gives its first letter; empty gives "?". Use it wherever the app shows initials next to the kit’s.',
+      },
+    },
+    controls: { include: [] },
+  },
+  render: () => ({
+    props: {
+      rows: ['Lena Maria Brandt', 'tom ek', 'Administrator', '  Kai   von Stein  ', ''].map((name) => ({
+        name,
+        initials: avatarInitials(name),
+      })),
+    },
+    template: `
+      <ul style="display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; color: var(--color-text-primary); font-size: 14px;">
+        @for (row of rows; track $index) {
+          <li style="display: flex; align-items: center; gap: 12px;">
+            <lc-avatar size="md" [name]="row.name" [decorative]="true" />
+            <code style="color: var(--color-text-secondary);">"{{ row.name }}"</code> → <strong>{{ row.initials }}</strong>
+          </li>
+        }
+      </ul>`,
   }),
 };
 

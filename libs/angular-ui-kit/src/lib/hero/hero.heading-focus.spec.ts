@@ -116,7 +116,10 @@ describe('HeroComponent — headingLevel and focusTitle() (3.36, request 056)', 
       expect(selectors.length).toBeGreaterThan(20);
       for (const selector of selectors) expect(selector).not.toMatch(/(^|[\s,>+~(])h[1-6]\b/);
       // Size, weight, line height and margin come from .hero__title rules only.
-      expect(css).toMatch(/\n\.hero__title \{\s*margin: 0;\s*font-weight: 800;\s*line-height: 1\.1;\s*color: inherit;\s*\}/);
+      // 3.45 (request 065, backlog 060-n2, AC-32): + hyphenation and break-word.
+      expect(css).toMatch(
+        /\n\.hero__title \{\s*margin: 0;\s*font-weight: 800;\s*line-height: 1\.1;\s*color: inherit;\s*hyphens: auto;\s*hyphenate-limit-chars: 10 4 3;\s*overflow-wrap: break-word;\s*\}/,
+      );
     });
   });
 

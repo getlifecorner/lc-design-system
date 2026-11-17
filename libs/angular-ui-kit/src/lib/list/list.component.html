@@ -73,7 +73,32 @@
 </ng-template>
 
 <div #listEl [class]="listClasses()" role="list">
-  @for (item of items(); track item.id || $index; let i = $index) {
+  @if (columnSegments(); as segments) {
+    <!-- 3.45 (backlog 064-n4/n5): in columns, each heading and its rows stay
+         together in a plain wrapper (no role), so a column never starts
+         without its heading. Rows before the first heading stay list children. -->
+    @for (segment of segments; track $index) {
+      @if (segment.grouped) {
+        <div class="lc-list__group">
+          @for (entry of segment.entries; track entry.item.id || entry.index) {
+            <ng-container *ngTemplateOutlet="listRow; context: { $implicit: entry.item, index: entry.index }" />
+          }
+        </div>
+      } @else {
+        @for (entry of segment.entries; track entry.item.id || entry.index) {
+          <ng-container *ngTemplateOutlet="listRow; context: { $implicit: entry.item, index: entry.index }" />
+        }
+      }
+    }
+  } @else {
+    @for (item of items(); track item.id || $index; let i = $index) {
+      <ng-container *ngTemplateOutlet="listRow; context: { $implicit: item, index: i }" />
+    }
+  }
+</div>
+
+<!-- One item: a heading, a link row, a split row, a clickable row or a plain row. -->
+<ng-template #listRow let-item let-i="index">
     @if (item.heading) {
       <!-- 3.44 (usm-x row 20): a sub-heading inside the list, one list child like every row. -->
       <div [class]="headingClasses(item)" role="listitem">
@@ -166,5 +191,4 @@
         <ng-container *ngTemplateOutlet="rowContent; context: { $implicit: item }"></ng-container>
       </div>
     }
-  }
-</div>
+</ng-template>

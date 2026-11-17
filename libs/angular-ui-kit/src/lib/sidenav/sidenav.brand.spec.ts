@@ -244,7 +244,8 @@ describe('SidenavComponent text brand (019)', () => {
     // #84c7d4 ring (1.89:1 on #fff) and bar (1.76:1 on #f0f8fa).
     it('reads the theme accent in every focus ring of the rail', () => {
       const outlines = css.match(/outline: 2px solid [^;]+;/g) ?? [];
-      expect(outlines).toHaveLength(8);
+      // 3.45 (065, AC-39): +1, the foldable section's button, on the same accent.
+      expect(outlines).toHaveLength(9);
       for (const o of outlines) {
         expect(o).toMatch(/^outline: 2px solid var\(--_lc-sidenav-t-accent, var\(--color-primary-500[,)]/);
       }

@@ -88,6 +88,9 @@
           [disabled]="tab.disabled()"
           (click)="selectTab(i)"
         >
+          @if (showIcons() && tab.icon()) {
+            <lc-icon class="lc-tabs__icon" [name]="tab.icon()!" size="xs" [decorative]="true" />
+          }
           {{ tab.label() }}
           @if (tab.hasBadge()) {
             <lc-badge
@@ -122,6 +125,9 @@
 
 <!-- The label and badge of a link tab (3.44), as in the panels tabs. -->
 <ng-template #linkContent let-tab>
+  @if (showIcons() && tab.icon()) {
+    <lc-icon class="lc-tabs__icon" [name]="tab.icon()" size="xs" [decorative]="true" />
+  }
   {{ tab.label() }}
   @if (tab.hasBadge()) {
     <lc-badge class="lc-tabs__badge" [variant]="tab.badgeVariant()" size="xs" [rounded]="true">{{ tab.badge() }}</lc-badge>

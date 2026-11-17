@@ -1,4 +1,5 @@
 // Table Component Styles
+@use 'sortable-head';
 
 .lc-table-wrapper {
   width: 100%;
@@ -33,49 +34,31 @@
     background-color: var(--color-surface-2);
     border-bottom: 2px solid var(--color-border-strong);
 
+    // 3.45: the cell look lives in `_sortable-head.scss`, shared with
+    // `th[lcSortableHead]`; the compiled rules are unchanged.
     tr {
       th {
-        padding: var(--lc-density-padding-sm, var(--spacing-3)) var(--lc-density-padding-md, var(--spacing-4));
-        text-align: left;
-        font-weight: var(--typography-font-weight-semibold);
-        font-size: var(--typography-font-size-sm);
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--color-text-secondary);
-        white-space: nowrap;
-        user-select: none;
-        
-        &.sortable {
-          cursor: pointer;
-          position: relative;
-          padding-right: var(--spacing-8);
-          transition: background-color 0.2s ease;
+        @include sortable-head.head-cell;
 
-          // Sortable headers are keyboard stops (tabindex 0): show where focus is.
+        &.sortable {
+          @include sortable-head.sortable-cell;
+
           &:focus-visible {
-            outline: 2px solid var(--color-primary-500);
-            outline-offset: -2px;
+            @include sortable-head.focus-ring;
           }
 
           &:hover {
-            background-color: var(--color-surface-hover);
-            color: var(--color-text-primary);
+            @include sortable-head.active-state;
           }
-          
+
           .sort-indicator {
-            position: absolute;
-            right: var(--spacing-3);
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: var(--typography-font-size-xs);
-            color: var(--color-primary);
+            @include sortable-head.sort-indicator;
           }
         }
-        
+
         &.sorted-asc,
         &.sorted-desc {
-          background-color: var(--color-surface-hover);
-          color: var(--color-text-primary);
+          @include sortable-head.active-state;
         }
       }
     }
@@ -157,7 +140,7 @@
   &--sm {
     thead tr th,
     tbody tr td {
-      padding: var(--lc-density-padding-xs, var(--spacing-2)) var(--lc-density-padding-sm, var(--spacing-3));
+      @include sortable-head.size-sm;
     }
 
     thead tr th {
@@ -172,7 +155,7 @@
   &--lg {
     thead tr th,
     tbody tr td {
-      padding: var(--lc-density-padding-md, var(--spacing-4)) var(--spacing-5);
+      @include sortable-head.size-lg;
     }
 
     thead tr th {
@@ -207,20 +190,14 @@
 .lc-table {
   thead tr th.lc-table__cell--end,
   tbody tr td.lc-table__cell--end {
-    text-align: end;
-    font-variant-numeric: tabular-nums;
+    @include sortable-head.end-cell;
   }
 
-  // A sortable end header keeps its 32 px arrow reserve on the start side and
-  // the cell's own end padding, so the label ends where the figures end.
   thead tr th.sortable.lc-table__cell--end {
-    padding-inline-start: var(--spacing-8);
-    padding-inline-end: var(--lc-density-padding-md, var(--spacing-4));
+    @include sortable-head.sortable-end-cell;
 
-    // The arrow sits 8 px before the label, centred on the label line.
     .sort-indicator {
-      right: auto;
-      inset-inline-end: calc(100% + var(--spacing-2));
+      @include sortable-head.end-sort-indicator;
     }
   }
 
@@ -235,8 +212,7 @@
 
 // The label and the arrow of an end header: the box the arrow is placed against.
 .lc-table__sort-label {
-  position: relative;
-  display: inline-block;
+  @include sortable-head.end-sort-label;
 }
 
 // `font` resets the alignment and the figures on inputs.

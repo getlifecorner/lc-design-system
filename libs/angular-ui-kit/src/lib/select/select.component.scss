@@ -384,6 +384,8 @@
 // 3.42 (services-prove row 1): option group header, the lc-combobox look;
 // 5.58:1 or more on the panel (light), 5.65:1 (dark). A long German label
 // wraps hyphenated (in the panel's `lang`) instead of overflowing at 360 px.
+// 3.45 (backlog 062-n1): at most 2 lines, then "…"; the full text is the
+// header's `title` and stays in the DOM (it names the group).
 .lc-select__group-label {
   padding: var(--spacing-1-5) var(--lc-density-padding-sm, var(--spacing-3));
   font-size: var(--font-size-xs);
@@ -397,6 +399,11 @@
   hyphenate-limit-chars: 12 4 3;
   cursor: default;
   user-select: none;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 
 // A decorative divider between groups.

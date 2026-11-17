@@ -1,10 +1,12 @@
 // Marker colours are runtime tokens (not compiled Sass constants) so they
-// follow the active theme.
+// follow the active theme. 3.45: success and warning use the text inks
+// (light 5.30 / 6.03 on the page, 4.55 / 5.18 on the selected fill; the
+// `-default` fills had 2.72 / 2.26, below WCAG 1.4.11).
 $timeline-colors: (
   'primary': var(--color-primary-500),
   'secondary': var(--color-secondary-500),
-  'success': var(--color-success-default),
-  'warning': var(--color-warning-default),
+  'success': var(--color-text-success),
+  'warning': var(--color-text-warning),
   'error': var(--color-error-default),
   'info': var(--color-info-default),
   'neutral': var(--color-text-tertiary),
@@ -236,4 +238,134 @@ $timeline-colors: (
   margin-top: 0.25rem;
   font-size: 0.75rem;
   color: var(--color-text-tertiary);
+}
+
+// ---------------------------------------------------------------------------
+// Selectable (3.45, request 065, usm-x row 36)
+// ---------------------------------------------------------------------------
+// The title is a button; its ::before draws the item's box (behind the
+// content, the item isolates it) and its ::after is a transparent hit area
+// over the same box. The box is the entry without the gap to the next one,
+// 4 px out at the top and bottom and 8 px at the sides (vertical), at least
+// 44 px high. The body template stays above the hit area, so its links work.
+// The list pads by the box's outset, so every box, its 3 px bar and the focus
+// ring stay inside the <ol> (the horizontal one scrolls and would clip them).
+.timeline--selectable {
+  padding: 0.25rem 0.5rem;
+
+  &.timeline--horizontal {
+    padding: 0.25rem;
+  }
+
+  // A focused item scrolls into view with its box outset (review r3 M6).
+  .timeline__item {
+    --_lc-tl-gap: 1.5rem;
+    isolation: isolate;
+    scroll-margin: 0.25rem 0.5rem;
+  }
+
+  &.timeline--horizontal .timeline__item {
+    scroll-margin: 0.25rem;
+  }
+
+  &.timeline--compact .timeline__item {
+    --_lc-tl-gap: 0.75rem;
+  }
+
+  &.timeline--vertical .timeline__item {
+    min-block-size: 2.25rem;
+  }
+
+  .timeline__item--last {
+    --_lc-tl-gap: 0px;
+  }
+
+  .timeline__marker {
+    background: transparent;
+  }
+
+  .timeline__body {
+    position: relative;
+    z-index: 2;
+  }
+}
+
+.timeline__button {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  // Long German titles wrap inside the button.
+  overflow-wrap: break-word;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -0.25rem -0.5rem calc(var(--_lc-tl-gap) - 0.25rem);
+    border-radius: var(--border-radius-md);
+  }
+
+  &::before {
+    z-index: -1;
+  }
+
+  &::after {
+    z-index: 1;
+  }
+
+  &:hover::before {
+    background-color: var(--color-surface-hover);
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  &:focus-visible::before {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: -2px;
+  }
+}
+
+.timeline--horizontal .timeline__button {
+  &::before,
+  &::after {
+    inset: -0.25rem calc(2rem - 0.25rem) -0.25rem -0.25rem;
+  }
+}
+
+.timeline--horizontal .timeline__item--last .timeline__button {
+  &::before,
+  &::after {
+    inset: -0.25rem;
+  }
+}
+
+// Selected: the selected surface and a 3 px bar at the inline start
+// (vertical) or the block end (horizontal).
+.timeline__item--selected .timeline__button::before {
+  background-color: var(--color-surface-selected);
+  border-inline-start: 3px solid var(--color-primary-500);
+}
+
+.timeline--horizontal .timeline__item--selected .timeline__button::before {
+  border-inline-start: 0;
+  border-block-end: 3px solid var(--color-primary-500);
+}
+
+@media (forced-colors: active) {
+  .timeline__button:focus-visible::before {
+    outline-color: Highlight;
+  }
+
+  .timeline__item--selected .timeline__button::before,
+  .timeline--horizontal .timeline__item--selected .timeline__button::before {
+    border-color: Highlight;
+  }
 }

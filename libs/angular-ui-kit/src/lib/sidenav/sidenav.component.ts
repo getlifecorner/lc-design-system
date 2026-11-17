@@ -48,6 +48,19 @@ export type SidenavMode = 'drawer' | 'docked';
  */
 export type SidenavVariant = 'default' | 'transparent';
 
+let nextSidenavId = 0;
+/** Hold time of a long press (3.45), as iOS and Android. */
+const LONG_PRESS_MS = 500;
+/** A move farther than this cancels a long press (3.45). */
+const LONG_PRESS_SLOP_PX = 10;
+/** How long after an emitted long press a native `contextmenu` counts as its echo (3.45). */
+const LONG_PRESS_ECHO_MS = 1500;
+
+/** Whether `target` is `item` or below it. */
+function containsItem(item: NavigationItem, target: NavigationItem): boolean {
+  return !!item.children?.some((child) => child === target || containsItem(child, target));
+}
+
 /**
  * Sidenav component for application navigation sidebar.
  *
@@ -305,16 +318,41 @@ export class SidenavComponent implements OnDestroy {
    * Navigation items (`NavigationItem[]`): `id`, `icon`, `label`, `route`,
    * `displayOrder` (sort order, 1 = first); optional `children`
    * (`NavigationItem[]`, a collapsible group, up to 3 levels), `isSection`
-   * (renders `label` as a section headline over its `children`), `badge`
-   * (`{ value: string | number; variant?: 'default' | 'primary' | 'success' |
-   * 'warning' | 'error' | 'info' }`), `action` (`{ icon: string; ariaLabel?:
+   * (renders `label` as a section headline over its `children`),
+   * `collapsible` (3.45: a section heading becomes a disclosure button, see
+   * `collapsedSections`), `badge` (`{ value: string | number; variant?:
+   * 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+   * ariaLabel?: string; tooltip?: string }`; on the rail a value longer than
+   * 2 characters shows as a dot), `action` (`{ icon: string; ariaLabel?:
    * string }`, a button that emits `itemAction`), `requiredRole` (for the
-   * app's own filtering; not evaluated here). Items link with `routerLink`;
-   * exactly one link, the current item (see `activeRoute`), gets
-   * `aria-current="page"`.
+   * app's own filtering; not evaluated here). 3.44: `kind` (`'link'` or
+   * `'action'`), `current`, `hasChildren`, `childrenLoading`, `hint`,
+   * `matchRoutes`, `iconUrl`, `muted`, and the row states `busy`, `disabled`,
+   * `disabledReason`, `tooltip`. Items link with `routerLink`; exactly one
+   * link, the current item (see `activeRoute`), gets `aria-current="page"`.
    * @default []
    */
   readonly items = input<NavigationItem[]>([]);
+
+  /**
+   * Ids of the folded sections (3.45, backlog 064-n2; two-way). Only sections
+   * with `collapsible: true` fold: their heading holds a disclosure button
+   * (`aria-expanded`, `aria-controls`) and their list is hidden while folded.
+   * The rail ignores folding. When the current item moves into a folded
+   * section, the section unfolds.
+   * @default []
+   */
+  readonly collapsedSections = model<readonly string[]>([]);
+
+  /**
+   * A 500 ms touch hold on an item emits `itemContextMenu` (3.45, backlog
+   * 064-n2), for iOS, which fires no `contextmenu` on a long press. Moving
+   * 10 px cancels it; the system callout and the click after the hold are
+   * suppressed, and Android's own `contextmenu` in the same press is not
+   * emitted a second time.
+   * @default false
+   */
+  readonly contextMenuOnLongPress = input(false);
 
   /**
    * The current route. When set, the first link (in display order) whose
@@ -419,6 +457,13 @@ export class SidenavComponent implements OnDestroy {
     currentNavigationItem(this.linkItems(), this.activeRoute(), this.activeRoute() === '' ? this.routerPath() : ''),
   );
 
+  /** Id of the foldable section that holds the current item (3.45), or null. */
+  private readonly currentSectionId = computed<string | null>(() => {
+    const current = this.currentItem();
+    if (!current) return null;
+    return this.sortedItems().find((item) => item.isSection && item.collapsible && containsItem(item, current))?.id ?? null;
+  });
+
   /**
    * Event emitted when the sidenav should close
    */
@@ -443,8 +488,8 @@ export class SidenavComponent implements OnDestroy {
   /**
    * A `contextmenu` event on an item (3.44): a right click, Shift+F10, the
    * Menu key or an Android long press (iOS fires none: pair it with the
-   * item's `action` button). The kit doesn't call `preventDefault`. Not
-   * emitted for disabled items.
+   * item's `action` button, or set `contextMenuOnLongPress`, 3.45). The kit
+   * doesn't call `preventDefault`. Not emitted for disabled items.
    */
   readonly itemContextMenu = output<NavigationItemContextMenuEvent>();
 
@@ -483,6 +528,16 @@ export class SidenavComponent implements OnDestroy {
       this.expandedItems.set(new Set([...expanded, ...parents]));
     });
 
+    // 3.45: the current item moving into a folded section unfolds it. The
+    // computed id changes only when the current item's section does, so a
+    // section the user folds over the current item stays folded.
+    effect(() => {
+      const id = this.currentSectionId();
+      if (id === null) return;
+      const folded = untracked(this.collapsedSections);
+      if (folded.includes(id)) this.collapsedSections.set(folded.filter((s) => s !== id));
+    });
+
     // 3.35: `returnFocusTo` after the drawer panel closed. Untracked: a
     // change of the input alone must not schedule anything.
     effect(() => {
@@ -502,15 +557,98 @@ export class SidenavComponent implements OnDestroy {
     // reaches the link (or the button's handler). Code, not a template
     // binding: a template listener only bubbles.
     afterNextRender(() => {
-      this.host.nativeElement.addEventListener('click', this.blockInertClick, true);
+      const host = this.host.nativeElement;
+      host.addEventListener('click', this.blockInertClick, true);
+      // 3.45: long press (`contextMenuOnLongPress`). In code, not in the
+      // template, so prerendered HTML carries no listener markup.
+      host.addEventListener('pointerdown', this.onLongPressStart);
+      host.addEventListener('pointermove', this.onLongPressMove);
+      host.addEventListener('pointerup', this.onLongPressEnd);
+      host.addEventListener('pointercancel', this.onLongPressEnd);
+      host.addEventListener('contextmenu', this.onNativeContextMenu, true);
     });
   }
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
+  /** Prefix of the ids the template links (`aria-controls` of a foldable section). */
+  private readonly baseId = `lc-sidenav-${++nextSidenavId}`;
+
+  /** The running long press (3.45): its timer, start point and pointer. */
+  private longPress: { timer: ReturnType<typeof setTimeout>; x: number; y: number; pointerId: number } | null = null;
+  /** When the last long press emitted (ms), until the next press: Android's own `contextmenu` in it is dropped. */
+  private longPressFiredAt: number | null = null;
+  /** The click after an emitted long press is swallowed. */
+  private suppressNextClick = false;
+  /** While the kit dispatches its own `contextmenu`, the capture guard lets it through. */
+  private dispatchingLongPress = false;
+
+  private readonly onLongPressStart = (event: PointerEvent): void => {
+    this.cancelLongPress();
+    this.longPressFiredAt = null;
+    this.suppressNextClick = false;
+    if (!this.contextMenuOnLongPress() || event.pointerType !== 'touch') return;
+    const target = (event.target as Element | null)?.closest?.('.lc-sidenav__nav-item');
+    if (!target) return;
+    const x = event.clientX;
+    const y = event.clientY;
+    const timer = setTimeout(() => {
+      this.longPress = null;
+      this.longPressFiredAt = Date.now();
+      this.suppressNextClick = true;
+      this.dispatchingLongPress = true;
+      try {
+        target.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: x, clientY: y }));
+      } finally {
+        this.dispatchingLongPress = false;
+      }
+    }, LONG_PRESS_MS);
+    this.longPress = { timer, x, y, pointerId: event.pointerId };
+  };
+
+  private readonly onLongPressMove = (event: PointerEvent): void => {
+    const press = this.longPress;
+    if (!press || event.pointerId !== press.pointerId) return;
+    if (Math.hypot(event.clientX - press.x, event.clientY - press.y) > LONG_PRESS_SLOP_PX) this.cancelLongPress();
+  };
+
+  private readonly onLongPressEnd = (): void => {
+    this.cancelLongPress();
+  };
+
+  /**
+   * Capture guard for `contextmenu` (3.45): Android fires its own on a long
+   * press. Before the kit's: the kit's is cancelled (the native one is
+   * emitted). After the kit's, in the same press: dropped, so the item is
+   * emitted once.
+   */
+  private readonly onNativeContextMenu = (event: MouseEvent): void => {
+    if (this.dispatchingLongPress) return;
+    if (this.longPress) {
+      this.cancelLongPress();
+      return;
+    }
+    if (this.longPressFiredAt !== null && Date.now() - this.longPressFiredAt < LONG_PRESS_ECHO_MS) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
+
+  private cancelLongPress(): void {
+    if (this.longPress) clearTimeout(this.longPress.timer);
+    this.longPress = null;
+  }
+
   /** Capture-phase click guard for busy and disabled items (3.44). */
   private readonly blockInertClick = (event: MouseEvent): void => {
     const target = event.target as Element | null;
+    // 3.45: the click that ends an emitted long press does nothing.
+    if (this.suppressNextClick) {
+      this.suppressNextClick = false;
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
     if (target?.closest?.('.lc-sidenav__nav-item[aria-disabled="true"]')) {
       event.preventDefault();
       event.stopPropagation();
@@ -520,7 +658,14 @@ export class SidenavComponent implements OnDestroy {
   ngOnDestroy(): void {
     this.teardownMediaQuery();
     this.drawerClosed();
-    this.host.nativeElement.removeEventListener?.('click', this.blockInertClick, true);
+    this.cancelLongPress();
+    const host = this.host.nativeElement;
+    host.removeEventListener?.('click', this.blockInertClick, true);
+    host.removeEventListener?.('pointerdown', this.onLongPressStart);
+    host.removeEventListener?.('pointermove', this.onLongPressMove);
+    host.removeEventListener?.('pointerup', this.onLongPressEnd);
+    host.removeEventListener?.('pointercancel', this.onLongPressEnd);
+    host.removeEventListener?.('contextmenu', this.onNativeContextMenu, true);
   }
 
   /** Ends a shown drawer panel; schedules `returnFocusTo` when set. */
@@ -618,6 +763,41 @@ export class SidenavComponent implements OnDestroy {
    */
   protected busyText(item: NavigationItem): string {
     return this.isRail() && !item.badge ? `${item.label} ${this.busyLabel()}` : this.busyLabel();
+  }
+
+  /**
+   * An item's `title` on the rail: its label, unless the hidden text already
+   * names it with more (a badge since 3.33, busy since 3.45), so the name is
+   * not read again as the description (backlog 064-n9).
+   */
+  protected railTitle(item: NavigationItem): string {
+    return this.collapsed() && !item.badge && !item.busy ? item.label : '';
+  }
+
+  /**
+   * A rail badge whose value is longer than 2 characters becomes a dot (3.45,
+   * backlog 064-n7): „56/60“ covered the icon. The value stays in the hidden
+   * name and the tooltip.
+   */
+  protected railBadgeDot(item: NavigationItem): boolean {
+    return this.isRail() && !!item.badge && String(item.badge.value).length > 2;
+  }
+
+  /** A `collapsible` section listed in `collapsedSections` (3.45). */
+  protected isSectionFolded(item: NavigationItem): boolean {
+    return !!item.collapsible && this.collapsedSections().includes(item.id);
+  }
+
+  /** Id of a foldable section's list, for its button's `aria-controls` (3.45). */
+  protected sectionListId(item: NavigationItem): string {
+    return `${this.baseId}-section-${item.id}`;
+  }
+
+  /** Folds or unfolds a `collapsible` section (3.45). */
+  toggleSection(item: NavigationItem): void {
+    if (!item.collapsible) return;
+    const folded = this.collapsedSections();
+    this.collapsedSections.set(folded.includes(item.id) ? folded.filter((id) => id !== item.id) : [...folded, item.id]);
   }
 
   /** Where the row tooltip opens (3.44): beside the item, below it on the rail (clear of the label tooltip). */

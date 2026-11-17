@@ -248,7 +248,8 @@ describe('HeroComponent', () => {
     });
 
     it('lays out text and media side by side from 1024 px through the media width hook', () => {
-      expect(scss).toContain('minmax(0, 1fr) var(--lc-hero-media-width, 23rem)');
+      // 3.45 (request 065, backlog 060-n1, AC-31): the column is capped at 62 % of the row.
+      expect(scss).toContain('minmax(0, 1fr) min(var(--lc-hero-media-width, 23rem), 62%)');
       expect(scss).toMatch(/\.hero__inner:has\(> \.hero__media:not\(:empty\)\)/);
     });
   });

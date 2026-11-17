@@ -16,6 +16,7 @@ import {
 import { NgStyle, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableCellDirective } from './table-cell.directive';
+import { ariaSortOf, nextSortDirection } from './sort-state';
 import { InputComponent } from '@lifecorner/angular-ui-kit/input';
 import { SelectComponent } from '@lifecorner/angular-ui-kit/select';
 import { ButtonComponent, ButtonSize, ButtonVariant } from '@lifecorner/angular-ui-kit/button';
@@ -133,6 +134,9 @@ export interface SortEvent {
   column: string;
   direction: 'asc' | 'desc';
 }
+
+/** Direction of a sorted column (3.45; `th[lcSortableHead]`'s `sortDirection`). */
+export type TableSortDirection = 'asc' | 'desc';
 
 export interface CellEditEvent {
   row: Record<string, unknown>;
@@ -846,11 +850,8 @@ export class TableComponent {
     const column = this.columns().find((col) => col.key === columnKey);
     if (!column || !column.sortable) return;
 
-    const current = this.currentSort();
-    let direction: 'asc' | 'desc' = 'asc';
-    if (current && current.column === columnKey) {
-      direction = current.direction === 'asc' ? 'desc' : 'asc';
-    }
+    // 3.45: the rule is shared with `th[lcSortableHead]`.
+    const direction = nextSortDirection(this.getSortState(columnKey));
 
     this.currentSort.set({ column: columnKey, direction });
     this.sort.emit({ column: columnKey, direction });
@@ -863,10 +864,7 @@ export class TableComponent {
   }
 
   getAriaSort(columnKey: string): string | null {
-    const sortState = this.getSortState(columnKey);
-    if (sortState === 'asc') return 'ascending';
-    if (sortState === 'desc') return 'descending';
-    return null;
+    return ariaSortOf(this.getSortState(columnKey));
   }
 
   getHeaderClasses(column: TableColumn): string {

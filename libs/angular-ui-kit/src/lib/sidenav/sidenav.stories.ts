@@ -73,7 +73,20 @@ const meta: Meta<SidenavComponent> = {
     items: {
       control: 'object',
       description:
-        'Navigation items (`NavigationItem[]`): `id`, `icon`, `label`, `route`, `displayOrder`; optional `children` (collapsible group), `isSection` (section headline), `badge { value, variant? }`, `action { icon, ariaLabel? }` (emits `itemAction`), `requiredRole` (for the app\'s own filtering)',
+        'Navigation items (`NavigationItem[]`): `id`, `icon`, `label`, `route`, `displayOrder`; optional `children` (collapsible group), `isSection` (section headline), `collapsible` (3.45, on a section: a disclosure heading, see `collapsedSections`), `badge { value, variant?, ariaLabel?, tooltip? }` (3.45: on the rail a value longer than 2 characters shows as a dot), `action { icon, ariaLabel? }` (emits `itemAction`), `requiredRole` (for the app\'s own filtering). 3.44: `kind` (`link` | `action`), `current`, `hasChildren`, `childrenLoading`, `hint`, `matchRoutes`, `iconUrl`, `muted`, and the row states `busy`, `disabled`, `disabledReason`, `tooltip`',
+      table: { defaultValue: { summary: '[]' } },
+    },
+    collapsedSections: {
+      control: 'object',
+      description:
+        '3.45 (backlog 064-n2): ids of the folded `collapsible` sections (two-way). The heading holds a disclosure button (`aria-expanded`, `aria-controls`); the list is hidden while folded. The rail ignores folding; the current item moving into a folded section unfolds it',
+      table: { defaultValue: { summary: '[]' } },
+    },
+    contextMenuOnLongPress: {
+      control: 'boolean',
+      description:
+        '3.45 (backlog 064-n2): a 500 ms touch hold on an item emits `itemContextMenu` (iOS fires no `contextmenu`). A 10 px move cancels it; the callout and the click after the hold are suppressed; Android\'s own `contextmenu` in the same press is not emitted twice',
+      table: { defaultValue: { summary: 'false' } },
     },
     brandName: {
       control: 'text',
@@ -1417,6 +1430,63 @@ export const CountsAndContextMenu: Story = {
         <lc-sidenav [isOpen]="true" mode="docked" width="260px" [mobileBreakpoint]="0" [items]="items" activeRoute="/orders"
                     (itemContextMenu)="status = 'Context menu: ' + $event.item.label" />
         <p role="status" style="flex: 1; margin: 0; padding: 24px; color: var(--color-text-secondary);">{{ status }}</p>
+      </div>`,
+  }),
+};
+
+/**
+ * 3.45 (backlog 064-n2): foldable sections and the long press on touch. A
+ * second collapsible level stays out (tree semantics; see `lc-tree-view`).
+ */
+export const FoldableSections: Story = {
+  name: 'Foldable Sections',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Sections with `collapsible: true` get a disclosure button in their `h2` (`aria-expanded`, `aria-controls` → the list); „Auswertungen“ starts folded through `collapsedSections` (two-way). Navigating to an item in a folded section unfolds it; the rail ignores folding. With `contextMenuOnLongPress` a 500 ms touch hold on an item emits `itemContextMenu` (the line on the right shows the last one), suppresses the iOS callout and the click after it. A second collapsible level below a section’s group is not offered: it needs tree semantics (`role="tree"`, `aria-level`, arrow keys) that would change every sidenav’s screen-reader model; `lc-tree-view` covers deep trees.',
+      },
+    },
+    controls: { include: ['collapsedSections', 'contextMenuOnLongPress'] },
+  },
+  args: {
+    collapsedSections: ['reports'],
+    contextMenuOnLongPress: true,
+  },
+  render: (args) => ({
+    props: {
+      ...args,
+      status: 'Kontextmenü: –',
+      items: [
+        {
+          id: 'master', icon: '', label: 'Stammdaten', route: '', displayOrder: 1, isSection: true, collapsible: true,
+          children: [
+            { id: 'cc', icon: 'building-library', label: 'Kostenstellen', route: '/kostenstellen', displayOrder: 1 },
+            { id: 'keys', icon: 'percent-badge', label: 'Leistungsverrechnungsschlüssel', route: '/schluessel', displayOrder: 2 },
+          ],
+        },
+        {
+          id: 'reports', icon: '', label: 'Auswertungen', route: '', displayOrder: 2, isSection: true, collapsible: true,
+          children: [
+            { id: 'monthly', icon: 'chart-bar', label: 'Monatsbericht', route: '/monat', displayOrder: 1 },
+            { id: 'forecast', icon: 'presentation-chart-line', label: 'Prognose', route: '/prognose', displayOrder: 2 },
+          ],
+        },
+        {
+          id: 'admin', icon: '', label: 'Verwaltung', route: '', displayOrder: 3, isSection: true, collapsible: true,
+          children: [
+            { id: 'users', icon: 'users', label: 'Benutzer und Rollen', route: '/benutzer', displayOrder: 1 },
+            { id: 'settings', icon: 'settings', label: 'Einstellungen', route: '/einstellungen', displayOrder: 2 },
+          ],
+        },
+      ],
+    },
+    template: `
+      <div lang="de" style="display: flex; flex-wrap: wrap; height: 520px; border: 1px solid var(--color-border); border-radius: 8px; overflow: visible;">
+        <lc-sidenav [isOpen]="true" mode="docked" width="280px" [mobileBreakpoint]="0" [items]="items" activeRoute="/kostenstellen"
+                    ariaLabel="Seitennavigation" [(collapsedSections)]="collapsedSections" [contextMenuOnLongPress]="contextMenuOnLongPress"
+                    (itemContextMenu)="status = 'Kontextmenü: ' + $event.item.label" />
+        <p role="status" style="flex: 1; min-width: 12rem; margin: 0; padding: 24px; color: var(--color-text-secondary);">{{ status }}</p>
       </div>`,
   }),
 };

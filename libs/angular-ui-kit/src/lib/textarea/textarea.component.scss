@@ -17,6 +17,10 @@
 
 // Base textarea styles
 .lc-textarea {
+  // 3.45 (request 065, backlog 063-n2): a block, so the host ends at the
+  // field in every mode; the inline-block <textarea> left a 6 px line gap
+  // below multi-line fields (host 133 → 127 px at md).
+  display: block;
   width: 100%;
   font-family: var(--font-family-base);
   font-size: var(--font-size-base);

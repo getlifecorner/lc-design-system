@@ -29,7 +29,12 @@
   <!-- Logo (clickable, navigates to home) -->
   <div class="lc-header__brand">
     @if (showLogo()) {
-      @if (homeHref()) {
+      @if (!homeLink()) {
+        <!-- 3.45: a brand that is not a link, named by the logo's alt. -->
+        <span class="lc-header__logo">
+          <ng-container [ngTemplateOutlet]="brandLogo" />
+        </span>
+      } @else if (homeHref()) {
         <!-- Plain link: works without the router and without JavaScript. -->
         <a [href]="homeHref()" class="lc-header__logo" [attr.aria-label]="homeAriaLabel()">
           <ng-container [ngTemplateOutlet]="brandLogo" />
@@ -86,6 +91,9 @@
       </ul>
     </nav>
   }
+
+  <!-- 3.45: caller content on the brand's row, after the nav in focus order. -->
+  <ng-content select="[slot='middle']" />
 
   <!-- Zero-width spacer on the brand's row: keeps 3.10's two gaps before the end
        group and the first row's height; grows in a has-nav header from 1024 px. -->

@@ -46,6 +46,22 @@ Chronological event display for activity feeds, changelogs, and process tracking
       description:
         '3.3: heading level of the item titles (`h2`–`h6`) for heading navigation; unset = paragraph (3.2). The timeline is an `<ol>`; an item’s `datetime` (ISO 8601) goes on its `<time datetime>`.',
     },
+    selectable: {
+      control: 'boolean',
+      description:
+        '3.45 (usm-x row 36): items become buttons over the whole entry. One tab stop (the selected item, else the first); the arrow keys, Home and End move, Enter, Space or a click emit `itemClick` and set `selectedId` (`aria-current="true"`). An item with `title: \'\'` renders no title element; name it with `ariaLabel`. Off: the DOM is as before.',
+      table: { defaultValue: { summary: 'false' } },
+    },
+    selectedId: {
+      control: 'text',
+      description: '3.45: `id` of the selected item in a `selectable` timeline (two-way); `null` = none.',
+      table: { defaultValue: { summary: 'null' } },
+    },
+    itemClick: {
+      action: 'itemClick',
+      description: '3.45: `{ item, index }` when an item of a `selectable` timeline is activated.',
+      table: { defaultValue: { summary: '—' } },
+    },
   },
 };
 
@@ -176,5 +192,43 @@ export const HeadingsAndTimes: Story = {
       { title: 'Einladung verschickt', timestamp: 'gestern, 20:30', datetime: '2026-10-11T20:30:00+02:00', color: 'primary' as const },
     ],
   },
+};
+
+/**
+ * 3.45 (usm-x row 36): a history the user picks entries from. German, with a
+ * long compound title and one untitled entry named by `ariaLabel`.
+ */
+export const Selectable: Story = {
+  args: {
+    selectable: true,
+    selectedId: 'h-2',
+    orientation: 'vertical',
+    compact: false,
+    headingLevel: 3,
+    items: [
+      { id: 'h-1', title: 'Antrag eingereicht', description: 'Von Lena Brandt über das Kundenportal.', timestamp: '09:12', datetime: '2026-11-17T09:12:00+01:00', color: 'primary' as const },
+      { id: 'h-2', title: 'Leistungsverrechnungsschlüssel geändert', description: 'Kostenstelle 4711 von 30 % auf 45 % angehoben.', timestamp: '10:40', datetime: '2026-11-17T10:40:00+01:00', color: 'success' as const, icon: 'check' },
+      { id: 'h-3', title: '', ariaLabel: 'Automatische Prüfung', description: 'Keine Auffälligkeiten gefunden.', timestamp: '11:05', datetime: '2026-11-17T11:05:00+01:00', color: 'neutral' as const },
+      { id: 'h-4', title: 'Freigabe angefordert', timestamp: '14:30', datetime: '2026-11-17T14:30:00+01:00', color: 'warning' as const },
+    ],
+  },
+};
+
+const selectableItemsEn = [
+  { id: 's-1', title: 'Request submitted', description: 'By Lena Brandt via the portal.', timestamp: '09:12' },
+  { id: 's-2', title: 'Allocation key changed', description: 'Cost centre 4711 from 30 % to 45 %.', timestamp: '10:40', color: 'success' as const },
+  { id: 's-3', title: 'Approval requested', timestamp: '14:30', color: 'warning' as const },
+];
+
+/** 3.45: a compact selectable timeline (gap 12, the box still ≥ 44 px). */
+export const SelectableCompact: Story = {
+  name: 'Selectable Compact',
+  args: { selectable: true, selectedId: 's-2', orientation: 'vertical', compact: true, items: selectableItemsEn },
+};
+
+/** 3.45: a horizontal selectable timeline; the selected bar sits at the block end. */
+export const SelectableHorizontal: Story = {
+  name: 'Selectable Horizontal',
+  args: { selectable: true, selectedId: 's-2', orientation: 'horizontal', compact: false, items: selectableItemsEn },
 };
 

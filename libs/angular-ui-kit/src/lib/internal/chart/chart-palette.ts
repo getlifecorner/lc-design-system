@@ -16,10 +16,16 @@
  * and `--color-warning-default` 2.05–2.26:1 on light pages; the inks reach
  * 5.30 and 6.03:1 there (8.40 and 7.65:1 dark). Every entry keeps 3:1 against
  * `--color-background` and `--color-surface` in both themes.
+ *
+ * 3.45 (request 065, backlog 057-n2): entry 2 is `--color-secondary-graphic`
+ * (light `#5a798c`, dark `#7097af`, the 3.23 bar/ring token). The light
+ * `--color-secondary-500` measured 2.98:1 on `--color-surface-2` and 2.83:1 on
+ * `--color-surface-sunken`; the graphic token reaches 4.42 and 4.20:1 there
+ * (4.60 and 5.80:1 dark).
  */
 export const CHART_PALETTE: readonly string[] = [
   'var(--color-primary-500)',
-  'var(--color-secondary-500)',
+  'var(--color-secondary-graphic)',
   'var(--color-text-success)',
   'var(--color-text-warning)',
   'var(--color-error-default)',

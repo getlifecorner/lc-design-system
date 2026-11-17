@@ -92,6 +92,7 @@
           stroke-linejoin="round"
           class="lc-line-chart__line"
           [class.lc-line-chart__line--dashed]="ser.dashed"
+          [class.lc-line-chart__line--dotted]="ser.dotted"
           [attr.stroke-dasharray]="ser.dashArray"
         />
       }
@@ -116,8 +117,9 @@
           <span
             class="lc-line-chart__legend-line"
             [class.lc-line-chart__legend-line--dashed]="item.dashed"
-            [style.background-color]="item.dashed ? null : item.color"
-            [style.color]="item.dashed ? item.color : null"
+            [class.lc-line-chart__legend-line--dotted]="item.dotted"
+            [style.background-color]="item.patterned ? null : item.color"
+            [style.color]="item.patterned ? item.color : null"
           ></span>
           <span class="lc-line-chart__legend-label">{{ item.label }}</span>
         </div>

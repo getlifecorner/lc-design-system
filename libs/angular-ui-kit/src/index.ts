@@ -119,6 +119,9 @@ export * from '@lifecorner/angular-ui-kit/divider';
 // Search Input Component
 export * from '@lifecorner/angular-ui-kit/search-input';
 
+// Command Palette Component (a search field over grouped results, 3.45)
+export * from '@lifecorner/angular-ui-kit/command-palette';
+
 // File Upload Component
 export * from '@lifecorner/angular-ui-kit/file-upload';
 

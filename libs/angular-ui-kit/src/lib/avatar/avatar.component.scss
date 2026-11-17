@@ -10,8 +10,11 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background-color: var(--color-surface-hover);
-  color: var(--color-text-secondary);
+  // 3.45 (usm-x row 37): an app's identity colours. Read here with the old
+  // value as fallback and never declared by the kit, so they work on the
+  // avatar or on any ancestor. Pick a pair at 4.5:1 or more.
+  background-color: var(--lc-avatar-bg, var(--color-surface-hover));
+  color: var(--lc-avatar-color, var(--color-text-secondary));
   font-weight: var(--typography-font-weight-medium, 500);
   line-height: 1;
   overflow: hidden;
@@ -140,7 +143,7 @@ $lc-avatar-member-colors: (
 );
 
 .lc-avatar--member {
-  color: var(--color-on-member, #ffffff);
+  color: var(--lc-avatar-color, var(--color-on-member, #ffffff));
   font-weight: var(--typography-font-weight-bold, 700);
   letter-spacing: 0.02em;
 
@@ -154,7 +157,7 @@ $lc-avatar-member-colors: (
 
 @each $index, $hex in $lc-avatar-member-colors {
   .lc-avatar--member-#{$index} {
-    background-color: var(--color-member-#{$index}, #{$hex});
+    background-color: var(--lc-avatar-bg, var(--color-member-#{$index}, #{$hex}));
   }
 }
 

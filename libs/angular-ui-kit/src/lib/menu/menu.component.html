@@ -17,6 +17,7 @@
       [style.min-width]="minWidth()"
       [style.max-width]="maxWidth() || null"
       [class.lc-menu__dropdown--capped]="!!maxWidth()"
+      [class.lc-menu__dropdown--has-toggles]="hasToggles()"
     >
       <!-- Optional header slot (outside the menu role: it is not an item) -->
       <ng-content select="[header]" />
@@ -68,6 +69,42 @@
                       <span class="lc-menu__item-badge">{{ badge }}</span>
                     }
                   </a>
+                } @else if (isToggle(member)) {
+                  <!-- Checkbox / radio item (3.45) -->
+                  <button
+                    #menuItem
+                    type="button"
+                    [attr.role]="member.type === 'radio' ? 'menuitemradio' : 'menuitemcheckbox'"
+                    [attr.aria-checked]="member.checked ? 'true' : 'false'"
+                    class="lc-menu__item lc-menu__item--toggle"
+                    [class.lc-menu__item--danger]="member.variant === 'danger'"
+                    [class.lc-menu__item--disabled]="member.disabled"
+                    [attr.tabindex]="tabindexFor(indexOf(member), member)"
+                    [disabled]="member.disabled"
+                    (click)="onToggleClick(member, $event)"
+                  >
+                    <span class="lc-menu__item-indicator" aria-hidden="true">
+                      @if (member.checked) {
+                        @if (member.type === 'radio') {
+                          <svg class="lc-menu__item-dot" viewBox="0 0 20 20" focusable="false"><circle cx="10" cy="10" r="4" fill="currentColor" /></svg>
+                        } @else {
+                          <lc-icon name="check" size="xs" [decorative]="true" />
+                        }
+                      }
+                    </span>
+                    @if (member.icon) {
+                      <lc-icon [name]="member.icon" [size]="member.iconSize || 'sm'" [decorative]="true" />
+                    }
+                    <span class="lc-menu__item-content">
+                      <span class="lc-menu__item-label">{{ member.label }}</span>
+                      @if (member.metadata?.subtitle; as subtitle) {
+                        <span class="lc-menu__item-subtitle">{{ subtitle }}</span>
+                      }
+                    </span>
+                    @if (member.metadata?.badge; as badge) {
+                      <span class="lc-menu__item-badge">{{ badge }}</span>
+                    }
+                  </button>
                 } @else {
                   <button
                     #menuItem
@@ -124,6 +161,42 @@
                 <span class="lc-menu__item-badge">{{ badge }}</span>
               }
             </a>
+          } @else if (isToggle(item)) {
+            <!-- Checkbox / radio item (3.45) -->
+            <button
+              #menuItem
+              type="button"
+              [attr.role]="item.type === 'radio' ? 'menuitemradio' : 'menuitemcheckbox'"
+              [attr.aria-checked]="item.checked ? 'true' : 'false'"
+              class="lc-menu__item lc-menu__item--toggle"
+              [class.lc-menu__item--danger]="item.variant === 'danger'"
+              [class.lc-menu__item--disabled]="item.disabled"
+              [attr.tabindex]="tabindexFor(indexOf(item), item)"
+              [disabled]="item.disabled"
+              (click)="onToggleClick(item, $event)"
+            >
+              <span class="lc-menu__item-indicator" aria-hidden="true">
+                @if (item.checked) {
+                  @if (item.type === 'radio') {
+                    <svg class="lc-menu__item-dot" viewBox="0 0 20 20" focusable="false"><circle cx="10" cy="10" r="4" fill="currentColor" /></svg>
+                  } @else {
+                    <lc-icon name="check" size="xs" [decorative]="true" />
+                  }
+                }
+              </span>
+              @if (item.icon) {
+                <lc-icon [name]="item.icon" [size]="item.iconSize || 'sm'" [decorative]="true" />
+              }
+              <span class="lc-menu__item-content">
+                <span class="lc-menu__item-label">{{ item.label }}</span>
+                @if (item.metadata?.subtitle; as subtitle) {
+                  <span class="lc-menu__item-subtitle">{{ subtitle }}</span>
+                }
+              </span>
+              @if (item.metadata?.badge; as badge) {
+                <span class="lc-menu__item-badge">{{ badge }}</span>
+              }
+            </button>
           } @else {
             <!-- Button item -->
             <button

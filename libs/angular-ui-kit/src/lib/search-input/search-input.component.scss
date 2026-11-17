@@ -108,4 +108,17 @@
     --icon-size: 0.75rem;
     color: var(--color-text-secondary);
   }
+
+  // 3.45 (usm-x row 32): `description`, read through aria-describedby only.
+  &__description {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
 }

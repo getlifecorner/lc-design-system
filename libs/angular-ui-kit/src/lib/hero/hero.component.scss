@@ -348,6 +348,12 @@ $hero-colors: (
   font-weight: 800;
   line-height: 1.1;
   color: inherit;
+  // 3.45 (backlog 060-n2): a long word („organisiert“ at 320 px and 200 %
+  // text) hyphenates in the hero's `lang` instead of being cut; a word with
+  // no break point still wraps.
+  hyphens: auto;
+  hyphenate-limit-chars: 10 4 3;
+  overflow-wrap: break-word;
 
   .hero--sm & {
     font-size: 1.5rem;
@@ -478,7 +484,11 @@ $hero-colors: (
 @media (min-width: 1024px) {
   .hero__inner:has(> .hero__media:not(:empty)) {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) var(--lc-hero-media-width, 23rem);
+    // 3.45 (backlog 060-n1): at most 62 % of the row, so 200 % text (23rem =
+    // 736 px) neither clips the media nor squeezes the title; at 100 % every
+    // documented width fits (area-map's 34rem = 544 px also in an 880 px row
+    // at 1024: 62 % = 545.6; 60 % shrank it to 528).
+    grid-template-columns: minmax(0, 1fr) min(var(--lc-hero-media-width, 23rem), 62%);
     column-gap: 3.5rem;
     align-items: center;
 

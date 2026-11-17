@@ -310,7 +310,12 @@ export const Light: Story = {
 
 export const LightSlim: Story = {
   parameters: {
-    docs: { description: { story: 'Combining slim and light for a subtle, compact section header.' } },
+    docs: {
+      description: {
+        story:
+          'A subtle, compact section header: `variant="light"` with `size="sm"`. `slim` and `light` don’t combine (`variant` takes one value; 3.45, backlog 058-n1: the story used to pass "slim light", an invalid value that drew a slim dark band); for less height use `size="sm"` as here.',
+      },
+    },
   },
   args: {
     title: 'Note',
@@ -322,7 +327,7 @@ export const LightSlim: Story = {
   render: (args) => ({
     props: args,
     template: `
-      <lc-hero [title]="title" [color]="color" [size]="size" [borderRadius]="borderRadius" variant="slim light">
+      <lc-hero [title]="title" [color]="color" [size]="size" [borderRadius]="borderRadius" [variant]="variant">
         <p style="margin: 0;">A very compact, pastel-colored callout-style hero.</p>
       </lc-hero>`,
   }),
@@ -357,7 +362,7 @@ export const WithMedia: Story = {
     docs: {
       description: {
         story:
-          'A visual in the `[hero-media]` slot: below the text with the footer rule on small screens, beside it from 1024 px. It is outside the body, at full opacity. `--lc-hero-media-width` sets its column (default 23rem).',
+          'A visual in the `[hero-media]` slot: below the text with the footer rule on small screens, beside it from 1024 px. It is outside the body, at full opacity. `--lc-hero-media-width` sets its column (default 23rem; since 3.45 at most 62 % of the row, so large text never clips the media or squeezes the title).',
       },
     },
   },
@@ -603,7 +608,7 @@ export const StageActions: Story = {
     docs: {
       description: {
         story:
-          '3.36 (request 056, finance-intelligence monatsstand row 2): the main action „Freigeben“ (`inverse`) and the quieter „Herkunft“ (`inverse-outline`) side by side on all nine bands, `size="lg"`: both 48.5 px high in one row, the outline clearly the quieter one. Its text keeps at least 9.36:1 and its border at least 4.58:1 on every band, and the white `inverse` pill stands out from every band at 4.58:1 or more (3.38 bands, buttons at full opacity). Last, the pair at `sm`, `md` and `lg`: the same height at every size.',
+          '3.36 (request 056, finance-intelligence monatsstand row 2): the main action „Freigeben“ (`inverse`) and the quieter „Herkunft“ (`inverse-outline`) side by side on all nine bands, `size="lg"`: both 48.5 px high in one row, the outline clearly the quieter one. Its text keeps 9.3:1 or more and its border at least 4.58:1 on every band, and the white `inverse` pill stands out from every band at 4.58:1 or more (3.38 bands, buttons at full opacity). Last, the pair at `sm`, `md` and `lg`: the same height at every size.',
       },
     },
   },
@@ -643,6 +648,19 @@ export const StageActions: Story = {
   }),
 };
 
+/** German names of the bands for story labels (3.45, backlog 057-n6: no token names). */
+const BAND_NAMES_DE: Record<string, string> = {
+  primary: 'Petrol',
+  secondary: 'Blaugrau',
+  neutral: 'Neutral',
+  success: 'Erfolg',
+  info: 'Info',
+  warning: 'Warnung',
+  'accent-orange': 'Orange',
+  'accent-purple': 'Purpur',
+  'accent-violet': 'Violett',
+};
+
 const BADGE_VARIANTS: [BadgeVariant, string][] = [
   ['default', 'Neutral'],
   ['primary', 'Primär'],
@@ -665,12 +683,12 @@ export const BadgesInTheBody: Story = {
     },
   },
   render: () => ({
-    props: { colors: STAGE_COLORS, variants: BADGE_VARIANTS },
+    props: { colors: STAGE_COLORS, variants: BADGE_VARIANTS, names: BAND_NAMES_DE },
     moduleMetadata: { imports: [BadgeComponent] },
     template: `
       <div lang="de" style="display: flex; flex-direction: column; gap: 16px;">
         @for (color of colors; track color) {
-          <lc-hero [label]="'Monatsstand · ' + color" title="522.530,00 €" [color]="color" size="sm" [headingLevel]="2">
+          <lc-hero [label]="'Monatsstand · ' + names[color]" title="522.530,00 €" [color]="color" size="sm" [headingLevel]="2">
             <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
               <span>September 2026</span>
               <lc-badge size="sm" variant="warning" [rounded]="true">Entwurf</lc-badge>
@@ -683,7 +701,7 @@ export const BadgesInTheBody: Story = {
             </div>
           </lc-hero>
         }
-        <lc-hero label="Monatsstand · light" title="522.530,00 €" color="primary" variant="light" size="sm" [headingLevel]="2">
+        <lc-hero label="Monatsstand · Petrol hell" title="522.530,00 €" color="primary" variant="light" size="sm" [headingLevel]="2">
           <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
             <span>September 2026</span>
             <lc-badge size="sm" variant="warning" [rounded]="true">Entwurf</lc-badge>

@@ -144,6 +144,17 @@ Specialized search input with built-in magnifying glass icon, clear button, and 
       description: '3.44: `aria-haspopup` on the inner input. Unset renders none.',
       table: { defaultValue: { summary: 'null' } },
     },
+    clearOnEscape: {
+      control: 'boolean',
+      description:
+        '3.45: Escape with text clears the field (one `""` emission, focus stays, the key is consumed); on an empty field Escape passes on, so a dialog around it closes. `false`: as before 3.45.',
+      table: { defaultValue: { summary: 'true' } },
+    },
+    description: {
+      control: 'text',
+      description: '3.45: what the field searches; visually hidden text linked by `aria-describedby`. Empty renders nothing.',
+      table: { defaultValue: { summary: "''" } },
+    },
   },
 };
 
@@ -219,5 +230,40 @@ export const Combobox: Story = {
   render: () => ({
     moduleMetadata: { imports: [SearchInputComboboxDemoComponent] },
     template: `<lc-search-input-combobox-demo />`,
+  }),
+};
+
+/**
+ * 3.45 (request 065, usm-x row 32): `description` tells screen-reader users
+ * what the field searches; Escape clears a field with text and passes on when
+ * it is empty.
+ */
+export const Description: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`description` is read with the field (`aria-describedby` → a visually hidden text), not only shown as a `title`. Press Escape in a field with text: it clears (one `""` on `searchChange`, the focus stays); in an empty field Escape passes on, so a modal or command palette around it closes. English and German, each with a preset value.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 12px; max-width: 360px;">
+        <lc-search-input
+          placeholder="Search records…"
+          ariaLabel="Search records"
+          description="Searches names, numbers and cost centres."
+          value="Kosten"
+        ></lc-search-input>
+        <lc-search-input
+          lang="de"
+          placeholder="Datensätze durchsuchen …"
+          ariaLabel="Datensätze durchsuchen"
+          clearAriaLabel="Suche leeren"
+          description="Durchsucht Namen, Nummern und Kostenstellen."
+          value="Leistungsverrechnung"
+        ></lc-search-input>
+      </div>`,
   }),
 };

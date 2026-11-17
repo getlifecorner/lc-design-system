@@ -27,6 +27,13 @@ import type { AvatarColor } from '@lifecorner/angular-ui-kit/avatar';
 /** Counter for generated row ids: they follow creation order, so prerendered HTML is the same in every build. */
 let nextListId = 0;
 
+/** Items of a `multiColumn` list cut at its headings (3.45); kit-internal. */
+interface ListColumnSegment {
+  /** A heading and its rows, rendered in one `lc-list__group` wrapper. */
+  grouped: boolean;
+  entries: { item: ListItem; index: number }[];
+}
+
 /**
  * List orientation type
  */
@@ -274,11 +281,31 @@ export class ListComponent {
    * A vertical list flows into as many columns as fit (3.44), each at least
    * `--lc-list-column-width` (default 18rem) wide, `--lc-list-column-gap`
    * (default `--spacing-6`) apart. Rows never split, and a heading item stays
-   * with its first row. Reading order is the DOM order, down each column.
-   * Ignored in `horizontal`.
+   * with its first row. 3.45: a heading and its rows stay together in one
+   * column (a plain wrapper without a role), no column ends with a divider,
+   * and the corners are not clipped. Reading order is the DOM order, down
+   * each column. Ignored in `horizontal`.
    * @default false
    */
   multiColumn = input<boolean>(false);
+
+  /**
+   * 3.45 (backlog 064-n4): in columns with heading items, the items cut at
+   * each heading: a heading and its rows form one group (`grouped`); rows
+   * before the first heading stay list children. `null`: no columns or no
+   * heading, the rows render as before.
+   */
+  protected readonly columnSegments = computed<readonly ListColumnSegment[] | null>(() => {
+    if (!this.multiColumn() || this.orientation() !== 'vertical') return null;
+    const items = this.items() ?? [];
+    if (!items.some((item) => item.heading)) return null;
+    const segments: ListColumnSegment[] = [];
+    items.forEach((item, index) => {
+      if (item.heading || segments.length === 0) segments.push({ grouped: !!item.heading, entries: [] });
+      segments[segments.length - 1].entries.push({ item, index });
+    });
+    return segments;
+  });
 
   /** Event emitted when an item is clicked */
   readonly itemClick = output<ListItem>();
@@ -337,7 +364,10 @@ export class ListComponent {
       () => {
         this.pendingItemFocus = undefined;
         const index = (this.items() ?? []).findIndex((item) => item.id === id);
-        const row = index < 0 ? null : this.listEl()?.nativeElement.children.item(index);
+        // One `role="listitem"` element per item, a list child or (3.45, in
+        // columns) a child of a heading's group wrapper.
+        const rows = this.listEl()?.nativeElement.querySelectorAll(':scope > [role=listitem], :scope > .lc-list__group > [role=listitem]');
+        const row = index < 0 ? null : rows?.item(index);
         // querySelector skips the row element itself, so a plain row matches nothing.
         const target = row?.querySelector<HTMLElement>(
           part === 'action'

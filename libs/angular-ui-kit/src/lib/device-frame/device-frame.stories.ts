@@ -195,7 +195,7 @@ const ROW = [
 /** Layout of the story only (life-os website-screenshots §6, design §3). */
 const ROW_STYLE = `
   <style>
-    .shots__row { display: flex; gap: 16px; margin-inline: -16px; padding: 0 16px 8px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 16px; }
+    .shots__row { display: flex; gap: 16px; margin-inline: -16px; padding: 4px 16px 8px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 16px; }
     .shots__row:focus-visible { outline: 2px solid var(--color-primary-500); outline-offset: -2px; }
     .shots__figure { flex: 0 0 248px; margin: 0; display: flex; flex-direction: column; gap: 8px; scroll-snap-align: start; }
     .shots__slot { block-size: 535px; display: flex; align-items: flex-end; }
@@ -216,7 +216,7 @@ export const ScreenshotRow: Story = {
     docs: {
       description: {
         story:
-          'The life-os home section (website-screenshots §6): four `md` frames with the notch, a badge and a caption each. At 360 px the row bleeds to the page edges and scrolls sideways with snap points (248 px figures, 80 px of the second one show); it is a named region with a Tab stop and the kit focus ring, drawn inside the region (`outline-offset: -2px`) because the row reaches the page edges. From 1024 px the four figures share up to 928 px (220 px each) and nothing scrolls. The frames sit on one baseline (the first shot is 360 × 560). The third caption is about 120 characters long and wraps in its figure.',
+          'The life-os home section (website-screenshots §6): four `md` frames with the notch, a badge and a caption each. At 360 px the row bleeds to the page edges and scrolls sideways with snap points (248 px figures, 80 px of the second one show); it is a named region with a Tab stop and the kit focus ring, drawn inside the region (`outline-offset: -2px`) because the row reaches the page edges; 3.45 (backlog 059-n1): the row has 4 px padding on top (`4px 16px 8px`), so the ring no longer covers the frames’ rim. From 1024 px the four figures share up to 928 px (220 px each) and nothing scrolls. The frames sit on one baseline (the first shot is 360 × 560). The third caption is about 120 characters long and wraps in its figure.',
       },
     },
   },

@@ -1,15 +1,24 @@
 <div
   class="popover"
+  [class.popover--longpress]="kinds().has('longpress')"
   (mouseenter)="onMouseEnter()"
   (mouseleave)="onMouseLeave()"
 >
   <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- the projected trigger is the focusable control; its click bubbles here -->
-  <div class="popover__trigger" (click)="trigger() === 'click' ? toggle() : null">
+  <div class="popover__trigger" (click)="onTriggerClick()">
     <ng-content select="[popover-trigger]"></ng-content>
   </div>
   @if (isOpen()) {
-    <div [id]="panelId" [class]="panelClasses()" role="dialog" aria-modal="false">
-      <ng-content select="[popover-content]"></ng-content>
-    </div>
+    @if (interactive()) {
+      <div [id]="panelId" [class]="panelClasses()" role="dialog" aria-modal="false">
+        <ng-container [ngTemplateOutlet]="content" />
+      </div>
+    } @else {
+      <!-- 3.45: a hover / focus-only panel is a tooltip that describes the trigger. -->
+      <div [id]="panelId" [class]="panelClasses()" role="tooltip">
+        <ng-container [ngTemplateOutlet]="content" />
+      </div>
+    }
   }
 </div>
+<ng-template #content><ng-content select="[popover-content]"></ng-content></ng-template>

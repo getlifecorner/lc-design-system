@@ -49,12 +49,14 @@ export const AVATAR_MEMBER_COLORS: readonly AvatarColor[] = [
 ];
 
 /**
- * The initials `lc-avatar` shows for `name`: first and last word's first
- * letter, upper case; one word: its first letter; empty: `?`. Kit-internal
- * (used by `lc-header`, so the account button's name holds exactly the text
- * the avatar shows, AS-33); no semver guarantee.
+ * The kit's initials rule (3.45, usm-x row 37), used by `lc-avatar`,
+ * `lc-avatar-group` and `lc-header`: the first letter of the first and of the
+ * last whitespace-separated word, upper case (`'Lena Maria Brandt'` → `'LB'`);
+ * one word → its first letter (`'Admin'` → `'A'`); empty or only spaces →
+ * `'?'`. Use it wherever the app shows initials next to the kit's, so they
+ * match.
  */
-export function ɵavatarInitials(name: string | undefined): string {
+export function avatarInitials(name: string | undefined): string {
   if (!name || name.trim() === '') {
     return '?';
   }
@@ -81,6 +83,12 @@ export function ɵavatarInitials(name: string | undefined): string {
   }
   return '?';
 }
+
+/**
+ * Kit-internal name of {@link avatarInitials} (AS-33).
+ * @deprecated Since 3.45: use `avatarInitials`.
+ */
+export const ɵavatarInitials = avatarInitials;
 
 /**
  * Avatar component for circular user representation.
@@ -143,7 +151,13 @@ export class AvatarComponent {
 
   /**
    * Background of the initials: `default` (neutral) or a member colour
-   * `member-1` … `member-6` with white initials (LK-7).
+   * `member-1` … `member-6` with white initials (LK-7). For an app's own
+   * identity colours (3.45) set `--lc-avatar-bg` and `--lc-avatar-color` on
+   * the avatar or an ancestor; they replace the disc and initials colour of
+   * any `color` (not of the `person` fallback). Defaults: neutral
+   * `--color-surface-hover` / `--color-text-secondary`, member
+   * `--color-member-N` / `--color-on-member`. Pick a pair at 4.5:1 or more.
+   * @default 'default'
    */
   color = input<AvatarColor>('default');
 
@@ -174,7 +188,7 @@ export class AvatarComponent {
   /**
    * Computed initials from name
    */
-  initials = computed(() => ɵavatarInitials(this.name()));
+  initials = computed(() => avatarInitials(this.name()));
 
   /** The person symbol: `fallback="person"`, no image (or a broken one) and no name. */
   protected readonly showPerson = computed(

@@ -17,8 +17,21 @@ import {
   OnDestroy,
   inject,
 } from '@angular/core';
-import { IconComponent } from '@lifecorner/angular-ui-kit/icon';
+import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
+import { ICON_CHECK } from '@lifecorner/angular-ui-kit/icons';
 import { OverlayStackService } from '@lifecorner/angular-ui-kit/internal/overlay';
+
+/**
+ * Kind of a menu item (3.45, usm-x row 31): an action (`item`), or a
+ * `checkbox` / `radio` that the app keeps `checked`.
+ */
+export type MenuItemType = 'item' | 'checkbox' | 'radio';
+
+/** Payload of `itemToggle` (3.45): the item and its new state. */
+export interface MenuItemToggleEvent {
+  item: MenuItem;
+  checked: boolean;
+}
 
 export interface MenuItem {
   id: string;
@@ -49,6 +62,36 @@ export interface MenuItem {
    * @default false
    */
   indentChildren?: boolean;
+  /**
+   * 3.45 (usm-x row 31): `checkbox` or `radio` makes the item a
+   * `menuitemcheckbox` / `menuitemradio` with `aria-checked` and a check mark
+   * (or a dot) at its start; every item of such a menu gets that slot, so the
+   * labels share an edge. Activating it (click, Enter, Space) emits
+   * `itemToggle`, not `itemClick`, and the menu stays open with the focus on
+   * the item. Controlled: the app sets `checked`. An item with `href` is
+   * always a link.
+   * @default 'item'
+   */
+  type?: MenuItemType;
+  /**
+   * State of a `checkbox` / `radio` item (3.45).
+   * @default false
+   */
+  checked?: boolean;
+  /**
+   * Radio set of a `radio` item (3.45): items with the same name in one menu
+   * are exclusive. The menu emits only the item that becomes checked; the app
+   * sets it `checked` and the others of the set unchecked. Put a set in a
+   * section, so it is a `role="group"` named by the heading.
+   * @default ''
+   */
+  radioGroup?: string;
+  /**
+   * 3.45: `true` makes the menu emit `closed` after the item acts. Unset:
+   * plain items as before (the app's `itemClick` closes the menu), toggles
+   * keep it open.
+   */
+  closeOnSelect?: boolean;
 }
 
 /** Natively focusable elements a projected trigger may be or contain. */
@@ -90,6 +133,7 @@ const INTERACTIVE_SELECTOR = 'button, a[href], input, select, textarea, [tabinde
   selector: 'lc-menu',
   standalone: true,
   imports: [IconComponent],
+  viewProviders: [ɵprovideKitIcons([ICON_CHECK])],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -112,6 +156,12 @@ export class MenuComponent implements OnDestroy {
 
   readonly itemClick = output<MenuItem>();
   readonly closed = output<void>();
+  /**
+   * A `checkbox` / `radio` item was activated (3.45, usm-x row 31): the item
+   * and its new `checked` state. A radio emits only when it becomes checked.
+   * `itemClick` is not emitted for these items.
+   */
+  readonly itemToggle = output<MenuItemToggleEvent>();
 
   /** Id of the `role="menu"` element, referenced by the trigger's `aria-controls`. */
   protected readonly panelId = `${this.menuId}-panel`;
@@ -126,6 +176,9 @@ export class MenuComponent implements OnDestroy {
 
   /** Position of each acting item in {@link actions}. */
   private readonly actionIndex = computed(() => new Map(this.actions().map((item, i) => [item, i])));
+
+  /** Whether any item is a checkbox or radio (3.45): every item then gets the indicator slot. */
+  protected readonly hasToggles = computed(() => this.actions().some((item) => this.isToggle(item)));
 
   /** Index (into `actions()`) of the item that currently owns the roving tabindex. */
   protected readonly activeIndex = signal(-1);
@@ -195,6 +248,30 @@ export class MenuComponent implements OnDestroy {
     }
 
     this.itemClick.emit(item);
+    if (item.closeOnSelect === true) this.close();
+  }
+
+  /** Whether an item renders as a `menuitemcheckbox` / `menuitemradio` (3.45; links never do). */
+  protected isToggle(item: MenuItem): boolean {
+    return !item.href && !item.children && (item.type === 'checkbox' || item.type === 'radio');
+  }
+
+  /**
+   * A checkbox / radio item was activated (3.45): emit its new state, keep the
+   * focus on it (the app re-renders it by `id`), and close only with
+   * `closeOnSelect: true`.
+   */
+  protected onToggleClick(item: MenuItem, event: Event): void {
+    event.preventDefault();
+    if (item.disabled) return;
+    const index = this.indexOf(item);
+    if (index >= 0) this.activeIndex.set(index);
+    if (item.type === 'radio') {
+      if (!item.checked) this.itemToggle.emit({ item, checked: true });
+    } else {
+      this.itemToggle.emit({ item, checked: !item.checked });
+    }
+    if (item.closeOnSelect === true) this.close();
   }
 
   /**

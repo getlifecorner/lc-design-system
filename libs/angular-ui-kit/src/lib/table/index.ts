@@ -3,3 +3,4 @@
  */
 export * from './table.component';
 export * from './table-cell.directive';
+export * from './sortable-head.component';

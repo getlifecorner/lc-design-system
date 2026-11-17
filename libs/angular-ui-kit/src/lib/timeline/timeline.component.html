@@ -1,7 +1,7 @@
 <!-- An ordered list (3.3, G-11): the events have an order and a count. -->
 <ol [class]="timelineClasses()">
-  @for (item of items(); track item.id ?? $index; let last = $last) {
-    <li class="timeline__item" [class.timeline__item--last]="last">
+  @for (item of items(); track item.id ?? $index; let last = $last; let i = $index) {
+    <li class="timeline__item" [class.timeline__item--last]="last" [class.timeline__item--selected]="isSelected(item)">
       <div [class]="markerClasses(item)">
         @if (item.icon) {
           <lc-icon [name]="item.icon" class="timeline__icon" [decorative]="true"></lc-icon>
@@ -15,12 +15,38 @@
       <div class="timeline__content">
         <div class="timeline__header">
           <ng-template #titleContent>
-            {{ item.title }}
-            @if (item.titleMono) {
-              <code class="timeline__title-mono">{{ item.titleMono }}</code>
+            @if (selectable()) {
+              <!-- 3.45: the item's button; its ::before draws the box, its ::after is the hit area over the entry. -->
+              <button
+                type="button"
+                class="timeline__button"
+                [attr.tabindex]="i === focusIndex() ? 0 : -1"
+                [attr.aria-current]="isSelected(item) ? 'true' : null"
+                [attr.aria-label]="buttonLabel(item)"
+                [attr.aria-describedby]="describedBy(item, i)"
+                (click)="onItemActivate(item, i)"
+                (keydown)="onItemKeydown($event, i)"
+                (focus)="onItemFocus($event)"
+              >
+                {{ item.title }}
+                @if (item.titleMono) {
+                  <code class="timeline__title-mono">{{ item.titleMono }}</code>
+                }
+              </button>
+            } @else {
+              {{ item.title }}
+              @if (item.titleMono) {
+                <code class="timeline__title-mono">{{ item.titleMono }}</code>
+              }
             }
           </ng-template>
-          @switch (headingLevel()) {
+          <!-- 3.45: an untitled item ('') renders no title element; a selectable one keeps its button. -->
+          @switch (item.title ? headingLevel() : 'untitled') {
+            @case ('untitled') {
+              @if (selectable()) {
+                <ng-container [ngTemplateOutlet]="titleContent" />
+              }
+            }
             @case (2) {
               <h2 class="timeline__title"><ng-container [ngTemplateOutlet]="titleContent" /></h2>
             }
@@ -57,10 +83,10 @@
           }
         </div>
         @if (item.description) {
-          <p class="timeline__description">{{ item.description }}</p>
+          <p class="timeline__description" [attr.id]="partId(i, 'desc')">{{ item.description }}</p>
         }
         @if (item.timestamp) {
-          <time class="timeline__timestamp" [attr.datetime]="item.datetime ?? null">{{ item.timestamp }}</time>
+          <time class="timeline__timestamp" [attr.datetime]="item.datetime ?? null" [attr.id]="partId(i, 'time')">{{ item.timestamp }}</time>
         }
         @if (contentTemplate(); as contentTpl) {
           <div class="timeline__body">

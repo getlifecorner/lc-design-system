@@ -62,6 +62,13 @@ export interface NavigationItem extends ItemRowState {
   isSection?: boolean;
 
   /**
+   * On a section (`isSection`, 3.45): its heading becomes a disclosure button
+   * that folds the section's items (`lc-sidenav` `collapsedSections`). The
+   * rail ignores folding.
+   */
+  collapsible?: boolean;
+
+  /**
    * Optional action button displayed on the right side of the item.
    * Emits `itemAction` when clicked (e.g. to open a modal or context menu).
    */
@@ -136,6 +143,10 @@ export interface NavigationItem extends ItemRowState {
 export interface NavigationItemContextMenuEvent {
   /** The item the context menu was requested on. */
   item: NavigationItem;
-  /** The `contextmenu` event (the kit doesn't call `preventDefault`). */
+  /**
+   * The `contextmenu` event (the kit doesn't call `preventDefault`). For a
+   * long press (`contextMenuOnLongPress`, 3.45) the kit's own `contextmenu`
+   * event at the press point.
+   */
   event: MouseEvent;
 }

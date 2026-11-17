@@ -132,6 +132,23 @@ const meta: Meta<HeaderComponent> = {
         'Plain URL for the brand link. When set the brand is a native `<a href>` (no router needed); empty keeps `routerLink="/"`',
       table: { defaultValue: { summary: "''" } },
     },
+    homeLink: {
+      control: 'boolean',
+      description:
+        '3.45 (backlog 064-n1): `false` renders the logo as a plain `<span>` (named by its `alt`), not a link and not a tab stop; `homeHref` and `homeAriaLabel` are then unused',
+      table: { defaultValue: { summary: 'true' } },
+    },
+    userMenuItems: {
+      control: 'object',
+      description:
+        '3.45 (backlog 064-n1): caller entries (`MenuItem[]`) in the account menu between Profile and Logout; a click emits `userMenuItemClick` and closes the menu. Ids `profile` and `logout` are reserved',
+      table: { defaultValue: { summary: '[]' } },
+    },
+    userMenuItemClick: {
+      action: 'userMenuItemClick',
+      description: '3.45: the clicked `userMenuItems` entry',
+      table: { defaultValue: { summary: '—' } },
+    },
     navItems: {
       control: 'object',
       description:
@@ -1026,6 +1043,57 @@ export const AvatarPersonFallback: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Benutzermenü' }));
     await expect(canvas.getByRole('menu')).toBeTruthy();
     await expect(canvasElement.querySelectorAll('.lc-avatar--person').length).toBe(2);
+  },
+};
+
+/**
+ * 3.45 (backlog 064-n1): a search trigger in `[slot='middle']`, two caller
+ * entries in the account menu (open), and below a header whose brand is not
+ * a link (`homeLink=false`).
+ */
+export const MiddleSlotAndMenuEntries: Story = {
+  name: 'Middle Slot And Menu Entries',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The middle slot sits on the brand’s row after the nav (DOM and focus order brand → nav → middle → end) and shrinks before the end group wraps. `userMenuItems` appear between Profil and Abmelden as plain `menuitem`s; their clicks go to `userMenuItemClick`. The second header’s logo is a `<span>` named by its `alt`, not a tab stop.',
+      },
+    },
+    controls: { include: ['title', 'userName', 'userEmail', 'userMenuItems', 'homeLink', 'userMenuItemClick'] },
+  },
+  args: {
+    title: 'Produkt',
+    userName: 'Johanna Apfelbaum',
+    userEmail: 'j.apfelbaum@example.org',
+    homeLink: true,
+    userMenuItemClick: fn(),
+    userMenuItems: [
+      { id: 'settings', label: 'Einstellungen', icon: 'cog-6-tooth' },
+      { id: 'help', label: 'Hilfe und Kontakt', icon: 'information-circle', dividerAfter: true },
+    ],
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div lang="de" style="display: grid; gap: 340px; height: 520px; align-content: start;">
+        <lc-header
+          [title]="title" titleTag="span" [sticky]="false" [userName]="userName" [userEmail]="userEmail" homeAriaLabel="Zur Startseite"
+          userMenuTrigger="avatar" userMenuAriaLabel="Menü für Johanna Apfelbaum" menuSize="md"
+          profileLabel="Profil" logoutLabel="Abmelden" [homeLink]="homeLink" [userMenuItems]="userMenuItems"
+          (userMenuItemClick)="userMenuItemClick($event)">
+          <button slot="middle" type="button" class="story-search-trigger"
+            style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface); color: var(--color-text-secondary); font: inherit; font-size: 14px;">
+            Suchen <kbd style="font: inherit; font-size: 12px;">⌘K</kbd>
+          </button>
+        </lc-header>
+        <lc-header title="Produkt" titleTag="span" [sticky]="false" [homeLink]="false" logoAlt="Produkt" [showUserMenu]="false" />
+      </div>`,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: /Menü für Johanna Apfelbaum/ }));
+    await expect(canvas.getByRole('menuitem', { name: 'Einstellungen' })).toBeTruthy();
   },
 };
 

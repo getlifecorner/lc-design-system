@@ -20,7 +20,7 @@ import { ButtonComponent } from '@lifecorner/angular-ui-kit/button';
 import { LogoComponent } from '@lifecorner/angular-ui-kit/logo';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
 import { ICON_BARS_3, ICON_CHEVRON_DOWN, ICON_LOGOUT, ICON_MOON, ICON_SUN, ICON_USER } from '@lifecorner/angular-ui-kit/icons';
-import { AvatarColor, AvatarComponent, AvatarFallback, ɵavatarInitials } from '@lifecorner/angular-ui-kit/avatar';
+import { AvatarColor, AvatarComponent, AvatarFallback, avatarInitials } from '@lifecorner/angular-ui-kit/avatar';
 import { MenuComponent, MenuItem } from '@lifecorner/angular-ui-kit/menu';
 import { ThemeService } from '@lifecorner/angular-ui-kit/theme';
 import { BadgeComponent, type BadgeVariant } from '@lifecorner/angular-ui-kit/badge';
@@ -95,7 +95,9 @@ export interface HeaderContextBadge {
  *   `aria-current="page"` on the current item); below 1024 px it moves to a
  *   second row and wraps.
  * - `[slot='end']` takes content at the end of the first row (e.g. a language
- *   link), `showUserMenu` hides the account menu, `titleTag` picks the title
+ *   link); `[slot='middle']` (3.45) takes content between the brand (and nav)
+ *   and the end group, on the brand's row, e.g. a search trigger;
+ *   `showUserMenu` hides the account menu, `titleTag` picks the title
  *   element (the page keeps its own `<h1>`), `sticky` can be switched off.
  * - The end content (slot, theme button, context, account menu) is one group:
  *   when it doesn't fit beside the logo and the title's longest word (200 %
@@ -314,6 +316,21 @@ export class HeaderComponent {
    */
   readonly homeHref = input('');
   /**
+   * Whether the brand (logo) is a link home (3.45, backlog 064-n1). `false`:
+   * the logo is a plain `<span>`, named by its `alt` (`logoAlt`, else the
+   * title), and not a tab stop; `homeHref` and `homeAriaLabel` are unused.
+   * @default true
+   */
+  readonly homeLink = input(true);
+  /**
+   * Caller entries in the account menu (3.45, backlog 064-n1), between Profile
+   * and Logout. Plain items (`lc-menu` `MenuItem`: label, icon, `href`,
+   * `dividerAfter`, …); a click emits `userMenuItemClick` and closes the menu.
+   * The ids `profile` and `logout` are reserved for the header's own entries.
+   * @default []
+   */
+  readonly userMenuItems = input<readonly MenuItem[]>([]);
+  /**
    * Main navigation links, rendered as `<nav><ul><li><a href>` with
    * `aria-current="page"` on the current one. On screens below 1024 px the
    * navigation takes a second row and wraps.
@@ -366,6 +383,8 @@ export class HeaderComponent {
   readonly logoutClick = output<void>();
   readonly profileClick = output<void>();
   readonly contextClick = output<void>();
+  /** A `userMenuItems` entry was clicked (3.45); the menu closes. */
+  readonly userMenuItemClick = output<MenuItem>();
 
   private readonly injector = inject(Injector);
   private readonly hostElement = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -421,7 +440,7 @@ export class HeaderComponent {
    * as axe-core 4.14 does); an empty label becomes the initials alone.
    */
   protected readonly avatarTriggerAriaLabel = computed(() => {
-    const initials = ɵavatarInitials(this.userName());
+    const initials = avatarInitials(this.userName());
     const label = this.userMenuAriaLabel();
     if (!/[\p{L}\p{N}]/u.test(initials)) return label;
     // toLowerCase, not toLocaleLowerCase: server and browser must agree.
@@ -465,6 +484,9 @@ export class HeaderComponent {
         dividerAfter: true,
       });
     }
+
+    // 3.45: the caller's entries between Profile and Logout.
+    items.push(...this.userMenuItems());
 
     // Add logout
     items.push({
@@ -566,6 +588,9 @@ export class HeaderComponent {
       this.onLogoutClick();
     } else if (item.id === 'profile') {
       this.onProfileClick();
+    } else {
+      this.userMenuItemClick.emit(item);
+      this.closeDropdown();
     }
   }
 }

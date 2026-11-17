@@ -2,16 +2,14 @@
   <legend class="lc-radio-group__legend" [class.lc-radio-group__legend--hidden]="legendHidden()">
     {{ legend() }}
     @if (required() && requiredIndicator()) {
-      <span class="lc-radio-group__required" [attr.aria-label]="requiredAriaLabel()">*</span>
+      <!-- 3.45 (backlog 061-n3): as lc-checkbox-group, the * is hidden and the legend says "required". -->
+      <span class="lc-radio-group__required" aria-hidden="true">*</span>
+      <span class="lc-radio-group__required-text">{{ requiredAriaLabel() }}</span>
     }
   </legend>
 
   @if (helpText()) {
     <p [id]="helpId" class="lc-radio-group__help">{{ helpText() }}</p>
-  }
-
-  @if (error()) {
-    <p [id]="errorId" class="lc-radio-group__error" role="alert">{{ error() }}</p>
   }
 
   <div
@@ -21,4 +19,9 @@
   >
     <ng-content />
   </div>
+
+  <!-- 3.45 (backlog 061-n3): the one error below the options, as lc-checkbox-group. -->
+  @if (error()) {
+    <p [id]="errorId" class="lc-radio-group__error" role="alert">{{ error() }}</p>
+  }
 </fieldset>

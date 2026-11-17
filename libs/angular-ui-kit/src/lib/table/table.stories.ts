@@ -2,8 +2,9 @@ import type { Meta, StoryObj } from '@storybook/angular';
 import { moduleMetadata } from '@storybook/angular';
 import { fn } from 'storybook/test';
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
-import { TableComponent, type RowToggleEvent, type TableColumn } from './table.component';
+import { TableComponent, type RowToggleEvent, type SortEvent, type TableColumn } from './table.component';
 import { TableCellDirective } from './table-cell.directive';
+import { SortableHeadComponent } from './sortable-head.component';
 import { BadgeComponent } from '../badge/badge.component';
 import { AvatarComponent } from '../avatar/avatar.component';
 import { ChipComponent } from '../chip/chip.component';
@@ -1328,7 +1329,7 @@ export const ActionSizes: Story = {
     docs: {
       description: {
         story:
-          '3.37 (request 057, finance-intelligence services row 3): `TableAction.size` sets the kit size of a row action\'s `lc-button`; without it the action stays `xs` (30 px with a label, 20 px icon-only). `sm` is 38 / 30 px, `lg` 48.5 / 45.6 px, a 44 px touch target. The icon stays 20 px in every size, and text, alignment, the name per row and the row-click isolation are as before. The kit does not switch sizes per breakpoint: pass `lg` below 1024 px and `sm` from 1024 px yourself. Below: one table with `sm`, one with `lg`; „Herkunft“ with an icon and a label, „Details“ icon-only.',
+          '3.37 (request 057, finance-intelligence services row 3): `TableAction.size` sets the kit size of a row action\'s `lc-button`; without it the action stays `xs` (30 px with a label, 20 px icon-only). `sm` is 38 / 30 px, `lg` 48.5 / 45.6 px, a 44 px touch target. The icon stays 20 px in every size, and text, alignment, the name per row and the row-click isolation are as before. The kit does not switch sizes per breakpoint: pass `lg` below 1024 px and `sm` from 1024 px yourself. Below: one table with `sm`, one with `lg`; „Herkunft“ with an icon and a label, „Details“ icon-only. The `lg` table shows only the „Service“ column, so its actions are in view on a phone (3.45, backlog 057-n4; a wider table scrolls inside its wrapper as before).',
       },
     },
   },
@@ -1337,6 +1338,7 @@ export const ActionSizes: Story = {
     props: {
       ...args,
       columns: serviceColumns,
+      lgColumns: serviceColumns.slice(0, 1),
       data: serviceData.filter((row) => row.parentId === ''),
       smActions: sizedActions('sm'),
       lgActions: sizedActions('lg'),
@@ -1353,7 +1355,7 @@ export const ActionSizes: Story = {
           (actionClick)="actionClick($event)"
         ></lc-table>
         <lc-table
-          [columns]="columns"
+          [columns]="lgColumns"
           [data]="data"
           [actions]="lgActions"
           actionsLabel="Aktionen"
@@ -1364,6 +1366,91 @@ export const ActionSizes: Story = {
       </div>
     `,
   }),
+};
+
+/** 3.45 (request 065, usm-x row 33): an app-drawn table with `th[lcSortableHead]`. */
+@Component({
+  selector: 'lc-table-sortable-head-demo',
+  standalone: true,
+  imports: [SortableHeadComponent, TableComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div lang="de" style="display: flex; flex-direction: column; gap: 24px;">
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; background: var(--color-surface); color: var(--color-text-primary); font-family: var(--typography-font-family);">
+          <caption style="text-align: start; padding-bottom: 12px; font-weight: 600;">Eigene Tabelle der App</caption>
+          <thead>
+            <tr>
+              @for (column of columns; track column.key) {
+                <th
+                  scope="col"
+                  [lcSortableHead]="column.key"
+                  [align]="column.align ?? 'start'"
+                  [sortDirection]="sort().column === column.key ? sort().direction : null"
+                  sortedAscendingLabel="aufsteigend sortiert"
+                  sortedDescendingLabel="absteigend sortiert"
+                  (sortChange)="sort.set($event)"
+                >
+                  {{ column.label }}
+                </th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows(); track row.id) {
+              <tr style="border-bottom: 1px solid var(--color-divider);">
+                <td style="padding: 12px 16px; font-size: var(--typography-font-size-sm);">{{ row.name }}</td>
+                <td style="padding: 12px 16px; font-size: var(--typography-font-size-sm); text-align: end; font-variant-numeric: tabular-nums;">{{ euro(row.actual) }}</td>
+                <td style="padding: 12px 16px; font-size: var(--typography-font-size-sm); text-align: end; font-variant-numeric: tabular-nums;">{{ euro(row.plan) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <lc-table
+        [columns]="columns"
+        [data]="data"
+        caption="lc-table mit denselben Spalten"
+        sortedAscendingLabel="aufsteigend sortiert"
+        sortedDescendingLabel="absteigend sortiert"
+      ></lc-table>
+    </div>
+  `,
+})
+class TableSortableHeadDemoComponent {
+  protected readonly columns = serviceColumns;
+  protected readonly data = serviceData.filter((row) => row.parentId === '');
+  protected readonly sort = signal<SortEvent>({ column: 'name', direction: 'asc' });
+  protected readonly rows = computed(() => {
+    const { column, direction } = this.sort();
+    const factor = direction === 'asc' ? 1 : -1;
+    return [...this.data].sort((a, b) => {
+      const x = a[column as keyof typeof a];
+      const y = b[column as keyof typeof b];
+      return (typeof x === 'number' && typeof y === 'number' ? x - y : String(x).localeCompare(String(y), 'de')) * factor;
+    });
+  });
+  protected euro(value: number): string {
+    return deEuro.format(value);
+  }
+}
+
+export const SortableHeadOutsideTheTable: Story = {
+  name: 'Sortable Head Outside The Table',
+  decorators: [moduleMetadata({ imports: [TableSortableHeadDemoComponent] })],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.45 (request 065, usm-x row 33): `th[lcSortableHead]` gives a table the app draws itself the header cell of `lc-table`: the same padding, capitals, colours, hover and sorted fill, the arrow 12 px from the end (before the label in an `align="end"` column), `aria-sort`, a tab stop and Enter/Space. The app owns the state: `[sortDirection]` of the column and `(sortChange)` with the next direction. The state is read as hidden text after the label („Service aufsteigend sortiert“). Above: the app table sorted by „Service“; below: an `lc-table` with the same columns, sorted the same way at load, for comparison.',
+      },
+    },
+  },
+  render: () => ({ template: `<lc-table-sortable-head-demo />` }),
+  play: async ({ canvasElement }) => {
+    // Sort the lc-table by its first column too, so both heads show the same state.
+    (canvasElement.querySelector('lc-table th.sortable') as HTMLElement | null)?.click();
+  },
 };
 
 const lazyTreeDecorator = moduleMetadata({ imports: [TableLazyTreeDemoComponent] });

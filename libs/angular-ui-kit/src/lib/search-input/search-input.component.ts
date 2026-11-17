@@ -116,9 +116,9 @@ export class SearchInputComponent {
    * field the input of a command palette or an autocomplete; pair it with
    * `ariaExpanded`, `ariaControls` and `ariaActiveDescendant`. Not named `role`:
    * a static `role` attribute would also stay on the host. ArrowUp/Down, Enter
-   * and Escape stay the page's: listen to the host's bubbling `keydown`. Note:
-   * `type="search"` clears the field on Escape unless the page calls
-   * `preventDefault()`. `null` renders no attribute.
+   * and Escape on an empty field stay the page's: listen to the host's
+   * bubbling `keydown` (Escape with text clears the field, see
+   * `clearOnEscape`). `null` renders no attribute.
    * @default null
    */
   readonly inputRole = input<SearchInputRole | null>(null);
@@ -158,6 +158,24 @@ export class SearchInputComponent {
   readonly ariaHasPopup = input<SearchInputAriaHasPopup | null>(null);
 
   /**
+   * Escape with text in the field clears it (3.45, usm-x row 32): one `''` on
+   * `valueChange` and `searchChange`, the focus stays, and the key is consumed
+   * (`preventDefault` + `stopPropagation`). On an empty field Escape passes
+   * on, so a modal or command palette around it closes. `false`: Escape is
+   * left to the browser and the page (as before 3.45).
+   * @default true
+   */
+  readonly clearOnEscape = input<boolean>(true);
+
+  /**
+   * What the field searches („Searches names, numbers and cost centres.“),
+   * 3.45: visually hidden text linked to the input by `aria-describedby`.
+   * Empty renders nothing.
+   * @default ''
+   */
+  readonly description = input<string>('');
+
+  /**
    * Current query (two-way bindable). Writing it from outside updates the
    * field without emitting `searchChange`; `valueChange` emits on every
    * keystroke (undebounced) and on clear.
@@ -175,6 +193,9 @@ export class SearchInputComponent {
   readonly searchSubmit = output<string>();
 
   protected readonly inputRef = viewChild<ElementRef<HTMLInputElement>>('searchInputEl');
+
+  /** id of the hidden `description` text. */
+  protected readonly descriptionId = computed(() => `${this.inputId()}-description`);
 
   protected wrapperClasses = computed(() => {
     return [
@@ -227,6 +248,12 @@ export class SearchInputComponent {
   protected onKeydown(event: KeyboardEvent): void {
     if (event.key === 'Enter') {
       this.searchSubmit.emit(this.value());
+    } else if (event.key === 'Escape' && this.clearOnEscape() && this.value() && !event.isComposing) {
+      // Consumed, so the native type="search" clear doesn't run as well and a
+      // dialog around the field stays open.
+      event.preventDefault();
+      event.stopPropagation();
+      this.clear();
     }
   }
 

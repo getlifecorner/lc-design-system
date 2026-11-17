@@ -206,8 +206,13 @@ describe('lc-tabs links mode (3.44)', () => {
       expect(css.lastIndexOf('\n.lc-tabs--vertical .lc-tabs__tab--selected {')).toBe(selected);
       expect(rule('.lc-tabs--vertical .lc-tabs__tab')).toMatch(/^border-bottom: none; border-right: 2px solid transparent;/);
       expect(rule('.lc-tabs--vertical .lc-tabs__tab--selected')).toBe('border-right: 2px solid var(--color-primary-500);');
-      // After the selected rule, only the forced-colours block may set a right border.
-      const after = css.slice(css.indexOf('}', selected) + 1).replace(/@media \(forced-colors: active\) \{(?:[^{}]*\{[^{}]*\})*\s*\}/g, '');
+      // After the selected rule, only the forced-colours block may set a right border
+      // (3.45, 065 AC-46: and the container query that stacks vertical tabs below
+      // 31rem, where the line moves to the inline start on purpose).
+      const after = css
+        .slice(css.indexOf('}', selected) + 1)
+        .replace(/@container lc-tabs \(width < 31rem\) \{[^]*$/, '')
+        .replace(/@media \(forced-colors: active\) \{(?:[^{}]*\{[^{}]*\})*\s*\}/g, '');
       expect(after).not.toMatch(/border-right/);
       // Horizontal: the underline is unchanged.
       expect(css.slice(css.indexOf('\n.lc-tabs__tab--selected {'))).toMatch(/^\n\.lc-tabs__tab--selected \{[^}]*border-bottom-color: var\(--color-primary-500\);/);

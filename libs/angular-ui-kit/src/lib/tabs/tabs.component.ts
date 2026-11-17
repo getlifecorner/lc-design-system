@@ -20,8 +20,12 @@ import {
 import { NgClass, NgTemplateOutlet } from '@angular/common';
 import { RouterLink, type Params, type QueryParamsHandling } from '@angular/router';
 import { BadgeComponent, BadgeVariant } from '@lifecorner/angular-ui-kit/badge';
+import { IconComponent } from '@lifecorner/angular-ui-kit/icon';
 
 let nextUniqueId = 0;
+
+/** Width of the overflow fade, and the room a focused tab keeps from it (3.45). */
+const TAB_FADE_PX = 24;
 
 export type TabOrientation = 'horizontal' | 'vertical';
 
@@ -59,7 +63,10 @@ export class TabComponent {
   readonly disabled = input(false);
 
   /**
-   * Optional icon name (Tabler Icons)
+   * Optional icon name (an `lc-icon` name), drawn 16 px before the label only
+   * when the parent `lc-tabs` has `showIcons` (3.45, backlog 064-n3); without
+   * it the icon is not rendered (as before), so existing layouts don't move.
+   * @default undefined
    */
   readonly icon = input<string | undefined>();
 
@@ -178,7 +185,7 @@ export class TabComponent {
 @Component({
   selector: 'lc-tabs',
   standalone: true,
-  imports: [NgClass, NgTemplateOutlet, BadgeComponent, RouterLink],
+  imports: [NgClass, NgTemplateOutlet, BadgeComponent, RouterLink, IconComponent],
   templateUrl: './tabs.component.html',
   styleUrl: './tabs.component.scss',
   encapsulation: ViewEncapsulation.None,
@@ -230,6 +237,14 @@ export class TabsComponent {
   readonly panelId = input('');
 
   /**
+   * Renders each `lc-tab` `icon` (16 px, decorative) before its label (3.45,
+   * backlog 064-n3); a tab grows by 24 px (icon and gap). Off: icons are not
+   * rendered, as before.
+   * @default false
+   */
+  readonly showIcons = input(false);
+
+  /**
    * Projected tab components (signal query — updates when tabs are added or
    * removed after init).
    */
@@ -269,7 +284,14 @@ export class TabsComponent {
     'lc-tabs__list': true,
     'lc-tabs--horizontal': this.orientation() === 'horizontal',
     'lc-tabs--vertical': this.orientation() === 'vertical',
+    // 3.45 (backlog 064-n6): an overflowing horizontal list fades the side(s) that hide tabs.
+    'lc-tabs__list--fade-start': this.fadeStart(),
+    'lc-tabs__list--fade-end': this.fadeEnd(),
   }));
+
+  /** 3.45: tabs hidden before the list's start / after its end (horizontal, overflowing). */
+  private readonly fadeStart = signal(false);
+  private readonly fadeEnd = signal(false);
 
   constructor() {
     // Mirror the deprecated one-way input into the model. `model.set` is a
@@ -310,19 +332,67 @@ export class TabsComponent {
     });
     // Web fonts and container changes resize the tabs after the first render:
     // the observer scrolls the selected tab in again (never on a user scroll).
-    inject(DestroyRef).onDestroy(() => this.resizeObserver?.disconnect());
+    inject(DestroyRef).onDestroy(() => {
+      this.resizeObserver?.disconnect();
+      this.listen(undefined);
+    });
   }
 
   /** Re-scrolls when the list or a tab changes size (3.44). */
   private resizeObserver?: ResizeObserver;
 
+  /** The list that has the scroll and focus listeners (3.45). */
+  private listenedList?: HTMLElement;
+
   private observeSizes(list: HTMLElement | undefined): void {
+    this.listen(list);
+    this.updateFade();
     if (typeof ResizeObserver === 'undefined') return;
-    this.resizeObserver ??= new ResizeObserver(() => this.scrollSelectedIntoView());
+    this.resizeObserver ??= new ResizeObserver(() => {
+      this.scrollSelectedIntoView();
+      this.updateFade();
+    });
     this.resizeObserver.disconnect();
     if (!list || this.orientation() !== 'horizontal') return;
     this.resizeObserver.observe(list);
     list.querySelectorAll('[role="tab"]').forEach((tab) => this.resizeObserver?.observe(tab));
+  }
+
+  /**
+   * 3.45 (backlog 064-n6): scroll updates the fades; a focused tab scrolls
+   * fully in, clear of the fade. In code, not in the template: no listener
+   * markup in prerendered HTML.
+   */
+  private listen(list: HTMLElement | undefined): void {
+    if (list === this.listenedList) return;
+    this.listenedList?.removeEventListener('scroll', this.onListScroll);
+    this.listenedList?.removeEventListener('focusin', this.onListFocusIn);
+    this.listenedList = list;
+    list?.addEventListener('scroll', this.onListScroll, { passive: true });
+    list?.addEventListener('focusin', this.onListFocusIn);
+  }
+
+  private readonly onListScroll = (): void => this.updateFade();
+
+  private readonly onListFocusIn = (event: FocusEvent): void => {
+    const tab = (event.target as Element | null)?.closest?.('[role="tab"]');
+    if (tab instanceof HTMLElement) this.scrollTabIntoView(tab);
+  };
+
+  /** Sets the fade classes from the horizontal list's scroll position (3.45). */
+  private updateFade(): void {
+    const list = this.listenedList;
+    let start = false;
+    let end = false;
+    if (list && this.orientation() === 'horizontal') {
+      const max = list.scrollWidth - list.clientWidth;
+      // `abs`: in a right-to-left list `scrollLeft` runs from 0 to −max.
+      const offset = Math.abs(list.scrollLeft);
+      start = max > 1 && offset > 1;
+      end = max > 1 && offset < max - 1;
+    }
+    this.fadeStart.set(start);
+    this.fadeEnd.set(end);
   }
 
   /** Scrolls the horizontal list so the selected (links: current) tab is fully in view; `scrollLeft` only. */
@@ -331,13 +401,23 @@ export class TabsComponent {
     const list = this.listElement()?.nativeElement;
     if (!list || this.orientation() !== 'horizontal' || index < 0) return;
     const tab = list.querySelectorAll<HTMLElement>('[role="tab"]')[index];
-    if (!tab) return;
+    if (tab) this.scrollTabIntoView(tab);
+  }
+
+  /**
+   * Scrolls `tab` fully into the horizontal list, plus the fade's 24 px when
+   * the list overflows (3.45), so no tab ends under a fade; `scrollLeft` only.
+   */
+  private scrollTabIntoView(tab: HTMLElement): void {
+    const list = this.listElement()?.nativeElement;
+    if (!list || this.orientation() !== 'horizontal') return;
+    const pad = list.scrollWidth - list.clientWidth > 1 ? TAB_FADE_PX : 0;
     const box = list.getBoundingClientRect();
     const rect = tab.getBoundingClientRect();
-    if (rect.right > box.right) {
-      list.scrollLeft += rect.right - box.right;
-    } else if (rect.left < box.left) {
-      list.scrollLeft -= box.left - rect.left;
+    if (rect.right > box.right - pad) {
+      list.scrollLeft += rect.right - (box.right - pad);
+    } else if (rect.left < box.left + pad) {
+      list.scrollLeft -= box.left + pad - rect.left;
     }
   }
 

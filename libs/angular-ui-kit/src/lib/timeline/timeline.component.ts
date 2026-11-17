@@ -1,8 +1,13 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   contentChild,
+  inject,
   input,
+  linkedSignal,
+  model,
+  output,
   computed,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
@@ -24,10 +29,21 @@ export type TimelineItemState = 'success' | 'running' | 'failed' | 'pending';
 export type TimelineHeadingLevel = 2 | 3 | 4 | 5 | 6;
 
 export interface TimelineItem {
-  /** Optional stable identity for rendering (falls back to the list index). */
+  /**
+   * Optional stable identity for rendering (falls back to the list index).
+   * 3.45: a `selectable` timeline needs it to show the item as selected.
+   */
   id?: string;
-  /** Title of the event */
+  /**
+   * Title of the event. 3.45 (usm-x row 36): `''` renders no title element
+   * (before, an empty one); name a selectable untitled item with `ariaLabel`.
+   */
   title: string;
+  /**
+   * Accessible name of the item's button in a `selectable` timeline (3.45).
+   * Default: the title, else the description, else the timestamp.
+   */
+  ariaLabel?: string;
   /** Optional monospace suffix after the title (e.g. a tool id like `gate_test`). */
   titleMono?: string;
   /** Optional badge label in the header line (e.g. "Fehlgeschlagen"). */
@@ -58,6 +74,14 @@ export interface TimelineItem {
 }
 
 export type TimelineOrientation = 'vertical' | 'horizontal';
+
+/** Payload of `itemClick` (3.45): the item and its position in `items`. */
+export interface TimelineItemClickEvent {
+  item: TimelineItem;
+  index: number;
+}
+
+let nextTimelineId = 0;
 
 /** Marker color class per entry state. */
 const STATE_COLORS: Record<TimelineItemState, string> = {
@@ -121,6 +145,37 @@ export class TimelineComponent {
    */
   headingLevel = input<TimelineHeadingLevel | undefined>(undefined);
 
+  /**
+   * Makes the items selectable (3.45, usm-x row 36): each item's title
+   * becomes a button over the whole entry (inside the heading, when
+   * `headingLevel` is set). One tab stop (the selected item, else the first);
+   * the arrow keys, Home and End move between the items, Enter, Space or a
+   * click emit `itemClick` and select the item (`aria-current`). Links in the
+   * `lcTimelineContent` body stay clickable. Off: the DOM is as before.
+   * @default false
+   */
+  selectable = input<boolean>(false);
+
+  /**
+   * `id` of the selected item in a `selectable` timeline (two-way); a click,
+   * Enter or Space sets it. `null`: none.
+   * @default null
+   */
+  readonly selectedId = model<string | null>(null);
+
+  /** An item of a `selectable` timeline was activated (click, Enter, Space). */
+  readonly itemClick = output<TimelineItemClickEvent>();
+
+  private readonly baseId = `lc-timeline-${++nextTimelineId}`;
+  private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /** Index of the item that owns the tab stop: the selected one, else the first. */
+  protected readonly focusIndex = linkedSignal(() => {
+    const id = this.selectedId();
+    const index = id === null ? -1 : this.items().findIndex((item) => item.id === id);
+    return Math.max(0, index);
+  });
+
   /** Optional per-item content template (below the header line). */
   protected contentTemplate = contentChild(TimelineContentDirective);
 
@@ -132,10 +187,79 @@ export class TimelineComponent {
       'timeline',
       `timeline--${this.orientation()}`,
       this.compact() ? 'timeline--compact' : '',
+      this.selectable() ? 'timeline--selectable' : '',
     ]
       .filter(Boolean)
       .join(' ');
   });
+
+  protected isSelected(item: TimelineItem): boolean {
+    return this.selectable() && item.id !== undefined && item.id === this.selectedId();
+  }
+
+  /** id of an item's description or time, only in a selectable timeline. */
+  protected partId(index: number, part: 'desc' | 'time'): string | null {
+    return this.selectable() ? `${this.baseId}-${index}-${part}` : null;
+  }
+
+  /** `aria-label` of an item's button: only when the title doesn't name it. */
+  protected buttonLabel(item: TimelineItem): string | null {
+    if (item.ariaLabel) return item.ariaLabel;
+    if (item.title) return null;
+    return item.description || item.timestamp || null;
+  }
+
+  /** `aria-describedby` of an item's button: description and time, unless one is its name. */
+  protected describedBy(item: TimelineItem, index: number): string | null {
+    const name = item.ariaLabel || item.title ? null : item.description ? 'desc' : item.timestamp ? 'time' : null;
+    const ids: string[] = [];
+    if (item.description && name !== 'desc') ids.push(`${this.baseId}-${index}-desc`);
+    if (item.timestamp && name !== 'time') ids.push(`${this.baseId}-${index}-time`);
+    return ids.length ? ids.join(' ') : null;
+  }
+
+  protected onItemActivate(item: TimelineItem, index: number): void {
+    this.focusIndex.set(index);
+    if (item.id !== undefined) this.selectedId.set(item.id);
+    this.itemClick.emit({ item, index });
+  }
+
+  /** Arrow keys (both axes, in either orientation), Home and End move the focus. */
+  protected onItemKeydown(event: KeyboardEvent, index: number): void {
+    const last = this.items().length - 1;
+    let next: number;
+    switch (event.key) {
+      case 'ArrowDown':
+      case 'ArrowRight':
+        next = Math.min(last, index + 1);
+        break;
+      case 'ArrowUp':
+      case 'ArrowLeft':
+        next = Math.max(0, index - 1);
+        break;
+      case 'Home':
+        next = 0;
+        break;
+      case 'End':
+        next = last;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    this.focusIndex.set(next);
+    this.elementRef.nativeElement.querySelectorAll<HTMLElement>('.timeline__button')[next]?.focus();
+  }
+
+  /**
+   * Brings the focused item fully into view, its box outset included
+   * (`scroll-margin`): Chromium's `focus()` leaves a partly visible button
+   * where it is, cut off in the horizontal scroller (review r3 M6).
+   * `?.()`: jsdom has no `scrollIntoView`.
+   */
+  protected onItemFocus(event: FocusEvent): void {
+    (event.target as HTMLElement).closest('li')?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  }
 
   protected markerClasses(item: TimelineItem): string {
     const color = item.state ? STATE_COLORS[item.state] : item.color || 'primary';

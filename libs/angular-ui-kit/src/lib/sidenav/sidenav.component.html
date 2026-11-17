@@ -135,13 +135,30 @@
       <nav
         class="lc-sidenav__nav"
         [class.lc-sidenav__nav--docked]="effectiveMode() === 'docked'"
+        [class.lc-sidenav__nav--long-press]="contextMenuOnLongPress()"
         [attr.aria-label]="ariaLabel()">
         @for (item of sortedItems(); track item.id) {
           <!-- Section headline -->
           @if (item.isSection) {
             <div class="lc-sidenav__section">
               <div class="lc-sidenav__section-header">
-                <h2 class="lc-sidenav__section-title">{{ item.label }}</h2>
+                @if (item.collapsible) {
+                  <!-- 3.45: a foldable section; the heading holds its disclosure button. -->
+                  <h2 class="lc-sidenav__section-title lc-sidenav__section-title--foldable">
+                    <button
+                      type="button"
+                      class="lc-sidenav__section-toggle"
+                      [class.lc-sidenav__section-toggle--folded]="isSectionFolded(item)"
+                      [attr.aria-expanded]="!isSectionFolded(item)"
+                      [attr.aria-controls]="sectionListId(item)"
+                      (click)="toggleSection(item)">
+                      <span class="lc-sidenav__section-label">{{ item.label }}</span>
+                      <lc-icon name="chevron-down" size="xs" [decorative]="true" class="lc-sidenav__section-chevron" />
+                    </button>
+                  </h2>
+                } @else {
+                  <h2 class="lc-sidenav__section-title">{{ item.label }}</h2>
+                }
                 @if (item.action) {
                   <button
                     type="button"
@@ -153,7 +170,10 @@
                 }
               </div>
               @if (item.children?.length) {
-                <ul class="lc-sidenav__section-items">
+                <ul
+                  class="lc-sidenav__section-items"
+                  [attr.id]="item.collapsible ? sectionListId(item) : null"
+                  [attr.hidden]="isSectionFolded(item) && !isRail() ? '' : null">
                   @for (child of item.children; track child.id) {
                     <li>
                       @if (isGroup(child)) {
@@ -166,7 +186,7 @@
                             [class.lc-sidenav__nav-item--has-active-child]="hasActiveChild(child)"
                             (click)="toggleExpanded(child)"
                             [attr.aria-expanded]="isExpanded(child)"
-                            [title]="collapsed() && !child.badge ? child.label : ''"
+                            [title]="railTitle(child)"
                             [attr.data-tooltip]="collapsed() ? child.label : null"
                             [class.lc-sidenav__nav-item--busy]="!!child.busy"
                             [class.lc-sidenav__nav-item--disabled]="!!child.disabled"
@@ -249,7 +269,7 @@
                               (click)="handleItemClick(child)"
                               [class.lc-sidenav__nav-item--active]="isItemActive(child)"
                               [attr.aria-current]="isItemActive(child) ? 'page' : null"
-                              [title]="collapsed() && !child.badge ? child.label : ''"
+                              [title]="railTitle(child)"
                               [attr.data-tooltip]="collapsed() ? child.label : null"
                               [class.lc-sidenav__nav-item--busy]="!!child.busy"
                               [class.lc-sidenav__nav-item--disabled]="!!child.disabled"
@@ -270,7 +290,7 @@
                               (click)="handleItemClick(child)"
                               [class.lc-sidenav__nav-item--active]="isItemActive(child)"
                               [attr.aria-current]="isItemActive(child) ? 'page' : null"
-                              [title]="collapsed() && !child.badge ? child.label : ''"
+                              [title]="railTitle(child)"
                               [attr.data-tooltip]="collapsed() ? child.label : null"
                               [class.lc-sidenav__nav-item--busy]="!!child.busy"
                               [class.lc-sidenav__nav-item--disabled]="!!child.disabled"
@@ -311,7 +331,7 @@
                 [class.lc-sidenav__nav-item--has-active-child]="hasActiveChild(item)"
                 (click)="toggleExpanded(item)"
                 [attr.aria-expanded]="isExpanded(item)"
-                [title]="collapsed() && !item.badge ? item.label : ''"
+                [title]="railTitle(item)"
                 [attr.data-tooltip]="collapsed() ? item.label : null"
                 [class.lc-sidenav__nav-item--busy]="!!item.busy"
                 [class.lc-sidenav__nav-item--disabled]="!!item.disabled"
@@ -394,7 +414,7 @@
                   (click)="handleItemClick(item)"
                   [class.lc-sidenav__nav-item--active]="isItemActive(item)"
                   [attr.aria-current]="isItemActive(item) ? 'page' : null"
-                  [title]="collapsed() && !item.badge ? item.label : ''"
+                  [title]="railTitle(item)"
                   [attr.data-tooltip]="collapsed() ? item.label : null"
                   [class.lc-sidenav__nav-item--busy]="!!item.busy"
                   [class.lc-sidenav__nav-item--disabled]="!!item.disabled"
@@ -415,7 +435,7 @@
                   (click)="handleItemClick(item)"
                   [class.lc-sidenav__nav-item--active]="isItemActive(item)"
                   [attr.aria-current]="isItemActive(item) ? 'page' : null"
-                  [title]="collapsed() && !item.badge ? item.label : ''"
+                  [title]="railTitle(item)"
                   [attr.data-tooltip]="collapsed() ? item.label : null"
                   [class.lc-sidenav__nav-item--busy]="!!item.busy"
                   [class.lc-sidenav__nav-item--disabled]="!!item.disabled"
@@ -507,7 +527,7 @@
     &ngsp;<span class="lc-sidenav__nav-hint" [attr.title]="item.hint">{{ item.hint }}</span>
   }
   @if (item.badge) {
-    <lc-badge aria-hidden="true" [variant]="item.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ item.badge.value }}</lc-badge>&ngsp;<span class="lc-sidenav__sr-only">{{ badgeText(item) }}</span>
+    <lc-badge aria-hidden="true" [variant]="item.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge" [class.lc-sidenav__nav-badge--dot]="railBadgeDot(item)">{{ item.badge.value }}</lc-badge>&ngsp;<span class="lc-sidenav__sr-only">{{ badgeText(item) }}</span>
   }
   @if (item.busy) {
     &ngsp;<span class="lc-sidenav__sr-only">{{ busyText(item) }}</span>

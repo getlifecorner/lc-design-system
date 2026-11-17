@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { fn } from 'storybook/test';
-import { MenuComponent } from './menu.component';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { MenuComponent, type MenuItem, type MenuItemToggleEvent } from './menu.component';
 
 /**
  * Menus display a list of actions or options in a floating panel.
@@ -13,9 +14,15 @@ const meta: Meta<MenuComponent> = {
   args: {
     itemClick: fn(),
     closed: fn(),
+    itemToggle: fn(),
   },
   argTypes: {
     itemClick: { action: 'itemClick', description: 'Emitted with the MenuItem when an item is clicked' },
+    itemToggle: {
+      action: 'itemToggle',
+      description:
+        '3.45: `{ item, checked }` when a `checkbox` / `radio` item is activated (click, Enter, Space); a radio emits only when it becomes checked. `itemClick` is not emitted for these items',
+    },
     closed: { action: 'closed', description: 'Emitted when the menu is closed' },
     isOpen: { description: 'Whether the menu is currently visible' },
     position: {
@@ -38,7 +45,7 @@ const meta: Meta<MenuComponent> = {
     items: {
       control: 'object',
       description:
-        '`MenuItem[]`. 3.43 (usm-x row 12): an item with `children` is a section: its `label` is a heading (not focusable, not an action) and the children are its items, in a `role="group"` named by the heading; one level. `indentChildren: true` indents them one step (md 16, sm 12, lg 20 px); `dividerAfter` on a section follows the whole group. The arrow keys, Home and End run over the items of every section',
+        '`MenuItem[]`. 3.43 (usm-x row 12): an item with `children` is a section: its `label` is a heading (not focusable, not an action) and the children are its items, in a `role="group"` named by the heading; one level. `indentChildren: true` indents them one step (md 16, sm 12, lg 20 px); `dividerAfter` on a section follows the whole group. The arrow keys, Home and End run over the items of every section. 3.45 (usm-x row 31): `type: \'checkbox\' | \'radio\'` with `checked` (controlled), `radioGroup` (the exclusive set) and `closeOnSelect` (`true`: the menu emits `closed` after the item acts)',
       table: { defaultValue: { summary: '[]' } },
     },
   },
@@ -260,5 +267,78 @@ export const LightPanelInDarkScope: Story = {
           <button trigger type="button" class="lc-theme-dark" style="${TOKEN_TRIGGER}">Bereich ▾</button>
         </lc-menu>
       </div>`,
+  }),
+};
+
+/** 3.45 (usm-x row 31): the column choice of a table, as checkbox items and a radio set. */
+const COLUMN_CHOICE: MenuItem[] = [
+  { id: 'name', label: 'Name', type: 'checkbox', checked: true },
+  { id: 'status', label: 'Status', type: 'checkbox' },
+  { id: 'kostenstelle', label: 'Kostenstelle', type: 'checkbox', checked: true },
+  { id: 'verantwortlich', label: 'Verantwortlich', type: 'checkbox', checked: true },
+  { id: 'erstellt', label: 'Erstellt am', type: 'checkbox' },
+  { id: 'geaendert', label: 'Geändert am', type: 'checkbox', checked: true },
+  { id: 'betrag', label: 'Betrag', type: 'checkbox', checked: true },
+  { id: 'schluessel', label: 'Leistungsverrechnungsschlüssel', type: 'checkbox', checked: true, dividerAfter: true },
+  {
+    id: 'zeilenhoehe',
+    label: 'Zeilenhöhe',
+    children: [
+      { id: 'kompakt', label: 'Kompakt', type: 'radio', radioGroup: 'zeilenhoehe' },
+      { id: 'standard', label: 'Standard', type: 'radio', radioGroup: 'zeilenhoehe', checked: true },
+      { id: 'grosszuegig', label: 'Großzügig', type: 'radio', radioGroup: 'zeilenhoehe' },
+    ],
+  },
+];
+
+/** Applies an `itemToggle` the way an app does: the item takes its state, a radio unchecks its set. */
+function applyToggle(items: readonly MenuItem[], { item, checked }: MenuItemToggleEvent): MenuItem[] {
+  return items.map((i) => {
+    if (i.children) return { ...i, children: applyToggle(i.children, { item, checked }) };
+    if (i.id === item.id) return { ...i, checked };
+    if (item.type === 'radio' && i.radioGroup && i.radioGroup === item.radioGroup) return { ...i, checked: false };
+    return i;
+  });
+}
+
+@Component({
+  selector: 'lc-menu-column-choice-demo',
+  standalone: true,
+  imports: [MenuComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div lang="de" style="position: relative; display: inline-block; padding: 16px 0; min-height: 600px;">
+      <lc-menu
+        [items]="items()"
+        [isOpen]="open()"
+        position="bottom-left"
+        maxWidth="min(18rem, calc(100vw - 2rem))"
+        (itemToggle)="items.set(apply(items(), $event))"
+        (closed)="open.set(false)"
+      >
+        <button trigger type="button" style="${TOKEN_TRIGGER}" (click)="open.set(!open())">Spalten ein-/ausblenden ▾</button>
+      </lc-menu>
+    </div>
+  `,
+})
+class MenuColumnChoiceDemoComponent {
+  protected readonly open = signal(true);
+  protected readonly items = signal<MenuItem[]>(COLUMN_CHOICE);
+  protected readonly apply = applyToggle;
+}
+
+export const ColumnChoice: Story = {
+  name: 'Column Choice',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.45 (request 065, usm-x row 31): `type: \'checkbox\'` items are `menuitemcheckbox`es with `aria-checked` and a check mark; the „Zeilenhöhe“ section is a radio set (`type: \'radio\'`, `radioGroup`), a `role="group"` named by its heading, with a dot. Click, Enter or Space emits `itemToggle` with the new state (not `itemClick`); the menu stays open and the focus stays on the item. The app owns `checked` (and unchecks the rest of a radio set). Every item gets the 20 px indicator slot, so the labels share an edge; the long German label hyphenates. md rows are 44 px.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [MenuColumnChoiceDemoComponent] },
+    template: `<lc-menu-column-choice-demo />`,
   }),
 };

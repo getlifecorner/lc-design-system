@@ -2093,6 +2093,34 @@ describe('Component pairings of 3.37 (request 057)', () => {
       for (const page of pages) expect([old, page, ratio(color(light, old), color(light, page)) < 3]).toEqual([old, page, true]);
     }
   });
+
+  // 3.45 (request 065, backlog 057-n2, AC-25): entry 2 also on the card and
+  // well surfaces. [light, dark] per page, floored; design 065 §5 quotes them
+  // rounded (4.42 / 4.60 on surface-2, 4.20 / 5.80 on sunken).
+  it.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))(
+    'AC-25: %s palette: entry 2 is the secondary graphic token, at least 3:1 on surface-2 and sunken',
+    (_palette, tokens, i) => {
+      expect(PALETTE[1]).toBe('var(--color-secondary-graphic)');
+      const expected: Record<string, [number, number]> = {
+        '--color-surface-2': [4.41, 4.59],
+        '--color-surface-sunken': [4.19, 5.79],
+        '--color-surface': [4.61, 5.53],
+        '--color-background': [4.61, 6.03],
+      };
+      const measured = Object.fromEntries(
+        Object.keys(expected).map((page) => [page, floor(ratio(color(tokens, '--color-secondary-graphic'), color(tokens, page)))]),
+      );
+      expect(Object.values(measured).every((value) => value >= 3)).toBe(true);
+      expect(measured).toEqual(Object.fromEntries(Object.entries(expected).map(([page, values]) => [page, values[i]])));
+    },
+  );
+
+  it('why (AC-25): the light secondary-500 stayed below 3:1 on surface-2 and sunken', () => {
+    const light = palettes[0][1];
+    for (const page of ['--color-surface-2', '--color-surface-sunken']) {
+      expect([page, ratio(color(light, '--color-secondary-500'), color(light, page)) < 3]).toEqual([page, true]);
+    }
+  });
 });
 
 /**

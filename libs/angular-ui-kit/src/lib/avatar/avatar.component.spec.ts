@@ -317,8 +317,10 @@ describe('AvatarComponent', () => {
       for (const [, hex] of hexes) {
         expect(contrast(hex, '#ffffff')).toBeGreaterThanOrEqual(4.5);
       }
-      expect(scss).toMatch(/background-color: var\(--color-member-#\{\$index\}, #\{\$hex\}\)/);
-      expect(scss).toMatch(/color: var\(--color-on-member, #ffffff\)/);
+      // 3.45 (usm-x row 37, AC-22): the token and its literal fallback are now
+      // the fallback of the identity hooks `--lc-avatar-bg` / `--lc-avatar-color`.
+      expect(scss).toMatch(/background-color: var\(--lc-avatar-bg, var\(--color-member-#\{\$index\}, #\{\$hex\}\)\)/);
+      expect(scss).toMatch(/color: var\(--lc-avatar-color, var\(--color-on-member, #ffffff\)\)/);
     });
   });
 });

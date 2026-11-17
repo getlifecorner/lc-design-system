@@ -146,10 +146,14 @@ describe('lc-device-frame device="laptop" (3.40, request 060)', () => {
         'inset: 0 var(--_lc-device-frame-overhang) var(--_lc-device-frame-base-height); border-bottom: 0; ' +
           'border-radius: var(--_lc-device-frame-radius) var(--_lc-device-frame-radius) 0 0; background: var(--lc-device-frame-bezel-color, #111827);',
       );
+      // 3.45 (request 065, backlog 060-n3, AC-33): + the rim and shadow that
+      // vanish with a 0 base height.
       expect(rule(`${laptop}::after`)).toBe(
         'inset: auto 0 0; block-size: var(--_lc-device-frame-base-height); ' +
           'border-radius: 0 0 var(--_lc-device-frame-base-height) var(--_lc-device-frame-base-height); ' +
-          'background: radial-gradient(farthest-side at 50% 0, #1f2937 98%, transparent) 50% 0/14% 50% no-repeat, var(--lc-device-frame-base-color, #374151);',
+          'background: radial-gradient(farthest-side at 50% 0, #1f2937 98%, transparent) 50% 0/14% 50% no-repeat, var(--lc-device-frame-base-color, #374151); ' +
+          'border-width: min(1px, var(--_lc-device-frame-base-height)); ' +
+          'clip-path: inset(calc(var(--_lc-device-frame-base-height) * -100));',
       );
     });
 

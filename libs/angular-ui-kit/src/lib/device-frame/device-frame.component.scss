@@ -195,6 +195,11 @@
   background:
     radial-gradient(farthest-side at 50% 0, #{colors.$color-neutral-800} 98%, transparent) 50% 0 / 14% 50% no-repeat,
     var(--lc-device-frame-base-color, #{colors.$color-neutral-700});
+  // 3.45 (backlog 060-n3): `--lc-device-frame-base-height: 0` hides the base.
+  // Its 1 px rim shrinks with it (border-box: a 0 px base drew a 2 px strip),
+  // and the clip drops its shadow at 0 (100 × the height of room otherwise).
+  border-width: min(1px, var(--_lc-device-frame-base-height));
+  clip-path: inset(calc(var(--_lc-device-frame-base-height) * -100));
 }
 
 // The screen's lower corners sit on the lid's bottom bezel: square.

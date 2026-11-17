@@ -1,5 +1,54 @@
 import type { Meta, StoryObj } from '@storybook/angular';
+import { AfterViewInit, ChangeDetectionStrategy, Component, viewChildren } from '@angular/core';
 import { PopoverComponent } from './popover.component';
+
+const TRIGGER_STYLE =
+  'min-height: 44px; padding: 8px 16px; border: 1px solid var(--color-field-border); border-radius: var(--border-radius-md); background: var(--color-surface); color: var(--color-text-primary); font: inherit; cursor: pointer;';
+const NOTE_STYLE = 'margin: 0; font-size: 14px; line-height: 20px; color: var(--color-text-primary);';
+
+/** 3.45 (usm-x row 35): `align` and the viewport shift at the 360 px edges, opened at load. */
+@Component({
+  selector: 'lc-popover-placement-demo',
+  standalone: true,
+  imports: [PopoverComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- One demo per row, so the four open panels don't overlap at 360 px. -->
+    <div lang="de" style="display: flex; flex-direction: column; gap: 140px; padding-bottom: 140px;">
+      <div style="display: flex; justify-content: flex-start;">
+        <lc-popover align="start">
+          <button popover-trigger type="button" style="${TRIGGER_STYLE}">Start</button>
+          <div popover-content style="width: 15rem;"><p style="${NOTE_STYLE}">align="start": die Startkante des Panels liegt auf der des Auslösers.</p></div>
+        </lc-popover>
+      </div>
+      <div style="display: flex; justify-content: flex-end;">
+        <lc-popover align="end">
+          <button popover-trigger type="button" style="${TRIGGER_STYLE}">Ende</button>
+          <div popover-content style="width: 15rem;"><p style="${NOTE_STYLE}">align="end": die Endkante des Panels liegt auf der des Auslösers.</p></div>
+        </lc-popover>
+      </div>
+      <div style="display: flex; justify-content: flex-start;">
+        <lc-popover>
+          <button popover-trigger type="button" style="${TRIGGER_STYLE}">Mitte am Rand</button>
+          <div popover-content style="width: 15rem;"><p style="${NOTE_STYLE}">Zentriert, aber 8 px vom Rand verschoben; der Pfeil zeigt auf den Auslöser.</p></div>
+        </lc-popover>
+      </div>
+      <div style="display: flex; justify-content: flex-end;">
+        <lc-popover position="right">
+          <button popover-trigger type="button" style="${TRIGGER_STYLE}">Rechts</button>
+          <div popover-content style="width: 15rem;"><p style="${NOTE_STYLE}">position="right" passt nicht: das Panel weicht nach unten aus.</p></div>
+        </lc-popover>
+      </div>
+    </div>
+  `,
+})
+class PopoverPlacementDemoComponent implements AfterViewInit {
+  private readonly popovers = viewChildren(PopoverComponent);
+  ngAfterViewInit(): void {
+    // Demo only: open every panel at load, so the shot shows the placement.
+    this.popovers().forEach((p) => p.open());
+  }
+}
 
 const meta: Meta<PopoverComponent> = {
   title: 'Feedback/Popover',
@@ -21,9 +70,41 @@ A floating panel for rich content triggered by click or hover.
     },
   },
   argTypes: {
-    position: { control: 'select', options: ['top', 'bottom', 'left', 'right'] },
-    trigger: { control: 'select', options: ['click', 'hover'] },
-    showArrow: { control: 'boolean' },
+    position: {
+      control: 'select',
+      options: ['top', 'bottom', 'left', 'right'],
+      description: 'Side of the trigger. 3.45: a panel that doesn’t fit flips (top ↔ bottom; left/right fall back to bottom, then top).',
+      table: { defaultValue: { summary: 'bottom' } },
+    },
+    trigger: {
+      control: 'select',
+      options: ['click', 'hover', 'focus', 'longpress'],
+      description:
+        '`click`, `hover`; 3.45: `focus` (keyboard focus), `longpress` (touch hold of `longPressMs`, right click, Shift+F10, Menu key), or an array of kinds. Hover/focus-only panels are tooltips; interactive content needs `click` or `longpress`.',
+      table: { defaultValue: { summary: 'click' } },
+    },
+    showArrow: { control: 'boolean', description: 'Arrow pointing at the trigger.', table: { defaultValue: { summary: 'true' } } },
+    openDelay: {
+      control: { type: 'number', min: 0, max: 2000 },
+      description: '3.45: ms before a hover / focus opens the panel.',
+      table: { defaultValue: { summary: '0' } },
+    },
+    closeDelay: {
+      control: { type: 'number', min: 0, max: 2000 },
+      description: '3.45: ms before leaving trigger and panel closes a hover / focus panel.',
+      table: { defaultValue: { summary: '0' } },
+    },
+    longPressMs: {
+      control: { type: 'number', min: 200, max: 2000 },
+      description: '3.45: hold time of a `longpress` (a move of 10 px cancels it).',
+      table: { defaultValue: { summary: '500' } },
+    },
+    align: {
+      control: 'select',
+      options: ['start', 'center', 'end'],
+      description: '3.45: the panel’s start / end edge on the trigger’s, or centred. The panel shifts to stay 8 px inside the viewport; the arrow follows the trigger.',
+      table: { defaultValue: { summary: 'center' } },
+    },
   },
 };
 
@@ -119,5 +200,58 @@ export const NoArrow: Story = {
           </div>
         </lc-popover>
       </div>`,
+  }),
+};
+
+export const Triggers: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.45 (request 065, usm-x row 35). **Info card:** `[trigger]="[\'hover\', \'focus\', \'longpress\']"` with `openDelay` 300 and `closeDelay` 200: it opens after 300 ms of hover or on keyboard focus, on a 500 ms touch hold, right click, Shift+F10 or the Menu key; the pointer can move onto the panel (a bridge over the gap), Escape closes it and the same hover doesn’t reopen it until the pointer leaves. **Keyboard focus:** `trigger="focus"` only — a hover/focus-only panel is a `tooltip` the trigger is described by. **Long press:** `trigger="longpress"`; the click that ends the hold is cancelled. **Programmatic:** the outer buttons call `open()` and `close()`; `openChange` emits once per change.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 24px; padding-bottom: 160px;">
+        <lc-popover [trigger]="['hover', 'focus', 'longpress']" [openDelay]="300" [closeDelay]="200">
+          <button popover-trigger type="button" style="${TRIGGER_STYLE}">Info card (hover, focus, long press)</button>
+          <div popover-content style="width: 16rem;">
+            <p style="${NOTE_STYLE}"><strong>Cost centre 4711</strong><br />Facility management · owner M. Weber</p>
+          </div>
+        </lc-popover>
+        <lc-popover trigger="focus">
+          <button popover-trigger type="button" style="${TRIGGER_STYLE}">Keyboard focus only</button>
+          <div popover-content style="width: 16rem;"><p style="${NOTE_STYLE}">Opens when the button gets keyboard focus.</p></div>
+        </lc-popover>
+        <lc-popover trigger="longpress">
+          <button popover-trigger type="button" style="${TRIGGER_STYLE}">Long press or right click</button>
+          <div popover-content style="width: 16rem;"><p style="${NOTE_STYLE}">Hold 500 ms on touch, right click, Shift+F10 or the Menu key.</p></div>
+        </lc-popover>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+          <lc-popover #pop>
+            <button popover-trigger type="button" style="${TRIGGER_STYLE}">Programmatic</button>
+            <div popover-content style="width: 16rem;"><p style="${NOTE_STYLE}">Opened by open(), closed by close().</p></div>
+          </lc-popover>
+          <button type="button" style="${TRIGGER_STYLE}" (click)="$event.stopPropagation(); pop.open()">open()</button>
+          <button type="button" style="${TRIGGER_STYLE}" (click)="$event.stopPropagation(); pop.close()">close()</button>
+        </div>
+      </div>`,
+  }),
+};
+
+export const Placement: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.45 (request 065, usm-x row 35): `align="start"` and `align="end"` line the panel up with the trigger’s start / end edge; a centred panel at the edge shifts to stay 8 px inside the viewport with its arrow on the trigger’s centre; `position="right"` without room falls back to bottom. All four are opened by `open()` at load (demo).',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [PopoverPlacementDemoComponent] },
+    template: `<lc-popover-placement-demo />`,
   }),
 };

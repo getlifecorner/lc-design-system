@@ -76,6 +76,14 @@
   background: repeating-linear-gradient(90deg, currentColor 0 6px, transparent 6px 10px);
 }
 
+// Dotted series (3.45, request 065): the path keeps its round caps, which
+// turn the zero-length dashes (`0 2·sw`) into dots. The swatch draws 3 px
+// dots every 6 px in the series colour (`color`).
+.lc-line-chart__legend-line--dotted {
+  border-radius: 0;
+  background: radial-gradient(circle closest-side, currentColor 96%, transparent) 0 50% / 6px 3px repeat-x;
+}
+
 // Forced colours: the swatch background would be forced to Canvas and vanish
 // (measured, design 063 §6); the SVG strokes keep their colours already.
 @media (forced-colors: active) {

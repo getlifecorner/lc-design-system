@@ -100,11 +100,14 @@ describe('TextareaComponent one-line mode and footer (3.43, request 063)', () =>
       expect(css.slice(oneLine).replace(/\s+/g, ' ')).toMatch(/^\.lc-textarea--one-line \{ min-height: 0; display: block; \}/);
     });
 
-    it('SCSS: only the one-line class sets display, so multi-line fields keep their 3.42 host (AC-15)', () => {
+    it('SCSS: the base field and the one-line class set display (3.45: multi-line fields are blocks too)', () => {
       const css = compile(resolve(__dirname, 'textarea.component.scss')).css;
       const fieldRules = css.match(/\n\.lc-textarea(?:--[a-z-]+)?(?::[a-z-]+)? \{[^}]*\}/g) ?? [];
       const withDisplay = fieldRules.filter((r) => /display:/.test(r)).map((r) => r.trim().split(' {')[0]);
-      expect(withDisplay).toEqual(['.lc-textarea--one-line']);
+      // 3.45 (request 065, backlog 063-n2, AC-41): the base rule is a block, so
+      // multi-line hosts lose their 6 px line gap (the 3.43 AC-15 kept it).
+      expect(withDisplay).toEqual(['.lc-textarea', '.lc-textarea--one-line']);
+      expect(css).toMatch(/\n\.lc-textarea \{\s*display: block;/);
     });
   });
 

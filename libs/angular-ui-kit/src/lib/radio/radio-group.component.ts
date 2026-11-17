@@ -45,7 +45,12 @@ export class RadioGroupComponent implements RadioGroupContext, ControlValueAcces
   /** Help for the whole group, below the legend. */
   readonly helpText = input<string>('');
 
-  /** One error for the whole group, below the help text; marks every radio invalid. */
+  /**
+   * One error for the whole group, below the options (3.45, as
+   * `lc-checkbox-group`; before, below the help text); marks every radio
+   * invalid.
+   * @default ''
+   */
   readonly error = input<string>('');
 
   /** Every radio is `required`. */
@@ -54,7 +59,12 @@ export class RadioGroupComponent implements RadioGroupContext, ControlValueAcces
   /** Show `*` after the legend of a required group. */
   readonly requiredIndicator = input<boolean>(true);
 
-  /** Accessible name of the `*` marker. */
+  /**
+   * Visually hidden text after the `*` of a required group, part of the
+   * legend (3.45: the `*` itself is hidden from assistive technology, as in
+   * `lc-checkbox-group`). German: „Pflichtfeld“.
+   * @default 'required'
+   */
   readonly requiredAriaLabel = input('required');
 
   /** Disables every radio. */
