@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.43.0] - 2026-11-17
+
+Lazy tree rows and gaps and dashes in the line chart for the finance-intelligence page "Kosten", and the next USM X gaps: a one-line `lc-textarea`, an `alertdialog` role and colour hooks on `lc-alert`, grouped `lc-menu` items, a string value in `lc-number-input`, an icon size hook and light and dark theme scopes. Gap IDs: kosten-2026-11-17 rows 1, 2; usm-x 2026-11-17 rows 6, 7, 8, 12, 13, 18, 19. No API breaks.
+
+### Added
+
+- **`lc-table` `hasChildrenKey`** (kosten row 1): a tree row whose field is truthy shows the chevron (`aria-expanded="false"`) before its children are loaded. The first open emits `rowToggle` once, and the row stays one row high until the page adds the children (then indented, no second event). The table shows no loading state.
+- **`LineChartSeries.data` takes `null`** (kosten row 2): no value, so the line breaks, a lone value is a dot, and the scale and the summary skip it („8 points, 4 with no value, 38 to 52“). **`LineChartSeries.dashed`**: 6/4 px at the default stroke, in the series colour, also in the legend.
+- **`lc-textarea` one-line mode** (usm-x row 6): `rows` 1, or `minRows` 1 with `autoResize`, is one line plus padding (xs 36, sm 43, md 50, lg 57 px), grows to `maxRows`, then scrolls. The host ends at the field, so a send button aligned at the end lines up with the field, also as it grows.
+- **`lc-alert` `role`** (`AlertRole`, usm-x row 7): `alertdialog` for a blocking question, named by the title, focused when shown, focus back to the opener when hidden. **Hooks** `--lc-alert-bg`, `-border`, `-fg`, `-icon` (row 8), on the alert or any ancestor.
+- **`--color-accent-yellow`** (usm-x row 8): light `#867200` (4.75:1 on white), dark `#e8c547`; tint 16 %.
+- **`MenuItem.children`** (sections with a heading, `role="group"`) and **`indentChildren`** (usm-x row 12). Heading contrast 7.55:1 light / 9.25:1 dark.
+- **`lc-number-input` `valueType="string"`** and `stringValueChange` (usm-x row 13): `"1.50"` stays `"1.50"`, a 20-digit id is not rounded; steppers and clamps work in decimal. **`--lc-number-input-value-width`** (on the element or any ancestor) widens the value box for a longer value (default xs 3, sm 3.5, md 4, lg 4.5 rem): `calc(20ch + 0.5rem)` shows all 20 digits of an id, `calc(7ch + 0.5rem)` fits „1250,00“.
+- **`--lc-icon-size`** (usm-x row 18): e.g. 18 px on an `lc-icon`; not inherited.
+- **Theme scopes** `.lc-theme-light` / `.lc-theme-dark` and the mixin `light-theme-tokens` (usm-x row 19): a light panel inside a dark page keeps its colours (items 17.73:1).
+
+### Changed
+
+- **`lc-textarea`** renders its footer only with a helper text, a counter or a visible error: a textarea without them is 8 px shorter (md host 141 → 133 px). Auto-resize counts the border, and a field at `maxRows` scrolls instead of clipping.
+- Tree chevrons take taps on 32 × 44 px (32 × 36 at `sm`); line-chart legend swatches show in forced colours.
+
+### Compatibility
+
+- No API breaks: new inputs, fields and outputs are optional; `LineChartSeries.data` only widens (`NaN` and `undefined` still draw as 0). An `lc-textarea` with `rows` 1 (or `minRows` 1 and `autoResize`) is now one line high (was 6 rem at md).
+
+### Known
+
+- A multi-line `lc-textarea` keeps a 6 px line gap below the field (as before).
+- In the *Gaps And Forecast* stories two solid series differ by hue only (the default chart palette).
+
 ## [3.42.0] - 2026-11-17
 
 Option-group headers in `lc-select`, a read-only `lc-checkbox`, contrast fixes for the checkbox, radio and chip, and the first kit gaps from USM X (`LC_ICON_BASE_PATH`, `ICON_MINUS`, ARIA state on `lc-button`, `invalid` on the text fields, `lc-spinner` `xs`, badge hooks). Gap IDs: services-prove-2026-11-15 row 1, usm-x 2026-11-17 rows 1, 2, 3, 5, 9, 10, 15, and the follow-ups 061-s1, 061-s2, 061-s3. No API breaks.

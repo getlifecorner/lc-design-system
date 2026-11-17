@@ -17,3 +17,5 @@ Open findings that don't need a request of their own: nits, known limits, wordin
 | 060-n5 | chip | The 44 px target premise (design §6) for chips is unsettled. | 060 build.md |
 | 062-n1 | select | A long group header (`Kunden mit Leistungsverrechnungsvereinbarung`) is 3 lines (66 px) at 360 px, 1 line at 1280; no overflow. | 062 build.md Deviation 2 |
 | 061-n3 | radio | `lc-radio-group`: `*` is an `aria-label` on a bare span (axe incomplete) and the error sits above the options; the checkbox group does both the other way. | 061 review F-6 |
+| 063-n1 | line-chart | F4: *Gaps And Forecast* stories: Plan (secondary-500) and Ist (primary-500) differ 1.40:1 (light) and 1.07:1 (dark) in luminance; the legend links them by colour only (default chart palette, pre-existing). Add a non-colour cue for a second solid series or a story palette with a lightness step. | 063 review F4 |
+| 063-n2 | textarea | F5: multi-line `lc-textarea` keeps a 6 px line gap below the field (pre-existing; one-line mode has none). Fixing it moves every host −6 px, so it needs its own request. | 063 review F5 |

@@ -46,3 +46,30 @@ Screenshots: `tmp/story-shots/063/r1-new` (14 stories × 360 · 1024 · 1280, li
 | F5 | nit (backlog) | `lc-textarea` multi-line modes | host ends at the field, as lc-input | 6 px line gap below every multi-line field (pre-existing; fixing it moves every host −6 px, so it needs its own request) |
 
 **Verdict:** changes requested (F1–F3). Round 2 re-shoots *One Line*, *One Line Chat (DE)*, *String Mode*, *String Mode (DE)* (360/1280 L/D, measures above) and compares the textarea and number-input baselines.
+
+## Round 2 — 2026-11-17, commit 82d0f2d (code = bc926d2, `git diff bc926d2 -- libs tools` empty)
+
+Developer's shots `r2-new` (4 stories × 360/1280 × L/D, axe 0, log `tmp/063/r2/shots-new.log`) reused: no source is newer than the first shot. Own run `r2-review` (same stories at 1024 L/D, axe 0) and `r2-review-word` (chat 360, long German words). Baselines: number input `r2-cmp-ni` 48/48 identical; textarea `r2-cmp-ta` 56/68 identical, the 12 diffs are *Sizes*, *Filled States*, *No Script Contact Form* (AC-15, −8 px), and `diff -rq r2-cmp-ta r1-cmp` (textarea files) = 0. Opened 5 shots.
+
+| Finding | Result | Evidence (360 · 1024 · 1280, L/D) |
+|---|---|---|
+| F1 | closed | *One Line*: field `display: block`; hosts 65/72/79/86/175 over fields 36/43/50/57/146, host − field bottom 0 at every width and theme; capped field `overflow-y: auto`. `textarea.one-line.spec` l. 100 pins `{ min-height: 0; display: block; }` and l. 106 that no other field rule sets `display` |
+| F2 | closed | *One Line Chat (DE)*: `lc-button size="lg"` icon-only „Senden“: 45.6 × 45.6; button − field bottom 0 at one line (50), 3 lines (98), 8 lines (capped 146, scrolls) and back to 50. 360: „Donaudampfschifffahrtsgesellschaftskapitänsmütze“ wraps (field 74), two long words 122, Δ 0, gap 8, `scrollWidth` 272 = `clientWidth`, page 360 |
+| F3 | closed | hook in all four size rules as `var(--lc-number-input-value-width, 3/3.5/4/4.5rem)`, never declared by the kit (spec l. 219–235); JSDoc on the class and `size`, docs block and `size` argType, *Added* line in build.md. *String Mode*: id box 209.6, control 291.6, `scrollWidth` 210 = `clientWidth` 210; Amount keeps 64 (no hook). *String Mode (DE)* (hook on the wrapper, so ancestors work): „1,50“, „1250,00“, „19,90“ each 79 = 79 in a 78.5 box. Page `scrollWidth` = width everywhere |
+
+| AC | Result |
+|---|---|
+| 13 | pass (F1, F2 closed) |
+| 21–23 | pass (F3 closed) |
+| all others | pass as in round 1; no code outside textarea, number-input and their stories changed |
+
+**API (§2):** `--lc-number-input-value-width` matches §2 (name, defaults per size, element or ancestor). No input, output or type changed in round 2.
+
+### Open items (for release.md)
+
+| # | Severity | Route |
+|---|---|---|
+| F4 | nit | backlog: *Gaps And Forecast* Plan vs Ist told apart by hue only (1.40:1 L, 1.07:1 D luminance), default chart palette |
+| F5 | nit | backlog: multi-line `lc-textarea` keeps a 6 px line gap below the field (fix moves every host −6 px) |
+
+**Verdict:** approved. No `must-fix` or `should-fix` open.
