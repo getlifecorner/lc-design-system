@@ -33,9 +33,11 @@
     }
   }
 
+  // 3.42 (as lc-checkbox, 061-s3): error-600 is 7.21:1 or more on the dark
+  // pages (--color-error was 1.71–2.24:1); light keeps its value.
   &.radio-error {
     .radio-circle {
-      border-color: var(--color-error);
+      border-color: var(--color-error-600);
     }
   }
 }
@@ -84,7 +86,7 @@
   }
 
   .radio-error & {
-    border-color: var(--color-error);
+    border-color: var(--color-error-600);
   }
 
   .radio-disabled & {
@@ -128,19 +130,28 @@
   margin-left: calc(var(--radio-size) + 0.5rem);
 }
 
-// Size variants
-.radio-xs {
+// Size variants. 3.42 (as lc-checkbox, 061-n1): the size is set on the label's
+// following siblings too, so the help and error text start under the label text.
+.radio-xs,
+.radio-xs ~ * {
   --radio-size: 1rem; // 16px
+}
+
+.radio-xs {
   font-size: 0.875rem; // 14px
 
   .radio-circle {
     width: var(--radio-size);
     height: var(--radio-size);
   }
+}
+
+.radio-sm,
+.radio-sm ~ * {
+  --radio-size: 1.125rem; // 18px
 }
 
 .radio-sm {
-  --radio-size: 1.125rem; // 18px
   font-size: 0.875rem; // 14px
 
   .radio-circle {
@@ -149,8 +160,12 @@
   }
 }
 
-.radio-md {
+.radio-md,
+.radio-md ~ * {
   --radio-size: 1.25rem; // 20px
+}
+
+.radio-md {
   font-size: 1rem; // 16px
   align-items: center;
 
@@ -160,8 +175,12 @@
   }
 }
 
-.radio-lg {
+.radio-lg,
+.radio-lg ~ * {
   --radio-size: 1.5rem; // 24px
+}
+
+.radio-lg {
   font-size: 1.125rem; // 18px
   // 3.3 (AC-6): the whole label row is a 44 px touch target (was about 27 px).
   min-height: 2.75rem;
@@ -193,5 +212,19 @@
   .radio-circle,
   .radio-dot {
     transition: none;
+  }
+}
+
+// 3.42 (062 r1, as lc-checkbox, AC-22): forced colours turn both the circle and
+// the dot (a background) into Canvas, so a checked radio looked unchecked. The
+// dot is CanvasText, GrayText when disabled.
+@media (forced-colors: active) {
+  .radio-dot {
+    background-color: CanvasText;
+    forced-color-adjust: none;
+  }
+
+  .radio-disabled .radio-dot {
+    background-color: GrayText;
   }
 }

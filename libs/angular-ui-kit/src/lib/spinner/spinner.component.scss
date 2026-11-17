@@ -53,6 +53,32 @@
       font-size: 1rem;
     }
   }
+
+  // 3.42 (usm-x row 5): inline in a 44 px row, a tab or a button-sized slot;
+  // no padding, the message beside the circle in the surrounding text size.
+  &--xs {
+    display: inline-flex;
+    flex-direction: row;
+    padding: 0;
+    gap: var(--spacing-2);
+    vertical-align: middle;
+
+    .spinner__circle {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .spinner__message {
+      font-size: inherit;
+    }
+  }
+}
+
+// The xs host is inline-flex too: an inline host in a flex row would add a
+// line-box strut around the 16 px circle.
+:host(.lc-spinner--inline) {
+  display: inline-flex;
+  vertical-align: middle;
 }
 
 // Visually hidden fallback text (local copy of the global .sr-only utility so
@@ -78,5 +104,14 @@
 @media (prefers-reduced-motion: reduce) {
   .spinner__circle {
     animation-duration: 1.5s;
+  }
+}
+
+// 3.42: forced colours turned track and arc into one colour, so the arc was
+// invisible; the system colours keep it apart in every size.
+@media (forced-colors: active) {
+  .spinner__circle {
+    border-color: GrayText;
+    border-top-color: CanvasText;
   }
 }

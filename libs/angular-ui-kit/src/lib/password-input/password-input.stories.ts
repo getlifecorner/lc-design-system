@@ -21,6 +21,12 @@ const meta: Meta<PasswordInputComponent> = {
     disabled: { description: 'Prevents interaction' },
     required: { description: 'Marks the field as required' },
     error: { description: 'Custom error message to display' },
+    invalid: {
+      control: 'boolean',
+      description:
+        '3.42 (usm-x row 9): marks the field invalid without a message (error border, `aria-invalid="true"`, `aria-describedby` unchanged), for a form that lists its errors once in a summary that names the field. A set `error` implies it',
+      table: { defaultValue: { summary: 'false' } },
+    },
     requiredIndicator: {
       control: 'boolean',
       description: 'Shows the `*` of a required field; `false` keeps `required` / `aria-required` without it',
@@ -91,6 +97,19 @@ type Story = StoryObj<PasswordInputComponent>;
 
 export const Default: Story = {
   args: { label: 'Password', placeholder: 'Enter your password' },
+};
+
+export const InvalidWithoutMessage: Story = {
+  name: 'Invalid Without Message',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.42 (usm-x row 9): `invalid` gives the error border and `aria-invalid="true"` without a message; a summary elsewhere on the form names the field (see Form/Input *Invalid Without Message (DE)*).',
+      },
+    },
+  },
+  args: { label: 'Password', placeholder: 'Enter your password', required: true, invalid: true },
 };
 
 export const WithStrengthMeter: Story = {

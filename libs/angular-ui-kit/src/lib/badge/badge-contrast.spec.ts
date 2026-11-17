@@ -64,13 +64,14 @@ function ratio(a: Rgb, b: Rgb): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-/** `--lc-badge-bg` / `--lc-badge-fg` per variant, read from the badge stylesheet. */
+/** The variant fill and ink (`--_lc-badge-bg` / `--_lc-badge-fg`), read from the badge stylesheet. */
 function badgeHooks(): Record<string, { bg: string; fg: string }> {
   const scss = readFileSync(resolve(__dirname, 'badge.component.scss'), 'utf-8');
   const hooks: Record<string, { bg: string; fg: string }> = {};
   for (const match of scss.matchAll(/&--(\w+)\s*\{([^}]*)\}/g)) {
-    const bg = match[2].match(/--lc-badge-bg:\s*([^;]+);/)?.[1];
-    const fg = match[2].match(/--lc-badge-fg:\s*([^;]+);/)?.[1];
+    // 3.42 (062 AC-18): variants set the private --_lc-badge-* (was --lc-badge-*); the hooks win over them.
+    const bg = match[2].match(/--_lc-badge-bg:\s*([^;]+);/)?.[1];
+    const fg = match[2].match(/--_lc-badge-fg:\s*([^;]+);/)?.[1];
     if (bg && fg) hooks[match[1]] = { bg: bg.trim(), fg: fg.trim() };
   }
   return hooks;

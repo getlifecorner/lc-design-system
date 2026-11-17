@@ -22,7 +22,8 @@ Use it for statuses, categories, notifications, and metadata.
 page and on a card (\`badge-contrast.spec.ts\`). The tinted variants take their ink from
 \`--color-on-*-subtle\`; since 3.3 the light warning and the dark success inks are darker /
 lighter so they pass (HS-5). Apps can still restyle a badge through \`--lc-badge-bg\`,
-\`--lc-badge-fg\` and \`--lc-badge-border\`.
+\`--lc-badge-fg\` and \`--lc-badge-border\`; since 3.42 they win when set on the badge, the
+\`lc-badge\` host, any ancestor or \`:root\` (see *Hooks on an Ancestor*).
         `,
       },
     },
@@ -169,6 +170,37 @@ export const AllVariants: Story = {
             <lc-badge variant="primary" size="md">Medium</lc-badge>
             <lc-badge variant="primary" size="lg">Large</lc-badge>
           </div>
+        </div>
+      </div>`,
+  }),
+};
+
+/** 3.42 (usm-x row 15): the colour hooks win from the host, an ancestor or `:root`, as on lc-chip. */
+export const HooksOnAnAncestor: Story = {
+  name: 'Hooks on an Ancestor',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.42 (usm-x row 15): `--lc-badge-bg`, `--lc-badge-fg` and `--lc-badge-border` set on a wrapper reach every badge inside and win over all six variants (the variants keep their colours in private properties and only read the hooks, as `lc-chip` since 3.40). Row 1: the wrapper sets an opaque surface fill with the info ink and border (text 10.16:1 light, 10.64:1 dark). Row 2: the same pair on one `lc-badge` host only; its neighbour keeps the variant. Before 3.42 a variant class redeclared the hooks, so a value on the host or an ancestor lost.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="--lc-badge-bg: var(--color-surface); --lc-badge-fg: var(--color-on-info-subtle); --lc-badge-border: var(--color-info-default); display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+          <lc-badge variant="default">Default</lc-badge>
+          <lc-badge variant="primary">Primary</lc-badge>
+          <lc-badge variant="info">Info</lc-badge>
+          <lc-badge variant="warning">Warning</lc-badge>
+          <lc-badge variant="success">Success</lc-badge>
+          <lc-badge variant="error">Error</lc-badge>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+          <lc-badge variant="warning" style="--lc-badge-bg: var(--color-surface); --lc-badge-fg: var(--color-on-info-subtle); --lc-badge-border: var(--color-info-default);">Hook on the host</lc-badge>
+          <lc-badge variant="warning">Variant</lc-badge>
         </div>
       </div>`,
   }),

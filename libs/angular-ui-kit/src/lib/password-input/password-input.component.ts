@@ -128,6 +128,19 @@ export class PasswordInputComponent implements ControlValueAccessor {
   /** Error message to display (also sets aria-invalid) */
   readonly error = input<string | undefined>(undefined);
 
+  /**
+   * Marks the field invalid without a message (3.42): error border and
+   * `aria-invalid="true"`; `aria-describedby` stays as it is. For a form that
+   * lists its errors once (an error summary that names and links the field),
+   * so the error is not shown by colour alone. A set `error` implies it; with
+   * both, the message shows once.
+   * @default false
+   */
+  readonly invalid = input<boolean>(false);
+
+  /** `error` or `invalid` (3.42): the error border and `aria-invalid`. */
+  protected readonly isInvalid = computed(() => !!this.error() || this.invalid());
+
   /** Help below the field, e.g. the password rule; linked by `aria-describedby`. The error replaces it. */
   readonly helperText = input<string>();
 

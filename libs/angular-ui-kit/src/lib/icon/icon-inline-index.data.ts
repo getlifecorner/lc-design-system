@@ -11,7 +11,7 @@
 
 /** The hand-picked keys (`INLINE_ICON_SVGS`); each has an outline and a solid glyph. */
 export const INLINE_HAND_KEYS =
-  'home chart-bar-square light-bulb banknotes play-circle x-mark bars-3 globe-alt calendar hashtag sun moon user chevron-down chevron-up eye eye-slash check-circle exclamation-triangle information-circle exclamation-circle clock arrow-path building-library arrow-trending-up arrow-trending-down percent-badge presentation-chart-line bell-alert pencil play check document-duplicate chart-bar bolt star plus bell-slash';
+  'home chart-bar-square light-bulb banknotes play-circle x-mark bars-3 globe-alt calendar hashtag sun moon user chevron-down chevron-up eye eye-slash check-circle exclamation-triangle information-circle exclamation-circle clock arrow-path building-library arrow-trending-up arrow-trending-down percent-badge presentation-chart-line bell-alert pencil play check document-duplicate chart-bar bolt star plus minus bell-slash';
 
 /** The inlined Tabler keys (`INLINE_TABLER_SVGS`) with an outline glyph. */
 export const INLINE_TABLER_OUTLINE_KEYS =

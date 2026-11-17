@@ -12,6 +12,12 @@ const meta: Meta<NumberInputComponent> = {
     disabled: { control: 'boolean' },
     helperText: { control: 'text' },
     error: { control: 'text' },
+    invalid: {
+      control: 'boolean',
+      description:
+        '3.42 (usm-x row 9): marks the field invalid without a message (error border, `aria-invalid="true"`, `aria-describedby` unchanged), for a form that lists its errors once in a summary that names the field. A set `error` implies it',
+      table: { defaultValue: { summary: 'false' } },
+    },
     ariaLabel: { control: 'text' },
     locale: {
       control: 'text',
@@ -65,6 +71,19 @@ export const Default: Story = {
 
 export const WithStep: Story = {
   args: { label: 'Guests', min: 0, max: 50, step: 5 },
+};
+
+export const InvalidWithoutMessage: Story = {
+  name: 'Invalid Without Message',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.42 (usm-x row 9): `invalid` gives the error border and `aria-invalid="true"` without a message; a summary elsewhere on the form names the field (see Form/Input *Invalid Without Message (DE)*). The minus is inline since 3.42 (usm-x row 2): no request for `minus.svg`.',
+      },
+    },
+  },
+  args: { label: 'Quantity', min: 0, max: 99, step: 1, invalid: true },
 };
 
 export const Disabled: Story = {

@@ -100,6 +100,13 @@ export class CheckboxGroupComponent implements CheckboxGroupContext, ControlValu
   readonly disabled = input<boolean>(false);
 
   /**
+   * Every checkbox in the group is read-only (see `lc-checkbox` `readonly`);
+   * the value can't change.
+   * @default false
+   */
+  readonly readonly = input<boolean>(false);
+
+  /**
    * `vertical` stacks the checkboxes; `horizontal` puts them in a row that wraps.
    * @default 'vertical'
    */
@@ -132,6 +139,7 @@ export class CheckboxGroupComponent implements CheckboxGroupContext, ControlValu
   readonly groupSize = computed(() => this.size());
   readonly groupDisabled = computed(() => this.disabled() || this.formDisabled());
   readonly groupInvalid = computed(() => !!this.error());
+  readonly groupReadonly = computed(() => this.readonly());
   readonly selectedValues = computed<readonly string[]>(() => this.value());
 
   protected readonly describedBy = computed(() => {

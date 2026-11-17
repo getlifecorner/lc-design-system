@@ -46,6 +46,7 @@ let nextUniqueId = 0;
  * - ControlValueAccessor integration for reactive forms
  * - Inside an `lc-checkbox-group` (3.41): size, disabled and the invalid state
  *   come from the group, and `value` makes the checkbox part of the group's value
+ * - Read-only (3.42): the value at full contrast, focusable, not changeable
  *
  * @example
  * ```html
@@ -108,6 +109,15 @@ export class CheckboxComponent implements ControlValueAccessor, OnChanges {
   readonly disabled = input<boolean>(false);
 
   /**
+   * Shows the value at full contrast but it can't be changed: click and Space
+   * do nothing (no `checkedChange`, no form write), the checkbox stays in the
+   * tab order and gets `aria-readonly="true"`. Inside an `lc-checkbox-group`
+   * the group's `readonly` sets it as well. `disabled` wins.
+   * @default false
+   */
+  readonly readonly = input<boolean>(false);
+
+  /**
    * Accessible name when there is no visible label.
    * @default ''
    */
@@ -159,6 +169,11 @@ export class CheckboxComponent implements ControlValueAccessor, OnChanges {
   /** Effective disabled state: `disabled` input OR form control OR group disabled. */
   readonly isDisabled = computed(() => this.disabled() || this.formDisabled() || !!this.group?.groupDisabled());
 
+  /** Effective read-only state: `readonly` here or on the group, unless disabled. */
+  readonly isReadonly = computed(
+    () => !this.isDisabled() && (this.readonly() || !!this.group?.groupReadonly?.()),
+  );
+
   /** Error state here or on the group. */
   readonly isInvalid = computed(() => this.error() || !!this.group?.groupInvalid());
 
@@ -184,6 +199,10 @@ export class CheckboxComponent implements ControlValueAccessor, OnChanges {
 
     if (this.isInvalid()) {
       classes.push('checkbox-error');
+    }
+
+    if (this.isReadonly()) {
+      classes.push('checkbox-readonly');
     }
 
     if (this.required()) {
@@ -253,6 +272,16 @@ export class CheckboxComponent implements ControlValueAccessor, OnChanges {
   }
 
   // Event handlers
+  /**
+   * Read-only: cancel the toggle. Space and label clicks fire `click` too; a
+   * cancelled click restores the native state and fires no `change`.
+   */
+  handleClick(event: Event): void {
+    if (this.isReadonly()) {
+      event.preventDefault();
+    }
+  }
+
   handleChange(event: Event): void {
     if (this.isDisabled()) {
       event.preventDefault();

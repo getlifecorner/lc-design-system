@@ -30,6 +30,15 @@ export interface SelectOptionGroup {
 
 export type SelectValue = string | number | string[] | number[] | null;
 
+/** A group of the open panel with the options that match the search (internal). */
+interface VisibleSelectGroup {
+  /** id of the header (`<listboxId>-group-<index in the unfiltered groups>`). */
+  readonly id: string;
+  readonly label: string;
+  /** Each option with its index in the flat filtered list (`optionId`, highlight). */
+  readonly items: readonly { readonly option: SelectOption; readonly index: number }[];
+}
+
 /**
  * Select component for dropdown option selection.
  *
@@ -137,7 +146,9 @@ export class SelectComponent implements ControlValueAccessor {
   readonly ariaLabel = input<string | undefined>(undefined);
 
   /**
-   * Select options (flat list or groups)
+   * Select options (flat list or groups). Groups render a header each (not
+   * selectable, 3.42); with `searchable`, groups without hits are hidden.
+   * @default []
    */
   readonly options = input<SelectOption[] | SelectOptionGroup[]>([]);
 
@@ -216,6 +227,29 @@ export class SelectComponent implements ControlValueAccessor {
     }
 
     return this.flattenOptions(opts).filter((opt) => opt.label.toLowerCase().includes(query));
+  });
+
+  /**
+   * The groups to render (3.42, services-prove row 1): each group with at
+   * least one option in `filteredOptions`, with the flat index of each option,
+   * so ids, highlight and keyboard work on the flat list as before. `null` for
+   * flat options and when nothing matches (the flat template branch renders).
+   */
+  readonly visibleGroups = computed<readonly VisibleSelectGroup[] | null>(() => {
+    const opts = this.options();
+    if (!opts?.length || !('options' in opts[0])) {
+      return null;
+    }
+    const visible = new Set(this.filteredOptions());
+    let index = 0;
+    const groups = (opts as SelectOptionGroup[])
+      .map((group, g) => ({
+        id: `${this.listboxId}-group-${g}`,
+        label: group.label,
+        items: group.options.filter((option) => visible.has(option)).map((option) => ({ option, index: index++ })),
+      }))
+      .filter((group) => group.items.length > 0);
+    return groups.length ? groups : null;
   });
 
   /** Keyboard highlight; resets whenever the visible option list changes so it never points at a stale row. */
@@ -454,6 +488,7 @@ export class SelectComponent implements ControlValueAccessor {
           const count = this.filteredOptions().length;
           if (count > 0) {
             this.highlightedIndex.set((this.highlightedIndex() + 1) % count);
+            this.revealHighlighted();
           }
         }
         event.preventDefault();
@@ -467,6 +502,7 @@ export class SelectComponent implements ControlValueAccessor {
           if (count > 0) {
             const current = this.highlightedIndex();
             this.highlightedIndex.set(current <= 0 ? count - 1 : current - 1);
+            this.revealHighlighted();
           }
         }
         event.preventDefault();
@@ -475,6 +511,7 @@ export class SelectComponent implements ControlValueAccessor {
       case 'Home':
         if (this.isOpen() && this.filteredOptions().length > 0) {
           this.highlightedIndex.set(0);
+          this.revealHighlighted();
           event.preventDefault();
         }
         break;
@@ -482,6 +519,7 @@ export class SelectComponent implements ControlValueAccessor {
       case 'End':
         if (this.isOpen() && this.filteredOptions().length > 0) {
           this.highlightedIndex.set(this.filteredOptions().length - 1);
+          this.revealHighlighted();
           event.preventDefault();
         }
         break;
@@ -532,6 +570,31 @@ export class SelectComponent implements ControlValueAccessor {
   }
 
   // Private helper methods
+  /**
+   * Scrolls the panel by the least amount that shows the highlighted option
+   * inside its padding box (3.42, WCAG 2.4.11); for the first option of a group
+   * its header is shown too. Instant, the panel only (never the page), and
+   * only for keyboard moves, never on hover.
+   */
+  private revealHighlighted(): void {
+    const panel = this.dropdownPanel()?.nativeElement;
+    const index = this.highlightedIndex();
+    const option = index >= 0 ? panel?.querySelector<HTMLElement>(`[id="${this.optionId(index)}"]`) : null;
+    if (!panel || !option) {
+      return;
+    }
+    const header = option.previousElementSibling;
+    const topEl = header?.classList.contains('lc-select__group-label') ? header : option;
+    const origin = panel.getBoundingClientRect().top + panel.clientTop - panel.scrollTop;
+    const top = topEl.getBoundingClientRect().top - origin;
+    const bottom = option.getBoundingClientRect().bottom - origin;
+    if (top < panel.scrollTop) {
+      panel.scrollTop = top;
+    } else if (bottom > panel.scrollTop + panel.clientHeight) {
+      panel.scrollTop = bottom - panel.clientHeight;
+    }
+  }
+
   private isSearchInput(target: EventTarget | null): boolean {
     return target instanceof HTMLInputElement;
   }

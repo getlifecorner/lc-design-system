@@ -29,15 +29,24 @@ describe('@lifecorner/angular-ui-kit/icons (AS-17)', () => {
   // glyph) to the Tabler keys: 133 → 137; the 133 of 3.5.1 keep their order.
   // 3.22 (BA-6, BA-7) appended 7 keys with 6 filled glyphs: 137 → 150; the 137 keep their order.
   // 3.40 (G-HV1) appended shopping-bag, target, heart and gift with 2 filled glyphs: 150 → 156; the 150 keep their order.
-  it('BUNDLED_ICONS holds the 156 glyphs of the maps (3.5.1 + 3.16 + 3.22 + 3.40), in order, with identical markup', () => {
-    expect(GLYPHS_351).toHaveLength(156);
-    expect(GLYPHS_351.slice(133, 137).map(({ name, variant }) => `${variant}:${name}`)).toEqual([
+  // 3.42 (062 AC-13, usm-x row 2) added the hand-picked minus (outline + solid) after plus: 156 → 158. Hand-picked
+  // glyphs come first, so every Tabler index below moved by 2 (133 → 135, 137 → 139, 150 → 152).
+  it('BUNDLED_ICONS holds the 158 glyphs of the maps (3.5.1 + 3.16 + 3.22 + 3.40 + 3.42), in order, with identical markup', () => {
+    expect(GLYPHS_351).toHaveLength(158);
+    const plus = GLYPHS_351.findIndex(({ name }) => name === 'plus');
+    expect(GLYPHS_351.slice(plus, plus + 4).map(({ name, variant }) => `${variant}:${name}`)).toEqual([
+      'outline:plus',
+      'solid:plus',
+      'outline:minus',
+      'solid:minus',
+    ]);
+    expect(GLYPHS_351.slice(135, 139).map(({ name, variant }) => `${variant}:${name}`)).toEqual([
       'outline:wallet',
       'outline:building-bank',
       'outline:shield-lock',
       'solid:shield-lock',
     ]);
-    expect(GLYPHS_351.slice(150).map(({ name, variant }) => `${variant}:${name}`)).toEqual([
+    expect(GLYPHS_351.slice(152).map(({ name, variant }) => `${variant}:${name}`)).toEqual([
       'outline:shopping-bag',
       'outline:target',
       'outline:heart',
@@ -45,7 +54,7 @@ describe('@lifecorner/angular-ui-kit/icons (AS-17)', () => {
       'outline:gift',
       'solid:gift',
     ]);
-    expect(GLYPHS_351.slice(137, 150).map(({ name, variant }) => `${variant}:${name}`)).toEqual([
+    expect(GLYPHS_351.slice(139, 152).map(({ name, variant }) => `${variant}:${name}`)).toEqual([
       'outline:search',
       'solid:search',
       'outline:lock',
@@ -69,7 +78,9 @@ describe('@lifecorner/angular-ui-kit/icons (AS-17)', () => {
     const exported = ICONS as unknown as Record<string, unknown>;
     for (const icon of BUNDLED_ICONS) expect(exported[iconConstantName(icon.name, icon.variant)]).toBe(icon);
     const names = Object.keys(exported).filter((n) => n.startsWith('ICON_'));
-    expect(names).toHaveLength(156);
+    expect(names).toHaveLength(158); // 3.42: + ICON_MINUS, ICON_MINUS_SOLID (was 156)
+    expect(exported['ICON_MINUS']).toMatchObject({ name: 'minus', variant: 'outline' });
+    expect(exported['ICON_MINUS_SOLID']).toMatchObject({ name: 'minus', variant: 'solid' });
     expect(Object.keys(exported).filter((n) => !n.startsWith('ICON_'))).toEqual(['BUNDLED_ICONS']);
     expect(exported['ICON_X_MARK']).toMatchObject({ name: 'x-mark', variant: 'outline' });
     expect(exported['ICON_BARS_3_SOLID']).toMatchObject({ name: 'bars-3', variant: 'solid' });
@@ -79,7 +90,7 @@ describe('@lifecorner/angular-ui-kit/icons (AS-17)', () => {
   it('ships plain object literals only, so a bundler keeps just the imported constants', () => {
     const source = readFileSync(join(__dirname, 'icons.data.ts'), 'utf-8');
     const constants = source.split('\n').filter((line) => line.startsWith('export const ICON_'));
-    expect(constants).toHaveLength(156);
+    expect(constants).toHaveLength(158); // 3.42: + the two minus constants (was 156)
     for (const line of constants) {
       expect(line).toMatch(/^export const ICON_[A-Z0-9_]+: LcIconDefinition = \{ name: '[a-z0-9-]+', variant: '(outline|solid)', svg: '<svg [^']*<\/svg>' \};$/);
     }

@@ -15,7 +15,7 @@ import {
 } from '@angular/core';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
-import { ICON_CHEVRON_LEFT, ICON_CHEVRON_RIGHT, ICON_PLUS, ICON_X_MARK } from '@lifecorner/angular-ui-kit/icons';
+import { ICON_CHEVRON_LEFT, ICON_CHEVRON_RIGHT, ICON_MINUS, ICON_PLUS, ICON_X_MARK } from '@lifecorner/angular-ui-kit/icons';
 import { NgStyle } from '@angular/common';
 import { isSafeImageUrl } from '@lifecorner/angular-ui-kit/internal/url';
 import { nameWithText } from '@lifecorner/angular-ui-kit/internal/a11y';
@@ -73,7 +73,7 @@ const SIZE_COLUMNS: Record<GallerySize, number> = {
   selector: 'lc-gallery',
   standalone: true,
   imports: [IconComponent, NgStyle, CdkTrapFocus],
-  viewProviders: [ɵprovideKitIcons([ICON_PLUS, ICON_X_MARK, ICON_CHEVRON_LEFT, ICON_CHEVRON_RIGHT])],
+  viewProviders: [ɵprovideKitIcons([ICON_PLUS, ICON_MINUS, ICON_X_MARK, ICON_CHEVRON_LEFT, ICON_CHEVRON_RIGHT])],
   templateUrl: './gallery.component.html',
   styleUrls: ['./gallery.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

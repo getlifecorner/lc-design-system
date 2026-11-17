@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/angular';
 import { applicationConfig } from '@storybook/angular';
 import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { IconComponent } from './icon.component';
+import { IconComponent, LC_ICON_BASE_PATH } from './icon.component';
 import { provideLcIcons } from './icon-registry';
 // 3.6 (AS-17): the 3.5.1 maps live in the lazy internal entry; the constants in `icons`.
 import { INLINE_ICON_SVGS, INLINE_TABLER_NAMES } from '@lifecorner/angular-ui-kit/internal/icon-set';
@@ -310,6 +310,33 @@ export const AllIcons: Story = {
   render: () => ({
     moduleMetadata: { imports: [IconGalleryComponent] },
     template: `<lc-icon-gallery></lc-icon-gallery>`,
+  }),
+};
+
+/**
+ * 3.42 (usm-x row 1): an app under a sub-path tells `lc-icon` where its Tabler
+ * set is served.
+ */
+export const BasePath: Story = {
+  name: 'Base Path',
+  decorators: [applicationConfig({ providers: [{ provide: LC_ICON_BASE_PATH, useValue: 'tabler-icons/' }] })],
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.42 (usm-x row 1): names outside the inline set are fetched from `LC_ICON_BASE_PATH` (`@lifecorner/angular-ui-kit/icon`, default `\'/tabler-icons\'`) as `${base}/outline/<name>.svg` (`filled/` for solid); a trailing `/` is ignored. An app served under `<base href="/usmx/">` provides `{ provide: LC_ICON_BASE_PATH, useValue: \'/usmx/tabler-icons\' }`, or a relative value, which the browser resolves against `<base href>`. This story provides the relative `\'tabler-icons/\'` (with a trailing slash): the four glyphs below are not inline and load from it. Inline and registered names never touch the network.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <lc-icon name="rocket" size="lg" ariaLabel="rocket"></lc-icon>
+        <lc-icon name="flask" size="lg" ariaLabel="flask"></lc-icon>
+        <lc-icon name="plant-2" size="lg" ariaLabel="plant-2"></lc-icon>
+        <lc-icon name="compass" size="lg" ariaLabel="compass"></lc-icon>
+      </div>`,
   }),
 };
 
@@ -635,7 +662,7 @@ export const IconConstants: Story = {
     docs: {
       description: {
         story:
-          'All 156 constants (`BUNDLED_ICONS` registers them all — for tests or a page that really shows every glyph; an app that imports it bundles all of them). A name that is an alias finds the constant of its target: `x-circle` → `ICON_CIRCLE_X`, `envelope` → `ICON_MAIL`, `cog-6-tooth` → `ICON_SETTINGS`.',
+          'All 158 constants (`BUNDLED_ICONS` registers them all — for tests or a page that really shows every glyph; an app that imports it bundles all of them). A name that is an alias finds the constant of its target: `x-circle` → `ICON_CIRCLE_X`, `envelope` → `ICON_MAIL`, `cog-6-tooth` → `ICON_SETTINGS`.',
       },
     },
   },

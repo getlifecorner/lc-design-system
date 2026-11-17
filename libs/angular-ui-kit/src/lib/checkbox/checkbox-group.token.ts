@@ -11,6 +11,11 @@ export interface CheckboxGroupContext {
   readonly groupSize: Signal<CheckboxSize>;
   readonly groupDisabled: Signal<boolean>;
   readonly groupInvalid: Signal<boolean>;
+  /**
+   * Every checkbox in the group is read-only (3.42). Optional, so an outside
+   * implementation of this interface still compiles.
+   */
+  readonly groupReadonly?: Signal<boolean>;
   /** The `value`s of the checked checkboxes. */
   readonly selectedValues: Signal<readonly string[]>;
   /** Called by a checkbox with a `value` that the person checks or unchecks. */

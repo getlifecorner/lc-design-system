@@ -213,9 +213,8 @@ a.btn {
 // for dark, coloured or image backgrounds that don't follow the theme, such as
 // the default lc-hero bands. On the teal band no other variant had a boundary
 // (every fill reached 1.00:1 somewhere, the teal ring 1.00 / 2.06). The values
-// are the same in both themes, because the bands are: on the band's light end
-// #208497 under the hero body's .85 opacity, fill 3.62 / 3.39 / 3.16 (default,
-// hover, active), ink 9.28 / 8.69 / 8.11, ring 3.62. Hook
+// are the same in both themes, because the bands are: on every band the label
+// reads 13.17:1 on the pill, the pill and the two-tone ring at least 4.58:1. Hook
 // `--lc-button-inverse-fg` (default #0d353d, $color-primary-800) sets the ink;
 // keep it at 4.5:1 on white.
 .btn-inverse {
@@ -232,10 +231,9 @@ a.btn {
 
   // After the .btn focus ring at equal specificity, so the ring turns white.
   // 3.36 (request 056, D-9): a 2 px $color-neutral-900 band between the pill
-  // and the white ring (WCAG technique C40). The white ring alone measured
-  // 2.01:1 on the warning band under the hero body's .85 opacity (2.39
-  // success, 2.61 orange, 2.70 secondary); with the band one of the two
-  // colours keeps at least 3.56. At rest nothing changes.
+  // and the white ring (WCAG technique C40), so the white ring alone never has
+  // to carry the boundary on a light band: the two-tone ring is at least
+  // 4.58:1 on every band. At rest nothing changes.
   &:focus-visible {
     outline-color: var(--color-neutral-white);
     box-shadow: 0 0 0 2px $color-neutral-900;
@@ -244,10 +242,10 @@ a.btn {
 
 // Inverse outline (3.36, request 056, monatsstand row 2): the quieter action
 // beside `inverse` on a dark band that doesn't follow the theme (lc-hero).
-// A 50 % $color-neutral-900 scrim under white text (min 4.66:1 on all nine
-// bands under the body's .85 opacity, 6.19 at full opacity) and a two-tone
-// keyline: the 1 px white border and a 1 px $color-neutral-900 shadow outside
-// it (min 3.56 / 4.23; white alone 2.01). The `.btn` box, so the heights equal
+// A 50 % $color-neutral-900 scrim under white text and a two-tone keyline: the
+// 1 px white border and a 1 px $color-neutral-900 shadow outside it. Text at
+// least 9.30:1, border and two-tone ring at least 4.58:1 on all nine bands.
+// The `.btn` box, so the heights equal
 // `inverse` at every size. Hover .62, active .74; the focus ring is the
 // inverse one (white ring over a 2 px band). The same in both themes.
 .btn-inverse-outline {

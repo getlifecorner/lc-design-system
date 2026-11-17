@@ -122,6 +122,19 @@ export class ComboboxComponent implements ControlValueAccessor {
   readonly error = input<string>();
 
   /**
+   * Marks the field invalid without a message (3.42): error border and
+   * `aria-invalid="true"`; `aria-describedby` stays as it is. For a form that
+   * lists its errors once (an error summary that names and links the field),
+   * so the error is not shown by colour alone. A set `error` implies it; with
+   * both, the message shows once.
+   * @default false
+   */
+  readonly invalid = input<boolean>(false);
+
+  /** `error` or `invalid` (3.42): the error border and `aria-invalid`. */
+  protected readonly isInvalid = computed(() => !!this.error() || this.invalid());
+
+  /**
    * Announce the error message the moment it appears (`role="alert"` on the
    * message), as `lc-textarea`. Set `false` when an `lc-alert` error summary
    * already announces the errors, e.g. a page that moves focus to this field
@@ -331,7 +344,7 @@ export class ComboboxComponent implements ControlValueAccessor {
   protected containerClasses = computed(() => {
     const classes = [`lc-combobox`, `lc-combobox--${this.size()}`];
     if (this.isDisabled()) classes.push('lc-combobox--disabled');
-    if (this.error()) classes.push('lc-combobox--error');
+    if (this.isInvalid()) classes.push('lc-combobox--error');
     if (this.isOpen()) classes.push('lc-combobox--open');
     return classes.join(' ');
   });

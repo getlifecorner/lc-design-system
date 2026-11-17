@@ -69,8 +69,9 @@ function bandEnds(color: HeroColor, light: boolean): [Rgba, Rgba] {
 /** The fill and ink tokens of a badge variant, read from the badge styles. */
 function badgeTokens(variant: string): [string, string] {
   const body = rule(badgeCss, `.lc-badge--${variant}`);
-  const bg = body.match(/--lc-badge-bg: var\((--[\w-]+)\);/)?.[1] as string;
-  const fg = body.match(/--lc-badge-fg: var\((--[\w-]+)\);/)?.[1] as string;
+  // 3.42 (062 AC-18): variants set the private --_lc-badge-* (was --lc-badge-*).
+  const bg = body.match(/--_lc-badge-bg: var\((--[\w-]+)\);/)?.[1] as string;
+  const fg = body.match(/--_lc-badge-fg: var\((--[\w-]+)\);/)?.[1] as string;
   return [bg, fg];
 }
 

@@ -111,6 +111,12 @@ selection, create-new entries, grouped options, and keyboard navigation.
         '3.36 (request 056, 055-n4): announce the error the moment it appears (`role="alert"`), as `lc-textarea`. `false` under an `lc-alert` error summary, e.g. when the page moves focus to the field after a rejected save (422): the error is read once, with the field, not twice. It stays visible and in `aria-describedby`; the input keeps `aria-invalid`.',
       table: { defaultValue: { summary: 'true' } },
     },
+    invalid: {
+      control: 'boolean',
+      description:
+        '3.42 (usm-x row 9): marks the field invalid without a message (error border, `aria-invalid="true"`, `aria-describedby` unchanged), for a form that lists its errors once in a summary that names the field. A set `error` implies it',
+      table: { defaultValue: { summary: 'false' } },
+    },
   },
 };
 
@@ -209,6 +215,23 @@ export const WithError: Story = {
   },
   parameters: {
     docs: { description: { story: 'Error state with validation message.' } },
+  },
+};
+
+export const InvalidWithoutMessage: Story = {
+  name: 'Invalid Without Message',
+  args: {
+    options: fruitOptions,
+    label: 'Required field',
+    invalid: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.42 (usm-x row 9): `invalid` gives the error border and `aria-invalid="true"` without a message; a summary elsewhere on the form names the field (see Form/Input *Invalid Without Message (DE)*).',
+      },
+    },
   },
 };
 

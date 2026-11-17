@@ -51,6 +51,12 @@ form \`username webauthn\` lets the browser offer passkeys in the email field.
     placeholder: { control: 'text', description: 'Placeholder text' },
     helperText: { control: 'text', description: 'Helper text below the input' },
     error: { control: 'text', description: 'Error message (activates error state)' },
+    invalid: {
+      control: 'boolean',
+      description:
+        '3.42 (usm-x row 9): marks the field invalid without a message: error border and `aria-invalid="true"`, `aria-describedby` unchanged. For a form that lists its errors once (a summary that names and links the field). A set `error` implies it; with both, the message shows once',
+      table: { defaultValue: { summary: 'false' } },
+    },
     disabled: { control: 'boolean', description: 'Disables the input' },
     readonly: { control: 'boolean', description: 'Makes the input read-only' },
     required: { control: 'boolean', description: 'Marks as required' },
@@ -254,6 +260,38 @@ export const ReadonlyWrap: Story = {
 export const RequiredWithoutIndicator: Story = {
   name: 'Required without Asterisk (SI-9)',
   args: { label: 'Name', required: true, requiredIndicator: false },
+};
+
+/**
+ * 3.42 (usm-x row 9): a form that lists its missing mandatory fields once,
+ * below the form; the fields are marked invalid without a message each.
+ */
+export const InvalidWithoutMessage: Story = {
+  name: 'Invalid Without Message (DE)',
+  parameters: {
+    controls: { include: ['invalid'] },
+    docs: {
+      description: {
+        story:
+          '3.42 (usm-x row 9): `invalid` marks a field invalid without printing a message: the error border (`--color-error-600`) and `aria-invalid="true"`, with `aria-describedby` unchanged. Here two empty mandatory fields and one summary below the form that names and links them, so the error is not shown by colour alone (WCAG 1.4.1, 3.3.1). A set `error` still implies `invalid`; with both, the message shows once. The same input is on `lc-email-input`, `lc-password-input`, `lc-number-input`, `lc-combobox` and `lc-verification-code-input`.',
+      },
+    },
+  },
+  args: { invalid: true },
+  render: (args) => ({
+    props: { invalid: args.invalid ?? true },
+    template: `
+      <div lang="de" style="max-width: 560px; display: flex; flex-direction: column; gap: 16px;">
+        <lc-input label="Kostenstelle" controlId="invalid-cost-centre" [required]="true" [invalid]="invalid"></lc-input>
+        <lc-input label="Projektnummer" controlId="invalid-project" [required]="true" [invalid]="invalid"></lc-input>
+        <lc-alert variant="error" title="Bitte füllen Sie zwei Pflichtfelder aus">
+          <ul style="list-style: none; margin: 4px 0 0; padding: 0">
+            <li><a lcButton variant="link" size="sm" [flush]="true" href="#invalid-cost-centre">Kostenstelle</a></li>
+            <li><a lcButton variant="link" size="sm" [flush]="true" href="#invalid-project">Projektnummer</a></li>
+          </ul>
+        </lc-alert>
+      </div>`,
+  }),
 };
 
 /**

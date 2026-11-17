@@ -33,7 +33,7 @@
       [attr.aria-expanded]="isOpen()"
       [attr.aria-controls]="isOpen() ? listboxId : null"
       [attr.aria-activedescendant]="activeDescendantId()"
-      [attr.aria-invalid]="error() ? true : null"
+      [attr.aria-invalid]="isInvalid() ? true : null"
       [attr.aria-describedby]="describedBy()"
       aria-autocomplete="list"
       aria-haspopup="listbox"

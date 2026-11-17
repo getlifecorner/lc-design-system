@@ -127,6 +127,16 @@ export class InputComponent implements ControlValueAccessor {
   readonly error = input<string>();
 
   /**
+   * Marks the field invalid without a message (3.42): error border and
+   * `aria-invalid="true"`; `aria-describedby` stays as it is. For a form that
+   * lists its errors once (an error summary that names and links the field),
+   * so the error is not shown by colour alone. A set `error` implies it; with
+   * both, the message shows once.
+   * @default false
+   */
+  readonly invalid = input<boolean>(false);
+
+  /**
    * Helper text to display below input
    */
   readonly helperText = input<string>();
@@ -314,7 +324,7 @@ export class InputComponent implements ControlValueAccessor {
    * Determines if error state should be shown
    */
   protected get hasError(): boolean {
-    return !!this.error();
+    return !!this.error() || this.invalid();
   }
 
   /**

@@ -346,6 +346,11 @@ const EXPECT_IN_HTML = [
       && !/\sstyle="/.test(map);
   }],
   ['area map: the anchor rules in the page CSS (AC-5, AC-9)', /\.lc-area-map__link--1\[_ngcontent-[^\]]*\]\s*\{\s*position-anchor:\s*--lc-area-map-a1;?\s*\}/],
+  // 3.42 (request 062, probe-342.ts, AC-24): before JS
+  ['grouped select: the trigger shows the chosen option of the groups (services-prove row 1)', /<div(?=[^>]*\sid="compat-select-342")[^>]*>[^]*?<div(?=[^>]*\srole="combobox")[^>]*>(?:<!--[^]*?-->|\s)*<div[^>]*\sclass="lc-select__value"[^>]*>(?:<!--[^]*?-->|\s)*<span[^>]*>\s*Extern\s*<\/span>/],
+  ['number input: the inline minus glyph in the decrement button (usm-x row 2)', /<div(?=[^>]*\sid="compat-number-342")[^>]*>[^]*?<button(?=[^>]*\sclass="number-input__button number-input__button--decrement")[^>]*>(?:(?!<\/button>)[^])*?<path(?=[^>]*\sd="M19\.5 12h-15")[^>]*>/],
+  ['spinner xs: inline host class and the xs status (usm-x row 5)', /<div(?=[^>]*\sid="compat-spinner-342")[^>]*>[^]*?<lc-spinner(?=[^>]*\sclass="lc-spinner--inline")[^>]*>(?:<!--[^]*?-->|\s)*<div(?=[^>]*\sclass="[^"]*\bspinner--xs\b)(?=[^>]*\srole="status")[^>]*>/],
+  ['disabled checked checkbox: checked and disabled classes and the check path (061-s1)', /<div(?=[^>]*\sid="compat-checkbox-342")[^>]*>[^]*?<label(?=[^>]*\sclass="[^"]*\bcheckbox-checked\b)(?=[^>]*\sclass="[^"]*\bcheckbox-disabled\b)(?![^>]*\sclass="[^"]*\bcheckbox-readonly\b)[^>]*>(?:(?!<\/label>)[^])*?<path(?=[^>]*\sd="M13\.5 4L6 11\.5L2\.5 8")[^>]*>/],
   // 3.13 (request 017): the inverse link in the hero band and its rule before JS
   // (G-WL1, probe-313.ts); lc-input's error state is `input-invalid` (G-WL3, probe-312.ts)
   ['inverse link in the hero band, class before JS (G-WL1)', /<lc-hero(?=[^>]*\sid="compat-band")[^>]*>[^]*?<a(?=[^>]*\sid="compat-inverse")(?=[^>]*\shref="#warteliste")(?=[^>]*\sclass="btn btn-inverse btn-lg")[^>]*>(?:<!--[^]*?-->|\s)*Trag dich jetzt in die Warteliste ein/],

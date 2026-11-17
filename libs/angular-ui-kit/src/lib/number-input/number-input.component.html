@@ -24,7 +24,7 @@
       [attr.min]="min() ?? null"
       [attr.max]="max() ?? null"
       [attr.aria-label]="label() ? null : ariaLabel()"
-      [attr.aria-invalid]="error() ? true : null"
+      [attr.aria-invalid]="isInvalid() ? true : null"
       [attr.aria-describedby]="describedBy()"
       (input)="onInput($event)"
       (keydown)="onKeydown($event)"

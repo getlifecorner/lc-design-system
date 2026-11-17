@@ -2,6 +2,8 @@ import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
+import { resolve } from 'path';
+import { compile } from 'sass';
 import { RadioComponent } from './radio.component';
 
 /** Three radios sharing a name without any form binding (the way stories are written). */
@@ -717,5 +719,15 @@ describe('RadioComponent group bound to a FormControl', () => {
     host.control.disable();
     fixture.detectChanges();
     expect(inputs.every((i) => i.disabled)).toBe(true);
+  });
+});
+
+describe('RadioComponent forced colours (3.42, request 062 r1, AC-22)', () => {
+  it('draws the dot in CanvasText, GrayText when disabled (Canvas circle stays)', () => {
+    const css = compile(resolve(__dirname, 'radio.component.scss')).css;
+    const forced = css.slice(css.indexOf('@media (forced-colors: active)'));
+    expect(forced).toMatch(
+      /^@media \(forced-colors: active\) \{\s*\.radio-dot \{\s*background-color: CanvasText;\s*forced-color-adjust: none;\s*\}\s*\.radio-disabled \.radio-dot \{\s*background-color: GrayText;\s*\}\s*\}/,
+    );
   });
 });

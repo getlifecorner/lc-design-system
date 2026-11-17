@@ -85,6 +85,19 @@ export class VerificationCodeInputComponent implements ControlValueAccessor {
   readonly error = input<string | undefined>(undefined);
 
   /**
+   * Marks the code invalid without a message (3.42): error borders and
+   * `aria-invalid="true"` on every digit; `aria-describedby` stays as it is.
+   * For a form that lists its errors once (an error summary that names and
+   * links the field), so the error is not shown by colour alone. A set `error`
+   * implies it; with both, the message shows once.
+   * @default false
+   */
+  readonly invalid = input<boolean>(false);
+
+  /** `error` or `invalid` (3.42): the error borders and `aria-invalid`. */
+  protected readonly isInvalid = computed(() => !!this.error() || this.invalid());
+
+  /**
    * @deprecated `complete` always emits exactly once when the last digit is
    * entered — bind `(complete)` to auto-submit. Kept so existing bindings
    * keep compiling; it no longer changes behaviour.

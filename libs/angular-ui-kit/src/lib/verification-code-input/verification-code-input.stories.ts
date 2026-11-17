@@ -21,6 +21,12 @@ const meta: Meta<VerificationCodeInputComponent> = {
     autofocus: { description: 'Focus the first digit field once rendered' },
     autoSubmit: { description: 'Deprecated — `complete` always emits once when all digits are filled; bind `(complete)` to auto-submit' },
     error: { description: 'Error message displayed below the fields' },
+    invalid: {
+      control: 'boolean',
+      description:
+        '3.42 (usm-x row 9): marks the code invalid without a message (error borders, `aria-invalid="true"` on every digit, `aria-describedby` unchanged), for a form that lists its errors once in a summary that names the field. A set `error` implies it',
+      table: { defaultValue: { summary: 'false' } },
+    },
     disabled: { description: 'Prevents all interaction' },
     required: { description: 'Marks the field group as required' },
     requiredIndicator: {
@@ -83,6 +89,19 @@ export const FourDigit: Story = {
 export const WithError: Story = {
   name: 'Error State',
   args: { label: 'Verification Code', length: 6, error: 'Invalid code. Please check your email and try again.' },
+};
+
+export const InvalidWithoutMessage: Story = {
+  name: 'Invalid Without Message',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.42 (usm-x row 9): `invalid` gives every digit the error border and `aria-invalid="true"` without a message; a summary elsewhere on the form names the field (see Form/Input *Invalid Without Message (DE)*).',
+      },
+    },
+  },
+  args: { label: 'Verification Code', length: 6, invalid: true },
 };
 
 export const CompleteEvent: Story = {

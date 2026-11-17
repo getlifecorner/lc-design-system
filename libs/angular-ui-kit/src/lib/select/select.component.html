@@ -125,15 +125,67 @@
         [attr.aria-label]="ariaLabel() || null"
         [attr.aria-multiselectable]="multiple() ? 'true' : null"
       >
-        @if (filteredOptions().length === 0) {
-          <div
-            class="lc-select__option lc-select__option--no-results"
-            role="option"
-            aria-disabled="true"
-            aria-selected="false"
-          >
-            {{ noOptionsLabel() }}
-          </div>
+        @if (filteredOptions().length === 0 || visibleGroups()) {
+          @if (visibleGroups(); as groups) {
+            <!-- 3.42: option groups with headers (APG listbox with grouped options); the flat
+                 index of each option keeps ids, highlight and keyboard as in a flat list. -->
+            @for (group of groups; track group.id) {
+              <div class="lc-select__group" role="group" [attr.aria-labelledby]="group.id">
+                <div class="lc-select__group-label" role="presentation" [id]="group.id">{{ group.label }}</div>
+                @for (item of group.items; track item.option.value) {
+                  <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- listbox option: focus stays on the trigger/search, keyboard selection via aria-activedescendant -->
+                  <div
+                    class="lc-select__option"
+                    role="option"
+                    [id]="optionId(item.index)"
+                    [attr.aria-selected]="isSelected(item.option) ? 'true' : 'false'"
+                    [attr.aria-disabled]="item.option.disabled ? 'true' : null"
+                    [class.lc-select__option--selected]="isSelected(item.option)"
+                    [class.lc-select__option--highlighted]="highlightedIndex() === item.index"
+                    [class.lc-select__option--disabled]="item.option.disabled"
+                    (click)="selectOption(item.option)"
+                    (mouseenter)="highlightedIndex.set(item.index)"
+                  >
+                    @if (multiple()) {
+                      <input
+                        type="checkbox"
+                        [checked]="isSelected(item.option)"
+                        [disabled]="item.option.disabled"
+                        class="lc-select__checkbox"
+                        tabindex="-1"
+                        aria-hidden="true"
+                      />
+                    }
+                    <span class="lc-select__option-label">{{ item.option.label }}</span>
+                    @if (isSelected(item.option) && !multiple()) {
+                      <svg
+                        class="lc-select__check"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          } @else {
+            <div
+              class="lc-select__option lc-select__option--no-results"
+              role="option"
+              aria-disabled="true"
+              aria-selected="false"
+            >
+              {{ noOptionsLabel() }}
+            </div>
+          }
         } @else {
           @for (option of filteredOptions(); track option.value; let i = $index) {
             <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- listbox option: focus stays on the trigger/search, keyboard selection via aria-activedescendant -->

@@ -188,7 +188,8 @@ describe('CheckboxGroupComponent (lc-checkbox-group, request 061)', () => {
       render();
       expect(labels().every((l) => l.classList.contains('checkbox-lg'))).toBe(true);
       expect(labels().every((l) => l.classList.contains('checkbox-in-group'))).toBe(true);
-      expect(SCSS).toMatch(/\.checkbox-lg\.checkbox-in-group \{\s*min-height: 2\.75rem;\s*\}/);
+      // 3.42 (062 AC-5): every lg row is 44 px, in a group as alone (was `.checkbox-lg.checkbox-in-group`).
+      expect(SCSS).toMatch(/\.checkbox-lg \{[^}]*min-height: 2\.75rem;/);
     });
 
     it('AC-9: vertical by default, horizontal on request', () => {

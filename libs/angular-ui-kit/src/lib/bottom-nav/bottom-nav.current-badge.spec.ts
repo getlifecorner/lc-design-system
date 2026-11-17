@@ -38,8 +38,10 @@ const kosten: BottomNavItem = {
 describe('BottomNavComponent badge on the current pill (3.32, request 051)', () => {
   describe('styles (compiled CSS)', () => {
     it('AC-1: lays the badge fill over the bar colour, read from --lc-bottom-nav-bg, else the bar', () => {
+      // 3.42 (062 AC-18): the badge keeps its variant fill in --_lc-badge-bg, so the
+      // underlay reads the hook first, then the private value (was var(--lc-badge-bg) alone).
       expect(declarations(SELECTOR)).toEqual([
-        'background-image: linear-gradient(var(--lc-badge-bg), var(--lc-badge-bg))',
+        'background-image: linear-gradient(var(--lc-badge-bg, var(--_lc-badge-bg)), var(--lc-badge-bg, var(--_lc-badge-bg)))',
         'background-color: var(--lc-bottom-nav-bg, var(--_bg))',
       ]);
     });

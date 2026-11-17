@@ -105,6 +105,14 @@ export const WithError: Story = {
 
 export const WithGroups: Story = {
   name: 'Grouped Options',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`SelectOptionGroup[]`: since 3.42 (finance-intelligence services-prove row 1) the open panel shows a header per group (not selectable, `role="group"` named by its header) with a divider between groups. Arrow keys move over the options only and scroll the highlighted one into view. With `searchable`, groups without hits are hidden. See *Grouped Options (DE)*.',
+      },
+    },
+  },
   render: () => ({
     props: {
       groupedOptions: [
@@ -126,6 +134,100 @@ export const WithGroups: Story = {
     },
     template: `<lc-select placeholder="Select a food..." [options]="groupedOptions"></lc-select>`,
   }),
+};
+
+const customerGroups = [
+  {
+    label: 'Kundenart',
+    options: [
+      { value: 'intern', label: 'Intern' },
+      { value: 'extern', label: 'Extern' },
+    ],
+  },
+  {
+    label: 'Kunden',
+    options: [
+      { value: 'allianz', label: 'Allianz Lebensversicherungs-AG' },
+      { value: 'bayernlb', label: 'Bayerische Landesbank' },
+      { value: 'swm', label: 'Stadtwerke Musterstadt Versorgungs- und Verkehrsgesellschaft mbH' },
+      { value: 'ukm', label: 'Universitätsklinikum Musterstadt' },
+    ],
+  },
+  {
+    label: 'Kunden mit Leistungsverrechnungsvereinbarung',
+    options: [
+      { value: 'ksk', label: 'Kreissparkasse Musterstadt' },
+      { value: 'db', label: 'Deutsche Bahn AG' },
+    ],
+  },
+];
+
+const customerSelect = `
+  <div lang="de">
+    <lc-select
+      [size]="size"
+      ariaLabel="Kunde"
+      placeholder="Kunde wählen"
+      searchPlaceholder="Kunde suchen …"
+      searchAriaLabel="Kunde suchen"
+      noOptionsLabel="Keine Treffer"
+      clearAriaLabel="Auswahl löschen"
+      [searchable]="true"
+      [options]="groups"
+    ></lc-select>
+  </div>`;
+
+/** 3.42 (finance-intelligence services-prove row 1): the customer filter of the Services page. */
+export const GroupedOptionsDe: Story = {
+  name: 'Grouped Options (DE)',
+  parameters: {
+    controls: { include: ['size'] },
+    docs: {
+      description: {
+        story:
+          'The customer filter of the Services page (3.42, services-prove row 1): three groups, each with a header (12 px, semibold, uppercase, `--color-text-tertiary`: 5.58:1 or more light, 5.65:1 dark) and a divider between groups. A long German header wraps hyphenated in the panel’s `lang` instead of overflowing at 360 px. The listbox holds one `role="group"` per group, named by its header; arrow keys skip the headers and scroll the highlighted option into view. The story opens the panel (in the story view).',
+      },
+    },
+  },
+  args: { size: 'lg' },
+  render: (args) => ({
+    props: { size: args.size ?? 'lg', groups: customerGroups },
+    template: customerSelect,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    canvasElement.querySelector<HTMLElement>('[role="combobox"]')?.click();
+  },
+};
+
+export const GroupedOptionsSearchDe: Story = {
+  name: 'Grouped Options, Search (DE)',
+  parameters: {
+    controls: { include: ['size'] },
+    docs: {
+      description: {
+        story:
+          'The same filter searched for „stadt“ (3.42): groups without hits are hidden (Kundenart), the others keep their headers. The story opens the panel and types (in the story view).',
+      },
+    },
+  },
+  args: { size: 'md' },
+  render: (args) => ({
+    props: { size: args.size ?? 'md', groups: customerGroups },
+    template: customerSelect,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    canvasElement.querySelector<HTMLElement>('[role="combobox"]')?.click();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const search = document.querySelector<HTMLInputElement>('.lc-select__search-input');
+    if (search) {
+      await userEvent.type(search, 'stadt');
+      await expect(document.querySelectorAll('.lc-select__group')).toHaveLength(2);
+    }
+  },
 };
 
 export const WithDisabledOptions: Story = {

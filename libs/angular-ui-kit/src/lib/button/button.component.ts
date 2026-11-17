@@ -30,6 +30,12 @@ export type ButtonType = 'button' | 'submit' | 'reset';
  */
 export type ButtonTone = 'neutral' | 'primary';
 
+/** Value of `aria-pressed` for a toggle button (3.42). */
+export type ButtonAriaPressed = boolean | 'mixed';
+
+/** Value of `aria-haspopup` for a popup trigger (3.42). */
+export type ButtonAriaHasPopup = boolean | 'menu' | 'listbox' | 'tree' | 'grid' | 'dialog';
+
 @Component({
   selector: 'lc-button',
   standalone: true,
@@ -131,6 +137,34 @@ export class ButtonComponent {
    * @default ''
    */
   readonly ariaDescribedBy = input('');
+
+  /**
+   * `aria-pressed` on the inner `<button>`, for a toggle (`false` renders
+   * `"false"`); `null` renders none. Style the pressed look yourself
+   * (`lc-button .btn[aria-pressed="true"]` or a bound `variant`). (3.42)
+   * @default null
+   */
+  readonly ariaPressed = input<ButtonAriaPressed | null>(null);
+
+  /**
+   * `aria-expanded` on the inner `<button>` (a disclosure or popup trigger);
+   * `null` renders none. Inside `lc-menu` leave it unset: the menu sets it. (3.42)
+   * @default null
+   */
+  readonly ariaExpanded = input<boolean | null>(null);
+
+  /**
+   * `aria-haspopup` on the inner `<button>`; `null` renders none. Not needed
+   * inside `lc-menu`. (3.42)
+   * @default null
+   */
+  readonly ariaHasPopup = input<ButtonAriaHasPopup | null>(null);
+
+  /**
+   * Id(s) for `aria-controls` on the inner `<button>`; empty renders none. (3.42)
+   * @default ''
+   */
+  readonly ariaControls = input('');
   readonly type = input<ButtonType>('button');
 
   /**
@@ -183,6 +217,11 @@ export class ButtonComponent {
     }
     return this.title() || null;
   });
+
+  /** An ARIA state value as attribute text; `null`/`undefined` renders no attribute (3.42). */
+  protected ariaState(value: boolean | string | null | undefined): string | null {
+    return value === null || value === undefined ? null : String(value);
+  }
 
   /**
    * Emits `clicked` unless the button is disabled or loading. While loading

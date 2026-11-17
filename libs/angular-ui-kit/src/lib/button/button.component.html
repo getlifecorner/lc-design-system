@@ -7,6 +7,10 @@
   [attr.aria-describedby]="ariaDescribedBy() || null"
   [attr.aria-disabled]="isDisabled() ? 'true' : 'false'"
   [attr.aria-busy]="loading() ? 'true' : 'false'"
+  [attr.aria-pressed]="ariaState(ariaPressed())"
+  [attr.aria-expanded]="ariaState(ariaExpanded())"
+  [attr.aria-haspopup]="ariaState(ariaHasPopup())"
+  [attr.aria-controls]="ariaControls() || null"
   [ngClass]="{
     'btn': true,
     'btn-primary': variant() === 'primary',

@@ -16,7 +16,7 @@
   color: var(--color-text-primary);
   transition: opacity 150ms ease-in-out;
 
-  &:hover:not(.checkbox-disabled):not(.checkbox-checked):not(.checkbox-indeterminate) {
+  &:hover:not(.checkbox-disabled):not(.checkbox-checked):not(.checkbox-indeterminate):not(.checkbox-readonly) {
     .checkbox-box {
       border-color: var(--color-primary-600);
       background-color: var(--color-primary-400);
@@ -33,9 +33,45 @@
     }
   }
 
-  &.checkbox-error {
+  // 3.42 (061-s1): a disabled checked or indeterminate box keeps its fill, so it
+  // still reads as "on": only the text is dimmed (.5) and the box a little (.75);
+  // the check is 3.63:1 (light) / 4.67:1 (dark) on the fill (was 1.02:1).
+  &.checkbox-disabled.checkbox-checked,
+  &.checkbox-disabled.checkbox-indeterminate {
+    opacity: 1;
+
+    .checkbox-label-text {
+      opacity: 0.5;
+    }
+
     .checkbox-box {
-      border-color: var(--color-error);
+      background-color: var(--color-primary-fill);
+      border-color: var(--color-primary-fill);
+      opacity: 0.75;
+    }
+  }
+
+  // 3.42 (usm-x 10): read-only shows the value at full contrast, not dimmed:
+  // a muted box with the field border, the check in the text colour.
+  &.checkbox-readonly {
+    cursor: default;
+
+    .checkbox-box {
+      background-color: var(--color-surface-muted);
+      border-color: var(--color-field-border);
+    }
+
+    .checkbox-icon {
+      color: var(--color-text-primary);
+    }
+  }
+
+  // 3.42 (061-s3): error-600 is 7.21:1 or more on the dark pages (--color-error
+  // was 1.71–2.24:1); light keeps its value.
+  &.checkbox-error,
+  &.checkbox-disabled.checkbox-error {
+    .checkbox-box {
+      border-color: var(--color-error-600);
     }
   }
 }
@@ -68,7 +104,9 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 2px solid var(--color-neutral-400);
+  // 3.42 (061-s3): the box is the control's boundary, 3:1 against the page
+  // (WCAG 1.4.11) as lc-radio's circle; neutral-400 was 2.31:1 (light).
+  border: 2px solid var(--color-field-border);
   // The radius scale starts at 10px (--border-radius-sm), which rounds a 16–20px
   // box into a circle and makes it indistinguishable from a radio. A literal
   // small radius keeps it recognisably square.
@@ -86,7 +124,7 @@
   }
 
   .checkbox-error & {
-    border-color: var(--color-error);
+    border-color: var(--color-error-600);
   }
 
   .checkbox-disabled & {
@@ -130,19 +168,28 @@
   margin-left: calc(var(--checkbox-size) + 0.5rem);
 }
 
-// Size variants
-.checkbox-xs {
+// Size variants. 3.42 (061-n1): the size is set on the label's following
+// siblings too, so the help and error text start under the label text.
+.checkbox-xs,
+.checkbox-xs ~ * {
   --checkbox-size: 1rem; // 16px
+}
+
+.checkbox-xs {
   font-size: 0.875rem; // 14px
 
   .checkbox-box {
     width: var(--checkbox-size);
     height: var(--checkbox-size);
   }
+}
+
+.checkbox-sm,
+.checkbox-sm ~ * {
+  --checkbox-size: 1.125rem; // 18px
 }
 
 .checkbox-sm {
-  --checkbox-size: 1.125rem; // 18px
   font-size: 0.875rem; // 14px
 
   .checkbox-box {
@@ -151,8 +198,12 @@
   }
 }
 
-.checkbox-md {
+.checkbox-md,
+.checkbox-md ~ * {
   --checkbox-size: 1.25rem; // 20px
+}
+
+.checkbox-md {
   font-size: 1rem; // 16px
 
   .checkbox-box {
@@ -161,20 +212,21 @@
   }
 }
 
-.checkbox-lg {
+.checkbox-lg,
+.checkbox-lg ~ * {
   --checkbox-size: 1.5rem; // 24px
+}
+
+// 3.42 (061-n2): an lg row is a 44 px touch target, alone and in a group, as
+// .radio-lg; xs/sm/md are dense rows that meet WCAG 2.5.8 by spacing.
+.checkbox-lg {
   font-size: 1.125rem; // 18px
+  min-height: 2.75rem;
 
   .checkbox-box {
     width: var(--checkbox-size);
     height: var(--checkbox-size);
   }
-}
-
-// 3.41: in an lc-checkbox-group an lg row is a 44 px touch target (as .radio-lg);
-// a standalone lg checkbox keeps its height.
-.checkbox-lg.checkbox-in-group {
-  min-height: 2.75rem;
 }
 
 // Required indicator
@@ -198,5 +250,21 @@
   .checkbox-box,
   .checkbox-icon {
     transition: none;
+  }
+}
+
+// 3.42 (062 r1, AC-22): forced colours turn the box into Canvas but keep the
+// check's own colour (on-primary or the read-only ink), so it vanished on a
+// light Canvas. The check is CanvasText, GrayText when disabled. The readonly
+// selector repeats the (0,3,0) weight of the read-only rule and wins by order.
+@media (forced-colors: active) {
+  .checkbox-label .checkbox-icon,
+  .checkbox-label.checkbox-readonly .checkbox-icon {
+    color: CanvasText;
+    forced-color-adjust: none;
+  }
+
+  .checkbox-label.checkbox-disabled .checkbox-icon {
+    color: GrayText;
   }
 }

@@ -20,6 +20,12 @@ const meta: Meta<EmailInputComponent> = {
     },
     validateOnInput: { description: 'Validates as the user types (vs on blur)' },
     error: { description: 'Custom error message to display' },
+    invalid: {
+      control: 'boolean',
+      description:
+        '3.42 (usm-x row 9): marks the field invalid without a message (error border, `aria-invalid="true"`, `aria-describedby` unchanged), for a form that lists its errors once in a summary that names the field. A set `error` implies it',
+      table: { defaultValue: { summary: 'false' } },
+    },
     helperText: { description: 'Help text shown below the input' },
     disabled: { description: 'Prevents interaction' },
     readonly: { description: 'Allows copying but not editing' },
@@ -97,6 +103,19 @@ type Story = StoryObj<EmailInputComponent>;
 
 export const Default: Story = {
   args: { label: 'Email Address', placeholder: 'you@example.com', size: 'md' },
+};
+
+export const InvalidWithoutMessage: Story = {
+  name: 'Invalid Without Message',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.42 (usm-x row 9): `invalid` gives the error border and `aria-invalid="true"` without a message; a summary elsewhere on the form names the field (see Form/Input *Invalid Without Message (DE)*).',
+      },
+    },
+  },
+  args: { label: 'Email Address', placeholder: 'you@example.com', size: 'md', required: true, invalid: true },
 };
 
 export const WithHelperText: Story = {

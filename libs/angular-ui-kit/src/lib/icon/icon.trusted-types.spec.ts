@@ -237,9 +237,10 @@ describe('IconComponent under Trusted Types (AS-14)', () => {
     // 3.16 (TD-3) added wallet, building-bank and shield-lock (+ its filled glyph): 133 → 137.
     // 3.22 (BA-6, BA-7) added 7 Tabler keys with 6 filled glyphs: 137 → 150.
     // 3.40 (G-HV1) added shopping-bag, target, heart and gift (+ 2 filled glyphs): 150 → 156.
-    it('returns each of the 156 bundled constants and the placeholder unchanged', () => {
-      expect(ALL_BUNDLED).toHaveLength(156);
-      expect(bundledIconSvgs().size).toBe(157);
+    // 3.42 (062 AC-13) added the hand-picked minus (outline + solid): 156 → 158, with the placeholder 157 → 159.
+    it('returns each of the 158 bundled constants and the placeholder unchanged', () => {
+      expect(ALL_BUNDLED).toHaveLength(158);
+      expect(bundledIconSvgs().size).toBe(159);
       for (const svg of [...ALL_BUNDLED, ICON_FALLBACK_SVG]) expect(rules.createHTML(svg)).toBe(svg);
     });
 

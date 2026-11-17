@@ -12,9 +12,11 @@
     [attr.aria-required]="required() ? 'true' : null"
     [attr.aria-invalid]="isInvalid() ? 'true' : null"
     [attr.aria-disabled]="isDisabled() ? 'true' : null"
+    [attr.aria-readonly]="isReadonly() ? 'true' : null"
     [attr.tabindex]="isDisabled() ? -1 : 0"
     role="checkbox"
     class="checkbox-input"
+    (click)="handleClick($event)"
     (change)="handleChange($event)"
     (blur)="handleBlur()"
   />

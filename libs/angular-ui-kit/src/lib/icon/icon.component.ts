@@ -8,6 +8,7 @@ import {
   isDevMode,
   ChangeDetectionStrategy,
   inject,
+  InjectionToken,
   PendingTasks,
   PLATFORM_ID,
   viewChild,
@@ -42,6 +43,27 @@ const MAX_ICON_NAME_LENGTH = 64;
  * which left prod incidents invisible in the console).
  */
 const warnedIconNames = new Set<string>();
+
+/**
+ * Base URL of the served Tabler set, for names outside the inline set (3.42,
+ * usm-x row 1): `lc-icon` fetches `${base}/outline/<name>.svg` (or
+ * `${base}/filled/…` for `variant="solid"`); a trailing `/` is ignored.
+ * Defaults to `'/tabler-icons'`. An app under a sub-path either names it
+ * (`'/usmx/tabler-icons'`) or gives a relative value (`'tabler-icons'`), which
+ * the browser resolves against the document's `<base href>`. Names you
+ * register with `provideLcIcons()` and the inline set are never fetched.
+ *
+ * @example
+ * ```ts
+ * providers: [
+ *   { provide: LC_ICON_BASE_PATH, useValue: '/usmx/tabler-icons' },
+ * ]
+ * ```
+ */
+export const LC_ICON_BASE_PATH = new InjectionToken<string>('LC_ICON_BASE_PATH', {
+  providedIn: 'root',
+  factory: () => '/tabler-icons',
+});
 
 function warnOnce(name: string, message: string): void {
   if (warnedIconNames.has(name)) return;
@@ -244,6 +266,8 @@ export class IconComponent {
   private readonly scope = inject(LC_ICON_SCOPE, { optional: true });
   /** Keeps the server (and `whenStable()`) waiting while the kit's set loads. */
   private readonly pendingTasks = inject(PendingTasks);
+  /** Base URL of the served Tabler set, without a trailing `/` (3.42). */
+  private readonly basePath = inject(LC_ICON_BASE_PATH).replace(/\/+$/, '');
   private readonly container = viewChild.required<ElementRef<HTMLElement>>('container');
   /** Whether the container was written once; until then a pending icon leaves a prerendered `<svg>` alone. */
   private rendered = false;
@@ -352,7 +376,7 @@ export class IconComponent {
     if (!rawName) return '';
     const iconName = ICON_ALIASES[rawName] ?? rawName;
     const tablerVariant = iconVariant === 'solid' ? 'filled' : 'outline';
-    return `/tabler-icons/${tablerVariant}/${iconName}.svg`;
+    return `${this.basePath}/${tablerVariant}/${iconName}.svg`;
   });
 
   /**

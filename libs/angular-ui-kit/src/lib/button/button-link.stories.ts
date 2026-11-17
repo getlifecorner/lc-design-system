@@ -172,8 +172,8 @@ export const WithIcons: Story = {
 
 /**
  * 3.13 (G-WL1): `variant="inverse"` on a link in an `lc-hero` band — the white pill with dark
- * ink and a white focus ring that stays visible on the teal band (fill and ring 3.62:1, label
- * 9.28:1 at the band's light end, under the body's 85 % opacity). Use `lg` for the 44 px target.
+ * ink and a white focus ring that stays visible on the teal band (on every band the label reads
+ * 13.17:1 on the pill, the pill and the two-tone ring at least 4.58:1). Use `lg` for the 44 px target.
  */
 export const Inverse: Story = {
   name: 'Inverse (G-WL1)',
@@ -211,7 +211,7 @@ export const InverseOutline: Story = {
     docs: {
       description: {
         story:
-          '3.36 (request 056): `variant="inverse-outline"` on a link, beside an `inverse` link on the teal band. White text and border on a 50 % `#111827` scrim with a 1 px `#111827` line outside the border: text at least 4.66:1, border and focus ring at least 3.56:1 on all nine `lc-hero` bands under the body\'s 85 % opacity. sm, md, lg, one with an icon after the label and an icon-only link; the same height as `inverse` at every size. A link cannot be disabled or busy: use `lc-button` for those states.',
+          '3.36 (request 056): `variant="inverse-outline"` on a link, beside an `inverse` link on the teal band. White text and border on a 50 % `#111827` scrim with a 1 px `#111827` line outside the border: text at least 9.30:1, border and two-tone ring at least 4.58:1 on all nine `lc-hero` bands. sm, md, lg, one with an icon after the label and an icon-only link; the same height as `inverse` at every size. A link cannot be disabled or busy: use `lc-button` for those states.',
       },
     },
   },

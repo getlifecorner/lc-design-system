@@ -87,6 +87,12 @@ a checkbox wins over the group's.
       description: 'Disables the fieldset and every checkbox in it',
       table: { defaultValue: { summary: 'false' } },
     },
+    readonly: {
+      control: 'boolean',
+      description:
+        'Every checkbox in the group is read-only (3.42): full contrast, focusable, `aria-readonly="true"`; the value can’t change',
+      table: { defaultValue: { summary: 'false' } },
+    },
     orientation: {
       control: 'select',
       options: ['vertical', 'horizontal'],
@@ -115,6 +121,7 @@ a checkbox wins over the group's.
     requiredIndicator: true,
     requiredAriaLabel: 'Pflichtfeld',
     disabled: false,
+    readonly: false,
     orientation: 'vertical',
     size: 'md',
     value: ['controlling'],
@@ -125,7 +132,7 @@ a checkbox wins over the group's.
     template: `
       <lc-checkbox-group lang="de" [legend]="legend" [legendHidden]="legendHidden" [helpText]="helpText" [error]="error"
                          [required]="required" [requiredIndicator]="requiredIndicator"
-                         [requiredAriaLabel]="requiredAriaLabel" [disabled]="disabled"
+                         [requiredAriaLabel]="requiredAriaLabel" [disabled]="disabled" [readonly]="readonly"
                          [orientation]="orientation" [size]="size" [(value)]="value">${CHILDREN}
       </lc-checkbox-group>
     `,
@@ -168,6 +175,42 @@ export const Required: Story = {
 
 export const Disabled: Story = {
   args: { disabled: true, value: ['administration'] },
+};
+
+export const Readonly: Story = {
+  name: 'Read-only (DE)',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          'A read-only group (3.42, usm-x row 10): `readonly` on the group makes every checkbox read-only, at full contrast and focusable; the value can’t change. Below, an editable group with one read-only item (`readonly` on the checkbox).',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [CheckboxGroupComponent, CheckboxComponent] },
+    props: { roles: ['lesen', 'bearbeiten'], projectRoles: ['lesen'] },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 24px;">
+        <lc-checkbox-group legend="Rollen" [readonly]="true" [(value)]="roles">
+          <lc-checkbox value="lesen" label="Lesen"></lc-checkbox>
+          <lc-checkbox value="bearbeiten" label="Bearbeiten"></lc-checkbox>
+          <lc-checkbox value="verwalten" label="Verwalten"></lc-checkbox>
+        </lc-checkbox-group>
+        <lc-checkbox-group legend="Projektrollen" [(value)]="projectRoles">
+          <lc-checkbox value="lesen" label="Lesen" [readonly]="true"></lc-checkbox>
+          <lc-checkbox value="bearbeiten" label="Bearbeiten"></lc-checkbox>
+          <lc-checkbox value="verwalten" label="Verwalten"></lc-checkbox>
+        </lc-checkbox-group>
+      </div>`,
+  }),
+  play: async ({ canvasElement }) => {
+    const box = within(canvasElement).getAllByRole('checkbox', { name: 'Lesen' })[0] as HTMLInputElement;
+    await userEvent.click(box);
+    await expect(box.checked).toBe(true);
+    box.blur();
+  },
 };
 
 export const Horizontal: Story = {

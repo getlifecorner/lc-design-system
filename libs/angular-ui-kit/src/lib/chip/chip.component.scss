@@ -199,6 +199,17 @@
     appearance: none;
     cursor: pointer;
 
+    // 3.42 (060-n4): `font: inherit` took the parent's size (16 px); a clickable
+    // chip keeps its size's font size like a plain one.
+    &.lc-chip--sm,
+    &.lc-chip--md {
+      font-size: var(--typography-font-size-sm, 0.875rem);
+    }
+
+    &.lc-chip--lg {
+      font-size: var(--typography-font-size-base, 1rem);
+    }
+
     &:hover:not(:disabled) {
       filter: brightness(1.06);
       border-color: var(--color-border-strong, var(--color-border));
@@ -214,9 +225,10 @@
     }
   }
 
-  // A hovered quiet chip gets a fill; its border stays.
+  // A hovered quiet chip gets a fill; its border stays. 3.42 (061-s2): a
+  // --lc-chip-bg set on the chip or an ancestor is the hover fill too.
   &--quiet.lc-chip--clickable:hover:not(:disabled) {
-    background-color: var(--color-surface-hover);
+    background-color: var(--lc-chip-bg, var(--color-surface-hover));
     border-color: var(--lc-chip-border, var(--_lc-chip-border));
   }
 
@@ -317,8 +329,9 @@ $_chip-wrap-heights: (
     --_lc-chip-border: var(--_lc-hero-ink);
   }
 
+  // 3.42 (061-s2): the hook wins on hover as at rest (was 1.05–1.11:1 with a custom ink).
   .lc-chip--quiet.lc-chip--clickable:hover:not(:disabled) {
-    background-color: var(--_lc-hero-glass);
+    background-color: var(--lc-chip-bg, var(--_lc-hero-glass));
   }
 
   // The hero title's two-tone ring: the ink 2 px out, the ring gap between.

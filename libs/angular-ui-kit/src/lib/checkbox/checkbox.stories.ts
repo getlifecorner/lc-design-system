@@ -33,6 +33,12 @@ Supports validation, help text, and indeterminate state.
     checked: { control: 'boolean', description: 'Checked state (two-way bindable via [(checked)])' },
     indeterminate: { control: 'boolean', description: 'Partially-checked state, cleared on the next toggle' },
     disabled: { control: 'boolean', description: 'Disables the checkbox' },
+    readonly: {
+      control: 'boolean',
+      description:
+        'Read-only (3.42): the value at full contrast, focusable, `aria-readonly="true"`; click and Space change nothing. `disabled` wins',
+      table: { defaultValue: { summary: 'false' } },
+    },
     required: { control: 'boolean', description: 'Marks as required' },
     value: {
       control: 'text',
@@ -70,6 +76,78 @@ export const Disabled: Story = {
       <div style="display: flex; flex-direction: column; gap: 8px;">
         <lc-checkbox label="This option is currently unavailable" [disabled]="true"></lc-checkbox>
         <lc-checkbox label="Locked in the on state" [disabled]="true" [checked]="true"></lc-checkbox>
+      </div>`,
+  }),
+};
+
+export const Readonly: Story = {
+  name: 'Read-only',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A value the person may see but not change (3.42, usm-x row 10): the box keeps full contrast (muted box, field border 4.63:1, check in the text colour), stays in the tab order and has `aria-readonly="true"`; click and Space change nothing.',
+      },
+    },
+  },
+  args: { label: 'Approval required', readonly: true, checked: true },
+};
+
+export const ReadonlyAndDisabled: Story = {
+  name: 'Read-only and Disabled (DE)',
+  parameters: {
+    controls: { include: ['size'] },
+    docs: {
+      description: {
+        story:
+          'Editable, read-only and disabled side by side, each off, on and partially checked (3.42). A disabled checked box keeps its fill (061-s1: the check is 3.63:1 in light, was 1.02:1); read-only is not dimmed.',
+      },
+    },
+  },
+  args: { size: 'md' },
+  render: (args) => ({
+    moduleMetadata: { imports: [CheckboxGroupComponent, CheckboxComponent] },
+    props: { size: args.size ?? 'md' },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px;">
+        <lc-checkbox-group legend="Bearbeitbar" orientation="horizontal" [size]="size">
+          <lc-checkbox label="aus"></lc-checkbox>
+          <lc-checkbox label="an" [checked]="true"></lc-checkbox>
+          <lc-checkbox label="teilweise" [indeterminate]="true"></lc-checkbox>
+        </lc-checkbox-group>
+        <lc-checkbox-group legend="Schreibgeschützt" orientation="horizontal" [size]="size">
+          <lc-checkbox label="aus" [readonly]="true"></lc-checkbox>
+          <lc-checkbox label="an" [readonly]="true" [checked]="true"></lc-checkbox>
+          <lc-checkbox label="teilweise" [readonly]="true" [indeterminate]="true"></lc-checkbox>
+        </lc-checkbox-group>
+        <lc-checkbox-group legend="Deaktiviert" orientation="horizontal" [size]="size">
+          <lc-checkbox label="aus" [disabled]="true"></lc-checkbox>
+          <lc-checkbox label="an" [disabled]="true" [checked]="true"></lc-checkbox>
+          <lc-checkbox label="teilweise" [disabled]="true" [indeterminate]="true"></lc-checkbox>
+        </lc-checkbox-group>
+      </div>`,
+  }),
+};
+
+export const SizesWithHelpText: Story = {
+  name: 'Sizes with Help Text',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          'Help and error text start under the label text in every size (3.42, 061-n1: x = box + gap, 24 / 26 / 28 / 32 px). An `lg` row is a 44 px touch target, alone as in a group (061-n2); xs, sm and md are dense rows.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <lc-checkbox size="xs" label="Extra small" helpText="Help text under the label"></lc-checkbox>
+        <lc-checkbox size="sm" label="Small" helpText="Help text under the label"></lc-checkbox>
+        <lc-checkbox size="md" label="Medium" helpText="Help text under the label"></lc-checkbox>
+        <lc-checkbox size="lg" label="Large" helpText="Help text under the label"></lc-checkbox>
+        <lc-checkbox size="md" label="Medium with error" [error]="true" errorMessage="This box must be checked."></lc-checkbox>
       </div>`,
   }),
 };

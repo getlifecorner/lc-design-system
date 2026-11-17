@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
-import { ICON_PLUS } from '@lifecorner/angular-ui-kit/icons';
+import { ICON_MINUS, ICON_PLUS } from '@lifecorner/angular-ui-kit/icons';
 
 /** Number of decimals a number is written with (`0.001` → 3, `1e-7` → 7, `5` → 0). */
 function decimalsOf(n: number): number {
@@ -61,7 +61,7 @@ export type NumberInputSize = 'xs' | 'sm' | 'md' | 'lg';
   selector: 'lc-number-input',
   standalone: true,
   imports: [IconComponent],
-  viewProviders: [ɵprovideKitIcons([ICON_PLUS])],
+  viewProviders: [ɵprovideKitIcons([ICON_PLUS, ICON_MINUS])],
   templateUrl: './number-input.component.html',
   styleUrls: ['./number-input.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -122,6 +122,19 @@ export class NumberInputComponent implements ControlValueAccessor {
 
   /** Error message shown below the control; marks the field `aria-invalid`. */
   error = input<string>();
+
+  /**
+   * Marks the field invalid without a message (3.42): error border and
+   * `aria-invalid="true"`; `aria-describedby` stays as it is. For a form that
+   * lists its errors once (an error summary that names and links the field),
+   * so the error is not shown by colour alone. A set `error` implies it; with
+   * both, the message shows once.
+   * @default false
+   */
+  invalid = input<boolean>(false);
+
+  /** `error` or `invalid` (3.42): the error border and `aria-invalid`. */
+  protected isInvalid = computed(() => !!this.error() || this.invalid());
 
   /** Disabled state */
   disabled = input<boolean>(false);
@@ -218,7 +231,7 @@ export class NumberInputComponent implements ControlValueAccessor {
     const size = this.size();
     if (size === 'xs' || size === 'sm' || size === 'lg') classes.push(`number-input--${size}`);
     if (this.isDisabled()) classes.push('number-input--disabled');
-    if (this.error()) classes.push('number-input--error');
+    if (this.isInvalid()) classes.push('number-input--error');
     return classes.join(' ');
   });
 

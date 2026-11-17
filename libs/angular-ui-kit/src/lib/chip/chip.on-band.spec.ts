@@ -96,9 +96,19 @@ describe('lc-chip on a hero band and the emphasis / quiet variants (3.40, G-HV4)
 
     it('an interactive quiet chip draws its boundary in the field border; hovered it fills, the border stays', () => {
       expect(rule(chipCss, '.lc-chip--quiet.lc-chip--clickable')).toBe('--_lc-chip-border: var(--color-field-border);');
+      // 3.42 (062 AC-6): the hover fill reads --lc-chip-bg first (was var(--color-surface-hover) alone).
       expect(rule(chipCss, '.lc-chip--quiet.lc-chip--clickable:hover:not(:disabled)')).toBe(
-        'background-color: var(--color-surface-hover); border-color: var(--lc-chip-border, var(--_lc-chip-border));',
+        'background-color: var(--lc-chip-bg, var(--color-surface-hover)); border-color: var(--lc-chip-border, var(--_lc-chip-border));',
       );
+    });
+
+    it('062 AC-7: a clickable chip restates its size\'s font size after `font: inherit`', () => {
+      expect(rule(chipCss, '.lc-chip--clickable')).toMatch(/^font: inherit;/);
+      expect(chipCss).toMatch(
+        /\n\.lc-chip--clickable\.lc-chip--sm,\s*\.lc-chip--clickable\.lc-chip--md \{\s*font-size: var\(--typography-font-size-sm, 0\.875rem\);\s*\}/,
+      );
+      expect(rule(chipCss, '.lc-chip--clickable.lc-chip--lg')).toBe('font-size: var(--typography-font-size-base, 1rem);');
+      expect(chipCss.indexOf('.lc-chip--clickable.lc-chip--sm')).toBeGreaterThan(chipCss.indexOf('.lc-chip--clickable {'));
     });
   });
 
@@ -111,8 +121,9 @@ describe('lc-chip on a hero band and the emphasis / quiet variants (3.40, G-HV4)
         '--_lc-chip-bg: transparent; --_lc-chip-fg: var(--_lc-hero-ink); --_lc-chip-border: color-mix(in srgb, var(--_lc-hero-ink) 32%, transparent);',
       );
       expect(rule(chipCss, ':host-context(lc-hero) .lc-chip--quiet.lc-chip--clickable')).toBe('--_lc-chip-border: var(--_lc-hero-ink);');
+      // 3.42 (062 AC-6, 061-s2): a set --lc-chip-bg wins on hover too (was var(--_lc-hero-glass) alone).
       expect(rule(chipCss, ':host-context(lc-hero) .lc-chip--quiet.lc-chip--clickable:hover:not(:disabled)')).toBe(
-        'background-color: var(--_lc-hero-glass);',
+        'background-color: var(--lc-chip-bg, var(--_lc-hero-glass));',
       );
     });
 

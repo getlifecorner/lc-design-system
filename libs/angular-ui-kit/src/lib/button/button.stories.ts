@@ -4,6 +4,9 @@ import { ButtonComponent } from './button.component';
 import { IconComponent } from '../icon/icon.component';
 import { HeroComponent } from '../hero/hero.component';
 import { ProgressBarComponent } from '../progress-bar/progress-bar.component';
+import { MenuComponent } from '../menu/menu.component';
+import { CheckboxComponent } from '../checkbox/checkbox.component';
+import { CheckboxGroupComponent } from '../checkbox/checkbox-group.component';
 
 const meta: Meta<ButtonComponent> = {
   title: 'Components/Button',
@@ -72,6 +75,31 @@ same variants and sizes and works without JavaScript (see **Components / Button 
       control: 'text',
       description:
         '3.26 (gap row 7): id, or space-separated ids, of elements that describe the button, set as `aria-describedby` on the inner `<button>`. A screen reader reads the name and then their text, also while `disabled` or `loading`: tie a visible reason line to a disabled button. `disabledReason` stays a tooltip for pointers. Empty renders no attribute; the kit does not check the ids',
+      table: { defaultValue: { summary: "''" } },
+    },
+    ariaPressed: {
+      control: 'select',
+      options: [null, true, false, 'mixed'],
+      description:
+        '3.42 (usm-x row 3): `aria-pressed` on the inner `<button>` for a toggle (`false` renders `"false"`); `null` renders none. The pressed look is yours (`lc-button .btn[aria-pressed="true"]` or a bound `variant`)',
+      table: { defaultValue: { summary: 'null' } },
+    },
+    ariaExpanded: {
+      control: 'select',
+      options: [null, true, false],
+      description:
+        '3.42: `aria-expanded` on the inner `<button>` (a disclosure or popup trigger); `null` renders none. Inside `lc-menu` leave it unset: the menu sets it',
+      table: { defaultValue: { summary: 'null' } },
+    },
+    ariaHasPopup: {
+      control: 'select',
+      options: [null, true, false, 'menu', 'listbox', 'tree', 'grid', 'dialog'],
+      description: '3.42: `aria-haspopup` on the inner `<button>`; `null` renders none. Not needed inside `lc-menu`',
+      table: { defaultValue: { summary: 'null' } },
+    },
+    ariaControls: {
+      control: 'text',
+      description: '3.42: id(s) for `aria-controls` on the inner `<button>` (the panel it opens); empty renders none',
       table: { defaultValue: { summary: "''" } },
     },
     fullWidth: { control: 'boolean', description: 'Stretches the button to full container width' },
@@ -287,7 +315,7 @@ export const Inverse: Story = {
     docs: {
       description: {
         story:
-          '3.13 (G-WL1): `variant="inverse"` is a white pill with dark ink (`#0d353d`) and a white focus ring, for dark, coloured or image backgrounds that don\'t follow the theme, such as the default `lc-hero` bands. It looks the same in both themes. On the teal band, under the body\'s 85 % opacity: label 9.28:1, fill 3.62:1 and ring 3.62:1 at the band\'s light end (hover 8.69 / 3.39, active 8.11 / 3.16). It also passes on the neutral, info, accent-purple and accent-violet bands; not on light backgrounds. Use `lg` (48.5 px) for the 44 px target. CSS hook `--lc-button-inverse-fg` (default `#0d353d`) sets the ink. In forced colours the border becomes `ButtonText`.',
+          '3.13 (G-WL1): `variant="inverse"` is a white pill with dark ink (`#0d353d`) and a white focus ring, for dark, coloured or image backgrounds that don\'t follow the theme, such as the default `lc-hero` bands. It looks the same in both themes. On every band the label reads 13.17:1 on the pill, the pill and the two-tone ring at least 4.58:1. It also passes on the neutral, info, accent-purple and accent-violet bands; not on light backgrounds. Use `lg` (48.5 px) for the 44 px target. CSS hook `--lc-button-inverse-fg` (default `#0d353d`) sets the ink. In forced colours the border becomes `ButtonText`.',
       },
     },
   },
@@ -327,7 +355,7 @@ export const InverseOutline: Story = {
     docs: {
       description: {
         story:
-          '3.36 (request 056, finance-intelligence monatsstand row 2): `variant="inverse-outline"`, the quieter action beside an `inverse` button on the `lc-hero` bands (see *Layout / Hero / Stage Actions*). White text and a white 1 px border on a 50 % `#111827` scrim, with a 1 px `#111827` line outside the border, so the boundary holds on every band: text at least 4.66:1 under the body\'s 85 % opacity (6.19:1 without it), border and focus ring at least 3.56:1 (4.23:1), computed over all nine bands. Hover darkens the scrim to 62 %, active to 74 %; the focus ring is white over a 2 px dark band, as on `inverse` since 3.36. Same sizes, height, icon slots, `loading` and `disabled` as `inverse`; the same in both themes. In forced colours the border becomes `ButtonText`.',
+          '3.36 (request 056, finance-intelligence monatsstand row 2): `variant="inverse-outline"`, the quieter action beside an `inverse` button on the `lc-hero` bands (see *Layout / Hero / Stage Actions*). White text and a white 1 px border on a 50 % `#111827` scrim, with a 1 px `#111827` line outside the border, so the boundary holds on every band: text at least 9.30:1, border and two-tone ring at least 4.58:1 on all nine bands. Hover darkens the scrim to 62 %, active to 74 %; the focus ring is white over a 2 px dark band, as on `inverse` since 3.36. Same sizes, height, icon slots, `loading` and `disabled` as `inverse`; the same in both themes. In forced colours the border becomes `ButtonText`.',
       },
     },
   },
@@ -777,4 +805,60 @@ export const OutlinePrimaryTone: Story = {
         </div>
       </div>`,
   }),
+};
+
+/** 3.42 (usm-x row 3): toggles and popup triggers as `lc-button`. */
+export const ToggleAndMenuTrigger: Story = {
+  name: 'Toggle / Menu Trigger (DE)',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.42 (usm-x row 3, WCAG 4.1.2): `ariaPressed`, `ariaExpanded`, `ariaHasPopup` and `ariaControls` set their attributes on the inner `<button>` (never on the host); unset, none renders. „Assistent“ is a toggle: `[ariaPressed]` follows the state and the page swaps the look (`outline` ↔ `secondary`; the kit adds no pressed style). „Spalten“ opens a panel: `[ariaExpanded]` and `ariaControls` name it. „Ansicht“ is an `lc-menu` trigger without the inputs: the menu sets `aria-haspopup`, `aria-expanded` and `aria-controls` itself. The play test presses „Assistent“ and opens „Spalten“.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [MenuComponent, CheckboxGroupComponent, CheckboxComponent] },
+    props: {
+      assistant: false,
+      columnsOpen: false,
+      viewOpen: false,
+      viewItems: [
+        { id: 'list', label: 'Liste' },
+        { id: 'cards', label: 'Karten' },
+        { id: 'table', label: 'Tabelle' },
+      ],
+    },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+          <lc-button [variant]="assistant ? 'secondary' : 'outline'" [ariaPressed]="assistant" (clicked)="assistant = !assistant">Assistent</lc-button>
+          <lc-button variant="outline" [ariaExpanded]="columnsOpen" ariaControls="toggle-story-columns" (clicked)="columnsOpen = !columnsOpen">Spalten</lc-button>
+          <lc-menu [items]="viewItems" position="bottom-left" [isOpen]="viewOpen" (closed)="viewOpen = false" (itemClick)="viewOpen = false">
+            <lc-button trigger variant="outline" (clicked)="viewOpen = !viewOpen">Ansicht</lc-button>
+          </lc-menu>
+        </div>
+        <div id="toggle-story-columns" [hidden]="!columnsOpen">
+          <lc-checkbox-group legend="Sichtbare Spalten" orientation="horizontal" size="sm">
+            <lc-checkbox label="Name" [checked]="true"></lc-checkbox>
+            <lc-checkbox label="Status" [checked]="true"></lc-checkbox>
+            <lc-checkbox label="Geändert"></lc-checkbox>
+          </lc-checkbox-group>
+        </div>
+      </div>`,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const assistant = canvas.getByRole('button', { name: 'Assistent' });
+    await expect(assistant.getAttribute('aria-pressed')).toBe('false');
+    await userEvent.click(assistant);
+    await expect(assistant.getAttribute('aria-pressed')).toBe('true');
+    const columns = canvas.getByRole('button', { name: 'Spalten' });
+    await userEvent.click(columns);
+    await expect(columns.getAttribute('aria-expanded')).toBe('true');
+    await expect(columns.getAttribute('aria-controls')).toBe('toggle-story-columns');
+    columns.blur();
+  },
 };

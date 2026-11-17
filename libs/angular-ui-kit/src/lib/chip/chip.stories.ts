@@ -83,6 +83,14 @@ export const Removable: Story = {
 };
 
 export const Clickable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A real `<button>` with hover, active and focus states. 3.42 (060-n4): a clickable `sm`/`md` chip keeps the chip font size (14 px; `lg` 16 px) instead of taking the parent’s 16 px.',
+      },
+    },
+  },
   args: { variant: 'default', clickable: true, size: 'md' },
   render: (args) => ({
     props: args,
@@ -396,7 +404,7 @@ export const HooksOnAnAncestor: Story = {
     docs: {
       description: {
         story:
-          '3.40 (AC-15): `--lc-chip-bg`, `--lc-chip-fg`, `--lc-chip-border` and `--lc-chip-gap` set on a wrapper reach every chip inside, and they win over the variant colours, also over the on-band palette in `lc-hero` (the variants now keep their colours in private properties and only read the hooks). Here the wrapper sets an opaque surface fill with the info ink and border; each row holds an emphasis, a default and a quiet chip. Theme tokens in a hook on an ancestor resolve in the page theme, also inside `lc-hero`: pick an opaque pair, as here (chip text 10.16:1 light, 10.64:1 dark, off the band and on it). A translucent fill such as `--color-info-subtle` lets the band through (4.01:1 in dark, below 4.5:1). Before 3.40 a chip declared the hooks itself, so only a value on the chip took effect.',
+          '3.40 (AC-15): `--lc-chip-bg`, `--lc-chip-fg`, `--lc-chip-border` and `--lc-chip-gap` set on a wrapper reach every chip inside, and they win over the variant colours, also over the on-band palette in `lc-hero` (the variants now keep their colours in private properties and only read the hooks). Here the wrapper sets an opaque surface fill with the info ink and border; each row holds an emphasis, a default and a quiet chip. Theme tokens in a hook on an ancestor resolve in the page theme, also inside `lc-hero`: pick an opaque pair, as here (chip text 10.16:1 light, 10.64:1 dark, off the band and on it). A translucent fill such as `--color-info-subtle` lets the band through (4.01:1 in dark, below 4.5:1). Before 3.40 a chip declared the hooks itself, so only a value on the chip took effect. 3.42 (061-s2): a hovered clickable quiet chip keeps the `--lc-chip-bg` fill too, in and outside `lc-hero` (text 9.56:1 light, 11.09:1 dark or more on hover; before, the hero glass replaced it: 1.05–1.11:1).',
       },
     },
   },
