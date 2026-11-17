@@ -9,6 +9,7 @@
       "Bash(npx nx run angular-ui-kit:build:tokens *)",
       "Bash(npm run test:tools)",
       "Bash(npm run build:tokens)",
+      "Bash(npm run generate:icon-names)",
       "Bash(node tools/agents/story-shots.mjs *)",
       "Bash(node tools/compat/check-angular-majors.mjs *)",
       "Bash(node tools/compat/check-trusted-types.mjs *)",
