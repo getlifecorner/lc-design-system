@@ -93,6 +93,9 @@
   --color-accent-red: #{$color-accent-red};
   --color-accent-rust: #{$color-accent-rust};
   --color-accent-violet: #{$color-accent-violet};
+  // 3.43 (usm-x row 8): the dark value of the yellow accent (10.29:1 on the
+  // surface); its tint 16 % as in light.
+  --color-accent-yellow: #{$color-accent-yellow-bright};
 
   // ============================================================================
   // Elevation (DS2.0 deep layered shadows — from generated tokens)
@@ -471,8 +474,19 @@
 // (request 043, F-25): its slot buttons measured 1.00:1 (outline) and 3.12:1
 // (link) there; with the tokens re-declared they match a dark page (16.32:1,
 // 12.13:1). A root-level token override does not reach inside a themed header.
+//
+// `.lc-theme-dark` (3.43, request 063, usm-x row 19): the same full colour set
+// on any element and its subtree, the class form of `dark-theme-tokens`.
+// Scopes nest (`.lc-theme-light` inside it switches back). It paints no
+// background: the components inside paint their own.
+.lc-theme-dark,
 .lc-header--dark {
   @include -dark-theme-colors;
+}
+
+.lc-theme-dark {
+  color: var(--color-text-primary);
+  color-scheme: dark;
 }
 
 // `<lc-sidenav theme="dark">` on a light page: its badges took the page's

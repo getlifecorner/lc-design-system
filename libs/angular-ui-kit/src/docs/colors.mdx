@@ -182,7 +182,7 @@ Semantic colors for feedback and states.
 
 Additional colors for data visualization and categorization.
 
-<div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
   <div style={{ background: '#DF792E', padding: '16px 12px', borderRadius: '8px', fontSize: '12px', textAlign: 'center', color: 'white' }}>
     <div style={{ fontWeight: 600 }}>Orange</div>
     <div style={{ marginTop: 4 }}>#DF792E</div>
@@ -203,7 +203,20 @@ Additional colors for data visualization and categorization.
     <div style={{ fontWeight: 600 }}>Violet</div>
     <div style={{ marginTop: 4 }}>#4E3F84</div>
   </div>
+  <div style={{ background: '#867200', padding: '16px 12px', borderRadius: '8px', fontSize: '12px', textAlign: 'center', color: 'white' }}>
+    <div style={{ fontWeight: 600 }}>Yellow</div>
+    <div style={{ marginTop: 4 }}>#867200 · dark #E8C547</div>
+  </div>
 </div>
+
+Since 3.43, `--color-accent-yellow` is a yellow between warning and neutral for
+severity scales (usm-x). It is the only accent with a value per theme: light
+`#867200` (4.75:1 on white), dark `#e8c547` (10.28:1 on the surface). Use it as an
+ink, border or mark; its tint is 16 %
+(`color-mix(in srgb, var(--color-accent-yellow) 16%, transparent)`), on which
+`--color-text-primary` reaches 14.46:1 (light) and 11.20:1 (dark). No component
+variant uses it: give an `lc-alert` the yellow through its hooks
+(`--lc-alert-bg`, `--lc-alert-border`, `--lc-alert-icon`).
 
 ## Semantic ink tokens
 
@@ -276,6 +289,24 @@ theme-color) without adding a class; `setTheme()` replaces `system` with the
 chosen class. For the browser bar without JavaScript, give the page two meta
 tags: `<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">`
 and `content="#0a121b"` for `dark`.
+
+### Theme scopes (3.43)
+
+A part of the page can take the other theme, for example a light menu inside a
+dark rail:
+
+| Class / mixin | Gives the element and its subtree |
+|---|---|
+| `.lc-theme-light` | the full light colour set (the values of `:root.light`), `color: var(--color-text-primary)` and `color-scheme: light` |
+| `.lc-theme-dark` | the full dark colour set (the values of `:root.dark`), `color: var(--color-text-primary)` and `color-scheme: dark` |
+| `@include light-theme-tokens` (from `_theme-light.scss`) | every light token (colours, spacing, type) on a selector of your own |
+| `@include dark-theme-tokens` (from `_theme-dark.scss`) | every dark token, the same way |
+
+Scopes nest: `<nav class="lc-theme-dark">` → `<lc-menu class="lc-theme-light">` →
+`<button trigger class="lc-theme-dark">`. A scope paints no background; the
+components inside paint their own (a menu panel, a card). Derived tokens such as
+`--color-primary` resolve where they are declared, so use a scope class or mixin
+rather than overriding single tokens.
 
 ## "Weite": the app look (3.3)
 

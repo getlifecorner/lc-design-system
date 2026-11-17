@@ -71,8 +71,12 @@
     }
   }
 
+  // 3.43 (request 063, review F3): the value box width is the public hook
+  // `--lc-number-input-value-width` (on the element or any ancestor), sized
+  // for the longest value, e.g. `calc(20ch + 0.5rem)` for a 20-digit id (the
+  // digits are tabular). Defaults: xs 3rem, sm 3.5rem, md 4rem, lg 4.5rem.
   &__input {
-    width: 4rem;
+    width: var(--lc-number-input-value-width, 4rem);
     text-align: center;
     border: none;
     outline: none;
@@ -133,7 +137,7 @@
     }
 
     .number-input__input {
-      width: 3rem;
+      width: var(--lc-number-input-value-width, 3rem);
     }
 
     .number-input__input,
@@ -149,7 +153,7 @@
     }
 
     .number-input__input {
-      width: 3.5rem;
+      width: var(--lc-number-input-value-width, 3.5rem);
     }
 
     .number-input__input,
@@ -165,7 +169,7 @@
     }
 
     .number-input__input {
-      width: 4.5rem;
+      width: var(--lc-number-input-value-width, 4.5rem);
     }
 
     .number-input__input,

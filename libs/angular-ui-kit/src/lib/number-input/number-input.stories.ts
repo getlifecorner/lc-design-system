@@ -38,8 +38,16 @@ const meta: Meta<NumberInputComponent> = {
     size: {
       control: 'select',
       options: ['xs', 'sm', 'md', 'lg'],
-      description: '3.29: height of the field and the steppers: `xs` 24, `sm` 32, `md` 40 (as before), `lg` 44 px (touch targets).',
+      description:
+        '3.29: height of the field and the steppers: `xs` 24, `sm` 32, `md` 40 (as before), `lg` 44 px (touch targets). The value box is 3 / 3.5 / 4 / 4.5 rem wide; 3.43: the CSS hook `--lc-number-input-value-width` widens it for a longer value.',
       table: { defaultValue: { summary: 'md' } },
+    },
+    valueType: {
+      control: 'inline-radio',
+      options: ['number', 'string'],
+      description:
+        "3.43 (usm-x row 13): `'string'` keeps the typed decimal as text: the model and `stringValueChange` carry a string with `.` as the separator (`\"1.50\"`, a 20-digit id), `null` without a digit; nothing passes through a double. The steppers add `step` in decimal at the larger scale (`\"1.50\"` + 0.5 → `\"2.00\"`); blur clamps only a value out of range, at its scale; `locale` changes only the shown separator; `valueChange` does not emit",
+      table: { defaultValue: { summary: "'number'" } },
     },
   },
 
@@ -56,6 +64,8 @@ Number input component with increment/decrement controls.
 - Helper text and error message linked via \`aria-describedby\`
 - Disabled state support
 - ControlValueAccessor integration for reactive forms
+
+**CSS hook (3.43):** \`--lc-number-input-value-width\`, on the element or any ancestor, sets the width of the value box between the steppers. Default: the size's width (\`xs\` 3rem, \`sm\` 3.5rem, \`md\` 4rem, \`lg\` 4.5rem). Size it for the longest value, e.g. \`calc(7ch + 0.5rem)\` for „1250,00“ or \`calc(20ch + 0.5rem)\` for a 20-digit id (the digits are tabular, so 1ch is one digit).
 `,
       },
     },
@@ -179,6 +189,71 @@ export const Sizes: Story = {
               decrementAriaLabel="Wert verringern" incrementAriaLabel="Wert erhöhen" />
           }
         </div>
+      </div>`,
+  }),
+};
+
+/** The model as the page would send it: a quoted string or `null`. */
+const showModel = (value: unknown) => JSON.stringify(value ?? null);
+const MODEL_STYLE = 'font-size: var(--typography-font-size-sm); color: var(--color-text-secondary); margin: 4px 0 0;';
+
+/** 3.43 (request 063, usm-x row 13): the typed decimal as a string. */
+export const StringMode: Story = {
+  name: 'String Mode',
+  parameters: {
+    controls: { include: ['valueType'] },
+    docs: {
+      description: {
+        story:
+          '3.43 (request 063, usm-x row 13): `valueType="string"` keeps what was typed, for a backend that validates the text itself. The model (forms, `[(ngModel)]`) and `stringValueChange` carry a string with `.` as the separator: "Amount" stays `"1.50"` (not 1.5), and "Case number" holds a 20-digit id that a double would round (`12345678901234567890` is `12345678901234567000` as a number). Nothing passes through a double: the steppers add `step` in decimal and keep the larger scale (`"1.50"` + 0.5 → `"2.00"`, the id + 1 → `…891`), and blur only rewrites a value outside `min`/`max` (to the bound, at the value\'s scale). `valueChange` (number) does not emit in this mode. Below each field, the model. The case number sets `--lc-number-input-value-width: calc(20ch + 0.5rem)`, so all 20 digits show (the default box is 4 rem).',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [NumberInputComponent, FormsModule] },
+    props: { amount: '1.50', caseNumber: '12345678901234567890', showModel },
+    template: `
+      <div lang="en" style="display: flex; flex-direction: column; gap: 16px; max-width: 360px;">
+        <div>
+          <lc-number-input label="Amount" valueType="string" [step]="0.5" [min]="0" [max]="1000" [(ngModel)]="amount" />
+          <p style="${MODEL_STYLE}">Model: <output>{{ showModel(amount) }}</output></p>
+        </div>
+        <div>
+          <lc-number-input label="Case number" valueType="string" [step]="1" [(ngModel)]="caseNumber"
+            style="--lc-number-input-value-width: calc(20ch + 0.5rem)" />
+          <p style="${MODEL_STYLE}">Model: <output>{{ showModel(caseNumber) }}</output></p>
+        </div>
+      </div>`,
+  }),
+};
+
+/** 3.43 (request 063, usm-x row 13): German decimals in string mode, invalid and disabled. */
+export const StringModeDe: Story = {
+  name: 'String Mode (DE)',
+  parameters: {
+    controls: { include: ['valueType'] },
+    docs: {
+      description: {
+        story:
+          '3.43 (request 063, AC-22, AC-23): `valueType="string" locale="de-DE"`. The field shows „1,50“ and the model stays `"1.50"`: `locale` only changes the shown separator; typing „1,5“ gives `"1.5"`. The second field is invalid with its message, the third disabled. The wrapper sets `--lc-number-input-value-width: calc(7ch + 0.5rem)` for all three, so „1250,00“ fits.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [NumberInputComponent, FormsModule] },
+    props: { amount: '1.50', wrong: '1250.00', locked: '19.90', showModel },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px; max-width: 360px; --lc-number-input-value-width: calc(7ch + 0.5rem);">
+        <div>
+          <lc-number-input label="Betrag" valueType="string" locale="de-DE" [step]="0.5" [min]="0" [max]="1000"
+            decrementAriaLabel="Wert verringern" incrementAriaLabel="Wert erhöhen" [(ngModel)]="amount" />
+          <p style="${MODEL_STYLE}">Modell: <output>{{ showModel(amount) }}</output></p>
+        </div>
+        <lc-number-input label="Betrag (ungültig)" valueType="string" locale="de-DE" [step]="0.5"
+          error="Bitte einen Betrag von 0 bis 1.000 eingeben." decrementAriaLabel="Wert verringern" incrementAriaLabel="Wert erhöhen"
+          [(ngModel)]="wrong" />
+        <lc-number-input label="Betrag (gesperrt)" valueType="string" locale="de-DE" [step]="0.5" [disabled]="true"
+          decrementAriaLabel="Wert verringern" incrementAriaLabel="Wert erhöhen" [(ngModel)]="locked" />
       </div>`,
   }),
 };

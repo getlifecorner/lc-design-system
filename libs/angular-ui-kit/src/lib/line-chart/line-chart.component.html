@@ -91,6 +91,8 @@
           stroke-linecap="round"
           stroke-linejoin="round"
           class="lc-line-chart__line"
+          [class.lc-line-chart__line--dashed]="ser.dashed"
+          [attr.stroke-dasharray]="ser.dashArray"
         />
       }
       @for (pt of ser.points; track $index) {
@@ -111,7 +113,12 @@
     <div class="lc-line-chart__legend">
       @for (item of legendItems(); track $index) {
         <div class="lc-line-chart__legend-item">
-          <span class="lc-line-chart__legend-line" [style.background-color]="item.color"></span>
+          <span
+            class="lc-line-chart__legend-line"
+            [class.lc-line-chart__legend-line--dashed]="item.dashed"
+            [style.background-color]="item.dashed ? null : item.color"
+            [style.color]="item.dashed ? item.color : null"
+          ></span>
           <span class="lc-line-chart__legend-label">{{ item.label }}</span>
         </div>
       }

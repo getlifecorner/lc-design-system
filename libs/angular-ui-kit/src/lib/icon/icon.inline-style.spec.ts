@@ -243,8 +243,9 @@ describe('lc-icon without inline styles (3.11.1, G-37)', () => {
   describe('Stylesheet contract (AC-3, AC-4)', () => {
     it.each(SIZES)('.icon-%s is %s × %s', (size, px) => {
       const block = rule(`.icon-${size}`);
-      expect(block).toContain(`width: ${px};`);
-      expect(block).toContain(`height: ${px};`);
+      // 3.43 (request 063): the px is the fallback of the --lc-icon-size hook (through --_lc-icon-size); unset, the same px.
+      expect(block).toContain(`width: var(--_lc-icon-size, ${px});`);
+      expect(block).toContain(`height: var(--_lc-icon-size, ${px});`);
     });
 
     it('the svg fills the box and inherits the colour; no other colour rule', () => {

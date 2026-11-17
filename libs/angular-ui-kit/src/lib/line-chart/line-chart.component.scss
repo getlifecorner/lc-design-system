@@ -64,3 +64,22 @@
   color: var(--color-text-secondary);
 
 }
+
+// Dashed series (3.43, request 063): butt caps keep the 3·sw / 2·sw pattern
+// exact (round caps would eat the gaps). The swatch draws 6 on, 4 off, 6 on
+// in the series colour (`color`).
+.lc-line-chart__line--dashed {
+  stroke-linecap: butt;
+}
+
+.lc-line-chart__legend-line--dashed {
+  background: repeating-linear-gradient(90deg, currentColor 0 6px, transparent 6px 10px);
+}
+
+// Forced colours: the swatch background would be forced to Canvas and vanish
+// (measured, design 063 §6); the SVG strokes keep their colours already.
+@media (forced-colors: active) {
+  .lc-line-chart__legend-line {
+    forced-color-adjust: none;
+  }
+}

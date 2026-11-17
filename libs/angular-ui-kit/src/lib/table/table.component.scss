@@ -437,6 +437,7 @@
   cursor: pointer;
   border-radius: var(--border-radius-sm);
   transition: transform 0.2s ease, background-color 0.15s ease, color 0.15s ease;
+  position: relative; // anchors the hit area below (3.43)
 
   &:hover {
     background-color: var(--color-surface-hover);
@@ -452,6 +453,29 @@
   &--expanded {
     transform: rotate(90deg);
   }
+
+  // Hit area (3.43, design 063 §6): transparent, 12 px into the cell's start
+  // padding, 0 past the end (never over the content, so a link there keeps
+  // its clicks), 12 px up and down: 32 × 44 (md/lg), 32 × 36 (sm, -8 px).
+  // The expanded button is rotated 90deg clockwise, so its local insets are
+  // turned back: local left = screen top, local bottom = screen left.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -12px 0 -12px -12px;
+  }
+
+  &--expanded::before {
+    inset: 0 -12px -12px -12px;
+  }
+}
+
+.lc-table--sm .lc-table__chevron-btn::before {
+  inset: -8px 0 -8px -12px;
+}
+
+.lc-table--sm .lc-table__chevron-btn--expanded::before {
+  inset: 0 -8px -12px -8px;
 }
 
 .lc-table__tree-content {

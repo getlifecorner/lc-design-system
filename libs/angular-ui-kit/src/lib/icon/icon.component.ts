@@ -293,7 +293,11 @@ export class IconComponent {
    * - xl: 40px
    *
    * Set by the `icon-<size>` class in the component stylesheet; `lc-icon`
-   * writes no inline size (3.11.1).
+   * writes no inline size (3.11.1). Another box size (3.43, e.g. 18 px in a
+   * dense rail): set the CSS hook `--lc-icon-size: 18px` on the `lc-icon`
+   * element (a class or a selector). It does not inherit, so a value on a
+   * container does not reach the icons inside; the svg's `width`/`height`
+   * attributes keep the `size`, and the drawn box follows the hook.
    * @default "md"
    */
   readonly size = input<IconSize>('md');

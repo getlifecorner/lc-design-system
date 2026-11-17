@@ -1,12 +1,21 @@
 import {
   Component,
   ChangeDetectionStrategy,
+  DestroyRef,
+  ElementRef,
+  Injector,
+  PLATFORM_ID,
+  afterNextRender,
+  effect,
+  inject,
   input,
   model,
   output,
   computed,
+  untracked,
   ViewEncapsulation,
 } from '@angular/core';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
 import {
   ICON_CHECK_CIRCLE,
@@ -32,6 +41,15 @@ export type AlertVariant = 'success' | 'error' | 'warning' | 'info';
  * edge, not under the text.
  */
 export type AlertActionsLayout = 'inline' | 'stacked';
+
+/**
+ * Role of the alert (3.43): `alert` (assertive), `status` (polite), or
+ * `alertdialog` for a blocking question with focus handling.
+ */
+export type AlertRole = 'alert' | 'status' | 'alertdialog';
+
+/** Counter for the title and message ids of an `alertdialog`, in creation order. */
+let nextAlertId = 0;
 
 /**
  * Alert component for inline notifications.
@@ -60,6 +78,10 @@ export type AlertActionsLayout = 'inline' | 'stacked';
  * - The variant icon is decorative unless `iconAriaLabel` names it (the
  *   title and the colour carry the tone; no built-in English word)
  * - Accessible: `role="alert"` for error / warning, `role="status"` otherwise
+ * - 3.43: `role="alertdialog"` for a blocking question (named by the title,
+ *   described by the message, focused when it shows, focus returned when it
+ *   hides), and the colour hooks `--lc-alert-bg`, `--lc-alert-border`,
+ *   `--lc-alert-fg` and `--lc-alert-icon` (on the alert or any ancestor)
  *
  * @example
  * ```html
@@ -91,12 +113,42 @@ export type AlertActionsLayout = 'inline' | 'stacked';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[class]': 'hostClasses()',
-    '[attr.role]': 'role()',
+    '[attr.role]': 'effectiveRole()',
     '[attr.aria-live]': 'ariaLive()',
     '[attr.aria-label]': 'ariaLabel()',
+    '[attr.aria-labelledby]': 'labelledBy()',
+    '[attr.aria-describedby]': 'describedBy()',
+    '[attr.tabindex]': 'isDialog() ? -1 : null',
   },
 })
 export class AlertComponent {
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
+  private readonly document = inject(DOCUMENT);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+
+  /** Element that had the focus when the alertdialog showed. */
+  private opener: HTMLElement | null = null;
+  /** Whether the alertdialog was shown at the last check. */
+  private dialogShown = false;
+
+  private readonly idBase = `lc-alert-${nextAlertId++}`;
+  /** Id of the title in `alertdialog` mode. */
+  protected readonly titleId = `${this.idBase}-title`;
+  /** Id of the message in `alertdialog` mode. */
+  protected readonly contentId = `${this.idBase}-content`;
+
+  constructor() {
+    // 3.43: focus moves into a shown alertdialog and back to the opener when
+    // it hides. Browser only; nothing runs in prerendering.
+    effect(() => {
+      const shown = this.visible() && this.isDialog();
+      untracked(() => this.onDialogShown(shown));
+    });
+    inject(DestroyRef).onDestroy(() => {
+      if (this.dialogShown) this.restoreFocus();
+    });
+  }
   /**
    * Visual variant of the alert
    * @default 'info'
@@ -159,6 +211,18 @@ export class AlertComponent {
   closeAriaLabel = input('Close alert');
 
   /**
+   * Role of the alert (3.43, usm-x row 7). Unset: `alert` for error and
+   * warning, `status` otherwise (as before). `alertdialog` is a blocking
+   * question. It is named by the title (`aria-labelledby`; without a title by
+   * `ariaLabel`) and described by the message (`aria-describedby`), it is not
+   * a live region, focus moves to it when it shows, and focus returns to the
+   * element that had it when the alert hides or is destroyed. Put the
+   * decisions in `slot="action"`.
+   * @default undefined
+   */
+  role = input<AlertRole | undefined>(undefined);
+
+  /**
    * Emitted when alert is dismissed
    */
   readonly dismissed = output<void>();
@@ -200,15 +264,30 @@ export class AlertComponent {
   });
 
   /**
-   * Live-region role: `alert` (assertive) only for error / warning,
-   * `status` (polite) for info / success.
+   * The rendered role: the `role` input, else the live-region role, `alert`
+   * (assertive) only for error / warning, `status` (polite) for info / success.
    */
-  protected role = computed(() => (this.isUrgent() ? 'alert' : 'status'));
+  protected effectiveRole = computed(() => this.role() ?? (this.isUrgent() ? 'alert' : 'status'));
+
+  /** Whether the alert is a blocking question (`role="alertdialog"`, 3.43). */
+  protected readonly isDialog = computed(() => this.role() === 'alertdialog');
 
   /**
-   * Computed ARIA live region priority
+   * Computed ARIA live region priority. An alertdialog is no live region; it
+   * takes the focus instead. A `role` of `alert` or `status` sets its own.
    */
-  protected ariaLive = computed(() => (this.isUrgent() ? 'assertive' : 'polite'));
+  protected ariaLive = computed(() => {
+    const role = this.effectiveRole();
+    if (role === 'alertdialog') return null;
+    if (this.role()) return role === 'alert' ? 'assertive' : 'polite';
+    return this.isUrgent() ? 'assertive' : 'polite';
+  });
+
+  /** `aria-labelledby` of an alertdialog with a title. */
+  protected readonly labelledBy = computed(() => (this.isDialog() && this.title() ? this.titleId : null));
+
+  /** `aria-describedby` of an alertdialog: its message. */
+  protected readonly describedBy = computed(() => (this.isDialog() ? this.contentId : null));
 
   /**
    * Computed default icon based on variant
@@ -238,5 +317,37 @@ export class AlertComponent {
     event.preventDefault();
     event.stopPropagation();
     this.dismiss();
+  }
+
+  /** Moves the focus in when an alertdialog shows and back when it hides. */
+  private onDialogShown(shown: boolean): void {
+    if (!this.isBrowser || shown === this.dialogShown) return;
+    this.dialogShown = shown;
+    if (shown) {
+      const active = this.document.activeElement as HTMLElement | null;
+      this.opener = active && !this.host.nativeElement.contains(active) ? active : null;
+      afterNextRender(
+        () => {
+          if (this.dialogShown) this.host.nativeElement.focus();
+        },
+        { injector: this.injector },
+      );
+    } else {
+      this.restoreFocus();
+    }
+  }
+
+  /**
+   * Gives the focus back to the opener if it is still in the page and the
+   * focus is inside the alert or nowhere (on `<body>`), so a user who moved on
+   * is not pulled back.
+   */
+  private restoreFocus(): void {
+    const opener = this.opener;
+    this.opener = null;
+    if (!this.isBrowser || !opener?.isConnected) return;
+    const active = this.document.activeElement;
+    const inside = !!active && this.host.nativeElement.contains(active);
+    if (inside || !active || active === this.document.body) opener.focus();
   }
 }

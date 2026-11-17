@@ -5,6 +5,7 @@ import { TextareaComponent } from './textarea.component';
 import { InputComponent } from '../input/input.component';
 import { ButtonComponent } from '../button/button.component';
 import { ModalComponent } from '../modal/modal.component';
+import { IconComponent } from '../icon/icon.component';
 
 /**
  * 3.35 (request 055, monatsstand-prove row 1): "Oktober 2026 freigeben" opens
@@ -113,15 +114,25 @@ const meta: Meta<TextareaComponent> = {
       description: 'Controls padding and font size',
       table: { defaultValue: { summary: 'md' } },
     },
-    rows: { description: 'Number of visible text lines (default height)', table: { defaultValue: { summary: '3' } } },
+    rows: {
+      description:
+        'Number of visible text lines (default height). 3.43: `1` is the one-line mode (one line plus padding, no 4–7 rem floor; with `autoResize` it grows to `maxRows`)',
+      table: { defaultValue: { summary: '3' } },
+    },
     maxLength: { description: 'Maximum number of characters allowed', table: { defaultValue: { summary: 'undefined' } } },
     showCharacterCount: {
       description: 'Shows remaining/total character count below the field',
       table: { defaultValue: { summary: 'false' } },
     },
     autoResize: { description: 'Automatically grows/shrinks based on content', table: { defaultValue: { summary: 'false' } } },
-    minRows: { description: 'Minimum rows when auto-resize is enabled', table: { defaultValue: { summary: '3' } } },
-    maxRows: { description: 'Maximum rows when auto-resize is enabled', table: { defaultValue: { summary: 'undefined' } } },
+    minRows: {
+      description: 'Minimum rows when auto-resize is enabled. 3.43: `1` with `autoResize` is the one-line mode',
+      table: { defaultValue: { summary: '3' } },
+    },
+    maxRows: {
+      description: 'Maximum rows when auto-resize is enabled; 3.43: a field at this height scrolls',
+      table: { defaultValue: { summary: 'undefined' } },
+    },
     helperText: { description: 'Helpful hint shown below the textarea', table: { defaultValue: { summary: "''" } } },
     error: { description: 'Shows error styling when true', table: { defaultValue: { summary: 'false' } } },
     errorMessage: { description: 'Error message displayed below the textarea', table: { defaultValue: { summary: "''" } } },
@@ -408,4 +419,56 @@ export const FocusOnOpen: Story = {
     await new Promise((resolve) => setTimeout(resolve, 50));
     canvasElement.querySelector<HTMLButtonElement>('lc-textarea-focus-on-open-demo lc-button button')?.click();
   },
+};
+
+/** Seven lines, more than the one-line field's `maxRows` 5 (request 063). */
+const SEVEN_LINES = ['First line', 'Second line', 'Third line', 'Fourth line', 'Fifth line', 'Sixth line', 'Seventh line'].join('\n');
+
+/** 3.43 (request 063, usm-x row 6): one line plus padding at every size. */
+export const OneLine: Story = {
+  name: 'One Line',
+  parameters: {
+    controls: { include: ['rows', 'minRows', 'maxRows', 'autoResize'] },
+    docs: {
+      description: {
+        story:
+          '3.43 (request 063, usm-x row 6): `rows` 1, or `minRows` 1 with `autoResize`, is the one-line mode. The field is one line plus padding (xs 36, sm 43, md 50, lg 57 px), with no 4–7 rem floor, and the prerendered `<textarea>` has `rows="1"`. With `autoResize` it grows one line at a time up to `maxRows`, then scrolls: the last field holds seven lines and stops at five (146 px at md). Without a helper text, a counter or a visible error there is no footer row below the field, and the host ends at the field (no line gap).',
+      },
+    },
+  },
+  render: () => ({
+    props: { sevenLines: SEVEN_LINES },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 16px; max-width: 400px;">
+        <lc-textarea label="Extra small" placeholder="One line" size="xs" [rows]="1"></lc-textarea>
+        <lc-textarea label="Small" placeholder="One line" size="sm" [rows]="1"></lc-textarea>
+        <lc-textarea label="Medium" placeholder="One line" size="md" [rows]="1"></lc-textarea>
+        <lc-textarea label="Large" placeholder="One line" size="lg" [rows]="1"></lc-textarea>
+        <lc-textarea label="Grows to 5 lines, then scrolls" [minRows]="1" [autoResize]="true" [maxRows]="5" [value]="sevenLines"></lc-textarea>
+      </div>`,
+  }),
+};
+
+/** 3.43 (request 063, usm-x row 6): a chat composer beside a send button. */
+export const OneLineChatDe: Story = {
+  name: 'One Line Chat (DE)',
+  decorators: [moduleMetadata({ imports: [ButtonComponent, IconComponent] })],
+  parameters: {
+    controls: { include: ['rows', 'autoResize', 'maxRows'] },
+    docs: {
+      description: {
+        story:
+          '3.43 (request 063, usm-x row 6): the composer of a chat. `rows` 1 with `autoResize` and `maxRows` 5: one line (50 px at md) beside an icon-only `lg` „Senden“ button (45.6 px, a 44 px touch target), both aligned at the end; it grows with the text to five lines and then scrolls. No footer row and no line gap below the field (the one-line field is a block), so the button bottom stays at the field bottom.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div lang="de" style="display: flex; align-items: flex-end; gap: 8px; max-width: 480px;">
+        <div style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column;">
+          <lc-textarea label="Nachricht" placeholder="Nachricht schreiben …" [rows]="1" [autoResize]="true" [maxRows]="5"></lc-textarea>
+        </div>
+        <lc-button variant="primary" size="lg" [iconOnly]="true" ariaLabel="Senden"><lc-icon slot="icon-before" name="send" size="sm" [decorative]="true"></lc-icon></lc-button>
+      </div>`,
+  }),
 };

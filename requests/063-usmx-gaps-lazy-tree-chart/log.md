@@ -1,0 +1,17 @@
+# Log 063: USM X frame and form gaps, lc-table lazy tree rows, lc-line-chart gaps and dashed series
+
+## Owner decisions
+
+- 2026-11-17 13:47 (resume): "Owner 2026-11-17 13:50: continue. The headless run stopped on the usage limit while ui-ux-designer (design mode) was working; there is no design.md yet, only tmp/story-shots/063/build-storybook.log (10:37). Start the design from spec.md and reuse a Storybook build if story-shots.mjs accepts it."
+
+## Handoffs
+
+Times come from `date '+%Y-%m-%d %H:%M'` when the row is written, never estimated.
+
+| Time | From → to | Status | Reason | Task |
+|---|---|---|---|---|
+| 2026-11-17 10:29 | dispatcher → spec-writer | new | Bundle 20261117-102851 started by the owner (2 items: usm-x remaining rows of 062, finance-intelligence kosten-2026-11-17 rows 1–2). | Write the spec for this request |
+| 2026-11-17 10:31 | spec-writer → ui-ux-designer | done | The spec is complete and has no owner decision, so the designer takes it next. | Design the API and visuals for AC-1…AC-33 in spec.md (lazy tree rows in lc-table, null gaps and dashed series in lc-line-chart, textarea one-line mode, alert role and hooks plus the yellow token, menu sections, number-input string mode, 18 px icon, public light theme scope). Before you start, the dispatcher puts usm-x rows 4, 11, 14, 16, 17, 20 back into the inbox as one item. (Dispatcher: done, tmp/lc-request/inbox/20261117-103144-usmx-frame-rows.md.) |
+| 2026-11-17 14:09 | ui-ux-designer → web-developer | done | The design covers AC-1…AC-33 with measured values and no owner decision, so the build comes next. | Implement design.md for request 063 (§2 API, §3 layout values, §6 behaviour, the 14 stories in §8, the verification in §9); the expected baseline diffs are the textarea −8 px cases listed under AC-15. |
+| 2026-11-17 15:00 | web-developer → ui-ux-designer | done | All gates are green on 4e9a365 and the build follows design.md; only the designer can review the stories and accept the deviations. | Review request 063 (stories data-display-table--tree-lazy-rows, --tree-lazy-rows-de, charts-line-chart--gaps-and-forecast, --gaps-and-forecast-de, form-textarea--one-line, --one-line-chat-de, feedback-alert--blocking-question, --blocking-question-de, --custom-colors-de, navigation-menu--sections-de, --light-panel-in-dark-scope, form-number-input--string-mode, --string-mode-de, components-icon--size-hook; shots and measures in tmp/story-shots/063/new and tmp/063/new-*.log, baseline diffs in tmp/story-shots/063/r1-a…d) and rule on build.md Deviations 1–5, choosing an option for Deviation 1 (composer button 6 px below the field). |
+| 2026-11-17 15:14 | ui-ux-designer → web-developer | changes-requested | Three must-fix findings (composer misalignment, a 36 px button in the story, values cut off in string mode) need code and story changes before release. | Fix review.md round 1 F1–F3: `display: block` on `.lc-textarea--one-line` (pin it in the one-line spec), `size="lg"` on the One Line Chat (DE) send button, and a new hook `--lc-number-input-value-width` (defaults 3/3.5/4/4.5 rem, JSDoc, docs, Added line) set in both String Mode stories as in design.md §8; then re-shoot those 4 stories and compare the textarea and number-input baselines against the values in design §9. |

@@ -452,6 +452,19 @@ export class TableComponent {
   /** Indentation per depth level, in px. Default: 20. */
   indentSize = input<number>(20);
 
+  /**
+   * Row field that marks a tree row as expandable before its children are
+   * loaded (3.43, kosten-2026-11-17 row 1). When the field is truthy, the row
+   * shows the chevron with `aria-expanded="false"` and opens without children.
+   * The first open emits {@link rowToggle}, and the page then adds the
+   * children to `data`. The row starts collapsed whatever
+   * {@link defaultExpanded} says. A row whose loaded children are removed
+   * returns to this state. Announce the loading in the page
+   * (`role="status"`); the table shows no loading state.
+   * @default undefined
+   */
+  hasChildrenKey = input<string | undefined>(undefined);
+
   /** Accessible name prefix of a column filter, followed by the column label. */
   filterAriaLabel = input('Filter by');
 
@@ -739,8 +752,9 @@ export class TableComponent {
       group.forEach((row, idx) => {
         const id = String(row[idKey] ?? '');
         const children = childrenOf.get(id) ?? [];
-        const hasChildren = children.length > 0;
-        const expanded = hasChildren && this.isExpanded(id);
+        const loaded = children.length > 0;
+        const hasChildren = loaded || this.isLazyParent(row);
+        const expanded = hasChildren && this.isExpanded(id, loaded);
         out.push({
           row,
           absIndex: dataIndex.get(row) ?? -1,
@@ -1060,12 +1074,15 @@ export class TableComponent {
         break;
       case 'ArrowRight':
         if (!dr.hasChildren) return;
-        if (dr.expanded) this.focusRow(index + 1); // first child
-        else if (dr.id) this.toggleRow(dr.id, dr.row);
+        if (dr.expanded) {
+          // First child; an open lazy row without children has none (3.43).
+          if (!(rows[index + 1]?.depth > dr.depth)) return;
+          this.focusRow(index + 1);
+        } else if (dr.id) this.toggleRow(dr);
         break;
       case 'ArrowLeft':
         if (dr.hasChildren && dr.expanded && dr.id) {
-          this.toggleRow(dr.id, dr.row);
+          this.toggleRow(dr);
         } else if (dr.depth > 0) {
           // Step out to the parent: the nearest row above with a smaller depth.
           for (let i = index - 1; i >= 0; i--) {
@@ -1100,23 +1117,38 @@ export class TableComponent {
 
   // -- Tree expand / collapse --------------------------------------------------
 
-  /** Whether the parent row with the given id is currently expanded. */
-  protected isExpanded(id: string): boolean {
+  /**
+   * Whether the parent row with the given id is currently expanded. A row
+   * without loaded children (a lazy row, 3.43) is not seeded by
+   * `defaultExpanded`: it starts collapsed.
+   */
+  protected isExpanded(id: string, loaded = true): boolean {
     const controlled = this.expandedIds();
     if (controlled !== undefined) return controlled.includes(id);
     const override = this.expandOverrides().get(id);
     if (override !== undefined) return override;
-    return this.defaultExpanded();
+    return loaded && this.defaultExpanded();
+  }
+
+  /** Whether `hasChildrenKey` marks the row as expandable (3.43). */
+  private isLazyParent(row: Record<string, unknown>): boolean {
+    const key = this.hasChildrenKey();
+    return !!key && !!row[key];
   }
 
   /** Chevron click: toggle expand state without triggering the row click. */
   protected onChevronClick(displayRow: DisplayRow, event: Event): void {
     event.stopPropagation();
-    if (displayRow.id) this.toggleRow(displayRow.id, displayRow.row);
+    if (displayRow.id) this.toggleRow(displayRow);
   }
 
-  private toggleRow(id: string, row: Record<string, unknown>): void {
-    const expanded = !this.isExpanded(id);
+  private toggleRow(dr: DisplayRow): void {
+    const id = dr.id as string;
+    const row = dr.row;
+    // Read the signals, not `dr.expanded`, so two toggles before a render
+    // still flip twice. `loaded` matches the walk in `displayRows`.
+    const loaded = (this.treeSorted().childrenOf.get(id)?.length ?? 0) > 0;
+    const expanded = !this.isExpanded(id, loaded);
     this.expandOverrides.update((map) => {
       const next = new Map(map);
       next.set(id, expanded);
@@ -1130,12 +1162,23 @@ export class TableComponent {
   private nextExpandedIds(changedId: string, changedExpanded: boolean): string[] {
     const controlled = this.expandedIds();
     const overrides = this.expandOverrides();
-    const parentIds = Array.from(this.treeBuild().childrenOf.keys());
+    const { childrenOf } = this.treeBuild();
+    const parentIds = Array.from(childrenOf.keys());
+    // Lazy rows (3.43) join the list after the rows with loaded children.
+    const idKey = this.idKey();
+    if (this.hasChildrenKey() && idKey) {
+      for (const row of this.data()) {
+        const id = String(row[idKey] ?? '');
+        if (id && this.isLazyParent(row) && !childrenOf.has(id) && !parentIds.includes(id)) {
+          parentIds.push(id);
+        }
+      }
+    }
     return parentIds.filter((pid) => {
       if (pid === changedId) return changedExpanded;
       if (controlled !== undefined) return controlled.includes(pid);
       const override = overrides.get(pid);
-      return override !== undefined ? override : this.defaultExpanded();
+      return override !== undefined ? override : childrenOf.has(pid) && this.defaultExpanded();
     });
   }
 

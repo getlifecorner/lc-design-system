@@ -95,6 +95,10 @@
   --color-accent-red: #{$color-accent-red};
   --color-accent-rust: #{$color-accent-rust};
   --color-accent-violet: #{$color-accent-violet};
+  // 3.43 (usm-x row 8): a yellow between warning and neutral for severity
+  // scales; an ink, border or mark (4.75:1 on white), its tint 16 %
+  // (`color-mix(in srgb, var(--color-accent-yellow) 16%, transparent)`).
+  --color-accent-yellow: #{$color-accent-yellow};
 
   // ============================================================================
   // Elevation (Box Shadows) — light-tuned
@@ -334,9 +338,11 @@
   --color-info-700: var(--color-info-dark);
 }
 
-// Default theme (light) on :root
-:root,
-:root.light {
+// Every light token: the colours above plus spacing, type, radius, motion and
+// sizes. Public since 3.43 (request 063, usm-x row 19), the counterpart of
+// `dark-theme-tokens`: include it in a selector of your own for a light
+// subtree. `:root` and `:root.light` emit it, unchanged.
+@mixin light-theme-tokens {
   @include -light-theme-colors;
 
   // ============================================================================
@@ -478,13 +484,30 @@
   --animation-timing-ease: var(--animation-easing-ease-in-out);
 }
 
+// Default theme (light) on :root
+:root,
+:root.light {
+  @include light-theme-tokens;
+}
+
 // `<lc-header theme="light">` keeps the light palette inside a dark page
 // (request 043, F-25): its slot buttons and primary inks measured 1.05:1
 // (outline) and 1.59:1 (link) there; with the tokens re-declared they match a
 // light page (17.12:1, 6.21:1). A root-level token override does not reach
 // inside a themed header.
+//
+// `.lc-theme-light` (3.43, request 063, usm-x row 19): the same full colour
+// set on any element and its subtree, e.g. a light menu inside a dark rail.
+// Scopes nest (`.lc-theme-dark` inside it switches back). It paints no
+// background: the components inside paint their own.
+.lc-theme-light,
 .lc-header--light {
   @include -light-theme-colors;
+}
+
+.lc-theme-light {
+  color: var(--color-text-primary);
+  color-scheme: light;
 }
 
 // `<lc-sidenav theme="light">` on a dark page: the rail is light, but its

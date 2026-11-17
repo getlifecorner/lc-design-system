@@ -13,10 +13,10 @@
     
     <div class="lc-alert__body">
       @if (title()) {
-        <div class="lc-alert__title">{{ title() }}</div>
+        <div class="lc-alert__title" [attr.id]="isDialog() ? titleId : null">{{ title() }}</div>
       }
-      
-      <div class="lc-alert__content">
+
+      <div class="lc-alert__content" [attr.id]="isDialog() ? contentId : null">
         @if (message()) {
           {{ message() }}
         } @else {

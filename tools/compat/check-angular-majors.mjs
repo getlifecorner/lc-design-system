@@ -351,6 +351,25 @@ const EXPECT_IN_HTML = [
   ['number input: the inline minus glyph in the decrement button (usm-x row 2)', /<div(?=[^>]*\sid="compat-number-342")[^>]*>[^]*?<button(?=[^>]*\sclass="number-input__button number-input__button--decrement")[^>]*>(?:(?!<\/button>)[^])*?<path(?=[^>]*\sd="M19\.5 12h-15")[^>]*>/],
   ['spinner xs: inline host class and the xs status (usm-x row 5)', /<div(?=[^>]*\sid="compat-spinner-342")[^>]*>[^]*?<lc-spinner(?=[^>]*\sclass="lc-spinner--inline")[^>]*>(?:<!--[^]*?-->|\s)*<div(?=[^>]*\sclass="[^"]*\bspinner--xs\b)(?=[^>]*\srole="status")[^>]*>/],
   ['disabled checked checkbox: checked and disabled classes and the check path (061-s1)', /<div(?=[^>]*\sid="compat-checkbox-342")[^>]*>[^]*?<label(?=[^>]*\sclass="[^"]*\bcheckbox-checked\b)(?=[^>]*\sclass="[^"]*\bcheckbox-disabled\b)(?![^>]*\sclass="[^"]*\bcheckbox-readonly\b)[^>]*>(?:(?!<\/label>)[^])*?<path(?=[^>]*\sd="M13\.5 4L6 11\.5L2\.5 8")[^>]*>/],
+  // 3.43 (request 063, probe-343.ts, AC-33): before JS
+  ['lazy tree row: collapsed row and chevron, no chevron without the field (kosten row 1)', (html) => {
+    const table = html.match(/<div(?=[^>]*\sid="compat-table-343")[^>]*>([^]*?)<\/table>/)?.[1] ?? '';
+    const rows = [...table.matchAll(/<tr(?=[^>]*\srole="row")[^>]*>[^]*?<\/tr>/g)].map(([row]) => row).filter((row) => /\saria-level=/.test(row));
+    return rows.length === 2
+      && /^<tr(?=[^>]*\saria-expanded="false")[^>]*>(?:(?!<\/tr>)[^])*?<button(?=[^>]*\sclass="lc-table__chevron-btn")(?=[^>]*\saria-expanded="false")(?=[^>]*\saria-label="Aufklappen: IT-Betrieb")[^>]*>/.test(rows[0])
+      && !/aria-expanded/.test(rows[1]) && !/lc-table__chevron-btn/.test(rows[1]);
+  }],
+  // Review 063 F1: the one-line field is a block, so the host ends at the field before JS too.
+  ['one-line textarea: rows="1", the one-line class, no footer, a block (usm-x row 6)', (html) => {
+    const field = html.match(/<div(?=[^>]*\sid="compat-textarea-343")[^>]*>([^]*?)<\/lc-textarea>/)?.[1] ?? '';
+    return /<textarea(?=[^>]*\sclass="[^"]*\blc-textarea--one-line\b)(?=[^>]*\srows="1")[^>]*>/.test(field)
+      && !/lc-textarea-footer/.test(field)
+      && /\.lc-textarea--one-line\[_ngcontent-[^\]]*\]\s*\{\s*min-height:\s*0;\s*display:\s*block;?\s*\}/.test(html);
+  }],
+  ['icon size hook: the glyph at size sm, 18 px from a class, no style (usm-x row 18)', (html) => /<div(?=[^>]*\sid="compat-icon-343")[^>]*>(?:<!--[^]*?-->|\s)*<lc-icon(?=[^>]*\sclass="compat-dense-icon")(?![^>]*\sstyle=)[^>]*>(?:<!--[^]*?-->|\s)*<div(?=[^>]*\sclass="[^"]*\bicon-sm\b)[^>]*><svg(?=[^>]*\swidth="20px")[^>]*>/.test(html)
+    && /\.compat-dense-icon\[_ngcontent-[^\]]*\]\s*\{\s*--lc-icon-size:\s*18px;?\s*\}/.test(html)
+    && /@property\s+--lc-icon-size\s*\{\s*syntax:\s*"\*";\s*inherits:\s*false;?\s*\}/.test(html)
+    && /\.icon-sm\[_ngcontent-[^\]]*\]\s*\{\s*width:\s*var\(--_lc-icon-size,\s*20px\)/.test(html)],
   // 3.13 (request 017): the inverse link in the hero band and its rule before JS
   // (G-WL1, probe-313.ts); lc-input's error state is `input-invalid` (G-WL3, probe-312.ts)
   ['inverse link in the hero band, class before JS (G-WL1)', /<lc-hero(?=[^>]*\sid="compat-band")[^>]*>[^]*?<a(?=[^>]*\sid="compat-inverse")(?=[^>]*\shref="#warteliste")(?=[^>]*\sclass="btn btn-inverse btn-lg")[^>]*>(?:<!--[^]*?-->|\s)*Trag dich jetzt in die Warteliste ein/],

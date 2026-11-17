@@ -30,7 +30,8 @@ describe('AlertComponent — 44 px close target (3.34, request 054)', () => {
     expect(css).toContain(COLOR);
     expect(rule('.lc-alert__close')).toContain('color: inherit;');
     for (const variant of ['success', 'error', 'warning', 'info']) {
-      expect(rule(`.lc-alert--${variant}`)).toMatch(/color: var\(--color-text-primary\);/);
+      // 3.43 (request 063): the text colour is read through the --lc-alert-fg hook, with the same rest value.
+      expect(rule(`.lc-alert--${variant}`)).toMatch(/color: var\(--lc-alert-fg, var\(--color-text-primary\)\);/);
       expect(css).not.toMatch(new RegExp(`\\.lc-alert--${variant} \\.lc-alert__close[^{]*\\{[^}]*(?:^|[;\\s])color:`));
     }
   });

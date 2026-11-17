@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/angular';
+import { moduleMetadata } from '@storybook/angular';
 import { LineChartComponent } from './line-chart.component';
 
 const meta: Meta<LineChartComponent> = {
@@ -18,8 +19,23 @@ Line chart component for visualizing data trends.
 - Optional area fill below lines
 - Configurable grid, axis labels, dots, and legend
 - Responsive SVG rendering with configurable dimensions
+- 3.43: gaps (\`null\` in \`LineChartSeries.data\`) and dashed series (\`LineChartSeries.dashed\`), see *Gaps And Forecast*
 `,
       },
+    },
+  },
+  argTypes: {
+    series: {
+      control: 'object',
+      description:
+        '`LineChartSeries[]`: `{ label, data, color?, dashed? }`. 3.43: a `null` in `data` is no value (no point, the line breaks there; a lone value between gaps is a dot; the scale and the summary skip it). `dashed: true` draws the series 3 × / 2 × `strokeWidth` (6/4 px) in its colour, in the plot and the legend swatch',
+      table: { defaultValue: { summary: 'required (dashed: false)' } },
+    },
+    ariaLabel: {
+      control: 'text',
+      description:
+        "Accessible name; empty generates an English summary per series (3.43: '8 points, 4 with no value, 38 to 52'). Pass a German text here",
+      table: { defaultValue: { summary: "''" } },
     },
   },
 };
@@ -100,4 +116,81 @@ export const Compact: Story = {
     showYLabels: false,
     strokeWidth: 1.5,
   },
+};
+
+const PLAN = [40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 50];
+
+export const GapsAndForecast: Story = {
+  name: 'Gaps And Forecast',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.43 (request 063, finance-intelligence kosten-2026-11-17 row 2): `null` is no value. *Actual* has gaps in April, June, November and December: the line breaks there, and May, alone between two gaps, is still a dot. *Forecast* is `dashed` (6/4 px, butt caps, in its colour, also in the legend) and starts at October with the last actual value, so it joins the actuals. The scale and the generated summary skip the gaps ("8 points, 4 with no value, 38 to 52"). The legend names every series, so the dash is not the only cue.',
+      },
+    },
+  },
+  args: {
+    series: [
+      { label: 'Plan', data: PLAN, color: 'var(--color-secondary-500)' },
+      { label: 'Actual', data: [38, 41, 43, null, 45, null, 44, 49, 50, 52, null, null], color: 'var(--color-primary-500)' },
+      {
+        label: 'Forecast',
+        data: [null, null, null, null, null, null, null, null, null, 52, 54, 55],
+        color: 'var(--color-primary-500)',
+        dashed: true,
+      },
+    ],
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    showLegend: true,
+    width: 500,
+    height: 240,
+  },
+};
+
+export const GapsAndForecastDe: Story = {
+  name: 'Gaps And Forecast (DE)',
+  decorators: [moduleMetadata({ imports: [LineChartComponent] })],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.43 (request 063, AC-12): the „Kosten“ chart in German. *Ist* runs through October, *Prognose* is dashed from October to December, *Plan* is solid all year. The chart has no locale input: the German name comes through `ariaLabel`.',
+      },
+    },
+  },
+  args: {
+    series: [
+      { label: 'Plan', data: PLAN, color: 'var(--color-secondary-500)' },
+      { label: 'Ist', data: [38, 41, 43, 40, 45, 47, 44, 49, 50, 52, null, null], color: 'var(--color-primary-500)' },
+      {
+        label: 'Prognose',
+        data: [null, null, null, null, null, null, null, null, null, 52, 54, 55],
+        color: 'var(--color-primary-500)',
+        dashed: true,
+      },
+    ],
+    labels: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
+    showLegend: true,
+    width: 500,
+    height: 240,
+    ariaLabel:
+      'Liniendiagramm, Kosten in Tausend Euro: Plan (12 Werte, 40 bis 50), Ist (10 Werte, 2 ohne Wert, 38 bis 52), Prognose (3 Werte, 9 ohne Wert, 52 bis 55)',
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <figure lang="de" style="margin: 0;">
+        <figcaption style="margin: 0 0 8px; font-size: var(--typography-font-size-sm); font-weight: var(--typography-font-weight-semibold); color: var(--color-text-primary);">Kosten in Tsd. €</figcaption>
+        <lc-line-chart
+          [series]="series"
+          [labels]="labels"
+          [showLegend]="showLegend"
+          [width]="width"
+          [height]="height"
+          [ariaLabel]="ariaLabel"
+        />
+      </figure>
+    `,
+  }),
 };

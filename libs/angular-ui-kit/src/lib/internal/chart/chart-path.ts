@@ -7,6 +7,14 @@ export interface ChartPoint {
   y: number;
 }
 
+/**
+ * Dash pattern of a dashed series (3.43, request 063): dashes 3 × and gaps
+ * 2 × the stroke width, so `6 4` at the default 2 px.
+ */
+export function chartDashArray(strokeWidth: number): string {
+  return `${3 * strokeWidth} ${2 * strokeWidth}`;
+}
+
 /** `M x,y L x,y …` polyline through the points; '' for fewer than two points. */
 export function linearPath(points: readonly ChartPoint[]): string {
   if (points.length < 2) return '';

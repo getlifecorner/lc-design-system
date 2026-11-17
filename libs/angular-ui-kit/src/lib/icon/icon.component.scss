@@ -1,7 +1,18 @@
+// 3.43 (request 063, usm-x row 18): `--lc-icon-size` on the `lc-icon`
+// element sizes its box (e.g. 18px in a dense rail). Registered as not
+// inherited, so a value on a container does not reach the icons inside
+// (Firefox < 128 has no @property: there it inherits). The host hands it to
+// its own box through a private property; unset, each size keeps its px.
+@property --lc-icon-size {
+  syntax: '*';
+  inherits: false;
+}
+
 :host {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  --_lc-icon-size: var(--lc-icon-size);
 }
 
 .icon-container {
@@ -23,7 +34,8 @@
 
 // Box size per `size` input (3.11.1, G-37): the same values as
 // `sizeInPixels` in icon.component.ts, which also sets the svg's
-// `width`/`height` attributes. Fixed px, also at 200 % text.
+// `width`/`height` attributes. Fixed px, also at 200 % text. 3.43: the
+// `--lc-icon-size` hook (above) wins when set; the svg fills the box.
 $icon-sizes: (
   xs: 16px,
   sm: 20px,
@@ -34,8 +46,8 @@ $icon-sizes: (
 
 @each $name, $px in $icon-sizes {
   .icon-#{$name} {
-    width: $px;
-    height: $px;
+    width: var(--_lc-icon-size, #{$px});
+    height: var(--_lc-icon-size, #{$px});
   }
 }
 

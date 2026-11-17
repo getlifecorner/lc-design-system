@@ -10,7 +10,12 @@ import {
   signal,
 } from '@angular/core';
 import { chartColor } from '@lifecorner/angular-ui-kit/internal/chart';
-import { linearPath, smoothPath } from '@lifecorner/angular-ui-kit/internal/chart';
+import {
+  chartDashArray,
+  linearPath,
+  smoothPath,
+  type ChartPoint,
+} from '@lifecorner/angular-ui-kit/internal/chart';
 import {
   ChartValueFormatter,
   formatChartValue,
@@ -20,8 +25,21 @@ import {
 
 export interface LineChartSeries {
   label: string;
-  data: number[];
+  /**
+   * One value per label. `null` means no value (3.43): no point, and the line
+   * breaks there. A lone value between two gaps is drawn as a dot, also with
+   * `showDots` false. `NaN` and `undefined` are drawn as 0, as before.
+   */
+  data: (number | null)[];
   color?: string;
+  /**
+   * Draws the series dashed, in its colour (3.43): dashes 3 × and gaps 2 ×
+   * `strokeWidth` (6/4 px at the default 2), in the plot and in the legend
+   * swatch. To join a forecast to the actuals, repeat the last actual value at
+   * the forecast's first index.
+   * @default false
+   */
+  dashed?: boolean;
 }
 
 /** viewBox width used until the container has been measured. */
@@ -136,15 +154,17 @@ export class LineChartComponent {
     () => `0 0 ${this.effectiveWidth()} ${this.height()}`
   );
 
+  /** `null` stays a gap (3.43); every other value is coerced as before. */
   private readonly cleanSeries = computed(() =>
     (this.series() ?? []).map((ser) => ({
       ...ser,
-      data: (ser.data ?? []).map((v) => toFinite(v)),
+      data: (ser.data ?? []).map((v) => (v === null ? null : toFinite(v))),
     }))
   );
 
+  /** The values the scale and the summary read: gaps left out. */
   protected readonly allValues = computed(() =>
-    this.cleanSeries().flatMap((ser) => ser.data)
+    this.cleanSeries().flatMap((ser) => ser.data.filter((v): v is number => v !== null))
   );
 
   protected readonly minValue = computed(() => {
@@ -199,29 +219,59 @@ export class LineChartComponent {
   protected readonly renderedSeries = computed(() => {
     const pa = this.plotArea();
 
+    const build = this.smooth() ? smoothPath : linearPath;
+    const bottomY = pa.y + pa.h;
+
     return this.cleanSeries().map((ser, si) => {
       const color = ser.color || chartColor(si);
-      const points = ser.data.map((v, i) => ({
-        x: pa.x + (ser.data.length > 1 ? (i / (ser.data.length - 1)) * pa.w : pa.w / 2),
-        y: this.valueToY(v),
-      }));
+      const n = ser.data.length;
+      // A `null` ends a segment (3.43); without one the series is one segment.
+      const segments: ChartPoint[][] = [];
+      let current: ChartPoint[] = [];
+      ser.data.forEach((v, i) => {
+        if (v === null) {
+          if (current.length) segments.push(current);
+          current = [];
+          return;
+        }
+        current.push({
+          x: pa.x + (n > 1 ? (i / (n - 1)) * pa.w : pa.w / 2),
+          y: this.valueToY(v),
+        });
+      });
+      if (current.length) segments.push(current);
 
-      const pathD = this.smooth() ? smoothPath(points) : linearPath(points);
+      const paths = segments.map((points) => ({ points, d: build(points) }));
+      const pathD = paths.map((p) => p.d).filter(Boolean).join(' ');
 
       let areaD = '';
       if (this.filled() && pathD) {
-        const lastX = points[points.length - 1].x;
-        const firstX = points[0].x;
-        const bottomY = pa.y + pa.h;
-        areaD = `${pathD} L${lastX},${bottomY} L${firstX},${bottomY} Z`;
+        areaD = paths
+          .filter((p) => p.d)
+          .map(({ points, d }) => {
+            const lastX = points[points.length - 1].x;
+            const firstX = points[0].x;
+            return `${d} L${lastX},${bottomY} L${firstX},${bottomY} Z`;
+          })
+          .join(' ');
       }
+
+      // A lone value next to a gap has no segment to draw, so it is a dot.
+      const hasGap = ser.data.includes(null);
+      const points = this.showDots()
+        ? segments.flat()
+        : hasGap
+          ? segments.filter((s) => s.length === 1).flat()
+          : [];
 
       return {
         label: ser.label,
         color,
         pathD,
         areaD,
-        points: this.showDots() ? points : [],
+        points,
+        dashed: !!ser.dashed,
+        dashArray: ser.dashed ? chartDashArray(this.strokeWidth()) : null,
       };
     });
   });
@@ -241,6 +291,7 @@ export class LineChartComponent {
     return this.renderedSeries().map((s) => ({
       label: s.label,
       color: s.color,
+      dashed: s.dashed,
     }));
   });
 
@@ -256,8 +307,14 @@ export class LineChartComponent {
     const parts = series.map((s, i) => {
       const name = s.label || `Series ${i + 1}`;
       if (!s.data.length) return `${name} (no data)`;
-      const n = s.data.length;
-      return `${name} (${n} ${n === 1 ? 'point' : 'points'}, ${fmt(Math.min(...s.data))} to ${fmt(Math.max(...s.data))})`;
+      const values = s.data.filter((v): v is number => v !== null);
+      const total = s.data.length;
+      const n = values.length;
+      const k = total - n;
+      // 3.43: gaps are named and left out of the range.
+      if (!n) return `${name} (${total} ${total === 1 ? 'point' : 'points'} with no value)`;
+      const gaps = k ? `, ${k} with no value` : '';
+      return `${name} (${n} ${n === 1 ? 'point' : 'points'}${gaps}, ${fmt(Math.min(...values))} to ${fmt(Math.max(...values))})`;
     });
     return `Line chart: ${parts.join(', ')}`;
   });

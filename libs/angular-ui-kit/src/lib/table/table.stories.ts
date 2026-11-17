@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { moduleMetadata } from '@storybook/angular';
 import { fn } from 'storybook/test';
-import { TableComponent } from './table.component';
+import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { TableComponent, type RowToggleEvent, type TableColumn } from './table.component';
 import { TableCellDirective } from './table-cell.directive';
 import { BadgeComponent } from '../badge/badge.component';
 import { AvatarComponent } from '../avatar/avatar.component';
@@ -9,6 +10,115 @@ import { ChipComponent } from '../chip/chip.component';
 import { ButtonComponent } from '../button/button.component';
 import { MoneyComponent } from '../money/money.component';
 import { SwitchComponent } from '../switch/switch.component';
+
+/** Texts of the lazy-tree page (request 063), English and German. */
+const LAZY_TEXTS = {
+  en: {
+    columns: [
+      { key: 'name', label: 'Budget' },
+      { key: 'plan', label: 'Plan (€)', align: 'end' },
+      { key: 'actual', label: 'Actual (€)', align: 'end' },
+    ] as TableColumn[],
+    caption: 'Budgets with plan items',
+    rows: [
+      { id: 'b1', parentId: '', name: 'IT operations', plan: '120,000', actual: '98,400', hasPlanItems: true },
+      { id: 'b2', parentId: '', name: 'Licences', plan: '80,000', actual: '81,200', hasPlanItems: true },
+      { id: 'b3', parentId: '', name: 'Hardware', plan: '45,000', actual: '39,900', hasPlanItems: true },
+      { id: 'b4', parentId: '', name: 'Consulting', plan: '20,000', actual: '15,000', hasPlanItems: false },
+    ],
+    items: [
+      ['Maintenance contracts', '40,000', '38,100'],
+      ['Cloud subscriptions', '25,000', '27,300'],
+      ['Support hours', '15,000', '15,800'],
+    ],
+    loading: 'Loading plan items…',
+    loaded: (n: number) => `${n} plan items loaded`,
+    expand: 'Expand:',
+    collapse: 'Collapse:',
+  },
+  de: {
+    columns: [
+      { key: 'name', label: 'Budget' },
+      { key: 'plan', label: 'Plan (€)', align: 'end' },
+      { key: 'actual', label: 'Ist (€)', align: 'end' },
+    ] as TableColumn[],
+    caption: 'Budgets mit Planposten',
+    rows: [
+      { id: 'b1', parentId: '', name: 'IT-Betrieb', plan: '120.000', actual: '98.400', hasPlanItems: true },
+      { id: 'b2', parentId: '', name: 'Lizenzen', plan: '80.000', actual: '81.200', hasPlanItems: true },
+      { id: 'b3', parentId: '', name: 'Hardware', plan: '45.000', actual: '39.900', hasPlanItems: true },
+      { id: 'b4', parentId: '', name: 'Beratung', plan: '20.000', actual: '15.000', hasPlanItems: false },
+    ],
+    items: [
+      ['Wartungsverträge', '40.000', '38.100'],
+      ['Cloud-Abonnements', '25.000', '27.300'],
+      ['Supportstunden', '15.000', '15.800'],
+    ],
+    loading: 'Planposten werden geladen …',
+    loaded: (n: number) => `${n} Planposten geladen`,
+    expand: 'Aufklappen:',
+    collapse: 'Einklappen:',
+  },
+};
+
+/**
+ * The page side of a lazy tree (request 063): on the first open of a budget it
+ * "loads" three plan items (500 ms) and adds them to `data`, and it announces
+ * the loading in its own `role="status"`. The table only shows the chevron.
+ */
+@Component({
+  selector: 'lc-table-lazy-tree-demo',
+  standalone: true,
+  imports: [TableComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div [attr.lang]="lang()" style="display: flex; flex-direction: column; gap: 8px;">
+      <lc-table
+        [columns]="texts().columns"
+        [data]="data()"
+        [caption]="texts().caption"
+        [size]="size()"
+        idKey="id"
+        parentKey="parentId"
+        treeColumn="name"
+        hasChildrenKey="hasPlanItems"
+        [expandRowAriaLabel]="texts().expand"
+        [collapseRowAriaLabel]="texts().collapse"
+        (rowToggle)="onToggle($event)"
+      ></lc-table>
+      <p role="status" style="margin: 0; font-size: var(--typography-font-size-sm); color: var(--color-text-secondary);">{{ status() }}</p>
+    </div>
+  `,
+})
+class TableLazyTreeDemoComponent {
+  /** Language of the texts. */
+  readonly lang = input<'en' | 'de'>('en');
+  /** Table size. */
+  readonly size = input<'sm' | 'md' | 'lg'>('md');
+  protected readonly texts = computed(() => LAZY_TEXTS[this.lang()]);
+  private readonly children = signal<Record<string, unknown>[]>([]);
+  private readonly requested = new Set<string>();
+  protected readonly data = computed(() => [...this.texts().rows, ...this.children()]);
+  protected readonly status = signal('');
+
+  protected onToggle(event: RowToggleEvent): void {
+    if (!event.expanded || !event.row['hasPlanItems'] || this.requested.has(event.id)) return;
+    this.requested.add(event.id);
+    const texts = this.texts();
+    this.status.set(texts.loading);
+    setTimeout(() => {
+      const items = texts.items.map(([name, plan, actual], i) => ({
+        id: `${event.id}-${i + 1}`,
+        parentId: event.id,
+        name,
+        plan,
+        actual,
+      }));
+      this.children.update((list) => [...list, ...items]);
+      this.status.set(texts.loaded(items.length));
+    }, 500);
+  }
+}
 
 const meta: Meta<TableComponent> = {
   title: 'Data Display/Table',
@@ -100,6 +210,12 @@ The Table component displays structured data in rows and columns with advanced d
       control: 'object',
       description:
         '3.36: one `<tfoot>` row below all data rows (a record of the data shape, e.g. a sum), with the columns, formatters and `lcTableCell` templates (`footer: true`); never sorted, filtered, paged, selected or counted; first cell is the row header',
+      table: { defaultValue: { summary: 'undefined' } },
+    },
+    hasChildrenKey: {
+      control: 'text',
+      description:
+        '3.43 (kosten-2026-11-17 row 1): tree mode, a row field that marks a row as expandable before its children are loaded. A truthy field shows the chevron (`aria-expanded="false"`, collapsed whatever `defaultExpanded` says); the first open emits `rowToggle` and the page adds the children to `data`. No loading state in the table: announce it in the page (`role="status"`)',
       table: { defaultValue: { summary: 'undefined' } },
     },
   },
@@ -1247,5 +1363,41 @@ export const ActionSizes: Story = {
         ></lc-table>
       </div>
     `,
+  }),
+};
+
+const lazyTreeDecorator = moduleMetadata({ imports: [TableLazyTreeDemoComponent] });
+
+export const TreeLazyRows: Story = {
+  name: 'Tree Lazy Rows',
+  decorators: [lazyTreeDecorator],
+  parameters: {
+    controls: { include: ['hasChildrenKey'] },
+    docs: {
+      description: {
+        story:
+          '3.43 (request 063, finance-intelligence kosten-2026-11-17 row 1): `hasChildrenKey="hasPlanItems"` gives the budgets a chevron before their plan items are loaded. Opening one emits `rowToggle` once; the row is `aria-expanded="true"` and stays one row high while it has no children. The page then adds three plan items to `data` (here after 500 ms), and they render indented under it with no second `rowToggle`. The table shows no loading state: the page announces "Loading plan items…" and "3 plan items loaded" in its own `role="status"`. *Consulting* has no plan items, so it has no chevron. The chevron has a 32 × 44 px hit area (32 × 36 at `sm`) that never covers the cell content.',
+      },
+    },
+  },
+  render: () => ({
+    template: `<lc-table-lazy-tree-demo lang="en" size="md" />`,
+  }),
+};
+
+export const TreeLazyRowsDe: Story = {
+  name: 'Tree Lazy Rows (DE)',
+  decorators: [lazyTreeDecorator],
+  parameters: {
+    controls: { include: ['hasChildrenKey'] },
+    docs: {
+      description: {
+        story:
+          '3.43 (request 063, AC-6): the same page in German at `sm`: „Budgets mit Planposten“, IT-Betrieb, Lizenzen and Hardware open lazily, Beratung has no Planposten. The page writes „Planposten werden geladen …“ and „3 Planposten geladen“ to its `role="status"`.',
+      },
+    },
+  },
+  render: () => ({
+    template: `<lc-table-lazy-tree-demo lang="de" size="sm" />`,
   }),
 };

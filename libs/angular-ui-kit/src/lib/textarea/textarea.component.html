@@ -17,7 +17,7 @@
       [readonly]="readonly()"
       [required]="required()"
       [attr.name]="name() ?? null"
-      [attr.rows]="autoResize() ? null : rows()"
+      [attr.rows]="rowsAttr()"
       [attr.maxlength]="maxLength() ?? null"
       [attr.aria-label]="ariaLabel() || null"
       [attr.aria-required]="required() || null"
@@ -28,23 +28,26 @@
     ></textarea>
   </div>
 
-  <div class="lc-textarea-footer">
-    <div class="lc-textarea-messages">
-      @if (showsError()) {
-        <span [id]="errorId" class="lc-textarea-error-message" [attr.role]="announceError() ? 'alert' : null">{{ errorMessage() }}</span>
-      } @else if (showsHelper()) {
-        <span [id]="helperId" class="lc-textarea-helper-text">{{ helperText() }}</span>
+  <!-- 3.43: no footer row (and no gap) without an error, helper text or counter -->
+  @if (showsFooter()) {
+    <div class="lc-textarea-footer">
+      <div class="lc-textarea-messages">
+        @if (showsError()) {
+          <span [id]="errorId" class="lc-textarea-error-message" [attr.role]="announceError() ? 'alert' : null">{{ errorMessage() }}</span>
+        } @else if (showsHelper()) {
+          <span [id]="helperId" class="lc-textarea-helper-text">{{ helperText() }}</span>
+        }
+      </div>
+
+      @if (showCharacterCount()) {
+        <span
+          class="lc-textarea-character-count"
+          [class.lc-textarea-character-count--over-limit]="isOverLimit()"
+          aria-live="polite"
+        >
+          {{ characterCountText() }}
+        </span>
       }
     </div>
-
-    @if (showCharacterCount()) {
-      <span
-        class="lc-textarea-character-count"
-        [class.lc-textarea-character-count--over-limit]="isOverLimit()"
-        aria-live="polite"
-      >
-        {{ characterCountText() }}
-      </span>
-    }
-  </div>
+  }
 </div>

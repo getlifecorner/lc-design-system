@@ -604,7 +604,11 @@ describe('Component pairings of 3.20 (request 027)', () => {
   it('AC-14/AC-16: each variant icon reads its ink token, no raw colour; the fills stay on the rail and the tint', () => {
     for (const c of ['toast', 'alert'] as const) {
       for (const v of variants) {
-        expect(rule(c, `.lc-${c}--${v} .lc-${c}__icon`).trim()).toBe(`color: var(--color-on-${v}-subtle);`);
+        // 3.43 (request 063): the alert icon reads the --lc-alert-icon / --lc-alert-fg hooks first, with the same ink at rest.
+        const ink = `var(--color-on-${v}-subtle)`;
+        expect(rule(c, `.lc-${c}--${v} .lc-${c}__icon`).trim()).toBe(
+          c === 'alert' ? `color: var(--lc-alert-icon, var(--lc-alert-fg, ${ink}));` : `color: ${ink};`,
+        );
       }
       // The base icon rule sets no colour; nothing else colours the icon.
       expect(rule(c, `.lc-${c}__icon`)).not.toMatch(/(^|[\s;])color:/);
@@ -644,7 +648,8 @@ describe('Component pairings of 3.20 (request 027)', () => {
       const bases = [...surfaces, '--color-background-low'].map((name) => on(name));
       const min = Math.min(
         ...variants.flatMap((v) => {
-          const tint = rule('alert', `.lc-alert--${v}`).match(/background-color: (rgba\([^)]+\));/);
+          // 3.43 (request 063): the tint is the rest value of the --lc-alert-bg hook.
+          const tint = rule('alert', `.lc-alert--${v}`).match(/background-color: var\(--lc-alert-bg, (rgba\([^)]+\))\);/);
           expect(tint).not.toBeNull();
           return bases.map((base) => {
             const fill = over(parse((tint as RegExpMatchArray)[1]), base);
@@ -2185,5 +2190,41 @@ describe('Component pairings of 3.40 (request 060)', () => {
     // Text 4.5:1; the interactive quiet border and the rim (the frame's outer edge) 3:1.
     for (const key of ['emphasis', 'quietText', 'layer'] as const) expect(got[key]).toBeGreaterThanOrEqual(4.5);
     for (const key of ['quietBorder', 'laptopRim'] as const) expect(got[key]).toBeGreaterThanOrEqual(3);
+  });
+});
+
+/**
+ * 3.43 (request 063, usm-x row 8): `--color-accent-yellow`, a yellow between
+ * warning and neutral (light #867200, dark #e8c547). Design 063 §5, floored,
+ * [light, dark]: the yellow as an ink, border or mark on the surface and the
+ * page (3:1; in light also 4.5:1 for text), and text-primary on its 16 % tint
+ * (`color-mix(in srgb, var(--color-accent-yellow) 16%, transparent)`) over
+ * the surface (4.5:1).
+ */
+describe('Component pairings of 3.43 (request 063)', () => {
+  const floor = (n: number) => Math.floor(n * 100) / 100;
+  // Design §5 quotes dark rounded (10.29, 11.22) and its dark tint at 18 %
+  // (6.90, 10.64); the token's recipe is 16 % in both themes, pinned here.
+  const EXPECTED = {
+    onSurface: [4.75, 10.28],
+    onBackground: [4.75, 11.21],
+    onTint: [3.87, 7.26],
+    textOnTint: [14.46, 11.2],
+  };
+
+  it.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('%s palette: the yellow accent and its 16 %% tint', (_palette, tokens, i) => {
+    const c = (name: string) => color(tokens, name);
+    const yellow = c('--color-accent-yellow');
+    const surface = c('--color-surface');
+    const tint = over([yellow[0], yellow[1], yellow[2], 0.16], surface);
+    const got = {
+      onSurface: floor(ratio(yellow, surface)),
+      onBackground: floor(ratio(yellow, c('--color-background'))),
+      onTint: floor(ratio(yellow, tint)),
+      textOnTint: floor(ratio(c('--color-text-primary'), tint)),
+    };
+    expect(got).toEqual(Object.fromEntries(Object.entries(EXPECTED).map(([key, pair]) => [key, pair[i]])));
+    expect(got.textOnTint).toBeGreaterThanOrEqual(4.5);
+    for (const key of ['onSurface', 'onBackground', 'onTint'] as const) expect(got[key]).toBeGreaterThanOrEqual(3);
   });
 });

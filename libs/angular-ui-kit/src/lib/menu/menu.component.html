@@ -30,7 +30,73 @@
         (keydown)="onPanelKeydown($event)"
       >
         @for (item of items(); track item.id; let i = $index) {
-          @if (item.href) {
+          @if (item.children) {
+            <!-- Section (3.43): a heading and its items. The heading names the
+                 group and is hidden itself, so it is not read twice. -->
+            <div
+              class="lc-menu__section"
+              [class.lc-menu__section--indented]="item.indentChildren"
+              [attr.role]="item.children.length ? 'group' : null"
+              [attr.aria-labelledby]="item.children.length ? headingId(i) : null"
+            >
+              <div class="lc-menu__section-heading" [id]="headingId(i)" aria-hidden="true">{{ item.label }}</div>
+              @for (member of item.children; track member.id) {
+                @if (member.href) {
+                  <a
+                    #menuItem
+                    role="menuitem"
+                    [href]="member.href"
+                    [target]="member.target || '_self'"
+                    [attr.rel]="member.target === '_blank' ? 'noopener noreferrer' : null"
+                    [attr.tabindex]="tabindexFor(indexOf(member), member)"
+                    [attr.aria-disabled]="member.disabled ? 'true' : null"
+                    class="lc-menu__item"
+                    [class.lc-menu__item--danger]="member.variant === 'danger'"
+                    [class.lc-menu__item--disabled]="member.disabled"
+                    (click)="onItemClick(member, $event)"
+                  >
+                    @if (member.icon) {
+                      <lc-icon [name]="member.icon" [size]="member.iconSize || 'sm'" [decorative]="true" />
+                    }
+                    <span class="lc-menu__item-content">
+                      <span class="lc-menu__item-label">{{ member.label }}</span>
+                      @if (member.metadata?.subtitle; as subtitle) {
+                        <span class="lc-menu__item-subtitle">{{ subtitle }}</span>
+                      }
+                    </span>
+                    @if (member.metadata?.badge; as badge) {
+                      <span class="lc-menu__item-badge">{{ badge }}</span>
+                    }
+                  </a>
+                } @else {
+                  <button
+                    #menuItem
+                    type="button"
+                    role="menuitem"
+                    class="lc-menu__item"
+                    [class.lc-menu__item--danger]="member.variant === 'danger'"
+                    [class.lc-menu__item--disabled]="member.disabled"
+                    [attr.tabindex]="tabindexFor(indexOf(member), member)"
+                    [disabled]="member.disabled"
+                    (click)="onItemClick(member, $event)"
+                  >
+                    @if (member.icon) {
+                      <lc-icon [name]="member.icon" [size]="member.iconSize || 'sm'" [decorative]="true" />
+                    }
+                    <span class="lc-menu__item-content">
+                      <span class="lc-menu__item-label">{{ member.label }}</span>
+                      @if (member.metadata?.subtitle; as subtitle) {
+                        <span class="lc-menu__item-subtitle">{{ subtitle }}</span>
+                      }
+                    </span>
+                    @if (member.metadata?.badge; as badge) {
+                      <span class="lc-menu__item-badge">{{ badge }}</span>
+                    }
+                  </button>
+                }
+              }
+            </div>
+          } @else if (item.href) {
             <!-- Link item -->
             <a
               #menuItem
@@ -38,7 +104,7 @@
               [href]="item.href"
               [target]="item.target || '_self'"
               [attr.rel]="item.target === '_blank' ? 'noopener noreferrer' : null"
-              [attr.tabindex]="tabindexFor(i, item)"
+              [attr.tabindex]="tabindexFor(indexOf(item), item)"
               [attr.aria-disabled]="item.disabled ? 'true' : null"
               class="lc-menu__item"
               [class.lc-menu__item--danger]="item.variant === 'danger'"
@@ -67,7 +133,7 @@
               class="lc-menu__item"
               [class.lc-menu__item--danger]="item.variant === 'danger'"
               [class.lc-menu__item--disabled]="item.disabled"
-              [attr.tabindex]="tabindexFor(i, item)"
+              [attr.tabindex]="tabindexFor(indexOf(item), item)"
               [disabled]="item.disabled"
               (click)="onItemClick(item, $event)"
             >

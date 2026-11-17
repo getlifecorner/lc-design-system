@@ -1,7 +1,71 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { moduleMetadata } from '@storybook/angular';
+import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import { AlertComponent } from './alert.component';
 import { ButtonComponent } from '../button/button.component';
+
+/** Texts of the blocking question (request 063), English and German. */
+const QUESTION_TEXTS = {
+  en: {
+    opener: 'Close window',
+    title: 'Unsaved changes',
+    message: 'The window has unsaved changes. If you close it now, they are lost.',
+    cancel: 'Cancel',
+    confirm: 'Close anyway',
+    closed: 'Window closed.',
+    kept: 'The window stays open.',
+  },
+  de: {
+    opener: 'Fenster schließen',
+    title: 'Ungespeicherte Änderungen',
+    message: 'Das Fenster hat ungespeicherte Änderungen. Wenn Sie es jetzt schließen, gehen sie verloren.',
+    cancel: 'Abbrechen',
+    confirm: 'Trotzdem schließen',
+    closed: 'Fenster geschlossen.',
+    kept: 'Das Fenster bleibt offen.',
+  },
+};
+
+/**
+ * A blocking question (request 063, usm-x row 7): the opener shows an
+ * `role="alertdialog"` alert, which takes the focus; either answer hides it
+ * and the focus returns to the opener.
+ */
+@Component({
+  selector: 'lc-alert-blocking-question-demo',
+  standalone: true,
+  imports: [AlertComponent, ButtonComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div [attr.lang]="lang()" style="display: flex; flex-direction: column; align-items: flex-start; gap: 16px;">
+      <lc-button variant="outline" (click)="ask()">{{ texts().opener }}</lc-button>
+      @if (open()) {
+        <lc-alert role="alertdialog" variant="warning" [title]="texts().title" [message]="texts().message" actionsLayout="stacked">
+          <lc-button slot="action" variant="outline" (click)="answer(false)">{{ texts().cancel }}</lc-button>
+          <lc-button slot="action" variant="primary" (click)="answer(true)">{{ texts().confirm }}</lc-button>
+        </lc-alert>
+      }
+      <p role="status" style="margin: 0; font-size: var(--typography-font-size-sm); color: var(--color-text-secondary);">{{ status() }}</p>
+    </div>
+  `,
+})
+class AlertBlockingQuestionDemoComponent {
+  /** Language of the texts. */
+  readonly lang = input<'en' | 'de'>('en');
+  protected readonly texts = computed(() => QUESTION_TEXTS[this.lang()]);
+  protected readonly open = signal(false);
+  protected readonly status = signal('');
+
+  protected ask(): void {
+    this.status.set('');
+    this.open.set(true);
+  }
+
+  protected answer(close: boolean): void {
+    this.open.set(false);
+    this.status.set(close ? this.texts().closed : this.texts().kept);
+  }
+}
 
 const meta: Meta<AlertComponent> = {
   title: 'Feedback/Alert',
@@ -55,6 +119,13 @@ Use it to inform users about important state changes, errors, warnings, or confi
       description:
         '3.3: `inline` — one action right of the body (3.2); 3.12: a text link (`<a slot="action">`) takes up to half the row and drops below the text under 576 px of alert width; 3.35: from 16rem to 30rem inside the border (alerts of 258–481 px at 100 % text, 514–961 px at 200 %) a button action takes its own row below the text, lined up with it, at its natural width. `stacked` — the actions in their own row below the text; below 576 px of alert width one per line at full width, 8 px apart, from 576 px side by side at natural width (a text link keeps its text width).',
       table: { defaultValue: { summary: 'inline' } },
+    },
+    role: {
+      control: 'select',
+      options: [undefined, 'alert', 'status', 'alertdialog'],
+      description:
+        '3.43 (usm-x row 7): `AlertRole`. Unset = `alert` for error / warning, `status` otherwise (as before). `alertdialog` is a blocking question: named by the title, described by the message, no live region, `tabindex="-1"`; focus moves to it when it shows and returns to the element that had it when it hides or is destroyed. Put the answers in `slot="action"`.',
+      table: { defaultValue: { summary: 'undefined' } },
     },
   },
 };
@@ -444,6 +515,87 @@ export const InlineActionNarrow: Story = {
         </div>
         <div lang="de" style="width: 482px; max-width: 100%;">${RETRY_ALERT}
         </div>
+      </div>`,
+  }),
+};
+
+/** Opens the question as a click would (focus, then click), so the focus returns to the opener later. */
+const askQuestion: Story['play'] = async ({ canvasElement, viewMode }) => {
+  if (viewMode !== 'story') return;
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  const opener = canvasElement.querySelector<HTMLButtonElement>('lc-alert-blocking-question-demo lc-button button');
+  opener?.focus();
+  opener?.click();
+};
+
+const BLOCKING_DOCS =
+  '3.43 (request 063, usm-x row 7): `role="alertdialog"` makes the alert a blocking question. The opener shows it; the alert is named by its title (`aria-labelledby`) and described by its message (`aria-describedby`), it is no live region, and the focus moves to it (`tabindex="-1"`, the 2 px ring), so a screen reader reads the question and Tab reaches the answers. Either answer hides it and the focus returns to the opener; the page announces the outcome in its own `role="status"`. Not modal: no focus trap and no Escape (the answers decide); for a modal question use `lc-modal`. `actionsLayout="stacked"`: below 576 px of alert width one answer per line at full width. In the story view the opener is clicked on load.';
+
+export const BlockingQuestion: Story = {
+  name: 'Blocking Question',
+  decorators: [moduleMetadata({ imports: [AlertBlockingQuestionDemoComponent] })],
+  parameters: {
+    controls: { include: ['role'] },
+    docs: { description: { story: BLOCKING_DOCS } },
+  },
+  render: () => ({ template: `<lc-alert-blocking-question-demo lang="en" />` }),
+  play: askQuestion,
+};
+
+export const BlockingQuestionDe: Story = {
+  name: 'Blocking Question (DE)',
+  decorators: [moduleMetadata({ imports: [AlertBlockingQuestionDemoComponent] })],
+  parameters: {
+    controls: { include: ['role'] },
+    docs: {
+      description: {
+        story: `${BLOCKING_DOCS} German: „Fenster schließen“ → „Ungespeicherte Änderungen“, „Abbrechen“ / „Trotzdem schließen“.`,
+      },
+    },
+  },
+  render: () => ({ template: `<lc-alert-blocking-question-demo lang="de" />` }),
+  play: askQuestion,
+};
+
+/**
+ * A fifth meaning through the hooks (request 063, usm-x row 8). The violet is
+ * the consumer's own value per theme; the yellow is the kit's token.
+ */
+const CUSTOM_COLOR_STYLES = `
+  <style>
+    ::ng-deep .story-alert-recording {
+      --lc-alert-bg: color-mix(in srgb, #4e3f84 12%, transparent);
+      --lc-alert-border: #4e3f84;
+      --lc-alert-icon: #4e3f84;
+    }
+    ::ng-deep :root:not(.light) .story-alert-recording {
+      --lc-alert-bg: color-mix(in srgb, #a38fc4 18%, transparent);
+      --lc-alert-border: #a38fc4;
+      --lc-alert-icon: #a38fc4;
+    }
+    ::ng-deep .story-alert-medium {
+      --lc-alert-bg: color-mix(in srgb, var(--color-accent-yellow) 16%, transparent);
+      --lc-alert-border: var(--color-accent-yellow);
+      --lc-alert-icon: var(--color-accent-yellow);
+    }
+  </style>`;
+
+export const CustomColorsDe: Story = {
+  name: 'Custom Colors (DE)',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.43 (request 063, usm-x row 8): `--lc-alert-bg`, `--lc-alert-border`, `--lc-alert-fg` and `--lc-alert-icon`, set on the alert or any ancestor, draw a meaning the four variants lack. Unset, each is the variant value. „In Aufnahme“ is the consumer\'s violet (light `#4e3f84` with a 12 % tint, dark `#a38fc4` with 18 %); „Mittel“ uses the new token `--color-accent-yellow` (light `#867200`, dark `#e8c547`) with its 16 % tint (`color-mix(in srgb, var(--color-accent-yellow) 16%, transparent)`). The text stays `--color-text-primary`. In forced colours the 1 px border stays. No variant was added: the role and the icon come from the variant you pick.',
+      },
+    },
+  },
+  render: () => ({
+    template: `${CUSTOM_COLOR_STYLES}
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px;">
+        <lc-alert class="story-alert-recording" variant="info" icon="player-record" title="In Aufnahme" message="Ihr Vorgang wird gerade aufgenommen. Änderungen anderer erscheinen erst danach."></lc-alert>
+        <lc-alert class="story-alert-medium" variant="info" icon="alert-circle" title="Mittel – Wartung geplant" message="Am Samstag zwischen 6 und 8 Uhr ist der Katalog nur lesbar."></lc-alert>
       </div>`,
   }),
 };

@@ -57,6 +57,54 @@ function decimalSeparatorOf(locale: string): '.' | ',' {
 /** Height of `lc-number-input`'s field and steppers: `xs` 24, `sm` 32, `md` 40 (the default), `lg` 44 px. */
 export type NumberInputSize = 'xs' | 'sm' | 'md' | 'lg';
 
+/**
+ * What the model of `lc-number-input` carries (3.43): a `number`, or the
+ * typed decimal as a `string` (`"1.50"`, a 20-digit id), never through a double.
+ */
+export type NumberInputValueType = 'number' | 'string';
+
+/** A decimal as an integer and a scale: `"1.50"` is `{ int: 150, scale: 2 }`. */
+interface Decimal {
+  int: bigint;
+  scale: number;
+}
+
+const TEN = BigInt(10);
+
+/** `"-12.50"`, `".5"`, `"007"` → a {@link Decimal}; `null` for text without a digit. */
+function parseDecimal(text: string): Decimal | null {
+  const match = /^(-?)(\d*)(?:\.(\d*))?$/.exec(text);
+  if (!match || !/\d/.test(match[2] + (match[3] ?? ''))) return null;
+  const fraction = match[3] ?? '';
+  const int = BigInt(`${match[2] || '0'}${fraction}`);
+  return { int: match[1] ? -int : int, scale: fraction.length };
+}
+
+/** The decimal's integer at a scale at least its own. */
+function atScale(d: Decimal, scale: number): bigint {
+  return d.int * TEN ** BigInt(scale - d.scale);
+}
+
+/** An integer at `scale` as decimal text with a point: `(150, 2)` → `"1.50"`. */
+function formatDecimal(int: bigint, scale: number): string {
+  const negative = int < BigInt(0);
+  const digits = (negative ? -int : int).toString().padStart(scale + 1, '0');
+  const text = scale ? `${digits.slice(0, -scale)}.${digits.slice(-scale)}` : digits;
+  return negative ? `-${text}` : text;
+}
+
+/** A number (a bound, a step) as decimal text without an exponent. */
+function numberToDecimal(n: number): Decimal | null {
+  return Number.isFinite(n) ? parseDecimal(n.toFixed(Math.min(100, decimalsOf(n)))) : null;
+}
+
+/** Sign of `a - b`. */
+function compareDecimal(a: Decimal, b: Decimal): number {
+  const scale = Math.max(a.scale, b.scale);
+  const diff = atScale(a, scale) - atScale(b, scale);
+  return diff > BigInt(0) ? 1 : diff < BigInt(0) ? -1 : 0;
+}
+
 @Component({
   selector: 'lc-number-input',
   standalone: true,
@@ -86,8 +134,15 @@ export type NumberInputSize = 'xs' | 'sm' | 'md' | 'lg';
  *   after it (`suffix`, „7,5 %“), read once (`suffixAriaLabel`)
  * - Sizes `xs`, `sm`, `md` (default), `lg` (44 px touch targets)
  * - Disabled state support
- * - ControlValueAccessor integration for reactive forms; the model is
- *   always a `number`, clamped to `min`/`max` on blur
+ * - ControlValueAccessor integration for reactive forms; the model is a
+ *   `number`, clamped to `min`/`max` on blur
+ * - 3.43: `valueType="string"` keeps the typed decimal as text (`"1.50"`, a
+ *   20-digit id), steps in decimal and emits `stringValueChange`
+ * - 3.43: CSS hook `--lc-number-input-value-width` (on the element or any
+ *   ancestor) sets the width of the value box between the steppers. Default:
+ *   the size's width (xs 3rem, sm 3.5rem, md 4rem, lg 4.5rem). Size it for
+ *   the longest value: `calc(7ch + 0.5rem)` for „1250,00“, `calc(20ch + 0.5rem)`
+ *   for a 20-digit id (the digits are tabular, so 1ch is one digit).
  *
  * @example
  * ```html
@@ -174,18 +229,42 @@ export class NumberInputComponent implements ControlValueAccessor {
   /**
    * Height of the field and the steppers (3.29, regeln row 4): `xs` 24,
    * `sm` 32, `md` 40 (as before), `lg` 44 px (touch: field and both
-   * steppers at least 44 × 44 px).
+   * steppers at least 44 × 44 px). The value box is xs 3, sm 3.5, md 4 and
+   * lg 4.5 rem wide; a longer value needs the CSS hook
+   * `--lc-number-input-value-width` (3.43), e.g. `calc(20ch + 0.5rem)`.
    * @default 'md'
    */
   size = input<NumberInputSize>('md');
 
+  /**
+   * `'string'` keeps the typed decimal as text (3.43, usm-x row 13). The model
+   * (forms) and `stringValueChange` carry a string with `.` as the separator
+   * (`"1.50"`, a 20-digit id), and `null` when the field has no digit. No
+   * value passes through a double. The steppers add `step` in decimal and
+   * keep the larger scale (`"1.50"` + 0.5 → `"2.00"`). Blur clamps an
+   * out-of-range value to `min`/`max` at the value's scale and never rewrites
+   * a value in range. `locale` only changes the shown separator („1,50“).
+   * `valueChange` (number) does not emit in this mode.
+   * @default 'number'
+   */
+  valueType = input<NumberInputValueType>('number');
+
   /** Emits value on change */
   valueChange = output<number>();
+
+  /** The value in `valueType="string"` mode, on every change (3.43). */
+  stringValueChange = output<string | null>();
 
   /** Per-instance id wiring the label, hint and error to the field. */
   readonly inputId = `lc-number-input-${++NumberInputComponent.nextId}`;
 
   protected value = signal<number | null>(null);
+
+  /** The model in `valueType="string"` mode (3.43): the typed decimal, `.` as separator. */
+  protected readonly stringValue = signal<string | null>(null);
+
+  /** Whether the model is a string (3.43). */
+  private readonly isStringMode = computed(() => this.valueType() === 'string');
 
   /**
    * Text shown in the field. It is re-derived from the model on `writeValue`,
@@ -236,6 +315,7 @@ export class NumberInputComponent implements ControlValueAccessor {
   });
 
   protected canDecrement = computed(() => {
+    if (this.isStringMode()) return this.stringBeyond(this.min(), 1);
     const val = this.value();
     const minV = this.min();
     if (val === null || minV === undefined) return true;
@@ -243,14 +323,23 @@ export class NumberInputComponent implements ControlValueAccessor {
   });
 
   protected canIncrement = computed(() => {
+    if (this.isStringMode()) return this.stringBeyond(this.max(), -1);
     const val = this.value();
     const maxV = this.max();
     if (val === null || maxV === undefined) return true;
     return val < maxV;
   });
 
+  /** String mode: whether the value is on the `sign` side of `bound` (true without a value or bound). */
+  private stringBeyond(bound: number | undefined, sign: 1 | -1): boolean {
+    const val = parseDecimal(this.stringValue() ?? '');
+    const b = bound === undefined ? null : numberToDecimal(bound);
+    if (!val || !b) return true;
+    return compareDecimal(val, b) === sign;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  private onChange: (val: number | null) => void = () => {};
+  private onChange: (val: number | string | null) => void = () => {};
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   private onTouched: () => void = () => {};
 
@@ -263,6 +352,10 @@ export class NumberInputComponent implements ControlValueAccessor {
   }
 
   private stepBy(direction: 1 | -1): void {
+    if (this.isStringMode()) {
+      this.stepString(direction);
+      return;
+    }
     const cur = this.value() ?? 0;
     // Keep whatever precision the user typed (1.25 + 0.1 → 1.35), but never
     // less than the step's own — that is what removes the binary drift.
@@ -295,6 +388,12 @@ export class NumberInputComponent implements ControlValueAccessor {
       target.setSelectionRange(caret, caret);
     }
     this.text.set(text);
+    if (this.isStringMode()) {
+      // 3.43: the typed text is the model, with `.` as the separator; without
+      // a digit ("", "-", ",") there is no value yet.
+      this.setStringValue(/\d/.test(text) ? text.replace(',', '.') : null);
+      return;
+    }
     // "" would parse as 0; it and the other in-progress entries ("-", ".")
     // mean the model has no number yet.
     const parsed = text === '' ? NaN : Number(text.replace(',', '.'));
@@ -310,6 +409,17 @@ export class NumberInputComponent implements ControlValueAccessor {
 
   onBlur(): void {
     this.onTouched();
+    if (this.isStringMode()) {
+      // 3.43: only a value out of range is rewritten (to the bound, at its
+      // scale); the text of a value in range stays as typed.
+      const val = this.stringValue();
+      const clamped = val === null ? null : this.clampString(val);
+      if (clamped !== null && clamped !== val) {
+        this.setStringValue(clamped);
+        this.showString(clamped);
+      }
+      return;
+    }
     // Clamp on blur
     const val = this.value();
     if (val !== null) {
@@ -353,13 +463,67 @@ export class NumberInputComponent implements ControlValueAccessor {
     this.onChange(val);
   }
 
-  // ControlValueAccessor
-  writeValue(val: number | null): void {
-    this.value.set(val);
-    this.text.set(this.format(val));
+  // -- String mode (3.43) -----------------------------------------------------
+
+  /** Adds `direction` × `step` in decimal, at the larger of the two scales, then clamps. */
+  private stepString(direction: 1 | -1): void {
+    const cur = parseDecimal(this.stringValue() ?? '') ?? { int: BigInt(0), scale: 0 };
+    const step = numberToDecimal(this.step()) ?? { int: BigInt(1), scale: 0 };
+    const scale = Math.max(cur.scale, step.scale);
+    const sum = atScale(cur, scale) + BigInt(direction) * atScale(step, scale);
+    const next = this.clampString(formatDecimal(sum, scale));
+    this.setStringValue(next);
+    this.showString(next);
   }
 
-  registerOnChange(fn: (val: number | null) => void): void {
+  /** `val` held to `min`/`max` by decimal comparison; a bound is written at the larger scale. */
+  private clampString(val: string): string {
+    const d = parseDecimal(val);
+    if (!d) return val;
+    for (const [bound, sign] of [
+      [this.min(), -1],
+      [this.max(), 1],
+    ] as const) {
+      const b = bound === undefined ? null : numberToDecimal(bound);
+      if (b && compareDecimal(d, b) === sign) {
+        const scale = Math.max(d.scale, b.scale);
+        return formatDecimal(atScale(b, scale), scale);
+      }
+    }
+    return val;
+  }
+
+  private setStringValue(val: string | null): void {
+    if (val === this.stringValue()) return;
+    this.stringValue.set(val);
+    this.stringValueChange.emit(val);
+    this.onChange(val);
+  }
+
+  /** Shows a model string in the field with the locale's separator. */
+  private showString(val: string | null): void {
+    const text = val === null ? '' : this.separator() === ',' ? val.replace('.', ',') : val;
+    this.text.set(text);
+    const el = this.inputEl()?.nativeElement;
+    if (el) el.value = text;
+  }
+
+  // ControlValueAccessor
+  writeValue(val: number | string | null): void {
+    if (this.isStringMode()) {
+      // A number written in string mode is taken at its own decimals, without an exponent.
+      const fromNumber = typeof val === 'number' ? numberToDecimal(val) : null;
+      const text = typeof val === 'number' ? (fromNumber ? formatDecimal(fromNumber.int, fromNumber.scale) : null) : val;
+      const model = text === null || text === undefined || text === '' ? null : text;
+      this.stringValue.set(model);
+      this.showString(model);
+      return;
+    }
+    this.value.set(val as number | null);
+    this.text.set(this.format(val as number | null));
+  }
+
+  registerOnChange(fn: (val: number | string | null) => void): void {
     this.onChange = fn;
   }
 

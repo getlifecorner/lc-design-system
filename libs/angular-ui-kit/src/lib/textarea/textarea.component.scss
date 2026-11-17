@@ -145,6 +145,16 @@
     resize: none;
     overflow: hidden;
   }
+
+  // 3.43 (request 063, usm-x row 6): one-line mode (`rows` 1, or `minRows` 1
+  // with `autoResize`) drops the 4–7 rem floor of the sizes above, so the
+  // field is one line plus padding (xs 36, sm 43, md 50, lg 57 px). A block,
+  // so the host ends at the field: the inline-block <textarea> left a 6 px
+  // line gap below it (review 063 F1; multi-line modes keep it, AC-15).
+  &--one-line {
+    min-height: 0;
+    display: block;
+  }
 }
 
 .lc-textarea-helper-text {

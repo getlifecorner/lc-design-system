@@ -110,7 +110,7 @@ const meta: Meta<IconComponent> = {
       control: 'select',
       options: ['xs', 'sm', 'md', 'lg', 'xl'],
       description:
-        'Icon dimensions — xs: 16px, sm: 20px, md: 24px, lg: 32px, xl: 40px. Set by the `icon-<size>` class in the component stylesheet; no inline size (3.11.1)',
+        'Icon dimensions — xs: 16px, sm: 20px, md: 24px, lg: 32px, xl: 40px. Set by the `icon-<size>` class in the component stylesheet; no inline size (3.11.1). 3.43: the CSS hook `--lc-icon-size` on the `lc-icon` element (e.g. `18px`) sets another box size; it does not inherit from a container (see *Size Hook*)',
       table: { defaultValue: { summary: "'md'" } },
     },
     color: {
@@ -732,6 +732,52 @@ export const InheritedColor: Story = {
         .ic-demo__row--error { color: var(--color-error-default); }
         .ic-demo__link { display: inline-flex; align-items: center; gap: 8px; color: var(--color-link); }
         .ic-demo__caption { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+      </style>`,
+  }),
+};
+
+/** 3.43 (request 063, usm-x row 18): an 18 px icon through the size hook. */
+export const SizeHook: Story = {
+  name: 'Size Hook',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.43 (request 063, usm-x row 18): `--lc-icon-size` set on the `lc-icon` element sizes its box, here `style="--lc-icon-size: 18px"` on `size="sm"` icons in a dense rail. The drawn icon is 18 × 18 px; the svg\'s `width`/`height` attributes keep the size (20px), `lc-icon` writes no style of its own, and nothing moves in the prerendered HTML (the size is CSS). Right: the references at `sm` (20) and `xs` (16), and a wrapper with `--lc-icon-size: 18px` whose icon stays at 20 px: the hook does not inherit (in Firefox before 128 it does). Without the hook every size is as before.',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      rows: [
+        { icon: 'briefcase', label: 'Arbeitsbereich' },
+        { icon: 'list-check', label: 'Vorgänge' },
+        { icon: 'users', label: 'Kunden' },
+        { icon: 'chart-bar', label: 'Berichte' },
+        { icon: 'settings', label: 'Einstellungen' },
+      ],
+    },
+    template: `
+      <div lang="de" class="ic-hook">
+        <ul class="ic-hook__rail" aria-label="Navigation (18 px)">
+          @for (row of rows; track row.icon) {
+            <li class="ic-hook__row"><lc-icon [name]="row.icon" size="sm" style="--lc-icon-size: 18px" [decorative]="true" />{{ row.label }}</li>
+          }
+        </ul>
+        <div class="ic-hook__refs">
+          <div class="ic-hook__ref"><lc-icon name="briefcase" size="sm" [decorative]="true" /><span>sm · 20 px</span></div>
+          <div class="ic-hook__ref"><lc-icon name="briefcase" size="sm" style="--lc-icon-size: 18px" [decorative]="true" /><span>sm + Hook · 18 px</span></div>
+          <div class="ic-hook__ref"><lc-icon name="briefcase" size="xs" [decorative]="true" /><span>xs · 16 px</span></div>
+          <div class="ic-hook__ref" style="--lc-icon-size: 18px"><lc-icon name="briefcase" size="sm" [decorative]="true" /><span>Hook am Container · bleibt 20 px</span></div>
+        </div>
+      </div>
+      <style>
+        .ic-hook { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; color: var(--color-text-primary); font-size: 13px; }
+        .ic-hook__rail { list-style: none; margin: 0; padding: 4px 0; width: 200px; border-radius: 8px; background: var(--color-sidebar); }
+        .ic-hook__row { display: flex; align-items: center; gap: 8px; min-height: 30px; padding: 0 12px; }
+        .ic-hook__refs { display: flex; flex-direction: column; gap: 12px; }
+        .ic-hook__ref { display: flex; align-items: center; gap: 8px; color: var(--color-text-secondary); }
       </style>`,
   }),
 };

@@ -3,6 +3,7 @@ import {
   input,
   output,
   signal,
+  computed,
   effect,
   untracked,
   afterNextRender,
@@ -33,6 +34,21 @@ export interface MenuItem {
     subtitle?: string;
     badge?: string;
   };
+  /**
+   * Makes the item a section (3.43, usm-x row 12). Its `label` is a heading
+   * that cannot be focused or activated, and `children` are its items, in a
+   * group named by the heading. One level: `children` of a member are
+   * ignored. On a section, `icon`, `href`, `variant`, `disabled` and
+   * `metadata` are ignored, and `dividerAfter` draws the divider after the
+   * whole group.
+   */
+  children?: MenuItem[];
+  /**
+   * Indents the section's items by one step (md 16, sm 12, lg 20 px). Only
+   * on a section (3.43).
+   * @default false
+   */
+  indentChildren?: boolean;
 }
 
 /** Natively focusable elements a projected trigger may be or contain. */
@@ -45,6 +61,8 @@ const INTERACTIVE_SELECTOR = 'button, a[href], input, select, textarea, [tabinde
  * - Customizable menu items with icons
  * - Support for links and buttons
  * - Dividers between menu sections
+ * - 3.43: sections with a heading (`MenuItem.children`), a `role="group"`
+ *   named by the heading; the arrow keys run over the items of every section
  * - Optional subtitle/metadata for items
  * - Danger variant for destructive actions
  * - Click outside to close (top-most overlay only)
@@ -98,7 +116,18 @@ export class MenuComponent implements OnDestroy {
   /** Id of the `role="menu"` element, referenced by the trigger's `aria-controls`. */
   protected readonly panelId = `${this.menuId}-panel`;
 
-  /** Index (into `items()`) of the item that currently owns the roving tabindex. */
+  /**
+   * The items that act, in visual order (3.43): top-level items, and in place
+   * of a section its members. Section headings are not in it.
+   */
+  protected readonly actions = computed(() =>
+    this.items().flatMap((item) => (item.children ? item.children : [item]))
+  );
+
+  /** Position of each acting item in {@link actions}. */
+  private readonly actionIndex = computed(() => new Map(this.actions().map((item, i) => [item, i])));
+
+  /** Index (into `actions()`) of the item that currently owns the roving tabindex. */
   protected readonly activeIndex = signal(-1);
 
   private readonly itemElements = viewChildren<ElementRef<HTMLElement>>('menuItem');
@@ -247,6 +276,16 @@ export class MenuComponent implements OnDestroy {
     return !item.disabled && index === this.activeIndex() ? 0 : -1;
   }
 
+  /** Index of an acting item in {@link actions} (its index in `items()` in a flat menu). */
+  protected indexOf(item: MenuItem): number {
+    return this.actionIndex().get(item) ?? -1;
+  }
+
+  /** Id of the heading of the section at `index` in `items()` (3.43). */
+  protected headingId(index: number): string {
+    return `${this.panelId}-section-${index}`;
+  }
+
   private focusIndex(index: number): void {
     if (index < 0) return;
     this.activeIndex.set(index);
@@ -258,12 +297,12 @@ export class MenuComponent implements OnDestroy {
   }
 
   private firstEnabledIndex(): number {
-    return this.items().findIndex((item) => !item.disabled);
+    return this.actions().findIndex((item) => !item.disabled);
   }
 
   /** Index of the next enabled item in `direction`, wrapping around; -1 if none. */
   private nextEnabledIndex(from: number, direction: 1 | -1): number {
-    const items = this.items();
+    const items = this.actions();
     for (let step = 1; step <= items.length; step++) {
       const index = (from + direction * step + items.length) % items.length;
       if (!items[index]?.disabled) return index;

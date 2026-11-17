@@ -178,7 +178,10 @@ export class TextareaComponent implements ControlValueAccessor {
   readonly name = input<string>();
 
   /**
-   * Number of visible text rows
+   * Number of visible text rows. `1` is the one-line mode (3.43, e.g. a chat
+   * composer beside a send button): the field is one line plus padding (md
+   * 50 px), with no 4–7 rem floor; with `autoResize` it grows to `maxRows`,
+   * then scrolls, and the prerendered `<textarea>` already has `rows="1"`.
    * @default 3
    */
   readonly rows = input<number>(3);
@@ -202,13 +205,16 @@ export class TextareaComponent implements ControlValueAccessor {
   readonly autoResize = input<boolean>(false);
 
   /**
-   * Minimum number of rows for auto-resize
+   * Minimum number of rows for auto-resize. `1` with `autoResize` is the
+   * one-line mode (3.43): one line plus padding, no 4–7 rem floor, growing to
+   * `maxRows`.
    * @default 3
    */
   readonly minRows = input<number>(3);
 
   /**
-   * Maximum number of rows for auto-resize
+   * Maximum number of rows for auto-resize. A field at this height scrolls
+   * (3.43; it used to clip the rest).
    * @default undefined
    */
   readonly maxRows = input<number | undefined>(undefined);
@@ -298,6 +304,30 @@ export class TextareaComponent implements ControlValueAccessor {
   });
 
   /**
+   * Whether the footer row is rendered (3.43): only for a visible error, a
+   * helper text or the character counter, so a field without them reserves
+   * no space below it.
+   */
+  protected readonly showsFooter = computed(
+    () => this.showsError() || this.showsHelper() || this.showCharacterCount()
+  );
+
+  /** One-line mode (3.43): `rows` 1, or `minRows` 1 with `autoResize`. */
+  protected readonly oneLine = computed(
+    () => this.rows() === 1 || (this.autoResize() && this.minRows() === 1)
+  );
+
+  /**
+   * The native `rows` attribute: `rows` without auto-resize; with it none
+   * (the height is measured), except `1` in one-line mode, so the prerendered
+   * field is one line too (HTML's default is 2).
+   */
+  protected readonly rowsAttr = computed(() => {
+    if (!this.autoResize()) return this.rows();
+    return this.oneLine() ? 1 : null;
+  });
+
+  /**
    * Computed classes for the textarea element
    */
   readonly textareaClasses = computed(() => {
@@ -319,6 +349,10 @@ export class TextareaComponent implements ControlValueAccessor {
       classes.push('lc-textarea--auto-resize');
     }
 
+    if (this.oneLine()) {
+      classes.push('lc-textarea--one-line');
+    }
+
     return classes.join(' ');
   });
 
@@ -335,6 +369,7 @@ export class TextareaComponent implements ControlValueAccessor {
       this.value();
       this.minRows();
       this.maxRows();
+      this.oneLine();
       if (this.autoResize()) {
         this.adjustHeight();
       }
@@ -406,19 +441,29 @@ export class TextareaComponent implements ControlValueAccessor {
     // Reset height to get accurate scrollHeight
     textarea.style.height = 'auto';
 
-    const minHeight = this.rowsToHeight(textarea, this.minRows());
-    const maxHeight = this.rowsToHeight(textarea, this.maxRows());
-    let newHeight = textarea.scrollHeight;
+    // 3.43: the field is `border-box` and `scrollHeight` excludes the border,
+    // so the content height and the `maxRows` cap add it (a one-line field is
+    // 24 + 24 + 2 = 50 px at md, capped at 5 rows 146 px). The `minRows` floor
+    // keeps its 3.42 value, so fields at rest keep their height.
+    const style = getComputedStyle(textarea);
+    const border = (parseFloat(style.borderTopWidth) || 0) + (parseFloat(style.borderBottomWidth) || 0);
+    const minHeight = this.rowsToHeight(textarea, this.oneLine() ? 1 : this.minRows());
+    const maxRows = this.rowsToHeight(textarea, this.maxRows());
+    const maxHeight = maxRows === undefined ? undefined : maxRows + border;
+    let newHeight = textarea.scrollHeight + border;
 
     // Apply constraints
     if (minHeight !== undefined) {
       newHeight = Math.max(newHeight, minHeight);
     }
+    const capped = maxHeight !== undefined && newHeight > maxHeight;
     if (maxHeight !== undefined) {
       newHeight = Math.min(newHeight, maxHeight);
     }
 
     textarea.style.height = `${newHeight}px`;
+    // A capped field scrolls, so the rest of the text stays reachable.
+    textarea.style.overflowY = capped ? 'auto' : '';
   }
 
   /** Pixel height for `rows` lines incl. vertical padding; undefined when it cannot be measured. */

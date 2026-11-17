@@ -17,6 +17,12 @@
   &--hidden {
     display: none;
   }
+
+  // 3.43 (request 063, usm-x row 7): `role="alertdialog"` focuses the host
+  // (tabindex -1); the kit's 2 px ring shows it.
+  &[role='alertdialog'] {
+    @include mix.focus-ring;
+  }
 }
 
 .lc-alert__container {
@@ -335,14 +341,19 @@ $text-link: 'a:where(:not(.btn))';
 
 // DS2.0: translucent tinted surfaces with a tinted border and bright semantic
 // ink. Reads correctly on the dark-first surfaces (and stays legible on light).
+// 3.43 (request 063, usm-x row 8): the public hooks --lc-alert-bg, -border,
+// -fg and -icon are read here and never declared by the kit, so a value on the
+// alert or any ancestor wins; unset, each resolves to the 3.42 value written
+// as its fallback. The icon follows --lc-alert-fg when only that is set. The
+// × hover keeps the variant tint.
 // Success variant
 .lc-alert--success {
-  background-color: rgba(142, 164, 117, 0.12);
-  border-color: rgba(142, 164, 117, 0.4);
-  color: var(--color-text-primary);
+  background-color: var(--lc-alert-bg, rgba(142, 164, 117, 0.12));
+  border-color: var(--lc-alert-border, rgba(142, 164, 117, 0.4));
+  color: var(--lc-alert-fg, var(--color-text-primary));
 
   .lc-alert__icon {
-    color: var(--color-on-success-subtle);
+    color: var(--lc-alert-icon, var(--lc-alert-fg, var(--color-on-success-subtle)));
   }
 
   .lc-alert__close:hover {
@@ -352,12 +363,12 @@ $text-link: 'a:where(:not(.btn))';
 
 // Error variant
 .lc-alert--error {
-  background-color: rgba(157, 14, 14, 0.14);
-  border-color: rgba(157, 14, 14, 0.45);
-  color: var(--color-text-primary);
+  background-color: var(--lc-alert-bg, rgba(157, 14, 14, 0.14));
+  border-color: var(--lc-alert-border, rgba(157, 14, 14, 0.45));
+  color: var(--lc-alert-fg, var(--color-text-primary));
 
   .lc-alert__icon {
-    color: var(--color-on-error-subtle);
+    color: var(--lc-alert-icon, var(--lc-alert-fg, var(--color-on-error-subtle)));
   }
 
   .lc-alert__close:hover {
@@ -367,12 +378,12 @@ $text-link: 'a:where(:not(.btn))';
 
 // Warning variant
 .lc-alert--warning {
-  background-color: rgba(225, 160, 64, 0.14);
-  border-color: rgba(225, 160, 64, 0.42);
-  color: var(--color-text-primary);
+  background-color: var(--lc-alert-bg, rgba(225, 160, 64, 0.14));
+  border-color: var(--lc-alert-border, rgba(225, 160, 64, 0.42));
+  color: var(--lc-alert-fg, var(--color-text-primary));
 
   .lc-alert__icon {
-    color: var(--color-on-warning-subtle);
+    color: var(--lc-alert-icon, var(--lc-alert-fg, var(--color-on-warning-subtle)));
   }
 
   .lc-alert__close:hover {
@@ -382,12 +393,12 @@ $text-link: 'a:where(:not(.btn))';
 
 // Info variant
 .lc-alert--info {
-  background-color: rgba(59, 101, 136, 0.16);
-  border-color: rgba(59, 101, 136, 0.42);
-  color: var(--color-text-primary);
+  background-color: var(--lc-alert-bg, rgba(59, 101, 136, 0.16));
+  border-color: var(--lc-alert-border, rgba(59, 101, 136, 0.42));
+  color: var(--lc-alert-fg, var(--color-text-primary));
 
   .lc-alert__icon {
-    color: var(--color-on-info-subtle);
+    color: var(--lc-alert-icon, var(--lc-alert-fg, var(--color-on-info-subtle)));
   }
 
   .lc-alert__close:hover {

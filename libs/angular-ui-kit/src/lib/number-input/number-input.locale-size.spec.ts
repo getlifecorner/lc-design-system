@@ -239,7 +239,8 @@ describe('lc-number-input size and suffix styles (3.29, AC-16)', () => {
     expect(rule(`.number-input--${size} .number-input__button`)).toMatch(
       new RegExp(`width: var\\(--size-interactive-${token}-height\\);\\n\\s*height: var\\(--size-interactive-${token}-height\\);`),
     );
-    expect(rule(`.number-input--${size} .number-input__input`)).toContain(`width: ${width}`);
+    // 3.43 (063 F3): the same width, now the fallback of the value-width hook.
+    expect(rule(`.number-input--${size} .number-input__input`)).toContain(`width: var(--lc-number-input-value-width, ${width})`);
     expect(css).toMatch(
       new RegExp(`\\n\\.number-input--${size} \\.number-input__input,\\s*\\.number-input--${size} \\.number-input__suffix \\{\\n\\s*font-size: var\\(--size-interactive-${token}-font-size\\);`),
     );
@@ -247,7 +248,7 @@ describe('lc-number-input size and suffix styles (3.29, AC-16)', () => {
 
   it('md keeps the 3.28 rules: 2.5rem steppers, a 4rem field, no size class rule', () => {
     expect(rule('.number-input__button')).toMatch(/width: 2\.5rem;\n\s*height: 2\.5rem;/);
-    expect(rule('.number-input__input')).toMatch(/width: 4rem;\n\s*text-align: center;/);
+    expect(rule('.number-input__input')).toMatch(/width: var\(--lc-number-input-value-width, 4rem\);\n\s*text-align: center;/);
     expect(css).not.toContain('.number-input--md');
   });
 

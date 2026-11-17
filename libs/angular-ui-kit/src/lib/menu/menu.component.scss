@@ -171,6 +171,48 @@
   }
 }
 
+// ── Sections (3.43, request 063, usm-x row 12) ──
+// The heading uses the sidenav section-title recipe: 12 px semibold capitals,
+// secondary ink (7.56:1 light, 9.26:1 dark on the panel). Not interactive, and
+// long German words wrap. md 8/16/4 around an 18 px line = 30 px; the inline
+// padding matches the items, so the heading and the item text share an edge.
+.lc-menu__section-heading {
+  padding: var(--spacing-2) var(--lc-density-padding-md, var(--spacing-4)) var(--spacing-1);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  overflow-wrap: break-word;
+  color: var(--color-text-secondary);
+  cursor: default;
+}
+
+// `indentChildren`: one step more at the start (md 16 → 32 px).
+.lc-menu__section--indented .lc-menu__item {
+  padding-inline-start: calc(var(--lc-density-padding-md, var(--spacing-4)) + var(--spacing-4));
+}
+
+.lc-menu__dropdown--sm {
+  .lc-menu__section-heading {
+    padding: var(--spacing-1) var(--lc-density-padding-sm, var(--spacing-3)) var(--spacing-0-5);
+  }
+
+  .lc-menu__section--indented .lc-menu__item {
+    padding-inline-start: calc(var(--lc-density-padding-sm, var(--spacing-3)) + var(--spacing-3));
+  }
+}
+
+.lc-menu__dropdown--lg {
+  .lc-menu__section-heading {
+    padding: var(--spacing-2) var(--spacing-5) var(--spacing-1);
+  }
+
+  .lc-menu__section--indented .lc-menu__item {
+    padding-inline-start: calc(var(--spacing-5) + var(--spacing-5));
+  }
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;
