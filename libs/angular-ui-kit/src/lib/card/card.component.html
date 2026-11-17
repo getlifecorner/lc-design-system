@@ -3,7 +3,7 @@
   [class]="cardClasses()"
   [attr.role]="role()"
   [attr.aria-label]="cardAriaLabel()"
-  [attr.tabindex]="isClickable() ? 0 : null"
+  [attr.tabindex]="cardTabindex()"
   (click)="handleClick($event)"
 >
   @if (linkMode() && !title()) {
@@ -34,56 +34,57 @@
             <!-- Collapsible card (3.36): the heading stays a heading and holds the toggle. -->
             @switch (headingLevel()) {
               @case (2) {
-                <h2 class="card__title"><ng-container [ngTemplateOutlet]="cardToggle" /></h2>
+                <h2 class="card__title" [attr.title]="headingTitle()"><ng-container [ngTemplateOutlet]="cardToggle" /></h2>
               }
               @case (4) {
-                <h4 class="card__title"><ng-container [ngTemplateOutlet]="cardToggle" /></h4>
+                <h4 class="card__title" [attr.title]="headingTitle()"><ng-container [ngTemplateOutlet]="cardToggle" /></h4>
               }
               @case (5) {
-                <h5 class="card__title"><ng-container [ngTemplateOutlet]="cardToggle" /></h5>
+                <h5 class="card__title" [attr.title]="headingTitle()"><ng-container [ngTemplateOutlet]="cardToggle" /></h5>
               }
               @case (6) {
-                <h6 class="card__title"><ng-container [ngTemplateOutlet]="cardToggle" /></h6>
+                <h6 class="card__title" [attr.title]="headingTitle()"><ng-container [ngTemplateOutlet]="cardToggle" /></h6>
               }
               @default {
-                <h3 class="card__title"><ng-container [ngTemplateOutlet]="cardToggle" /></h3>
+                <h3 class="card__title" [attr.title]="headingTitle()"><ng-container [ngTemplateOutlet]="cardToggle" /></h3>
               }
             }&ngsp;
-          } @else if (linkMode()) {
-            <!-- Link card (3.24): the heading stays a heading and holds the link. -->
+          } @else if (linkMode() || headingTarget()) {
+            <!-- Link card (3.24): the heading stays a heading and holds the link.
+                 3.44 (clickTarget="heading"): or the clickable card's button. -->
             @switch (headingLevel()) {
               @case (2) {
-                <h2 class="card__title"><ng-container [ngTemplateOutlet]="cardLink" /></h2>
+                <h2 class="card__title" [attr.title]="headingTitle()"><ng-container [ngTemplateOutlet]="cardLink" /></h2>
               }
               @case (4) {
-                <h4 class="card__title"><ng-container [ngTemplateOutlet]="cardLink" /></h4>
+                <h4 class="card__title" [attr.title]="headingTitle()"><ng-container [ngTemplateOutlet]="cardLink" /></h4>
               }
               @case (5) {
-                <h5 class="card__title"><ng-container [ngTemplateOutlet]="cardLink" /></h5>
+                <h5 class="card__title" [attr.title]="headingTitle()"><ng-container [ngTemplateOutlet]="cardLink" /></h5>
               }
               @case (6) {
-                <h6 class="card__title"><ng-container [ngTemplateOutlet]="cardLink" /></h6>
+                <h6 class="card__title" [attr.title]="headingTitle()"><ng-container [ngTemplateOutlet]="cardLink" /></h6>
               }
               @default {
-                <h3 class="card__title"><ng-container [ngTemplateOutlet]="cardLink" /></h3>
+                <h3 class="card__title" [attr.title]="headingTitle()"><ng-container [ngTemplateOutlet]="cardLink" /></h3>
               }
             }&ngsp;
           } @else {
             @switch (headingLevel()) {
               @case (2) {
-                <h2 class="card__title">{{ title() }}</h2>
+                <h2 class="card__title" [attr.title]="headingTitle()">{{ title() }}</h2>
               }
               @case (4) {
-                <h4 class="card__title">{{ title() }}</h4>
+                <h4 class="card__title" [attr.title]="headingTitle()">{{ title() }}</h4>
               }
               @case (5) {
-                <h5 class="card__title">{{ title() }}</h5>
+                <h5 class="card__title" [attr.title]="headingTitle()">{{ title() }}</h5>
               }
               @case (6) {
-                <h6 class="card__title">{{ title() }}</h6>
+                <h6 class="card__title" [attr.title]="headingTitle()">{{ title() }}</h6>
               }
               @default {
-                <h3 class="card__title">{{ title() }}</h3>
+                <h3 class="card__title" [attr.title]="headingTitle()">{{ title() }}</h3>
               }
             }&ngsp;
           }
@@ -135,7 +136,11 @@
      (RouterLink, created only here, so other cards never need a router).
      Its ::after covers the card. -->
 <ng-template #cardLink let-bare="bare">
-  @if (linkMode() === 'href') {
+  @if (headingTarget()) {
+    <!-- 3.44 (usm-x row 24): the clickable card's button, inside the heading
+         and stretched over the card; its click bubbles to the card's handler. -->
+    <button type="button" class="card__link card__link--button" [attr.aria-label]="ariaLabel()">{{ title() }}</button>
+  } @else if (linkMode() === 'href') {
     <a class="card__link" [class.card__link--bare]="bare" [href]="href()" [attr.aria-label]="ariaLabel()">{{ bare ? '' : title() }}</a>
   } @else {
     <a

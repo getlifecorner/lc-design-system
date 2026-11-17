@@ -4,6 +4,7 @@ import {
   input,
   computed,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { SparklineComponent, SparklineColor } from '@lifecorner/angular-ui-kit/sparkline';
 import { IconComponent } from '@lifecorner/angular-ui-kit/icon';
 
@@ -43,7 +44,7 @@ const DEFAULT_LABELS: StatTrendLabels = {
 @Component({
   selector: 'lc-stat-trend',
   standalone: true,
-  imports: [SparklineComponent, IconComponent],
+  imports: [SparklineComponent, IconComponent, NgTemplateOutlet],
   templateUrl: './stat-trend.component.html',
   styleUrls: ['./stat-trend.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

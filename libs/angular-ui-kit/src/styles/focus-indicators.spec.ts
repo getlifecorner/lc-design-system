@@ -161,7 +161,9 @@ describe('Focus indicators (request 042)', () => {
 
     it('AC-2: theme="light" pins the light primary-500: 4.36:1 on its white bar in both themes (dark primary-500 was 1.89)', () => {
       const light = fills(file, '.lc-header--light');
-      expect([light['--_lc-header-ring'], light['--lc-header-bg']]).toEqual(['#208497', '#ffffff']);
+      // Request 064 (row 4): the bar is now the private value with #ffffff as
+      // the fallback of the --lc-header-bg hook (an ancestor may set it).
+      expect([light['--_lc-header-ring'], light['--_lc-header-bg']]).toEqual(['#208497', 'var(--lc-header-bg, #ffffff)']);
       const lum = (hex: string) =>
         [1, 3, 5]
           .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)

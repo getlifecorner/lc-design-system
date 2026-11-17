@@ -71,6 +71,9 @@ export * from '@lifecorner/angular-ui-kit/area-map';
 // Menu Component
 export * from '@lifecorner/angular-ui-kit/menu';
 
+// Split Button Component (a face plus a menu caret in one outline, 3.44)
+export * from '@lifecorner/angular-ui-kit/split-button';
+
 // Input Component
 export * from '@lifecorner/angular-ui-kit/input';
 

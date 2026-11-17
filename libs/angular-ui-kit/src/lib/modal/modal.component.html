@@ -28,6 +28,7 @@
           class="lc-modal__close"
           [attr.aria-label]="closeAriaLabel()"
           (click)="onCloseClick($event)"
+          (keydown)="onCloseKeydown($event)"
         >
           <lc-icon name="x-mark" size="md" [decorative]="true" />
         </button>

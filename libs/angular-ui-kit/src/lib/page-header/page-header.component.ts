@@ -43,7 +43,16 @@ export type PageHeaderPaddingTop = 'default' | 'none' | 'sm' | 'md';
  * Slots:
  *  - `[slot="breadcrumbs"]`   — rendered above the title (e.g. `<lc-breadcrumbs>`)
  *  - `[slot="title-suffix"]`  — inline beside the title, after the optional `badge`
- *                               (for one or more status chips/badges)
+ *                               (for one or more status chips/badges); rendered
+ *                               inside the heading, so it is part of its name
+ *  - `[slot="title-aside"]`   — beside the heading and outside it (3.44): status
+ *                               chips and live regions (`role="status"`) that must
+ *                               not join the heading's accessible name. Hidden
+ *                               when empty. `--lc-page-header-title-aside-below: 1`
+ *                               puts it on its own line under the title row, so
+ *                               the actions keep the title's line (visual order
+ *                               title → actions → aside; keep it free of
+ *                               focusable content)
  *  - `[slot="actions"]`       — right-aligned actions (buttons, menus)
  *  - `[slot="meta"]`          — secondary metadata under the title row (chips, tags)
  *  - default                  — short header-internal description text
@@ -51,6 +60,11 @@ export type PageHeaderPaddingTop = 'default' | 'none' | 'sm' | 'md';
  * `overline` renders a short uppercase label (a date, a section) **above** the
  * title but **after** it in the DOM, so a screen reader that lands on the
  * heading reads the title first and the overline next.
+ *
+ * CSS hooks (3.44): `--lc-page-header-overline-color` (default
+ * `--color-overline`), `--lc-page-header-title-font-size` (default: the size's
+ * value, 24 px for `default`), `--lc-page-header-title-aside-below` (`0`|`1`,
+ * default `0`).
  *
  * Full-blown navigation primitives like `lc-tabs` — which render both the tab
  * strip **and** their panel content — belong **below** the page header, never

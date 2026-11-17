@@ -668,6 +668,124 @@
   border: 0;
 }
 
+// ── Row states, hints, children on demand (3.44, usm-x row 14) ────────────
+// Action items are <button>s with the link items' look. `:where()` keeps the
+// reset at zero weight, so the current look's fill still applies.
+:where(button.lc-sidenav__nav-item) {
+  width: 100%;
+  border: none;
+  background: none;
+  font-family: inherit;
+  text-align: start;
+}
+
+// Busy and disabled items can't be activated: no hover fill (the current
+// item keeps its fill), and the cursor says why. Disabled content is dimmed,
+// not the control, so the focus ring keeps its full contrast.
+.lc-sidenav__nav-item--busy {
+  cursor: progress;
+}
+
+.lc-sidenav__nav-item--disabled {
+  cursor: not-allowed;
+
+  > * {
+    opacity: 0.5;
+  }
+}
+
+.lc-sidenav__nav-item:is(.lc-sidenav__nav-item--busy, .lc-sidenav__nav-item--disabled):not(
+    .lc-sidenav__nav-item--active,
+    [aria-current='page']
+  ):hover {
+  background-color: transparent;
+  color: var(--lc-sidenav-fg, var(--_lc-sidenav-t-fg));
+}
+
+// The spinner sits in the 20 px icon box (22 on the rail) in the item's ink.
+.lc-sidenav__nav-spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:host ::ng-deep .lc-sidenav__nav-spinner .spinner__circle {
+  border-color: color-mix(in srgb, currentColor 30%, transparent);
+  border-top-color: currentColor;
+}
+
+// An image icon (`iconUrl`): the icon box, the picture contained.
+.lc-sidenav__nav-img {
+  object-fit: contain;
+}
+
+// Hint beside the label: it shrinks first (the label grows from its text),
+// ends in an ellipsis with the full text in `title`, and never pushes the
+// badge or the chevron out. Quieter ink at rest, the item's ink on hover and
+// when current (5.02:1 or more there). Hidden on the rail.
+.lc-sidenav__nav-item--hint .lc-sidenav__nav-label {
+  flex: 1 1 auto;
+}
+
+// The shrink factor is 100000, not 1000: at 1000 the label still lost ~0.04 px
+// (its share of the overflow), enough for its ellipsis („Navigati…“ at 360).
+.lc-sidenav__nav-hint {
+  flex: 0 100000 auto;
+  min-width: 3em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: end;
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: 400;
+  color: var(--lc-sidenav-section-fg, var(--_lc-sidenav-t-section-fg));
+}
+
+.lc-sidenav__nav-item:is(:hover, .lc-sidenav__nav-item--active, [aria-current='page']) .lc-sidenav__nav-hint {
+  color: inherit;
+}
+
+.lc-sidenav--collapsed .lc-sidenav__nav-hint {
+  display: none;
+}
+
+// Muted (dimmed but clickable): the section ink and regular weight at rest.
+.lc-sidenav__nav-item--muted:not(:hover, .lc-sidenav__nav-item--active, [aria-current='page']) {
+  color: var(--lc-sidenav-section-fg, var(--_lc-sidenav-t-section-fg));
+  font-weight: 400;
+}
+
+// The loading row of an open group (`childrenLoading`): a child item's box,
+// the spinner on the icon column, the text at the label's x.
+.lc-sidenav__nav-loading {
+  @include docked.item;
+  color: var(--lc-sidenav-section-fg, var(--_lc-sidenav-t-section-fg));
+  font-size: var(--font-size-sm, 0.875rem);
+}
+
+// Brand with a second line (`brandSubtitle`): one line each, same block height.
+.lc-sidenav__brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lc-sidenav__brand-name--one-line {
+  display: block;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.lc-sidenav__brand-subtitle {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: 400;
+  line-height: var(--line-height-tight, 1.25);
+  color: var(--lc-sidenav-section-fg, var(--_lc-sidenav-t-section-fg));
+}
+
 @media (forced-colors: active) {
   .lc-sidenav__brand-tile {
     border: 1px solid CanvasText;
@@ -678,6 +796,19 @@
   .lc-sidenav__nav-item--active:not(:focus-visible),
   .lc-sidenav__nav-item[aria-current='page']:not(:focus-visible) {
     outline: 1px solid Highlight;
+  }
+
+  // 3.44: disabled content in the system's disabled ink, undimmed.
+  .lc-sidenav__nav-item--disabled > * {
+    color: GrayText;
+    opacity: 1;
+  }
+
+  // 3.44: the busy spinner keeps lc-spinner's system colours (the arc's
+  // currentColor would be forced to the track's colour).
+  :host ::ng-deep .lc-sidenav__nav-spinner .spinner__circle {
+    border-color: GrayText;
+    border-top-color: CanvasText;
   }
 }
 

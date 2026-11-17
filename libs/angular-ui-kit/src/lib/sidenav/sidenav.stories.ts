@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { applicationConfig } from '@storybook/angular';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { provideRouter, withHashLocation } from '@angular/router';
 import { fn, expect, userEvent, within } from 'storybook/test';
+import type { NavigationItem } from '@lifecorner/angular-ui-kit/models';
 import { SidenavComponent } from './sidenav.component';
 import { HeaderComponent } from '../header/header.component';
 
@@ -109,9 +110,31 @@ const meta: Meta<SidenavComponent> = {
     badgeAriaLabel: {
       control: 'text',
       description:
-        "Text read after an item's label when it has a badge, at every level. On the collapsed rail, where labels are hidden, the label and this text name the item. `{value}` is replaced with the badge value, e.g. `'{value} offen'` → \"Stammdaten 1 offen\". The badge itself is hidden from screen readers. Empty: the badge isn't read",
+        "Text read after an item's label when it has a badge, at every level. On the collapsed rail, where labels are hidden, the label and this text name the item. `{value}` is replaced with the badge value, e.g. `'{value} offen'` → \"Stammdaten 1 offen\". The badge itself is hidden from screen readers. Empty: the badge isn't read. 3.44: `badge.ariaLabel` on an item wins",
       table: { defaultValue: { summary: "'{value}'" } },
     },
+    busyLabel: {
+      control: 'text',
+      description: '3.44: read after a `busy` item\'s text („Berichte Wird geladen“). German „Wird geladen“',
+      table: { defaultValue: { summary: "'Loading'" } },
+    },
+    childrenLoadingLabel: {
+      control: 'text',
+      description: '3.44: text of the loading row of an open group whose children load (`childrenLoading`). German „Wird geladen …“',
+      table: { defaultValue: { summary: "'Loading…'" } },
+    },
+    brandSubtitle: {
+      control: 'text',
+      description: '3.44: a second line under `brandName` (the name then keeps one line); joins the link name. Hidden on the rail',
+      table: { defaultValue: { summary: "''" } },
+    },
+    brandLetter: {
+      control: 'text',
+      description: '3.44: the brand tile\'s letter instead of the name\'s first one; `brandIcon` wins',
+      table: { defaultValue: { summary: "''" } },
+    },
+    expandRequested: { action: 'expandRequested', description: '3.44: a `hasChildren` group was opened while it has no children: load them' },
+    itemContextMenu: { action: 'itemContextMenu', description: '3.44: `{ item, event }` for a `contextmenu` event on an item (not prevented; not for disabled items)' },
     returnFocusTo: {
       control: false,
       description:
@@ -1165,6 +1188,235 @@ export const FinanceDestination: Story = {
     template: `
       <div lang="de">
         ${brandRail('theme="light" ariaLabel="Hauptnavigation"')}
+      </div>`,
+  }),
+};
+
+// ── 3.44 (request 064, usm-x row 14 and backlog 064-n2) ─────────────────────
+
+/** A 20 px glyph as an image icon (`iconUrl`) for the stories. */
+const IMAGE_ICON =
+  'data:image/svg+xml,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" rx="4" fill="#7c5cc4"/><path d="M6 10h8M10 6v8" stroke="#fff" stroke-width="2"/></svg>',
+  );
+
+/** The frame of the 3.44 stories: docked (a drawer below 768 px, open). */
+const rowStatesFrame = (attrs: string, frame = 'overflow: hidden;') => `
+  <div style="display: flex; height: 520px; border: 1px solid var(--color-border); border-radius: 8px; ${frame}">
+    <lc-sidenav [isOpen]="true" mode="docked" width="280px" [items]="items" ${attrs} />
+    <div style="flex: 1; padding: 24px; color: var(--color-text-secondary);">{{ status }}</div>
+  </div>`;
+
+/** 3.44 (usm-x row 14): entries that start an action, one current, one busy. */
+export const ActionItems: Story = {
+  name: 'Action Items',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.44 (usm-x row 14): `kind: \'action\'` items are buttons that emit `itemClicked` only (pass `route: \'\'`); the app sets `current` („Fenster öffnen“ is current, `aria-current="page"`). „Berichte erzeugen“ is `busy`: the spinner replaces its icon, it has `aria-busy` and `aria-disabled`, keeps its place and focus, ignores click, Enter and Space, and reads „Berichte erzeugen Wird geladen“ (`busyLabel`). Kostenstellen and Leistungsverrechnung are router links as before. Docked at 1024 px and wider, the open drawer at 360 px.',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      status: 'Arbeitsbereich',
+      items: [
+        { id: 'kst', icon: 'building-bank', label: 'Kostenstellen', route: '/kostenstellen', displayOrder: 1 },
+        { id: 'lv', icon: 'arrow-path', label: 'Leistungsverrechnung', route: '/leistungsverrechnung', displayOrder: 2 },
+        { id: 'open', icon: 'file', label: 'Fenster öffnen', route: '', kind: 'action', current: true, displayOrder: 3 },
+        { id: 'reports', icon: 'chart-bar', label: 'Berichte erzeugen', route: '', kind: 'action', busy: true, displayOrder: 4 },
+        { id: 'import', icon: 'arrow-down', label: 'Daten importieren', route: '', kind: 'action', displayOrder: 5 },
+      ],
+    },
+    template: `<div lang="de">${rowStatesFrame('ariaLabel="Bereiche" busyLabel="Wird geladen" closeAriaLabel="Navigation schließen" (itemClicked)="status = $event.label"')}</div>`,
+  }),
+};
+
+/** 3.44 (usm-x row 14): the row states on the 56 px rail. */
+export const CollapsedRailStates: Story = {
+  name: 'Collapsed Rail States',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.44: on the collapsed rail the busy spinner sits in the 22 px icon box, a disabled item is dimmed (not its focus ring) and shows its reason as the kit tooltip below it on hover and focus (the label tooltip stays on the right), the hint is hidden (the name keeps it out, as on the rail today), and the badge „56/60“ is read as „Incidents 56 von 60 geladen“ (`badge.ariaLabel`). The frame is `overflow: visible` so the tooltips can leave it.',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      status: '',
+      items: [
+        { id: 'start', icon: 'home', label: 'Start', route: '/start', displayOrder: 1 },
+        { id: 'reports', icon: 'chart-bar', label: 'Berichte', route: '/berichte', busy: true, displayOrder: 2 },
+        { id: 'views', icon: 'eye', label: 'Darstellungen', route: '/darstellungen', disabled: true, disabledReason: 'Kein Recht für diesen Bereich', displayOrder: 3 },
+        { id: 'kst', icon: 'building-bank', label: 'Kostenstellen', route: '/kostenstellen', hint: 'Rich Client', displayOrder: 4 },
+        { id: 'inc', icon: 'bell', label: 'Incidents', route: '/incidents', badge: { value: '56/60', variant: 'primary', ariaLabel: '56 von 60 geladen' }, displayOrder: 5 },
+      ],
+    },
+    template: `
+      <div lang="de" style="display: flex; height: 400px; border: 1px solid var(--color-border); border-radius: 8px; overflow: visible;">
+        <lc-sidenav [isOpen]="true" mode="docked" [collapsed]="true" [mobileBreakpoint]="0" [items]="items" ariaLabel="Bereiche"
+                    busyLabel="Wird geladen" expandAriaLabel="Navigation ausklappen" />
+        <div style="flex: 1;"></div>
+      </div>`,
+  }),
+};
+
+/** The app side of children on demand (3.44): load on `expandRequested`. */
+@Component({
+  selector: 'lc-sidenav-lazy-children-demo',
+  standalone: true,
+  imports: [SidenavComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div lang="de" style="display: flex; height: 480px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
+      <lc-sidenav [isOpen]="true" mode="docked" width="280px" [items]="items()" ariaLabel="Bereiche"
+                  childrenLoadingLabel="Wird geladen …" closeAriaLabel="Navigation schließen" (expandRequested)="load($event)" />
+      <p role="status" style="flex: 1; margin: 0; padding: 24px; color: var(--color-text-secondary);">{{ status() }}</p>
+    </div>
+  `,
+})
+class SidenavLazyChildrenDemoComponent {
+  protected readonly status = signal('');
+  protected readonly items = signal<NavigationItem[]>([
+    { id: 'start', icon: 'home', label: 'Start', route: '/start', displayOrder: 1 },
+    { id: 'contracts', icon: 'file', label: 'Verträge', route: '', hasChildren: true, displayOrder: 2 },
+    { id: 'archive', icon: 'clipboard', label: 'Archiv', route: '', hasChildren: true, displayOrder: 3 },
+  ]);
+
+  protected load(item: NavigationItem): void {
+    this.patch(item.id, { childrenLoading: true });
+    // „Verträge“ stays loading (the story's open group); „Archiv“ loads after 600 ms.
+    if (item.id !== 'archive') return;
+    setTimeout(() => {
+      this.patch(item.id, {
+        childrenLoading: false,
+        children: ['2024', '2025', '2026'].map((year, i) => ({ id: `archive-${year}`, icon: 'file', label: year, route: `/archiv/${year}`, displayOrder: i + 1 })),
+      });
+      this.status.set('Archiv: 3 Einträge geladen');
+    }, 600);
+  }
+
+  private patch(id: string, change: Partial<NavigationItem>): void {
+    this.items.update((items) => items.map((i) => (i.id === id ? { ...i, ...change } : i)));
+  }
+}
+
+/** 3.44 (usm-x row 14): groups whose children load on demand. */
+export const LazyChildren: Story = {
+  name: 'Lazy Children',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.44: `hasChildren` groups show the chevron before they have children. Opening one emits `expandRequested`; the app sets `childrenLoading` (a loading row „Wird geladen …“ and `aria-busy` on the children area) and then supplies `children`. „Verträge“ is open and still loading; open „Archiv“: its three children arrive after 600 ms, the focus stays on the group, and the app announces the result in its own `role="status"`.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [SidenavLazyChildrenDemoComponent] },
+    template: `<lc-sidenav-lazy-children-demo />`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    const group = [...canvasElement.querySelectorAll<HTMLButtonElement>('.lc-sidenav__nav-item--parent')].find((b) => b.textContent?.includes('Verträge'));
+    group?.click();
+  },
+};
+
+/** 3.44 (usm-x row 14): hints, disabled items with a reason and a muted item, German. */
+export const HintsAndReasonsGerman: Story = {
+  name: 'Hints And Reasons (German)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.44: a right-aligned `hint` beside the label (12 px, the section ink at rest, the item ink on hover and when current): „Rich Client“ beside Kostenstellen and its badge; „Editor im Rich Client“ shrinks first with an ellipsis (full text in `title`) next to a badge and a chevron, which never move out. Two `disabled` items with a `disabledReason` stay in place, dimmed, focusable, and show „Kein Recht für diesen Bereich“ as the tooltip on hover and focus (`aria-describedby`). „Verträge“ is `muted`: quieter at rest, still a link. Open drawer at 360 px.',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      status: '',
+      items: [
+        { id: 'kst', icon: 'building-bank', label: 'Kostenstellen', route: '/kostenstellen', hint: 'Rich Client', badge: { value: 3 }, displayOrder: 1 },
+        {
+          id: 'nav', icon: 'settings', label: 'Navigation', route: '', hint: 'Editor im Rich Client', badge: { value: 3 }, displayOrder: 2,
+          children: [{ id: 'nav-1', icon: 'file', label: 'Menüs', route: '/navigation/menues', displayOrder: 1 }],
+        },
+        { id: 'lv', icon: 'arrow-path', label: 'Leistungsverrechnung', route: '/leistungsverrechnung', hint: 'kein Recht', disabled: true, disabledReason: 'Kein Recht für diesen Bereich', displayOrder: 3 },
+        { id: 'views', icon: 'eye', label: 'Darstellungen', route: '/darstellungen', disabled: true, disabledReason: 'Kein Recht für diesen Bereich', displayOrder: 4 },
+        { id: 'contracts', icon: 'file', label: 'Verträge', route: '/vertraege', muted: true, displayOrder: 5 },
+        { id: 'reports', icon: 'chart-bar', label: 'Berichte', route: '/berichte', displayOrder: 6 },
+      ],
+    },
+    template: `<div lang="de">${rowStatesFrame('ariaLabel="Bereiche" activeRoute="/kostenstellen" closeAriaLabel="Navigation schließen"')}</div>`,
+  }),
+};
+
+/** 3.44 (backlog 064-n2): an area rail with a brand second line, a chosen letter, extra routes, tooltips and an image icon. */
+export const AreaRailGerman: Story = {
+  name: 'Area Rail (German)',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.44 (064-n2): `theme="dark"`, `brandName="USM X"` with `brandSubtitle="Customizing"` (one line each; the link reads „USM X Customizing“) and `brandLetter="X"` in the tile. Sections „Arbeit“ and „Customizing“. „Klassen“ is current through one of its `matchRoutes` (`activeRoute="/vorgang"`), the area owning several addresses. „Oberfläche“ has a `tooltip`; „Erweiterungen“ an `iconUrl` image (`alt=""`, 20 px).',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      status: '',
+      items: [
+        {
+          id: 'work', icon: '', label: 'Arbeit', route: '', isSection: true, displayOrder: 1,
+          children: [
+            { id: 'inc', icon: 'bell', label: 'Incidents', route: '/incidents', displayOrder: 1 },
+            { id: 'cls', icon: 'clipboard', label: 'Klassen', route: '/klassen', matchRoutes: ['/vorgang', '/fenster'], displayOrder: 2 },
+          ],
+        },
+        {
+          id: 'custom', icon: '', label: 'Customizing', route: '', isSection: true, displayOrder: 2,
+          children: [
+            { id: 'ui', icon: 'device-desktop', label: 'Oberfläche', route: '/oberflaeche', tooltip: 'Masken, Menüs und Darstellungen', displayOrder: 1 },
+            { id: 'ext', icon: '', iconUrl: IMAGE_ICON, label: 'Erweiterungen', route: '/erweiterungen', displayOrder: 2 },
+          ],
+        },
+      ],
+    },
+    template: `<div lang="de">${rowStatesFrame('theme="dark" activeRoute="/vorgang" ariaLabel="Bereiche" brandName="USM X" brandSubtitle="Customizing" brandLetter="X" brandHref="/" closeAriaLabel="Navigation schließen"', 'overflow: visible;')}</div>`,
+  }),
+};
+
+/** 3.44 (backlog 064-n2): a badge with two numbers and a tooltip; the context-menu hook. */
+export const CountsAndContextMenu: Story = {
+  name: 'Counts And Context Menu',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.44 (064-n2): the badge „56/60“ has its own `ariaLabel` („56 of 60 loaded“, read instead of `badgeAriaLabel`) and a `tooltip` that joins the item’s tooltip after „ · “. Right-click an item, or press Shift+F10 or the Menu key on it: `itemContextMenu` emits `{ item, event }` once and the kit prevents nothing (the line on the right shows the last one). iOS fires no `contextmenu`: pair it with the item’s `action` button.',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      status: 'Context menu: –',
+      items: [
+        { id: 'inc', icon: 'bell', label: 'Incidents', route: '/incidents', tooltip: 'Loaded today, 06:00', badge: { value: '56/60', variant: 'primary', ariaLabel: '56 of 60 loaded', tooltip: '4 still loading' }, displayOrder: 1 },
+        { id: 'orders', icon: 'shopping-bag', label: 'Orders', route: '/orders', badge: { value: 12 }, action: { icon: 'dots', ariaLabel: 'Orders actions' }, displayOrder: 2 },
+        { id: 'settings', icon: 'settings', label: 'Settings', route: '/settings', displayOrder: 3 },
+      ],
+    },
+    template: `
+      <div style="display: flex; flex-wrap: wrap; height: 400px; border: 1px solid var(--color-border); border-radius: 8px; overflow: visible;">
+        <lc-sidenav [isOpen]="true" mode="docked" width="260px" [mobileBreakpoint]="0" [items]="items" activeRoute="/orders"
+                    (itemContextMenu)="status = 'Context menu: ' + $event.item.label" />
+        <p role="status" style="flex: 1; margin: 0; padding: 24px; color: var(--color-text-secondary);">{{ status }}</p>
       </div>`,
   }),
 };

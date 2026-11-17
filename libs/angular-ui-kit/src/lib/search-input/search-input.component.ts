@@ -17,6 +17,15 @@ import { Subject, debounce, distinctUntilChanged, filter, of, timer } from 'rxjs
 
 export type SearchInputSize = 'sm' | 'md' | 'lg';
 
+/** `role` of the inner `<input>` (3.44): `'combobox'` for a command palette or an autocomplete. */
+export type SearchInputRole = 'combobox';
+
+/** `aria-autocomplete` of the inner `<input>` (3.44). */
+export type SearchInputAriaAutocomplete = 'list' | 'inline' | 'both' | 'none';
+
+/** `aria-haspopup` of the inner `<input>` (3.44). */
+export type SearchInputAriaHasPopup = 'listbox' | 'grid' | 'tree' | 'dialog';
+
 /** A value travelling through the debounce pipe. */
 interface SearchEmission {
   readonly value: string;
@@ -101,6 +110,52 @@ export class SearchInputComponent {
 
   /** Accessible name of the clear button. */
   readonly clearAriaLabel = input('Clear search');
+
+  /**
+   * `role` of the inner `<input>` (3.44, usm-x row 21). `'combobox'` makes the
+   * field the input of a command palette or an autocomplete; pair it with
+   * `ariaExpanded`, `ariaControls` and `ariaActiveDescendant`. Not named `role`:
+   * a static `role` attribute would also stay on the host. ArrowUp/Down, Enter
+   * and Escape stay the page's: listen to the host's bubbling `keydown`. Note:
+   * `type="search"` clears the field on Escape unless the page calls
+   * `preventDefault()`. `null` renders no attribute.
+   * @default null
+   */
+  readonly inputRole = input<SearchInputRole | null>(null);
+
+  /**
+   * `aria-expanded` on the inner `<input>` (combobox popup open). `null`
+   * renders no attribute.
+   * @default null
+   */
+  readonly ariaExpanded = input<boolean | null>(null);
+
+  /**
+   * `aria-controls` on the inner `<input>`: the id of the popup (listbox).
+   * Empty renders no attribute.
+   * @default ''
+   */
+  readonly ariaControls = input<string>('');
+
+  /**
+   * `aria-activedescendant` on the inner `<input>`: the id of the active
+   * option while focus stays in the field. Empty renders no attribute.
+   * @default ''
+   */
+  readonly ariaActiveDescendant = input<string>('');
+
+  /**
+   * `aria-autocomplete` on the inner `<input>`. `null` renders no attribute.
+   * @default null
+   */
+  readonly ariaAutocomplete = input<SearchInputAriaAutocomplete | null>(null);
+
+  /**
+   * `aria-haspopup` on the inner `<input>` (the combobox role implies
+   * `listbox`). `null` renders no attribute.
+   * @default null
+   */
+  readonly ariaHasPopup = input<SearchInputAriaHasPopup | null>(null);
 
   /**
    * Current query (two-way bindable). Writing it from outside updates the

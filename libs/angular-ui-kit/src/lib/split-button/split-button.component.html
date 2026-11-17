@@ -1,0 +1,40 @@
+<div [class]="classes()" role="group">
+  <lc-button
+    class="lc-split-button__face"
+    [variant]="variant()"
+    [size]="size()"
+    [disabled]="disabled()"
+    [loading]="loading()"
+    (clicked)="onFaceClick()"
+  >
+    <ng-container ngProjectAs="[slot='icon-before']"><ng-content select="[slot='icon-before']" /></ng-container>
+    <ng-content />
+  </lc-button>
+  <lc-menu
+    class="lc-split-button__menu"
+    [items]="items()"
+    [isOpen]="open()"
+    [position]="menuPosition()"
+    (itemClick)="onItemClick($event)"
+    (closed)="open.set(false)"
+  >
+    <!-- The caret is a native button with lc-button's classes: `btn-loading`
+         dims it without the spinner. aria-haspopup and aria-expanded are bound
+         here, so they are in prerendered HTML; lc-menu writes the same values. -->
+    <button
+      trigger
+      type="button"
+      class="btn lc-split-button__caret btn-{{ variant() }} btn-{{ size() }}"
+      [class.btn-loading]="caretInert()"
+      [disabled]="caretDisabled()"
+      aria-haspopup="menu"
+      [attr.aria-expanded]="open()"
+      [attr.aria-label]="menuAriaLabel()"
+      [attr.aria-disabled]="caretInert() ? 'true' : null"
+      (click)="onCaretClick($event)"
+      (keydown)="onCaretKeydown($event)"
+    >
+      <lc-icon name="chevron-down" [size]="chevronSize()" [decorative]="true" />
+    </button>
+  </lc-menu>
+</div>

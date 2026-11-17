@@ -253,7 +253,8 @@ describe('PageHeaderComponent', () => {
         expect(o).toMatch(/font-weight:\s*var\(--font-weight-bold, 700\)/);
         expect(o).toMatch(/letter-spacing:\s*var\(--letter-spacing-overline, 0\.12em\)/);
         expect(o).toMatch(/font-size:\s*var\(--font-size-overline, 0\.8125rem\)/);
-        expect(o).toMatch(/color:\s*var\(--color-overline/);
+        // 3.44 (request 064, AC-8): the overline hook comes first, the old ink is its fallback.
+        expect(o).toMatch(/color:\s*var\(--lc-page-header-overline-color, var\(--color-overline/);
       });
 
       it('hyphenates a long title in the page language instead of cutting a word without a hyphen', () => {
@@ -289,8 +290,9 @@ describe('PageHeaderComponent', () => {
         ['display', '--font-size-display, 2.5rem'],
         ['auth', '--font-size-auth-title, 1.875rem'],
       ])('puts size %s on the responsive scale token', (size, token) => {
+        // 3.44 (request 064, AC-10): behind the title-size hook.
         expect(rule(`.lc-page-header--size-${size} .lc-page-header__title`)).toContain(
-          `font-size: var(${token})`,
+          `font-size: var(--lc-page-header-title-font-size, var(${token}))`,
         );
       });
     });

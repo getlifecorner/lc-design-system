@@ -1,24 +1,30 @@
 /**
  * AppHeaderComponent Styles
  *
- * Internal theming tokens:
- * --lc-header-bg, --lc-header-fg, --lc-header-border
- * --lc-header-hover-bg, --lc-header-trigger-border, --lc-header-trigger-fg
+ * Theming hooks (set on any ancestor — `:root`, the app shell — or on the
+ * `lc-header` element; they win over the variant defaults):
+ * --lc-header-bg (painted with `background`, so a gradient works),
+ * --lc-header-fg, --lc-header-fg-secondary, --lc-header-border,
+ * --lc-header-hover-bg, --lc-header-trigger-border, --lc-header-trigger-fg,
+ * --lc-header-z (stack level, default 900: below lc-modal's 999/1000).
  *
- * The theme="dark|light" input sets these tokens directly on the header.
- * theme="auto" inherits from the global dark mode context.
+ * The hooks are never declared here: each is read once into a private
+ * `--_lc-header-*` value with the variant default as its fallback (request
+ * 064, row 4). A hook declared on the element itself could never be set from
+ * an ancestor. theme="dark|light" only change the fallbacks; theme="auto"
+ * follows the global theme; variant="transparent" declares its own values.
  */
 
 .lc-header {
   // DS2.0 dark-first: default header tokens follow the semantic surface tokens.
   // `.lc-header--light` opts back into a light bar.
-  --lc-header-bg: var(--color-surface);
-  --lc-header-fg: var(--color-text-primary);
-  --lc-header-fg-secondary: var(--color-text-secondary);
-  --lc-header-border: var(--color-border);
-  --lc-header-hover-bg: var(--color-surface-hover);
-  --lc-header-trigger-border: var(--color-border);
-  --lc-header-trigger-fg: var(--color-text-secondary);
+  --_lc-header-bg: var(--lc-header-bg, var(--color-surface));
+  --_lc-header-fg: var(--lc-header-fg, var(--color-text-primary));
+  --_lc-header-fg-secondary: var(--lc-header-fg-secondary, var(--color-text-secondary));
+  --_lc-header-border: var(--lc-header-border, var(--color-border));
+  --_lc-header-hover-bg: var(--lc-header-hover-bg, var(--color-surface-hover));
+  --_lc-header-trigger-border: var(--lc-header-trigger-border, var(--color-border));
+  --_lc-header-trigger-fg: var(--lc-header-trigger-fg, var(--color-text-secondary));
 
   // Horizontal padding lives in a var so the hamburger slot below can
   // compensate it exactly (including the responsive value).
@@ -33,12 +39,14 @@
   flex-wrap: wrap;
   row-gap: 0;
   padding: 0 var(--lc-header-padding-x);
-  background-color: var(--lc-header-bg);
-  border-bottom: 1px solid var(--lc-header-border);
+  background: var(--_lc-header-bg);
+  border-bottom: 1px solid var(--_lc-header-border);
   min-height: 64px;
   position: sticky;
   top: 0;
-  z-index: 1000;
+  // Below lc-modal (backdrop 999, dialog 1000), the drawer (1100) and toasts
+  // (1200), above page content: an open modal veils the header (row 4).
+  z-index: var(--lc-header-z, 900);
 
   // Explicit size variants (use to align the header with a sidebar brand block).
   // --lc-header-row-height is the height of the first row when the header
@@ -92,7 +100,7 @@
   min-height: var(--size-min-touch-height, 2.75rem);
   padding: 0 var(--spacing-3);
   border-radius: var(--border-radius-md);
-  color: var(--lc-header-fg-secondary);
+  color: var(--_lc-header-fg-secondary);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   line-height: var(--line-height-tight);
@@ -100,8 +108,8 @@
   transition: color 0.15s ease, background-color 0.15s ease;
 
   &:hover {
-    color: var(--lc-header-fg);
-    background-color: var(--lc-header-hover-bg);
+    color: var(--_lc-header-fg);
+    background-color: var(--_lc-header-hover-bg);
   }
 
   &:focus-visible {
@@ -112,7 +120,7 @@
   // The current page is marked by more than color (WCAG 1.4.1): full ink and
   // an underline bar under the label.
   &[aria-current='page'] {
-    color: var(--lc-header-fg);
+    color: var(--_lc-header-fg);
     text-decoration: underline;
     text-decoration-thickness: 2px;
     text-underline-offset: 0.45em;
@@ -163,24 +171,24 @@
 // gives a dark header on a light page — the two-tone shell — without an
 // app-side override.
 .lc-header--dark {
-  --lc-header-bg: #070e15; // $color-sidebar-dark
-  --lc-header-fg: #f1f6f8;
-  --lc-header-fg-secondary: #c4d2d9;
-  --lc-header-border: rgba(255, 255, 255, 0.08);
-  --lc-header-hover-bg: rgba(132, 199, 212, 0.06);
-  --lc-header-trigger-border: rgba(255, 255, 255, 0.08);
-  --lc-header-trigger-fg: #c4d2d9;
+  --_lc-header-bg: var(--lc-header-bg, #070e15); // $color-sidebar-dark
+  --_lc-header-fg: var(--lc-header-fg, #f1f6f8);
+  --_lc-header-fg-secondary: var(--lc-header-fg-secondary, #c4d2d9);
+  --_lc-header-border: var(--lc-header-border, rgba(255, 255, 255, 0.08));
+  --_lc-header-hover-bg: var(--lc-header-hover-bg, rgba(132, 199, 212, 0.06));
+  --_lc-header-trigger-border: var(--lc-header-trigger-border, rgba(255, 255, 255, 0.08));
+  --_lc-header-trigger-fg: var(--lc-header-trigger-fg, #c4d2d9);
 }
 
 // ── Light theme variant (explicit) ──
 .lc-header--light {
-  --lc-header-bg: #ffffff;
-  --lc-header-fg: #111827;
-  --lc-header-fg-secondary: #4b5563;
-  --lc-header-border: #e5e7eb;
-  --lc-header-hover-bg: #f3f4f6;
-  --lc-header-trigger-border: #e5e7eb;
-  --lc-header-trigger-fg: #374151;
+  --_lc-header-bg: var(--lc-header-bg, #ffffff);
+  --_lc-header-fg: var(--lc-header-fg, #111827);
+  --_lc-header-fg-secondary: var(--lc-header-fg-secondary, #4b5563);
+  --_lc-header-border: var(--lc-header-border, #e5e7eb);
+  --_lc-header-hover-bg: var(--lc-header-hover-bg, #f3f4f6);
+  --_lc-header-trigger-border: var(--lc-header-trigger-border, #e5e7eb);
+  --_lc-header-trigger-fg: var(--lc-header-trigger-fg, #374151);
   // The header's own rings keep the light primary on a dark page (request
   // 042: the dark --color-primary-500 measured 1.89:1 on this white bar).
   --_lc-header-ring: #208497;
@@ -225,7 +233,7 @@ $hamburger-glyph: 24px;
   );
   // Trade the row's flex gap for the (smaller) toggle-to-brand gap.
   margin-right: calc(var(--lc-header-hamburger-gap, 0.5rem) - var(--lc-density-gap-md, var(--spacing-4)));
-  color: var(--lc-header-trigger-fg);
+  color: var(--_lc-header-trigger-fg);
 
   // The inner ghost button is a little wider than the glyph; it overflows the
   // box symmetrically, so its hover pill stays centered on the glyph without
@@ -264,7 +272,7 @@ $hamburger-glyph: 24px;
   display: flex;
   align-items: center;
   text-decoration: none;
-  color: var(--lc-header-fg);
+  color: var(--_lc-header-fg);
   flex-shrink: 0;
 
   &:focus-visible {
@@ -295,7 +303,7 @@ $hamburger-glyph: 24px;
 .lc-header__title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--lc-header-fg);
+  color: var(--_lc-header-fg);
   margin: 0;
   margin-inline-end: calc(-1 * var(--lc-density-gap-md, var(--spacing-4)));
   line-height: 1.2;
@@ -324,7 +332,7 @@ $hamburger-glyph: 24px;
   font-size: 0.8125rem;
   line-height: 1.3;
   font-weight: 500;
-  color: var(--lc-header-fg-secondary);
+  color: var(--_lc-header-fg-secondary);
   text-transform: var(--lc-header-subtitle-transform, none);
   transition: color 0.2s ease;
 
@@ -367,7 +375,7 @@ $hamburger-glyph: 24px;
 
 // Theme toggle button
 .lc-header__theme-toggle {
-  color: var(--lc-header-trigger-fg);
+  color: var(--_lc-header-trigger-fg);
 }
 
 // Context info (e.g. tenant, organization, project)
@@ -381,16 +389,16 @@ $hamburger-glyph: 24px;
   border: none;
   cursor: pointer;
   border-radius: var(--border-radius-md);
-  color: var(--lc-header-trigger-fg);
+  color: var(--_lc-header-trigger-fg);
   transition: background-color 0.2s ease, color 0.2s ease;
   max-width: 220px;
   min-width: 0;
 
   &:hover {
-    background-color: var(--lc-header-hover-bg);
+    background-color: var(--_lc-header-hover-bg);
 
     .lc-header__context-name {
-      color: var(--lc-header-fg);
+      color: var(--_lc-header-fg);
     }
   }
 
@@ -468,7 +476,7 @@ $hamburger-glyph: 24px;
 .lc-header__context-label {
   font-size: var(--font-size-xs);
   font-weight: 500;
-  color: var(--lc-header-fg-secondary);
+  color: var(--_lc-header-fg-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   line-height: 1.2;
@@ -477,7 +485,7 @@ $hamburger-glyph: 24px;
 .lc-header__context-name {
   font-size: var(--font-size-sm);
   font-weight: 600;
-  color: var(--lc-header-fg);
+  color: var(--_lc-header-fg);
   line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
@@ -494,16 +502,16 @@ html.dark .lc-header:not(.lc-header--light),
   .lc-header__hamburger,
   .lc-header__profile-trigger {
     lc-icon, .lc-icon, svg {
-      color: var(--lc-header-trigger-fg);
+      color: var(--_lc-header-trigger-fg);
     }
   }
 
   // Map header tokens onto ghost-button tokens so .btn-ghost picks them up
   lc-button {
-    --lc-button-ghost-fg: var(--lc-header-trigger-fg);
-    --lc-button-ghost-hover-bg: var(--lc-header-hover-bg);
-    --lc-button-ghost-hover-fg: var(--lc-header-fg);
-    --lc-button-ghost-active-bg: var(--lc-header-hover-bg);
+    --lc-button-ghost-fg: var(--_lc-header-trigger-fg);
+    --lc-button-ghost-hover-bg: var(--_lc-header-hover-bg);
+    --lc-button-ghost-hover-fg: var(--_lc-header-fg);
+    --lc-button-ghost-active-bg: var(--_lc-header-hover-bg);
   }
 }
 
@@ -517,15 +525,15 @@ html.dark .lc-header:not(.lc-header--light),
   box-sizing: border-box;
   padding: var(--lc-density-padding-xs, var(--spacing-2)) var(--spacing-3);
   background: transparent;
-  border: 1px solid var(--lc-header-trigger-border);
+  border: 1px solid var(--_lc-header-trigger-border);
   border-radius: var(--border-radius-full);
   cursor: pointer;
-  color: var(--lc-header-trigger-fg);
+  color: var(--_lc-header-trigger-fg);
   transition: background-color 0.2s ease, border-color 0.2s ease;
 
   &:hover {
-    background-color: var(--lc-header-hover-bg);
-    border-color: var(--lc-header-fg-secondary);
+    background-color: var(--_lc-header-hover-bg);
+    border-color: var(--_lc-header-fg-secondary);
   }
 
   &:focus-visible {
@@ -551,7 +559,10 @@ html.dark .lc-header:not(.lc-header--light),
 }
 
 // ── Transparent variant (LK-8): no surface, no border ─────────────────────
-// After the theme variants so it wins over their literal backgrounds.
+// After the theme variants so it wins over their literal backgrounds. It
+// declares the public hooks on the element itself, so an ancestor's
+// --lc-header-bg/-border never reaches this variant (the private values above
+// resolve to transparent).
 .lc-header.lc-header--transparent {
   --lc-header-bg: transparent;
   --lc-header-border: transparent;

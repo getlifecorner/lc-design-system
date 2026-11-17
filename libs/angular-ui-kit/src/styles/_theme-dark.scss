@@ -231,14 +231,23 @@
   // bright-on-dark exactly like the pitch regardless of dark-mode inversion.
   // 3px top accent bar for cards/panels (use on a ::after as background)
   --accent-line: linear-gradient(90deg, #{$color-primary-500}, transparent);
-  // 1px teal ring used on brand tiles / focus glow
-  --shadow-brand-glow: 0 0 0 1px rgba(132, 199, 212, 0.3);
+  // 3.44 (request 064, usm-x rows 17 and 26): the brand tile, its glow, the
+  // subtle tile and the outline wash derive from the (inverted) scale instead,
+  // picking the steps that hold the same raw colours (-500 = raw 400, -300 =
+  // raw 600, -400 = raw 500), so they render as before and a customer theme
+  // recolours them. See _theme-light.scss for the scope rule.
+  // 1px teal ring used on brand tiles / focus glow: rgba(132, 199, 212, .3)
+  --shadow-brand-glow: 0 0 0 1px color-mix(in srgb, var(--color-primary-500) 30%, transparent);
   // Soft teal hover/focus glow
   --shadow-glow: 0 0 24px rgba(132, 199, 212, 0.12);
   // Gradient for clipped display text (use with -webkit-background-clip: text)
   --gradient-text: linear-gradient(100deg, #{$color-primary-300}, #{$color-primary-500} 55%, #{$color-accent-purple});
-  // Gradient teal tile for logos / icon squares
-  --gradient-brand-tile: linear-gradient(135deg, #{$color-primary-400}, #{$color-primary-600});
+  // Gradient teal tile for logos / icon squares: #84c7d4 → #1a6a79
+  --gradient-brand-tile: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-300));
+  // Subtle icon tile ground: rgba(32, 132, 151, .14)
+  --color-brand-tile-subtle: color-mix(in srgb, var(--color-primary-400) 14%, transparent);
+  // Ground of `lc-button variant="outline"`: rgba(132, 199, 212, .06)
+  --color-primary-wash: color-mix(in srgb, var(--color-primary-500) 6%, transparent);
 
   // ============================================================================
   // "Weite" look, night values (3.3: LK-1, LK-4, LK-5, LK-7, LK-10, LK-11)

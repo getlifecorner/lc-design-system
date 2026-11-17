@@ -11,6 +11,8 @@
   [attr.aria-expanded]="ariaState(ariaExpanded())"
   [attr.aria-haspopup]="ariaState(ariaHasPopup())"
   [attr.aria-controls]="ariaControls() || null"
+  [attr.accesskey]="accessKey() || null"
+  [attr.aria-keyshortcuts]="ariaKeyShortcuts() || null"
   [ngClass]="{
     'btn': true,
     'btn-primary': variant() === 'primary',
@@ -27,12 +29,13 @@
     'btn-sm': size() === 'sm',
     'btn-md': size() === 'md',
     'btn-lg': size() === 'lg',
-    'btn-icon-only': iconOnly(),
-    'btn-full-width': fullWidth(),
-    'btn-inline': inline(),
-    'btn-flush': flush(),
+    'btn-icon-only': iconOnly() && !isRow(),
+    'btn-full-width': fullWidth() && !isRow(),
+    'btn-inline': inline() && !isRow(),
+    'btn-flush': flush() && !isRow(),
     'btn-tone-primary': variant() === 'outline' && tone() === 'primary',
-    'btn-loading': loading()
+    'btn-loading': loading(),
+    'btn-row': isRow()
   }"
   (click)="handleClick($event)"
   (focus)="handleFocus()"

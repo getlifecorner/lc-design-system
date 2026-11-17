@@ -116,6 +116,23 @@ same variants and sizes and works without JavaScript (see **Components / Button 
       description: 'HTML button type attribute',
       table: { defaultValue: { summary: 'button' } },
     },
+    shape: {
+      control: 'inline-radio',
+      options: ['pill', 'row'],
+      description:
+        '3.44 (usm-x row 27): `row` makes the button the body of a row: full width, start-aligned, inherited font and ink, no fill, border or hover fill, radius `--border-radius-sm`, inset focus ring. Overrides `size` padding/font, `inline`, `flush`, `iconOnly`, `fullWidth`. Hooks `--lc-button-row-padding` (default `var(--spacing-2) var(--spacing-3)`) and `--lc-button-row-min-height` (default `44px`)',
+      table: { defaultValue: { summary: 'pill' } },
+    },
+    accessKey: {
+      control: 'text',
+      description: '3.44 (usm-x row 29): `accesskey` on the inner `<button>`; empty renders none. Pair it with `ariaKeyShortcuts`',
+      table: { defaultValue: { summary: "''" } },
+    },
+    ariaKeyShortcuts: {
+      control: 'text',
+      description: '3.44: `aria-keyshortcuts` on the inner `<button>` (e.g. `Alt+Shift+S`); empty renders none',
+      table: { defaultValue: { summary: "''" } },
+    },
     clicked: { action: 'clicked', description: 'Emitted when the button is clicked' },
     focused: { action: 'focused', description: 'Emitted when the button receives focus' },
     blurred: { action: 'blurred', description: 'Emitted when the button loses focus' },
@@ -765,6 +782,103 @@ export const DestructiveAction: Story = {
           Delete Account
         </lc-button>
       </div>`,
+  }),
+};
+
+/**
+ * A scoped accent as design 064 §5 defines it: the scale steps re-pointed to
+ * the violet accent, then the four derived tokens re-declared (they resolve
+ * where they are declared, so a subtree must re-declare them; pitfall 043).
+ */
+const STORY_ACCENT = [
+  '--color-primary-300: color-mix(in srgb, var(--color-accent-violet) 45%, white)',
+  '--color-primary-400: color-mix(in srgb, var(--color-accent-violet) 65%, white)',
+  '--color-primary-500: color-mix(in srgb, var(--color-accent-violet) 85%, white)',
+  '--color-primary-600: color-mix(in srgb, var(--color-accent-violet) 100%, white)',
+  '--color-primary-wash: color-mix(in srgb, var(--color-primary-400) 6%, transparent)',
+  '--color-brand-tile-subtle: color-mix(in srgb, var(--color-primary-500) 14%, transparent)',
+  '--gradient-brand-tile: linear-gradient(135deg, var(--color-primary-400), var(--color-primary-600))',
+  '--shadow-brand-glow: 0 0 0 1px color-mix(in srgb, var(--color-primary-500) 18%, transparent)',
+].join('; ');
+
+/** 3.44 (request 064, usm-x row 26): the outline ground follows a scoped accent. */
+export const OutlineInAScopedAccent: Story = {
+  name: 'Outline In A Scoped Accent',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.44 (usm-x row 26): the outline ground is `var(--lc-button-outline-bg, var(--color-primary-wash))`, and the wash is 6 % of the light primary step (rgba(132, 199, 212, .06) in both themes, as the old literal). Row 1: default, `tone="neutral"` and `tone="primary"`. Row 2: the same inside a scoped accent (a wrapper that re-points `--color-primary-300…600` to the violet accent and re-declares the four derived tokens, as usm-x’s customizing area does): the ground and the hover fill turn violet. Row 3: `--lc-button-outline-bg` set on a wrapper.',
+      },
+    },
+  },
+  render: () => ({
+    props: { accent: STORY_ACCENT },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+          <lc-button variant="outline">Speichern</lc-button>
+          <lc-button variant="outline" tone="primary">Speichern</lc-button>
+        </div>
+        <div [attr.style]="accent + '; display: flex; flex-wrap: wrap; align-items: center; gap: 12px;'">
+          <lc-button variant="outline">Speichern</lc-button>
+          <lc-button variant="outline" tone="primary">Speichern</lc-button>
+        </div>
+        <div style="--lc-button-outline-bg: var(--color-surface-selected); display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+          <lc-button variant="outline">Speichern</lc-button>
+          <lc-button variant="outline" tone="primary">Speichern</lc-button>
+        </div>
+      </div>`,
+  }),
+};
+
+/** 3.44 (request 064, usm-x row 27): `shape="row"`, the body of a consumer row. */
+export const RowShape: Story = {
+  name: 'Row Shape',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.44 (usm-x row 27): three `shape="row"` buttons as the bodies of rows in a bordered list (the list paints the rows and their hover). Full width, start-aligned, the list’s font and ink, no fill, border or hover fill, radius 10 px, padding 8/12, at least 44 px high. The second row is focused (inset ring, 2 px at −2 px, not clipped by the list’s `overflow: hidden`), the third is disabled. German labels; the long one wraps start-aligned.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <ul lang="de" style="list-style: none; margin: 0; padding: 4px; max-width: 360px; border: 1px solid var(--color-border); border-radius: var(--border-radius-md); overflow: hidden; color: var(--color-text-primary); font-size: var(--font-size-sm); display: flex; flex-direction: column; gap: 2px;">
+        <li><lc-button shape="row" variant="ghost">Kostenstellen</lc-button></li>
+        <li><lc-button shape="row" variant="outline" class="story-row-focus">Leistungsverrechnung zwischen Kostenstellen</lc-button></li>
+        <li><lc-button shape="row" [disabled]="true">Berichte</lc-button></li>
+      </ul>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    const button = canvasElement.querySelector<HTMLButtonElement>('.story-row-focus button');
+    button?.focus();
+    // A key after focus() gives keyboard modality (:focus-visible); the row has no action.
+    await userEvent.keyboard('{Enter}');
+  },
+};
+
+/** 3.44 (request 064, usm-x row 29): `accessKey` and `ariaKeyShortcuts` on the inner button. */
+export const AccessKeys: Story = {
+  name: 'Access Keys',
+  args: { accessKey: 's', ariaKeyShortcuts: 'Alt+Shift+S', variant: 'outline' },
+  parameters: {
+    controls: { include: ['accessKey', 'ariaKeyShortcuts', 'variant'] },
+    docs: {
+      description: {
+        story:
+          '3.44 (usm-x row 29): `accessKey="s"` and `ariaKeyShortcuts="Alt+Shift+S"` land on the inner `<button>` as `accesskey` and `aria-keyshortcuts` (empty: no attribute). The visible letter is the page’s choice (here underlined). Avoid letters the browser or a screen reader takes; on `a[lcButton]` set the attributes on the link itself.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <lc-button lang="de" [variant]="variant" [accessKey]="accessKey" [ariaKeyShortcuts]="ariaKeyShortcuts"><span><u>S</u>peichern</span></lc-button>`,
   }),
 };
 

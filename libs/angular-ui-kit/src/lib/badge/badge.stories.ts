@@ -48,6 +48,12 @@ lighter so they pass (HS-5). Apps can still restyle a badge through \`--lc-badge
       description: 'Wrap a long label onto centred lines (min-height instead of height; with rounded, a fixed radius)',
       table: { defaultValue: { summary: 'false' } },
     },
+    icon: {
+      control: 'text',
+      description:
+        '3.44: a leading decorative `lc-icon` (1em square, label ink) after the dot. The gap is `--lc-badge-gap` (default `0.4em` with an icon, `0` without), settable on the badge or any ancestor.',
+      table: { defaultValue: { summary: 'undefined' } },
+    },
   },
 };
 
@@ -201,6 +207,39 @@ export const HooksOnAnAncestor: Story = {
         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
           <lc-badge variant="warning" style="--lc-badge-bg: var(--color-surface); --lc-badge-fg: var(--color-on-info-subtle); --lc-badge-border: var(--color-info-default);">Hook on the host</lc-badge>
           <lc-badge variant="warning">Variant</lc-badge>
+        </div>
+      </div>`,
+  }),
+};
+
+/** 3.44 (request 064, usm-x row 28): `icon` and the `--lc-badge-gap` hook. */
+export const WithIcon: Story = {
+  name: 'With Icon',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.44 (usm-x row 28): `icon` draws a decorative `lc-icon` 1em square in the label ink, 0.4em from the label (xs 12 / 4.8 px, sm and md 14 / 5.6 px, lg 16 / 6.4 px). Row 1: the four sizes. Row 2: with `dot` (dot, icon, label, one gap each) and with `wrap` (the icon stays on the first line). Row 3: `--lc-badge-gap: 2px` on a wrapper reaches every badge inside, as `--lc-chip-gap` does. German labels.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px; max-width: 320px;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+          <lc-badge size="xs" variant="primary" icon="pencil">Entwurf</lc-badge>
+          <lc-badge size="sm" variant="primary" icon="pencil">Entwurf</lc-badge>
+          <lc-badge size="md" variant="primary" icon="pencil">Entwurf</lc-badge>
+          <lc-badge size="lg" variant="primary" icon="pencil">Entwurf</lc-badge>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start;">
+          <lc-badge variant="success" icon="check" [dot]="true" [rounded]="true">Freigegeben</lc-badge>
+          <lc-badge variant="warning" icon="clock" [wrap]="true">Wartet auf die Freigabe durch die Buchhaltung</lc-badge>
+        </div>
+        <div style="--lc-badge-gap: 2px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+          <lc-badge variant="info" icon="pencil">Gap 2 px</lc-badge>
+          <lc-badge variant="default" icon="clock">Geändert</lc-badge>
         </div>
       </div>`,
   }),

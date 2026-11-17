@@ -132,8 +132,39 @@ Use it for content sections, dashboard widgets, and list items.
       description: '3.36: open state of a `collapsible` card, two-way (`[(expanded)]`, `expandedChange`). Closed: only the head shows',
       table: { defaultValue: { summary: 'true' } },
     },
+    clickTarget: {
+      control: 'inline-radio',
+      options: ['card', 'heading'],
+      description:
+        '3.44 (usm-x row 24): where the button role of a `clickable` card with a `title` sits. `heading`: a `<button>` inside the heading, stretched over the card; the heading stays in the page outline, the card is one tab stop, click/Enter/Space emit `cardClick` once. `ariaLabel` then names the button (must contain the title)',
+      table: { defaultValue: { summary: 'card' } },
+    },
+    truncateTitle: {
+      control: 'boolean',
+      description: '3.44 (usm-x row 24): the title on one line with "…"; the full title is the heading\'s `title` attribute. A badge beside it never shrinks',
+      table: { defaultValue: { summary: 'false' } },
+    },
+    headerSize: {
+      control: 'inline-radio',
+      options: ['md', 'sm'],
+      description:
+        '3.44 (usm-x row 17): spacing of the built-in head. `sm`: padding-bottom 8 px, margin-bottom 12 px (md 12 / 16); a collapsible head is at least 32 px high and its toggle\'s hit area stays 44 px',
+      table: { defaultValue: { summary: 'md' } },
+    },
   },
 };
+
+/** The scoped accent of design 064 §5 (a subtree that re-points the scale and re-declares the derived tokens). */
+const STORY_ACCENT = [
+  '--color-primary-300: color-mix(in srgb, var(--color-accent-violet) 45%, white)',
+  '--color-primary-400: color-mix(in srgb, var(--color-accent-violet) 65%, white)',
+  '--color-primary-500: color-mix(in srgb, var(--color-accent-violet) 85%, white)',
+  '--color-primary-600: color-mix(in srgb, var(--color-accent-violet) 100%, white)',
+  '--color-primary-wash: color-mix(in srgb, var(--color-primary-400) 6%, transparent)',
+  '--color-brand-tile-subtle: color-mix(in srgb, var(--color-primary-500) 14%, transparent)',
+  '--gradient-brand-tile: linear-gradient(135deg, var(--color-primary-400), var(--color-primary-600))',
+  '--shadow-brand-glow: 0 0 0 1px color-mix(in srgb, var(--color-primary-500) 18%, transparent)',
+].join('; ');
 
 export default meta;
 type Story = StoryObj<CardComponent>;
@@ -788,6 +819,131 @@ export const ClickableNamedByItsText: Story = {
           <p style="margin: 0;">4 Regeln</p>
           <div card-footer><span>Stand heute 06:00</span></div>
         </lc-card>
+      </div>`,
+  }),
+};
+
+/** 3.44 (request 064, usm-x row 17): the icon tiles follow a customer theme or a scoped accent. */
+export const ScopedAccentTiles: Story = {
+  name: 'Scoped Accent Tiles',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.44 (usm-x row 17): the `brand` tile (`--gradient-brand-tile`, `--shadow-brand-glow`) and the `subtle` tile (`--color-brand-tile-subtle`) are theme tokens derived from the `--color-primary-*` scale; by default they render as before (#84c7d4 → #1a6a79, rgba(32, 132, 151, .14)). Row 1: default. Row 2: inside a scoped accent, a wrapper that re-points `--color-primary-300…600` to the violet accent and re-declares the four derived tokens (as usm-x’s customizing area): both tiles turn violet. Re-pointing only the scale on a subtree is not enough: the derived tokens resolve where they are declared.',
+      },
+    },
+  },
+  render: () => ({
+    props: { accent: STORY_ACCENT },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px; max-width: 640px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+          <lc-card variant="outlined" title="Kostenstellen" subtitle="Arbeitsbereich" icon="building-bank"><p style="margin: 0;">12 offen</p></lc-card>
+          <lc-card variant="outlined" title="Kostenstellen" subtitle="Arbeitsbereich" icon="building-bank" iconVariant="subtle"><p style="margin: 0;">12 offen</p></lc-card>
+        </div>
+        <div [attr.style]="accent + '; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;'">
+          <lc-card variant="outlined" title="Klassen" subtitle="Customizing" icon="building-bank"><p style="margin: 0;">4 geändert</p></lc-card>
+          <lc-card variant="outlined" title="Klassen" subtitle="Customizing" icon="building-bank" iconVariant="subtle"><p style="margin: 0;">4 geändert</p></lc-card>
+        </div>
+      </div>`,
+  }),
+};
+
+/** 3.44 (request 064, usm-x row 17): one divider hook; no rule under a head without body. */
+export const DividerHookAndNoBody: Story = {
+  name: 'Divider Hook And No Body',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.44 (usm-x row 17): `--lc-card-divider-color` colours every card rule: the built-in head (default `--color-border`), a projected `[card-header]` and the `[card-footer]` (default `--color-divider`); each default stays as it was. Left: the hook set to `--color-border-strong` on a wrapper. Right: a titled card with neither body nor footer: the head draws no rule and no space below it (CSS `:has`, also in prerendered HTML).',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div lang="de" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; max-width: 640px; align-items: start;">
+        <div style="--lc-card-divider-color: var(--color-border-strong); display: flex; flex-direction: column; gap: 16px;">
+          <lc-card variant="outlined" title="Kostenstellen" subtitle="Stand 17. November">
+            <p style="margin: 0;">12 offen</p>
+            <div card-footer><span>Zuletzt geändert heute</span></div>
+          </lc-card>
+          <lc-card variant="outlined">
+            <div card-header>Eigener Kopf</div>
+            <p style="margin: 0;">12 offen</p>
+          </lc-card>
+        </div>
+        <lc-card variant="outlined" title="Kostenstellen" subtitle="Stand 17. November" icon="building-bank" iconSize="sm"></lc-card>
+      </div>`,
+  }),
+};
+
+/** 3.44 (request 064, usm-x row 17): a dense collapsible head with a 44 px hit area. */
+export const DenseCollapsibleHead: Story = {
+  name: 'Dense Collapsible Head',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.44 (usm-x row 17): `headerSize="sm"` on collapsible cards, one open and one closed. The head is at least 32 px high (md: 44 px) with 8 px padding and 12 px margin below it; the toggle’s hit area reaches 6 px above and below the head, so it stays 44 px. Right: the same cards with the default `md` head for comparison.',
+      },
+    },
+  },
+  render: () => ({
+    props: { open: true, closed: false, openMd: true, closedMd: false },
+    template: `
+      <div lang="de" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; max-width: 640px; align-items: start;">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <lc-card variant="outlined" padding="sm" title="Kostenstellen" headerSize="sm" [collapsible]="true" [(expanded)]="open">
+            <p style="margin: 0;">12 offen, 3 überfällig</p>
+          </lc-card>
+          <lc-card variant="outlined" padding="sm" title="Leistungsverrechnung" headerSize="sm" [collapsible]="true" [(expanded)]="closed">
+            <p style="margin: 0;">4 Regeln</p>
+          </lc-card>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <lc-card variant="outlined" padding="sm" title="Kostenstellen" [collapsible]="true" [(expanded)]="openMd">
+            <p style="margin: 0;">12 offen, 3 überfällig</p>
+          </lc-card>
+          <lc-card variant="outlined" padding="sm" title="Leistungsverrechnung" [collapsible]="true" [(expanded)]="closedMd">
+            <p style="margin: 0;">4 Regeln</p>
+          </lc-card>
+        </div>
+      </div>`,
+  }),
+};
+
+/** 3.44 (request 064, usm-x row 24): the clickable card's heading stays a heading. */
+export const ClickableHeading: Story = {
+  name: 'Clickable Heading',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.44 (usm-x row 24): `clickable` with `clickTarget="heading"` and `truncateTitle`. The button role sits on a `<button>` inside the `h3`, stretched over the card: the page’s heading outline lists „Rechnungsübersicht Januar bis Dezember“, the card is one tab stop, a click anywhere, Enter or Space emit `cardClick` once, and the ring is drawn on the card. The title stays on one line with „…“ and the full title in the heading’s `title`; the badge „Neu“ never shrinks. The second card keeps the default `clickTarget="card"` for comparison.',
+      },
+    },
+  },
+  render: () => ({
+    props: { clicks: 0 },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px; max-width: 480px;">
+        <lc-card variant="outlined" [clickable]="true" clickTarget="heading" [truncateTitle]="true"
+                 title="Rechnungsübersicht Januar bis Dezember" subtitle="Stand 17. November" icon="file-text" iconSize="sm"
+                 badge="Neu" badgeVariant="primary" (cardClick)="clicks = clicks + 1">
+          <p style="margin: 0;">48 Rechnungen, 3 offen</p>
+        </lc-card>
+        <lc-card variant="outlined" [clickable]="true" [truncateTitle]="true"
+                 title="Rechnungsübersicht Januar bis Dezember" subtitle="Stand 17. November" icon="file-text" iconSize="sm"
+                 badge="Neu" badgeVariant="primary" (cardClick)="clicks = clicks + 1">
+          <p style="margin: 0;">48 Rechnungen, 3 offen</p>
+        </lc-card>
+        <p role="status" style="margin: 0; font-size: var(--font-size-sm); color: var(--color-text-secondary);">Aktiviert: {{ clicks }}</p>
       </div>`,
   }),
 };

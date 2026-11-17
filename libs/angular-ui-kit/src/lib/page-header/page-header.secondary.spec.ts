@@ -60,8 +60,12 @@ describe('lc-page-header size="secondary" (AS-25)', () => {
     expect(host.querySelector('.lc-page-header__subtitle')?.textContent?.trim()).toBe('We’re working on it.');
   });
 
+  // 3.44 (request 064, AC-10): every size's title reads the new
+  // --lc-page-header-title-font-size hook first; the fallback is the old value.
+  const titleSize = (value: string): string => `font-size: var(--lc-page-header-title-font-size, ${value});`;
+
   it('AC-9: a 20 px title (--font-size-xl) and the compact subtitle and spacing', () => {
-    expect(rule('.lc-page-header--size-secondary .lc-page-header__title')).toBe('font-size: var(--font-size-xl, 1.25rem);');
+    expect(rule('.lc-page-header--size-secondary .lc-page-header__title')).toBe(titleSize('var(--font-size-xl, 1.25rem)'));
     expect(rule('.lc-page-header--size-secondary .lc-page-header__subtitle')).toBe(
       rule('.lc-page-header--size-compact .lc-page-header__subtitle'),
     );
@@ -74,8 +78,8 @@ describe('lc-page-header size="secondary" (AS-25)', () => {
     plain.componentRef.setInput('title', 'Reports');
     plain.detectChanges();
     expect((plain.nativeElement as HTMLElement).className).toBe('lc-page-header lc-page-header--size-default');
-    expect(rule('.lc-page-header--size-default .lc-page-header__title')).toBe('font-size: var(--font-size-2xl, 1.5rem);');
-    expect(rule('.lc-page-header--size-compact .lc-page-header__title')).toBe('font-size: var(--font-size-lg, 1.125rem);');
+    expect(rule('.lc-page-header--size-default .lc-page-header__title')).toBe(titleSize('var(--font-size-2xl, 1.5rem)'));
+    expect(rule('.lc-page-header--size-compact .lc-page-header__title')).toBe(titleSize('var(--font-size-lg, 1.125rem)'));
     expect(rule('.lc-page-header--size-compact')).toBe(
       ['--lc-density-gap-md: 0.5rem;', '--lc-density-gap-sm: 0.375rem;', '--lc-density-padding-md: 0.75rem;'].join('\n  '),
     );

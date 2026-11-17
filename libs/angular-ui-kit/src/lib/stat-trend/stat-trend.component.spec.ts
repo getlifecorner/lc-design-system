@@ -169,10 +169,13 @@ describe('StatTrendComponent', () => {
     });
 
     // Unchanged default rendering: the same elements and classes as 3.22.0, one separator.
-    it('renders the default tile as before apart from S1', () => {
+    // 3.44 (request 064, usm-x row 23, AC-19): a tile with neither label nor icon no
+    // longer renders the empty header row (was `['lc-stat-trend__header', 'lc-stat-trend__row']`
+    // with an empty header); the rest of this pin is unchanged.
+    it('renders the default tile as before apart from S1 (no empty header since 3.44)', () => {
       const el = render({ value: '1,234' });
-      expect([...root(el).children].map((c) => c.className)).toEqual(['lc-stat-trend__header', 'lc-stat-trend__row']);
-      expect((el.querySelector('.lc-stat-trend__header') as HTMLElement).children).toHaveLength(0);
+      expect([...root(el).children].map((c) => c.className)).toEqual(['lc-stat-trend__row']);
+      expect(el.querySelector('.lc-stat-trend__header')).toBeNull();
       const row = el.querySelector('.lc-stat-trend__row') as HTMLElement;
       expect([...row.children].map((c) => c.className)).toEqual(['lc-stat-trend__value']);
       expect(textNodes(row)).toEqual([]);

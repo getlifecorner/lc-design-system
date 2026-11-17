@@ -174,6 +174,32 @@
   }
 }
 
+// ── Top placement (3.44, usm-x row 22) ─────────────────────────────────────
+// Anchored at a fixed offset from the top and centred horizontally: the top
+// edge stays put while the body grows (a command palette whose results grow),
+// the bottom moves down to 16 px above the viewport edge, then the body
+// scrolls. Hook: --lc-modal-top-offset (default 10dvh), never less than the
+// safe-area inset + 16 px. `full` keeps its own geometry.
+.lc-modal--placement-top:not(.lc-modal--full) {
+  --_lc-modal-top: max(calc(env(safe-area-inset-top, 0px) + var(--spacing-4, 1rem)), var(--lc-modal-top-offset, 10dvh));
+  top: var(--_lc-modal-top);
+  transform: translateX(-50%);
+  max-height: calc(100vh - var(--_lc-modal-top) - var(--spacing-4, 1rem));
+  max-height: calc(100dvh - var(--_lc-modal-top) - var(--spacing-4, 1rem));
+  animation: modalTopIn 0.15s ease-out;
+}
+
+@keyframes modalTopIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%);
+  }
+}
+
 @keyframes modalSheetIn {
   from {
     opacity: 0;
@@ -248,6 +274,11 @@
   // its own opt-out.
   .lc-modal.lc-modal--placement-sheet,
   .lc-modal.lc-modal--placement-auto {
+    animation: none;
+  }
+
+  // 3.44: the top placement's own entrance too (no transform animation).
+  .lc-modal.lc-modal--placement-top {
     animation: none;
   }
 }

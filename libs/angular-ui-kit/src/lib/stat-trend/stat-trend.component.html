@@ -1,31 +1,40 @@
 <div class="lc-stat-trend">
-  <div class="lc-stat-trend__header">
-    @if (label()) {
-      <span class="lc-stat-trend__label">{{ label() }}</span>
-    }
-    @if (icon()) {
-      <lc-icon [name]="icon()" size="sm" class="lc-stat-trend__header-icon" [decorative]="true" />
-    }
-  </div>
-  <!-- Request 031 (WCAG 2.5.3): a space before the row, the pill and the sparkline keeps the
-       text "Label Value +3,1 %"; in a flex container it gets no box and renders nothing. -->
-  &ngsp;
-  <div class="lc-stat-trend__row">
-    <span class="lc-stat-trend__value">{{ value() }}</span>
+  <!-- 3.44 (request 064, usm-x row 23): no header row (no element, no gap) without a
+       label and an icon. The row is a template so that the S1 space below stays both
+       the header's next sibling and the row's previous one (comment anchors follow). -->
+  <ng-template #row>
+    <div class="lc-stat-trend__row">
+      <span class="lc-stat-trend__value">{{ value() }}</span>
 
-    @if (change()) {
-      &ngsp;<span class="lc-stat-trend__change" [class]="trendColorClass()">
-        <span class="lc-stat-trend__icon" [attr.aria-hidden]="sentiment() ? 'true' : null">{{ trendIcon() }}</span>
-        <!-- The hidden text follows the change without a space ("+3,1 %, gestiegen", review r1 N2);
-             without a sentiment the text node stays " +3.1% " as before 3.14. -->
-        @if (sentiment()) {
-          {{ change() }}<span class="lc-stat-trend__sr-only">{{ srText() }}</span>
-        } @else {
-          {{ change() }}
-        }
-      </span>
-    }
-  </div>
+      @if (change()) {
+        &ngsp;<span class="lc-stat-trend__change" [class]="trendColorClass()">
+          <span class="lc-stat-trend__icon" [attr.aria-hidden]="sentiment() ? 'true' : null">{{ trendIcon() }}</span>
+          <!-- The hidden text follows the change without a space ("+3,1 %, gestiegen", review r1 N2);
+               without a sentiment the text node stays " +3.1% " as before 3.14. -->
+          @if (sentiment()) {
+            {{ change() }}<span class="lc-stat-trend__sr-only">{{ srText() }}</span>
+          } @else {
+            {{ change() }}
+          }
+        </span>
+      }
+    </div>
+  </ng-template>
+  @if (label() || icon()) {
+    <div class="lc-stat-trend__header">
+      @if (label()) {
+        <span class="lc-stat-trend__label">{{ label() }}</span>
+      }
+      @if (icon()) {
+        <lc-icon [name]="icon()" size="sm" class="lc-stat-trend__header-icon" [decorative]="true" />
+      }
+    </div>
+    <!-- Request 031 (WCAG 2.5.3): a space before the row, the pill and the sparkline keeps the
+         text "Label Value +3,1 %"; in a flex container it gets no box and renders nothing. -->
+    &ngsp;<ng-container [ngTemplateOutlet]="row" />
+  } @else {
+    &ngsp;<ng-container [ngTemplateOutlet]="row" />
+  }
 
   @if (hasSparkline()) {
     &ngsp;<lc-sparkline

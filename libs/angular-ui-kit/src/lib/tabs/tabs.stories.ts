@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/angular';
+import { applicationConfig, moduleMetadata } from '@storybook/angular';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, provideRouter, withHashLocation } from '@angular/router';
 import { fn, expect, userEvent, within } from 'storybook/test';
-import { TabsComponent } from './tabs.component';
+import { TabComponent, TabsComponent } from './tabs.component';
 
 // `selectedIndex` is a model(); its `selectedIndexChange` output binding exists on
 // the component but not as a class property, so Storybook's inferred arg type has
@@ -29,6 +33,8 @@ Use it for settings pages, multi-section views, and content categorization.
 - Two-way selection binding via \`[(selectedIndex)]\`
 - Keyboard navigation (arrow keys, Home, End) moves focus and selection together
 - Tabs added or removed at runtime (e.g. via \`@for\`) are picked up automatically
+- 3.44: a horizontal tab list that doesn't fit scrolls on its own (WCAG 1.4.10) and keeps the selected tab in view
+- 3.44: \`mode="links"\`: a tab list of links (\`route\` + \`queryParams\`, or \`href\`) for a router outlet; the app marks the \`current\` tab
         `,
       },
     },
@@ -39,6 +45,18 @@ Use it for settings pages, multi-section views, and content categorization.
       options: ['horizontal', 'vertical'],
       description: 'Tab bar direction',
       table: { defaultValue: { summary: 'horizontal' } },
+    },
+    mode: {
+      control: 'inline-radio',
+      options: ['panels', 'links'],
+      description:
+        '3.44 (usm-x row 11): `links` renders a tab list of links for content shown elsewhere (a router outlet), no panels. The `lc-tab` with `current` is `aria-selected`; clicks only navigate; arrows move the focus, Enter/Space follow the link. `lc-tab` inputs: `route`, `queryParams`, `queryParamsHandling`, `href`, `current`, `tabId`',
+      table: { defaultValue: { summary: 'panels' } },
+    },
+    panelId: {
+      control: 'text',
+      description: '3.44: `mode="links"`: `aria-controls` of every tab, the id of the element that shows the content. Empty renders none',
+      table: { defaultValue: { summary: "''" } },
     },
     selectedIndex: {
       control: 'number',
@@ -253,4 +271,106 @@ export const KeyboardFocus: Story = {
     if (viewMode !== 'story') return;
     canvasElement.querySelector<HTMLElement>('.lc-tabs__panel--active')?.focus({ preventScroll: true });
   },
+};
+
+/** The tabs of the router-links stories (3.44, request 064, usm-x row 11). */
+const LINK_TABS = {
+  en: [
+    { key: 'overview', label: 'Overview' },
+    { key: 'cost-centres', label: 'Cost centres' },
+    { key: 'allocation', label: 'Allocation' },
+    { key: 'history', label: 'History' },
+  ],
+  de: [
+    { key: 'uebersicht', label: 'Übersicht' },
+    { key: 'kostenstellen', label: 'Kostenstellen' },
+    { key: 'leistungsverrechnung', label: 'Leistungsverrechnung' },
+    { key: 'aenderungsverlauf', label: 'Änderungsverlauf' },
+    { key: 'anhaenge', label: 'Anhänge' },
+  ],
+};
+
+/** An empty routed page for the stories' own router. */
+@Component({ standalone: true, template: '', changeDetection: ChangeDetectionStrategy.OnPush })
+class TabsRoutePageComponent {}
+
+/**
+ * The app side of `mode="links"`: the open tab is `?tab=` in the URL (a
+ * reload or a shared link lands on it); the outlet sits in the tabpanel.
+ */
+@Component({
+  selector: 'lc-tabs-router-links-demo',
+  standalone: true,
+  imports: [TabsComponent, TabComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div [attr.lang]="lang()">
+      <lc-tabs mode="links" panelId="demo-tab-panel">
+        @for (t of tabs(); track t.key) {
+          <lc-tab
+            [label]="t.label"
+            [tabId]="'demo-tab-' + t.key"
+            route="."
+            [queryParams]="{ tab: t.key }"
+            queryParamsHandling="merge"
+            [current]="t.key === currentKey()"
+          ></lc-tab>
+        }
+      </lc-tabs>
+      <div role="tabpanel" id="demo-tab-panel" [attr.aria-labelledby]="'demo-tab-' + currentKey()" style="padding: 16px; color: var(--color-text-secondary);">
+        {{ lang() === 'de' ? 'Inhalt' : 'Content' }}: {{ currentLabel() }}
+      </div>
+    </div>
+  `,
+})
+class TabsRouterLinksDemoComponent {
+  /** Language of the tabs. */
+  readonly lang = input<'en' | 'de'>('en');
+  /** The tab shown when the URL has no `?tab=`. */
+  readonly defaultKey = input('');
+  private readonly query = toSignal(inject(ActivatedRoute).queryParamMap);
+  protected readonly tabs = computed(() => LINK_TABS[this.lang()]);
+  protected readonly currentKey = computed(() => {
+    const key = this.query()?.get('tab');
+    const keys = this.tabs().map((t) => t.key);
+    return key && keys.includes(key) ? key : this.defaultKey() || keys[0];
+  });
+  protected readonly currentLabel = computed(() => this.tabs().find((t) => t.key === this.currentKey())?.label ?? '');
+}
+
+const routerLinksDecorators = [
+  applicationConfig({ providers: [provideRouter([{ path: '**', component: TabsRoutePageComponent }], withHashLocation())] }),
+  moduleMetadata({ imports: [TabsRouterLinksDemoComponent] }),
+];
+
+/** 3.44 (request 064, usm-x row 11): the tab strip is the navigation for a router outlet. */
+export const RouterLinks: Story = {
+  name: 'Router Links',
+  decorators: routerLinksDecorators,
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.44 (usm-x row 11): `mode="links"`. Each `lc-tab` is a link (`route="."`, `[queryParams]="{ tab: key }"`, `queryParamsHandling="merge"`), so the open tab lives in the URL (`?tab=`): a reload or a shared link shows the same tab, also in prerendered HTML (`aria-selected` and `href` are in it). The app reads `?tab=` and sets `current`; a click only navigates. The tab list is `role="tablist"` with `role="tab"` links; ←/→, Home and End move the focus, Enter or Space follow the link. The app’s outlet is `<div role="tabpanel" id="demo-tab-panel">`, the `panelId` of the tabs, labelled by the current tab’s `tabId`. The story has its own router on the hash.',
+      },
+    },
+  },
+  render: () => ({ template: `<lc-tabs-router-links-demo lang="en" />` }),
+};
+
+/** 3.44 (request 064, usm-x row 11, §1): German labels; the list scrolls at 360 px and keeps the current tab in view. */
+export const RouterLinksGerman: Story = {
+  name: 'Router Links (German)',
+  decorators: routerLinksDecorators,
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.44: five German tabs; the current tab without `?tab=` is „Änderungsverlauf“. At 360 px the tabs don’t fit: the tab list scrolls on its own (the page doesn’t, WCAG 1.4.10), and the current tab is scrolled fully into view after the first render (`scrollLeft` only, no smooth scrolling). The focus ring is drawn inside the tab, so the scroller does not clip it.',
+      },
+    },
+  },
+  render: () => ({ template: `<lc-tabs-router-links-demo lang="de" defaultKey="aenderungsverlauf" />` }),
 };

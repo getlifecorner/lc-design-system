@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { moduleMetadata } from '@storybook/angular';
+import { ChangeDetectionStrategy, Component, ViewEncapsulation } from '@angular/core';
 import { PageHeaderComponent } from './page-header.component';
 import { ButtonComponent } from '../button/button.component';
 import { ChipComponent } from '../chip/chip.component';
@@ -665,6 +666,106 @@ export const PaddingTop: Story = {
         <div style="border: 1px dashed var(--color-border-strong);"><lc-page-header title="Ohne Abstand" subtitle="paddingTop: none" size="comfortable" paddingTop="none" /></div>
         <div style="border: 1px dashed var(--color-border-strong);"><lc-page-header title="Klein" subtitle="paddingTop: sm" size="comfortable" paddingTop="sm" /></div>
         <div style="border: 1px dashed var(--color-border-strong);"><lc-page-header title="Mittel" subtitle="paddingTop: {{ paddingTop }}" size="comfortable" [paddingTop]="paddingTop" /></div>
+      </div>`,
+  }),
+};
+
+/** 3.44 (request 064, usm-x row 16): a slot beside the heading, outside it. */
+export const TitleAside: Story = {
+  name: 'Title Aside',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.44 (usm-x row 16): `[slot="title-aside"]` sits beside the heading but outside it, so status chips and a live region (`role="status"`) there are not part of the heading’s accessible name: the `h1` is named „Rechnungsübersicht“ only. Hidden when empty. `title-suffix` keeps its place inside the heading (second header, for comparison: its name is „Rechnungsübersicht Entwurf“).',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 24px;">
+        <lc-page-header title="Rechnungsübersicht" subtitle="Januar bis Dezember">
+          <lc-chip slot="title-aside" size="sm" variant="warning">Entwurf</lc-chip>
+          <span slot="title-aside" role="status" style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">Geändert</span>
+          <lc-button slot="actions" variant="outline" size="sm">Teilen</lc-button>
+          <lc-button slot="actions" variant="primary" size="sm">Neu</lc-button>
+        </lc-page-header>
+        <lc-page-header title="Rechnungsübersicht" subtitle="title-suffix (inside the heading)" [level]="2">
+          <lc-chip slot="title-suffix" size="sm" variant="warning">Entwurf</lc-chip>
+        </lc-page-header>
+      </div>`,
+  }),
+};
+
+/**
+ * The wrap-order demo of 3.44 (row 25): the app sets the hook in a container
+ * query on its own wrapper (an app stylesheet, so no view encapsulation).
+ */
+@Component({
+  selector: 'lc-page-header-aside-wrap-demo',
+  standalone: true,
+  imports: [PageHeaderComponent, ButtonComponent, ChipComponent],
+  encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    .story-aside-wrap { container-type: inline-size; }
+    @container (30rem <= width < 56rem) {
+      .story-aside-wrap lc-page-header { --lc-page-header-title-aside-below: 1; }
+    }
+  `,
+  template: `
+    <div class="story-aside-wrap" lang="de">
+      <lc-page-header title="Rechnungsübersicht" subtitle="Januar bis Dezember">
+        <lc-chip slot="title-aside" size="sm" variant="warning">Entwurf</lc-chip>
+        <lc-chip slot="title-aside" size="sm">Geändert</lc-chip>
+        <lc-button slot="actions" variant="outline" size="sm">Teilen</lc-button>
+        <lc-button slot="actions" variant="primary" size="sm">Neu</lc-button>
+      </lc-page-header>
+    </div>
+  `,
+})
+class PageHeaderAsideWrapDemoComponent {}
+
+/** 3.44 (request 064, usm-x row 25): the aside wraps before the actions. */
+export const AsideWrapOrder: Story = {
+  name: 'Aside Wrap Order',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.44 (usm-x row 25): `--lc-page-header-title-aside-below: 1` puts `title-aside` on its own line under the title row, so the title and the actions keep line 1 (visual order title → actions → aside; keep the aside free of focusable content). The app sets it where the row gets tight; here a container query on the wrapper sets it from 30rem to below 56rem. At 1280 px everything fits on one line (hook 0); at 768 px the chips wrap below the title while „Teilen“ and „Neu“ stay beside it (hook 1); at 360 px the hook is 0 again and the row wraps in its default order. No ResizeObserver.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [PageHeaderAsideWrapDemoComponent] },
+    template: `<lc-page-header-aside-wrap-demo />`,
+  }),
+};
+
+/** 3.44 (request 064, usm-x row 16): overline colour and title size hooks. */
+export const OverlineAndTitleHooks: Story = {
+  name: 'Overline And Title Hooks',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.44 (usm-x row 16): `--lc-page-header-overline-color` (default `--color-overline`) and `--lc-page-header-title-font-size` (default: the size’s value, 24 px for `size="default"`), set on the host or an ancestor. First: the defaults. Second: overline in `--color-text-secondary`, title 20 px. Third: title 32 px.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 24px;">
+        <lc-page-header overline="Arbeitsbereich" title="Kostenstellen" subtitle="Standard" />
+        <lc-page-header overline="Arbeitsbereich" title="Kostenstellen" subtitle="Overline sekundär, Titel 20 px"
+          style="--lc-page-header-overline-color: var(--color-text-secondary); --lc-page-header-title-font-size: 1.25rem;" />
+        <div style="--lc-page-header-title-font-size: 2rem;">
+          <lc-page-header overline="Arbeitsbereich" title="Kostenstellen" subtitle="Titel 32 px über einen Vorfahren" />
+        </div>
       </div>`,
   }),
 };

@@ -99,6 +99,30 @@ export const ValueOnly: Story = {
   },
 };
 
+/**
+ * 3.44 (request 064, usm-x row 23): with neither `label` nor `icon` there is no
+ * header row: no element and no 4 px gap, so the value row starts at the top.
+ */
+export const WithoutHeader: Story = {
+  name: 'Without Header',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Value and change only (left): no header element and no gap above the value row, so the tile is as high as its row. Right, for comparison, the same tile with a `label`. Before 3.44 the left tile rendered an empty header and a 4 px gap.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-start;">
+        <lc-stat-trend value="48,210" change="+3.1%"></lc-stat-trend>
+        <lc-stat-trend label="Open items" value="48,210" change="+3.1%"></lc-stat-trend>
+      </div>
+    `,
+  }),
+};
+
 export const DashboardRow: Story = {
   render: () => ({
     template: `

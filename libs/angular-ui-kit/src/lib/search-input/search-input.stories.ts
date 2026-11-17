@@ -1,7 +1,86 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { applicationConfig } from '@storybook/angular';
+import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { provideLcIcons } from '@lifecorner/angular-ui-kit/icon';
 import { SearchInputComponent } from './search-input.component';
+
+const PALETTE_COMMANDS = ['Open invoices', 'Open cost centres', 'New booking', 'Settings', 'Sign out'];
+
+/**
+ * Request 064 (usm-x row 21): the field of a command palette. The page owns the
+ * listbox and the keys; lc-search-input forwards the combobox attributes to its
+ * inner input. ArrowDown/ArrowUp move `aria-activedescendant`, Enter picks.
+ */
+@Component({
+  selector: 'lc-search-input-combobox-demo',
+  standalone: true,
+  imports: [SearchInputComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- keydown bubbles from the combobox field inside -->
+    <div style="max-width: 360px; display: flex; flex-direction: column; gap: 4px;" (keydown)="onKey($event)">
+      <lc-search-input
+        placeholder="Type a command…"
+        ariaLabel="Command"
+        inputRole="combobox"
+        ariaAutocomplete="list"
+        ariaControls="palette-list"
+        [debounceMs]="0"
+        [ariaExpanded]="open()"
+        [ariaActiveDescendant]="active() >= 0 ? 'palette-opt-' + active() : ''"
+        [(value)]="query"
+        (searchSubmit)="pick()"
+      ></lc-search-input>
+      <ul
+        id="palette-list"
+        role="listbox"
+        aria-label="Commands"
+        [hidden]="!open()"
+        style="list-style: none; margin: 0; padding: 4px; border: 1px solid var(--color-border); border-radius: var(--border-radius-md); background: var(--color-surface);"
+      >
+        @for (c of matches(); track c; let i = $index) {
+          <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- options of an aria-activedescendant listbox are not focusable; the keys are on the field -->
+          <li
+            role="option"
+            [id]="'palette-opt-' + i"
+            [attr.aria-selected]="i === active()"
+            [style.background]="i === active() ? 'var(--color-primary-fill-subtle, var(--color-surface-hover))' : null"
+            style="padding: 8px 12px; border-radius: var(--border-radius-sm); color: var(--color-text-primary);"
+            (mousedown)="$event.preventDefault()"
+            (click)="active.set(i); pick()"
+          >
+            {{ c }}
+          </li>
+        }
+      </ul>
+      <p role="status" style="margin: 0; font-size: var(--typography-font-size-sm); color: var(--color-text-secondary);">{{ status() }}</p>
+    </div>
+  `,
+})
+class SearchInputComboboxDemoComponent {
+  protected readonly query = signal('');
+  protected readonly active = signal(0);
+  protected readonly status = signal('');
+  protected readonly matches = computed(() =>
+    PALETTE_COMMANDS.filter((c) => c.toLowerCase().includes(this.query().toLowerCase())),
+  );
+  protected readonly open = computed(() => this.matches().length > 0);
+
+  protected onKey(event: KeyboardEvent): void {
+    const n = this.matches().length;
+    if (!n) return;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      const step = event.key === 'ArrowDown' ? 1 : -1;
+      this.active.set((Math.max(this.active(), 0) + step + n) % n);
+    }
+  }
+
+  protected pick(): void {
+    const c = this.matches()[this.active()];
+    if (c) this.status.set(`Picked: ${c}`);
+  }
+}
 
 const meta: Meta<SearchInputComponent> = {
   title: 'Form/Search Input',
@@ -31,6 +110,40 @@ Specialized search input with built-in magnifying glass icon, clear button, and 
     disabled: { control: 'boolean' },
     value: { control: 'text', description: 'Current query (two-way bindable via [(value)])' },
     ariaLabel: { control: 'text', description: 'Accessible name (default "Search")' },
+    inputRole: {
+      control: 'select',
+      options: [null, 'combobox'],
+      description: '3.44: `role` on the inner input (`combobox` for a palette or an autocomplete). Unset renders none.',
+      table: { defaultValue: { summary: 'null' } },
+    },
+    ariaExpanded: {
+      control: 'select',
+      options: [null, true, false],
+      description: '3.44: `aria-expanded` on the inner input. Unset renders none.',
+      table: { defaultValue: { summary: 'null' } },
+    },
+    ariaControls: {
+      control: 'text',
+      description: '3.44: `aria-controls` on the inner input (id of the listbox). Empty renders none.',
+      table: { defaultValue: { summary: "''" } },
+    },
+    ariaActiveDescendant: {
+      control: 'text',
+      description: '3.44: `aria-activedescendant` on the inner input (id of the active option). Empty renders none.',
+      table: { defaultValue: { summary: "''" } },
+    },
+    ariaAutocomplete: {
+      control: 'select',
+      options: [null, 'list', 'inline', 'both', 'none'],
+      description: '3.44: `aria-autocomplete` on the inner input. Unset renders none.',
+      table: { defaultValue: { summary: 'null' } },
+    },
+    ariaHasPopup: {
+      control: 'select',
+      options: [null, 'listbox', 'grid', 'tree', 'dialog'],
+      description: '3.44: `aria-haspopup` on the inner input. Unset renders none.',
+      table: { defaultValue: { summary: 'null' } },
+    },
   },
 };
 
@@ -86,5 +199,25 @@ export const AppRegistersNoIcons: Story = {
         <lc-search-input lang="de" placeholder="Bank, BIC oder Ort suchen …" ariaLabel="Banken durchsuchen"></lc-search-input>
         <lc-search-input lang="de" placeholder="Bank, BIC oder Ort suchen …" ariaLabel="Banken durchsuchen" value="Sparkasse" clearAriaLabel="Suche leeren"></lc-search-input>
       </div>`,
+  }),
+};
+
+/**
+ * 3.44 (request 064, usm-x row 21): the field of a command palette. The page
+ * owns the listbox and the keys; `inputRole`, `ariaExpanded`, `ariaControls`,
+ * `ariaActiveDescendant` and `ariaAutocomplete` land on the inner input.
+ */
+export const Combobox: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A command-palette field: `inputRole="combobox"`, `ariaAutocomplete="list"`, `ariaControls` = the listbox id, `[ariaExpanded]` and `[ariaActiveDescendant]` from the page. ArrowDown/ArrowUp move the active option (the page listens to the host’s bubbling `keydown`), Enter picks it. Unset, none of these attributes renders.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [SearchInputComboboxDemoComponent] },
+    template: `<lc-search-input-combobox-demo />`,
   }),
 };

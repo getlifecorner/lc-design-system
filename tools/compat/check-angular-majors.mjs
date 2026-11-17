@@ -366,6 +366,17 @@ const EXPECT_IN_HTML = [
       && !/lc-textarea-footer/.test(field)
       && /\.lc-textarea--one-line\[_ngcontent-[^\]]*\]\s*\{\s*min-height:\s*0;\s*display:\s*block;?\s*\}/.test(html);
   }],
+  // 3.44 (request 064, probe-344.ts, AC-29): before JS
+  ['split button: a group of the face and the caret with aria-haspopup and aria-expanded (usm-x row 30)', /<lc-split-button(?=[^>]*\sid="compat-split-344")[^>]*>(?:<!--[^]*?-->|\s)*<div(?=[^>]*\srole="group")(?=[^>]*\sclass="[^"]*\blc-split-button\b)[^>]*>[^]*?<button(?=[^>]*\sclass="[^"]*\bbtn-sm\b)[^>]*>(?:(?!<\/button>)[^])*?Speichern(?:(?!<\/button>)[^])*<\/button>[^]*?<button(?=[^>]*\sclass="[^"]*\blc-split-button__caret\b)(?=[^>]*\saria-haspopup="menu")(?=[^>]*\saria-expanded="false")(?=[^>]*\saria-label="Weitere Aktionen")[^>]*>/],
+  ['tabs links: role=tab links, the current one aria-selected with its ?tab= href, no kit panel (usm-x row 11)', (html) => {
+    const tabs = html.match(/<lc-tabs(?=[^>]*\sid="compat-tabs-344")[^>]*>([^]*?)<\/lc-tabs>/)?.[1] ?? '';
+    const links = [...tabs.matchAll(/<a(?=[^>]*\srole="tab")[^>]*>/g)].map(([a]) => a);
+    return links.length === 2 && !/role="tabpanel"/.test(tabs)
+      && /\saria-selected="false"/.test(links[0]) && /\shref="[^"]*\?tab=uebersicht"/.test(links[0])
+      && /\saria-selected="true"/.test(links[1]) && /\shref="[^"]*\?tab=kosten"/.test(links[1])
+      && links.every((a) => /\saria-controls="compat-tab-panel-344"/.test(a))
+      && /\sid="compat-tab-kosten"/.test(links[1]);
+  }],
   ['icon size hook: the glyph at size sm, 18 px from a class, no style (usm-x row 18)', (html) => /<div(?=[^>]*\sid="compat-icon-343")[^>]*>(?:<!--[^]*?-->|\s)*<lc-icon(?=[^>]*\sclass="compat-dense-icon")(?![^>]*\sstyle=)[^>]*>(?:<!--[^]*?-->|\s)*<div(?=[^>]*\sclass="[^"]*\bicon-sm\b)[^>]*><svg(?=[^>]*\swidth="20px")[^>]*>/.test(html)
     && /\.compat-dense-icon\[_ngcontent-[^\]]*\]\s*\{\s*--lc-icon-size:\s*18px;?\s*\}/.test(html)
     && /@property\s+--lc-icon-size\s*\{\s*syntax:\s*"\*";\s*inherits:\s*false;?\s*\}/.test(html)

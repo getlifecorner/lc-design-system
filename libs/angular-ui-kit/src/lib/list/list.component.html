@@ -6,8 +6,10 @@
   @if (itemTemplate(); as tpl) {
     <ng-container *ngTemplateOutlet="tpl.template; context: { $implicit: item }"></ng-container>
   } @else {
-    <!-- Leading: Avatar or Icon -->
-    @if (item.avatar) {
+    <!-- Leading: Avatar or Icon (3.44: the spinner of a busy row in their box) -->
+    @if (item.busy) {
+      <span [class]="busyClasses(item)" aria-hidden="true"><lc-spinner size="xs" /></span>
+    } @else if (item.avatar) {
       <div [class]="avatarClasses(item)">
         @if (item.avatar.startsWith('http') || item.avatar.startsWith('/') || item.avatar.startsWith('data:')) {
           <img [src]="item.avatar" [alt]="item.label" class="lc-list__avatar-img" />
@@ -32,6 +34,9 @@
       @if (item.description) {
         <span class="lc-list__description">{{ wordBreak(item) }}{{ item.description }}</span>
       }
+      @if (busyInContent(item)) {
+        <span class="lc-list__sr-only">&ngsp;{{ busyLabel() }}</span>
+      }
     </div>
 
     <!-- Trailing: Badge, Metadata, Action -->
@@ -51,6 +56,7 @@
             [size]="actionSize()"
             [ariaLabel]="item.actionAriaLabel ?? ''"
             class="lc-list__action"
+            [loading]="!!item.busy"
             (clicked)="onActionClick(item)"
           >
             {{ item.action }}
@@ -68,15 +74,39 @@
 
 <div #listEl [class]="listClasses()" role="list">
   @for (item of items(); track item.id || $index; let i = $index) {
-    @if (isLinkRow(item)) {
+    @if (item.heading) {
+      <!-- 3.44 (usm-x row 20): a sub-heading inside the list, one list child like every row. -->
+      <div [class]="headingClasses(item)" role="listitem">
+        @switch (headingLevel()) {
+          @case (2) {
+            <h2 class="lc-list__heading">{{ item.label }}</h2>
+          }
+          @case (4) {
+            <h4 class="lc-list__heading">{{ item.label }}</h4>
+          }
+          @case (5) {
+            <h5 class="lc-list__heading">{{ item.label }}</h5>
+          }
+          @case (6) {
+            <h6 class="lc-list__heading">{{ item.label }}</h6>
+          }
+          @default {
+            <h3 class="lc-list__heading">{{ item.label }}</h3>
+          }
+        }
+      </div>
+    } @else if (isLinkRow(item)) {
       <!-- A real link over the whole row (3.16, TD-4); the row element carries the item styles. -->
       <div class="lc-list__item-wrapper" role="listitem">
         <a
           [class]="getItemClasses(item) + ' lc-list__item--link'"
           [href]="item.href"
           [attr.aria-current]="item.selected ? 'true' : null"
-          [attr.aria-label]="ariaLabelOf(item)"
+          [attr.aria-label]="rowAriaLabel(item)"
           (click)="onLinkClick($event, item)"
+          [attr.aria-busy]="item.busy ? 'true' : null"
+          [attr.aria-disabled]="item.busy ? 'true' : null"
+          [lcTooltip]="rowTooltip(item)"
         >
           <ng-container *ngTemplateOutlet="rowContent; context: { $implicit: item }"></ng-container>
         </a>
@@ -94,10 +124,12 @@
           <button
             type="button"
             class="lc-list__item-button"
-            [attr.aria-label]="splitRowName(item)"
-            [attr.tabindex]="item.disabled ? -1 : null"
-            [attr.aria-disabled]="item.disabled ? 'true' : null"
+            [attr.aria-label]="splitRowLabel(item)"
+            [attr.tabindex]="isUnreachable(item) ? -1 : null"
+            [attr.aria-disabled]="isBlocked(item) ? 'true' : null"
             [attr.aria-current]="item.selected ? 'true' : null"
+            [attr.aria-busy]="item.busy ? 'true' : null"
+            [lcTooltip]="rowTooltip(item)"
           ></button>
           <ng-container *ngTemplateOutlet="rowContent; context: { $implicit: item }"></ng-container>
         </div>
@@ -107,12 +139,14 @@
         <div
           [class]="getItemClasses(item)"
           role="button"
-          [attr.tabindex]="item.disabled ? -1 : 0"
-          [attr.aria-disabled]="item.disabled ? 'true' : null"
+          [attr.tabindex]="isUnreachable(item) ? -1 : 0"
+          [attr.aria-disabled]="isBlocked(item) ? 'true' : null"
           [attr.aria-current]="item.selected ? 'true' : null"
-          [attr.aria-label]="ariaLabelOf(item)"
+          [attr.aria-label]="rowAriaLabel(item)"
           (click)="onItemClick(item)"
           (keydown)="onItemKeydown($event, item)"
+          [attr.aria-busy]="item.busy ? 'true' : null"
+          [lcTooltip]="rowTooltip(item)"
         >
           <ng-container *ngTemplateOutlet="rowContent; context: { $implicit: item }"></ng-container>
         </div>
@@ -122,9 +156,12 @@
       <div
         [class]="getItemClasses(item)"
         role="listitem"
-        [attr.aria-disabled]="item.disabled ? 'true' : null"
+        [attr.aria-disabled]="isBlocked(item) ? 'true' : null"
         [attr.aria-current]="item.selected ? 'true' : null"
         (click)="onItemClick(item)"
+        [attr.aria-busy]="item.busy ? 'true' : null"
+        [attr.tabindex]="plainRowTabindex(item)"
+        [lcTooltip]="rowTooltip(item)"
       >
         <ng-container *ngTemplateOutlet="rowContent; context: { $implicit: item }"></ng-container>
       </div>

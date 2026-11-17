@@ -308,6 +308,40 @@ components inside paint their own (a menu panel, a card). Derived tokens such as
 `--color-primary` resolve where they are declared, so use a scope class or mixin
 rather than overriding single tokens.
 
+### Tokens derived from the primary scale (3.44)
+
+Four tokens are derived from the `--color-primary-*` scale, so a customer theme
+written on `<html>` or a `.lc-theme-*` scope recolours what reads them. They
+render the same colours as before in both themes (the dark scale is inverted,
+so each theme picks the step that holds the same raw colour):
+
+| Token | Light | Dark | Read by |
+|---|---|---|---|
+| `--color-primary-wash` | 6 % of `-400` = `rgba(132,199,212,.06)` | 6 % of `-500`, the same colour | `lc-button variant="outline"` ground (hook `--lc-button-outline-bg`) |
+| `--color-brand-tile-subtle` | 14 % of `-500` = `rgba(32,132,151,.14)` | 14 % of `-400`, the same colour | the `subtle` icon tile of `lc-card` and `lc-page-header` |
+| `--gradient-brand-tile` | `-400 → -600` (`#84c7d4 → #1a6a79`) | `-500 → -300`, the same colours | the `brand` icon tile |
+| `--shadow-brand-glow` | 1 px, 18 % of `-500` | 1 px, 30 % of `-500` | the brand tile, a selected card |
+
+Text on the wash keeps its contrast: text-primary 17.12:1 light, 15.71:1 (page)
+/ 14.17:1 (card) dark (`theme-contrast.spec.ts`). A **subtree** accent (a
+customizing area in violet) re-points `--color-primary-300…600` **and**
+re-declares these four tokens on the same element, because they resolve where
+they are declared; re-pointing only the scale on a subtree changes nothing.
+
+### Component hooks of 3.44
+
+| Hook | Default | Where |
+|---|---|---|
+| `--lc-button-outline-bg` | `var(--color-primary-wash)` | ground of `lc-button variant="outline"` |
+| `--lc-button-row-padding` · `--lc-button-row-min-height` | `var(--spacing-2) var(--spacing-3)` · `44px` | `lc-button shape="row"` |
+| `--lc-badge-gap` | `0`; `0.4em` with `icon` | space between dot, icon and label of `lc-badge`; set on any ancestor |
+| `--lc-card-divider-color` | head `--color-border`, `[card-header]` / `[card-footer]` `--color-divider` | every `lc-card` rule |
+| `--lc-page-header-overline-color` | `var(--color-overline)` | `lc-page-header` overline |
+| `--lc-page-header-title-font-size` | the size's value (24 px for `default`) | `lc-page-header` title |
+| `--lc-page-header-title-aside-below` | `0` | `1`: the `title-aside` slot wraps under the title row before the actions |
+| `--lc-modal-top-offset` | `10dvh` (at least safe area + 16 px) | `lc-modal placement="top"` |
+| `--lc-list-column-width` · `--lc-list-column-gap` · `--lc-list-indent-step` | `18rem` · `var(--spacing-6)` · sm 28 / md 32 / lg 36 px | `lc-list` `multiColumn` and `indent` |
+
 ## "Weite": the app look (3.3)
 
 A white sky, cards on it with a teal hairline, soft tinted cards for the next

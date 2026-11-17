@@ -260,6 +260,13 @@ $lc-list-member-colors: (
     outline: 2px solid Highlight;
     outline-offset: -2px;
   }
+
+  // 3.44: a disabled row with a reason (its rules are at the end of this
+  // file; one more class, so this wins) in the system's disabled ink.
+  .lc-list .lc-list__item--disabled.lc-list__item--has-reason > * {
+    color: GrayText;
+    opacity: 1;
+  }
 }
 
 // A clickable row with an action (3.37, request 057, 056 F-2, design D-7):
@@ -447,5 +454,157 @@ $lc-list-member-colors: (
   &.lc-list--with-dividers .lc-list__item {
     border-bottom-color: transparent;
   }
+}
+
+// ── Row states (3.44, usm-x row 20; the shared row model of lc-sidenav) ────
+// Busy: the 16 px spinner in the leading slot: the avatar's box (whose fill
+// and content give way), the icon's 20 px box, or alone before the label.
+.lc-list__busy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lc-list__busy--icon {
+  width: 20px;
+  height: 20px;
+}
+
+.lc-list__busy--avatar {
+  width: 40px;
+  height: 40px;
+}
+
+.lc-list--sm .lc-list__busy--avatar {
+  width: 32px;
+  height: 32px;
+}
+
+.lc-list--lg .lc-list__busy--avatar {
+  width: 48px;
+  height: 48px;
+}
+
+.lc-list__item--busy {
+  cursor: progress;
+}
+
+// A disabled row with a reason stays hoverable (its tooltip) and focusable;
+// its content is dimmed, not the row, so the focus ring keeps full contrast.
+// Its built-in action stays out of reach of the pointer, as before.
+.lc-list__item--disabled.lc-list__item--has-reason {
+  opacity: 1;
+  pointer-events: auto;
+
+  > * {
+    opacity: 0.5;
+  }
+
+  .lc-list__action-area {
+    pointer-events: none;
+  }
+}
+
+// Visually hidden, still read (the busy text).
+.lc-list__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// ── Heading items (3.44) ────────────────────────────────────────────────────
+// 12 px above, 4 px below, the row's inline padding: 36 px for one line. No
+// hover, focus or divider; the page language hyphenates long words.
+.lc-list__heading-item {
+  display: flex;
+  align-items: flex-end;
+  box-sizing: border-box;
+  min-height: 36px;
+  padding: var(--spacing-3) var(--lc-density-padding-md, var(--spacing-4)) var(--spacing-1);
+}
+
+.lc-list--sm .lc-list__heading-item {
+  padding-inline: var(--lc-density-padding-sm, var(--spacing-3));
+}
+
+.lc-list--lg .lc-list__heading-item {
+  padding-inline: var(--spacing-5);
+}
+
+.lc-list--card .lc-list__heading-item {
+  padding-inline: 1rem;
+}
+
+.lc-list__heading {
+  margin: 0;
+  min-width: 0;
+  font-size: var(--font-size-sm, 0.875rem);
+  line-height: 1.25rem;
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+// ── Indent (3.44) ───────────────────────────────────────────────────────────
+// Level n starts the row n steps further in (the row's own inline padding
+// plus n × --lc-list-indent-step; default the icon plus the row gap, so a
+// child's icon lands at its parent's label). Padding only: hover, divider and
+// ring stay full width.
+.lc-list {
+  --_lc-list-indent-step: var(--lc-list-indent-step, 32px);
+}
+
+.lc-list--sm {
+  --_lc-list-indent-step: var(--lc-list-indent-step, 28px);
+}
+
+.lc-list--lg {
+  --_lc-list-indent-step: var(--lc-list-indent-step, 36px);
+}
+
+$_list-row-padding: (
+  '.lc-list': var(--lc-density-padding-md, var(--spacing-4)),
+  '.lc-list--sm': var(--lc-density-padding-sm, var(--spacing-3)),
+  '.lc-list--lg': var(--spacing-5),
+  '.lc-list--card': 1rem,
+);
+
+@each $list, $padding in $_list-row-padding {
+  @for $n from 1 through 4 {
+    #{$list} :is(.lc-list__item, .lc-list__heading-item).lc-list__indent-#{$n} {
+      padding-inline-start: calc(#{$padding} + #{$n} * var(--_lc-list-indent-step));
+    }
+  }
+}
+
+// ── Columns (3.44, `multiColumn`) ───────────────────────────────────────────
+// A vertical list flows into as many columns as fit. Rows never split; a
+// heading never ends a column (Chromium and Safari keep it with its first
+// row; Firefox ignores `break-after: avoid`). The card variant's flex gap
+// becomes a bottom margin.
+.lc-list--vertical.lc-list--columns {
+  display: block;
+  column-width: var(--lc-list-column-width, 18rem);
+  column-gap: var(--lc-list-column-gap, var(--spacing-6));
+
+  > * {
+    break-inside: avoid;
+  }
+
+  > .lc-list__heading-item {
+    break-after: avoid;
+  }
+}
+
+.lc-list--card.lc-list--columns > * {
+  margin-bottom: 0.5rem;
 }
 

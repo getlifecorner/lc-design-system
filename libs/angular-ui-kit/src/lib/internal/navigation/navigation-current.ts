@@ -24,16 +24,30 @@ export function navigationLinks(sortedItems: readonly NavigationItem[]): Navigat
   for (const item of sortedItems) {
     if (item.isSection) {
       for (const child of item.children ?? []) {
-        if (child.children?.length) links.push(...child.children);
+        if (isNavigationGroup(child)) links.push(...(child.children ?? []));
         else links.push(child);
       }
-    } else if (item.children?.length) {
-      links.push(...item.children);
+    } else if (isNavigationGroup(item)) {
+      links.push(...(item.children ?? []));
     } else {
       links.push(item);
     }
   }
   return links;
+}
+
+/**
+ * Whether the item is a collapsible group: it has children, or (3.44) loads
+ * them on demand (`hasChildren`), also while it has none yet.
+ */
+export function isNavigationGroup(item: NavigationItem): boolean {
+  return !!item.children?.length || !!item.hasChildren;
+}
+
+/** The routes an item is current for (3.44): `route`, then `matchRoutes`. Action items have none. */
+function routesOf(link: NavigationItem): string[] {
+  if (link.kind === 'action') return [];
+  return link.matchRoutes?.length ? [link.route, ...link.matchRoutes] : [link.route];
 }
 
 /** The router URL's path: primary outlet only, no query, fragment or matrix parameters. */
@@ -43,24 +57,33 @@ export function navigationPath(router: Pick<Router, 'parseUrl'>, url: string): s
 }
 
 /**
- * The one current link (or none). With `activeRoute` set: the first link
- * whose route equals it. Without: the router's path — the exact match wins,
- * otherwise the longest link route the path continues with a `/` (`/`
- * matches only `/`); ties go to the first link in display order.
+ * The one current link (or none). 3.44: the first link with `current` wins.
+ * With `activeRoute` set: the first link whose route equals it. Without: the
+ * router's path — the exact match wins, otherwise the longest link route the
+ * path continues with a `/` (`/` matches only `/`); ties go to the first link
+ * in display order. 3.44: a link's `matchRoutes` count as its routes, and
+ * action items (`kind: 'action'`) are never matched by a route.
  */
 export function currentNavigationItem(
   links: readonly NavigationItem[],
   activeRoute: string,
   path: string,
 ): NavigationItem | null {
-  if (activeRoute !== '') return links.find((link) => link.route === activeRoute) ?? null;
-  const exact = links.find((link) => link.route === path);
+  const flagged = links.find((link) => link.current);
+  if (flagged) return flagged;
+  if (activeRoute !== '') return links.find((link) => routesOf(link).includes(activeRoute)) ?? null;
+  const exact = links.find((link) => routesOf(link).includes(path));
   if (exact) return exact;
   let best: NavigationItem | null = null;
+  let bestLength = 0;
   for (const link of links) {
-    const route = link.route;
-    if (!route || route === '/' || !path.startsWith(`${route}/`)) continue;
-    if (!best || route.length > best.route.length) best = link;
+    for (const route of routesOf(link)) {
+      if (!route || route === '/' || !path.startsWith(`${route}/`)) continue;
+      if (!best || route.length > bestLength) {
+        best = link;
+        bestLength = route.length;
+      }
+    }
   }
   return best;
 }

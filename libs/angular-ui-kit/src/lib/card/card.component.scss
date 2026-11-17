@@ -186,7 +186,8 @@
     gap: var(--lc-density-gap-md, var(--spacing-4));
     margin-bottom: var(--lc-density-padding-md, var(--spacing-4));
     padding-bottom: var(--lc-density-padding-sm, var(--spacing-3));
-    border-bottom: 1px solid var(--color-border, #e5e7eb);
+    // 3.44 (usm-x row 17): one hook for every card rule; each default stays.
+    border-bottom: 1px solid var(--lc-card-divider-color, var(--color-border, #e5e7eb));
   }
 
   // Leading brand-tile icon (optional). Mirrors --gradient-brand-tile so it
@@ -214,8 +215,12 @@
       box-shadow: var(--shadow-brand-glow);
     }
 
+    // 3.44 (usm-x row 17): the ground is a theme token derived from the
+    // primary scale (rgba(32, 132, 151, .14) in both themes), so a customer
+    // theme or a scoped accent recolours the tile; the brand tile's gradient
+    // and glow tokens are derived the same way.
     &--subtle {
-      background-color: rgba(32, 132, 151, 0.14);
+      background-color: var(--color-brand-tile-subtle);
       color: var(--color-primary-500);
       border: 1px solid var(--color-border-strong);
     }
@@ -329,7 +334,7 @@
   gap: var(--lc-density-gap-sm, var(--spacing-2));
   margin-bottom: var(--lc-density-padding-md, var(--spacing-4));
   padding-bottom: var(--lc-density-padding-sm, var(--spacing-3));
-  border-bottom: 1px solid var(--color-divider, #e5e7eb);
+  border-bottom: 1px solid var(--lc-card-divider-color, var(--color-divider, #e5e7eb));
   font-weight: 600;
   font-size: 1.125rem;
   color: var(--color-text-primary);
@@ -349,6 +354,13 @@
   padding-top: var(--lc-density-padding-sm, var(--spacing-3));
   border-top: 1px solid var(--color-divider, #e5e7eb);
   color: var(--color-text-secondary);
+}
+
+// 3.44 (usm-x row 17): the footer rule reads the divider hook too. A separate
+// rule of the same weight, so the 3.29 footer rule stays as it was.
+:host ::ng-deep [card-footer],
+:host ::ng-deep .card-footer {
+  border-top-color: var(--lc-card-divider-color, var(--color-divider, #e5e7eb));
 }
 
 // Equal footer (3.29, CC-2, `footerLayout="equal"`): two answers of equal
@@ -464,6 +476,25 @@
   }
 }
 
+// ── Dense head (3.44, usm-x row 17, `headerSize="sm"`) ─────────────────────
+// 8 px padding and 12 px margin below the head (md: 12 / 16). A collapsible
+// head may be 32 px high; its toggle's hit area reaches 6 px above and 7 px
+// below it (the ::after sits in the padding box, inside the 1 px rule), so the
+// target stays 44 px (measured 44.4 on a 32.4 px head). Before the closed
+// rule, which wins.
+.card-header-sm .card__header {
+  margin-bottom: var(--spacing-3);
+  padding-bottom: var(--spacing-2);
+}
+
+.card-collapsible.card-header-sm .card__header {
+  min-height: 32px;
+}
+
+.card-header-sm .card__toggle::after {
+  inset: -6px 0 -7px;
+}
+
 // Closed: only the head shows, without its divider and spacing.
 .card-collapsed .card__header {
   margin-bottom: 0;
@@ -479,4 +510,50 @@
 // rule and after it, so it also hides an equal footer.
 :host(.lc-card--collapsed) > .card > ::ng-deep :is([card-footer], .card-footer) {
   display: none;
+}
+
+// ── A titled card without body and footer (3.44, usm-x row 17) ─────────────
+// The head draws no rule and no space below it, as the closed head. CSS only
+// (`:has`), so it holds in prerendered HTML. `::ng-deep` keeps the projected
+// footer unscoped; `:host >` keeps nested cards out.
+:host > ::ng-deep .card:has(> .card__body:empty):not(:has(> :is([card-footer], .card-footer))) > .card__header {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+// ── Button in the heading (3.44, usm-x row 24, `clickTarget="heading"`) ────
+// The link card's stretched control as a <button>: it keeps the title's look,
+// its ::after (from .card__link) covers the card, and the card draws the ring.
+.card__link--button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+// ── One-line title (3.44, usm-x row 24, `truncateTitle`) ───────────────────
+// The heading and the link, button or toggle inside it end in an ellipsis;
+// neither is positioned, so their overflow never clips the stretched ::after.
+// The badge beside the title never shrinks.
+.card-truncate-title .card__title {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.card-truncate-title .card__title > :is(.card__link, .card__toggle) {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.card-truncate-title :is(.card__badge-slot, .card__badge) {
+  flex-shrink: 0;
 }

@@ -22,6 +22,9 @@ Use it for confirmations, forms, and important user interactions that require at
   Header and footer stay visible while the body scrolls; the close button is a 44 px target.
 - 3.34: \`returnFocusTo\` names the element that gets the focus back after the dialog closed (the trigger),
   on every close path; WebKit does not focus a tapped button, so without it the focus falls to \`body\`.
+- 3.44: \`placement="top"\` anchors the dialog at \`--lc-modal-top-offset\` (default \`10dvh\`), so a palette
+  whose results grow keeps its top edge. Escape and Enter/Space on the × are marked handled
+  (\`preventDefault\`): page listeners can tell, and the keys never reach a form behind the dialog.
 
 Click the **Open Modal** button in each story to see the modal in action.
         `,
@@ -39,9 +42,9 @@ Click the **Open Modal** button in each story to see the modal in action.
     open: { control: 'boolean', description: 'Controls visibility' },
     placement: {
       control: 'inline-radio',
-      options: ['center', 'auto', 'sheet'],
+      options: ['center', 'auto', 'sheet', 'top'],
       description:
-        '3.3: `center` (3.2); `auto` — a bottom sheet below 640 px viewport width, centred above; `sheet` — always a bottom sheet. The sheet spans the width, rounds its top corners, keeps clear of `env(safe-area-inset-bottom)` and is at most 90 dvh high; `full` size ignores it.',
+        '3.3: `center` (3.2); `auto` — a bottom sheet below 640 px viewport width, centred above; `sheet` — always a bottom sheet. The sheet spans the width, rounds its top corners, keeps clear of `env(safe-area-inset-bottom)` and is at most 90 dvh high. 3.44: `top` — anchored at `--lc-modal-top-offset` (default `10dvh`, at least safe area + 16 px) and centred horizontally; it grows downward only and the body scrolls 16 px above the bottom edge. `full` size ignores it.',
       table: { defaultValue: { summary: 'center' } },
     },
     returnFocusTo: {
@@ -186,6 +189,49 @@ export const BottomSheetOnPhones: Story = {
         <div slot="footer" style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
           <lc-button variant="danger" size="lg" [fullWidth]="true" (click)="isOpen = false">Entfernen</lc-button>
           <lc-button variant="outline" size="lg" [fullWidth]="true" (click)="isOpen = false">Abbrechen</lc-button>
+        </div>
+      </lc-modal>`,
+  }),
+};
+
+/**
+ * 3.44 (request 064, usm-x row 22): a command palette anchored at the top.
+ * "Add results" grows the body; the top edge stays where it is and the bottom
+ * moves down until the body scrolls 16 px above the viewport edge.
+ */
+export const TopPlacement: Story = {
+  name: 'Top Placement',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`placement="top"`, `size="md"`, open. The dialog sits at `--lc-modal-top-offset` (default `10dvh`: 90 px on a 900 px viewport, 64 px on a 640 px phone) and never above safe area + 16 px. **Add results** appends four rows: the top edge does not move, the bottom grows down to 16 px above the viewport edge, then the body scrolls inside.',
+      },
+      story: { inline: false, height: '640px' },
+    },
+  },
+  args: { open: true, size: 'md', placement: 'top' },
+  render: (args) => ({
+    props: {
+      ...args,
+      isOpen: args.open,
+      results: ['Open invoices', 'Open cost centres', 'New booking'],
+      more: ['Settings', 'Sign out', 'Switch tenant', 'Keyboard shortcuts'],
+    },
+    template: `
+      <lc-button variant="primary" (click)="isOpen = true">Open palette</lc-button>
+      <lc-modal [open]="isOpen" (openChange)="isOpen = $event" [size]="size" [placement]="placement" ariaLabelledBy="top-title">
+        <div slot="header"><h2 id="top-title">Commands</h2></div>
+        <div slot="body">
+          <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px;">
+            @for (r of results; track $index) {
+              <li style="padding: 8px 12px; border: 1px solid var(--color-border); border-radius: var(--border-radius-sm); color: var(--color-text-primary);">{{ r }}</li>
+            }
+          </ul>
+        </div>
+        <div slot="footer" style="display: flex; gap: 8px; justify-content: flex-end;">
+          <lc-button variant="outline" (click)="results = results.concat(more)">Add results</lc-button>
+          <lc-button variant="primary" (click)="isOpen = false">Close</lc-button>
         </div>
       </lc-modal>`,
   }),

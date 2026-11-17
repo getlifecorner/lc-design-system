@@ -1,0 +1,5 @@
+{
+  "lib": {
+    "entryFile": "../src/lib/split-button/index.ts"
+  }
+}

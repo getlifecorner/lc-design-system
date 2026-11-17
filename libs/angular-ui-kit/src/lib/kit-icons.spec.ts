@@ -52,6 +52,8 @@ const NOT_KIT_COMPONENTS = new Set(['icon', 'icons', 'icon-names', 'internal']);
  * `<folder>/<file>: <literal>`.
  */
 const NOT_ICONS: Record<string, string> = {
+  // 3.44 (request 064): lc-badge renders an `icon` input, so it is scanned now.
+  'badge/badge.component.ts: error': 'badge variant',
   'card/card.component.ts: error': 'badge variant',
   'chat/chat.component.html: user': 'message role',
   'chat/chat.component.html: file': 'input type',

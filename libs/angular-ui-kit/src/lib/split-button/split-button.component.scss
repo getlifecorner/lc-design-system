@@ -1,0 +1,79 @@
+// Split button (3.44, usm-x row 30). Encapsulation is off (the face is an
+// lc-button, the caret sits in an lc-menu), so every rule starts at
+// `.lc-split-button`. Both parts use lc-button's look; this sheet only joins
+// them: one outline, the face's end border as the divider (outline) or a 1 px
+// gap (filled), full radius outside and none inside, the caret stretched to
+// the face's height, and each part's focus ring drawn over its neighbour.
+
+// A stretching flex parent stretches the host only: the group keeps its own
+// height, as lc-button's does (review 064 r1).
+lc-split-button {
+  display: inline-flex;
+  align-items: flex-start;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.lc-split-button {
+  display: inline-flex;
+  align-items: stretch;
+  max-width: 100%;
+}
+
+.lc-split-button--filled {
+  gap: 1px;
+}
+
+// Face: the lc-button host, stretched; its button loses the inner corners.
+.lc-split-button .lc-split-button__face {
+  display: flex;
+  min-width: 0;
+}
+
+.lc-split-button .lc-split-button__face > .btn {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+// The lc-menu host and its wrappers stretch, so the caret takes the face's
+// height (also when a long face label wraps).
+.lc-split-button .lc-split-button__menu,
+.lc-split-button .lc-split-button__menu > .lc-menu,
+.lc-split-button .lc-split-button__menu .lc-menu__trigger {
+  display: flex;
+}
+
+// Caret: at least 36 / 44 / 48 px wide (sm / md / lg), no inner corners.
+.lc-split-button .lc-split-button__caret {
+  min-inline-size: 2.75rem;
+  padding-block: 0;
+  padding-inline: var(--spacing-2);
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
+.lc-split-button--sm .lc-split-button__caret {
+  min-inline-size: 2.25rem;
+}
+
+.lc-split-button--lg .lc-split-button__caret {
+  min-inline-size: 3rem;
+}
+
+// Outline: one keyline; the face's end border is the divider.
+.lc-split-button--outline .lc-split-button__caret {
+  border-inline-start-width: 0;
+}
+
+// Each part's 2 px ring (offset 2 px) draws over its neighbour.
+.lc-split-button .btn:focus-visible {
+  position: relative;
+  z-index: 1;
+}
+
+// Filled parts have transparent borders: forced colours show both outlines.
+@media (forced-colors: active) {
+  .lc-split-button .btn {
+    border-color: ButtonText;
+  }
+}

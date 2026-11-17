@@ -162,6 +162,41 @@ $_badge-wrap-heights: (
   }
 }
 
+// Icon and gap (3.44, usm-x row 28). `--lc-badge-gap` is read, never
+// declared, so a value on the badge, its host or any ancestor wins: the space
+// between the dot, the icon, projected elements and the label. Default 0 (as
+// before) and 0.4em with an icon (xs 4.8, sm/md 5.6, lg 6.4 px), where the
+// dot's own margin gives way to the gap.
+.lc-badge {
+  gap: var(--lc-badge-gap, 0);
+}
+
+.lc-badge--has-icon {
+  gap: var(--lc-badge-gap, 0.4em);
+
+  .lc-badge__dot {
+    margin-right: 0;
+  }
+}
+
+// 1em square in the label ink (decorative); the lc-icon box takes the hook.
+.lc-badge__icon {
+  --lc-icon-size: 1em;
+  flex-shrink: 0;
+}
+
+// `wrap`: the icon stays on the first line, centred on its 1.25 line box.
+.lc-badge--wrap .lc-badge__icon {
+  align-self: flex-start;
+  margin-top: 0.125em;
+}
+
+// `wrap` with an icon: the label's lines start at the gap after the icon
+// instead of centring in the space beside it (review 064 r1).
+.lc-badge--wrap.lc-badge--has-icon {
+  text-align: start;
+}
+
 // Responsive behavior
 @media (max-width: 640px) {
   .lc-badge {

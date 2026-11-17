@@ -99,8 +99,11 @@ a.btn {
 }
 
 .btn-outline {
-  // DS2.0: translucent teal pill with a strong teal-tinted border (pitch style)
-  background-color: rgba(132, 199, 212, 0.06);
+  // DS2.0: translucent teal pill with a strong teal-tinted border (pitch style).
+  // 3.44 (usm-x row 26): the ground is the --color-primary-wash token (6 % of
+  // the light primary, rgba(132, 199, 212, .06) in both themes), so a customer
+  // theme or a scoped accent reaches it; hook --lc-button-outline-bg.
+  background-color: var(--lc-button-outline-bg, var(--color-primary-wash));
   border-color: var(--color-border-strong);
   color: var(--color-text-primary);
 
@@ -442,6 +445,40 @@ a.btn {
   justify-content: var(--lc-btn-flush-align, start);
   text-align: var(--lc-btn-flush-align, start);
   border-radius: var(--border-radius-sm);
+}
+
+// Row shape (3.44, usm-x row 27): the button is the body of a row, and the
+// row container paints rest, hover and selection. Full width, start-aligned,
+// the container's font and ink, no fill, border or hover/active fill in any
+// variant, the small radius and an inset ring (2 px at -2 px: not clipped by a
+// row's `overflow: hidden`). `inline`, `flush`, `iconOnly` and `fullWidth`
+// are not applied with it (the template drops their classes); (0,2,0) beats
+// the variant and size rules. Hooks: --lc-button-row-padding (default 8/12)
+// and --lc-button-row-min-height (default 44px).
+.btn.btn-row {
+  display: flex;
+  width: 100%;
+  min-height: var(--lc-button-row-min-height, 44px);
+  padding: var(--lc-button-row-padding, var(--spacing-2) var(--spacing-3));
+  justify-content: flex-start;
+  text-align: start;
+  font: inherit;
+  color: inherit;
+  background-color: transparent;
+  border-width: 0;
+  border-radius: var(--border-radius-sm);
+
+  &:focus-visible {
+    outline-offset: -2px;
+  }
+}
+
+// Every variant's hover and active rule is at most (0,4,0) and earlier.
+.btn.btn-row:is(:hover, :active):not(:disabled, .btn-loading) {
+  color: inherit;
+  background-color: transparent;
+  text-decoration: none;
+  filter: none;
 }
 
 // Loading Spinner

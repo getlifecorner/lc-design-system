@@ -1,6 +1,12 @@
 <span [class]="badgeClasses()">
-  @if (dot()) {
-    <span class="lc-badge__dot" aria-hidden="true"></span>
+  <!-- 3.44 (usm-x row 28): one outer @if, so a badge without dot and icon keeps its single anchor. -->
+  @if (dot() || icon()) {
+    @if (dot()) {
+      <span class="lc-badge__dot" aria-hidden="true"></span>
+    }
+    @if (icon()) {
+      <lc-icon class="lc-badge__icon" [name]="icon()!" size="xs" [decorative]="true" />
+    }
   }
   <ng-content></ng-content>
 </span>

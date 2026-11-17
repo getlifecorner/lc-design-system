@@ -27,8 +27,13 @@ export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
  * - `auto`: a bottom sheet below 640 px viewport width (full width, top
  *   corners rounded, above the safe-area inset, in thumb reach), centred above
  * - `sheet`: a bottom sheet on every screen
+ * - `top` (3.44): anchored at `--lc-modal-top-offset` from the top (default
+ *   `10dvh`, never less than the safe-area inset + 16 px), centred
+ *   horizontally; it grows downward only, so a command palette whose results
+ *   grow keeps its top edge. The body scrolls inside once it reaches the
+ *   bottom margin (16 px).
  */
-export type ModalPlacement = 'center' | 'auto' | 'sheet';
+export type ModalPlacement = 'center' | 'auto' | 'sheet' | 'top';
 
 /**
  * Modal dialog component for focused user interactions.
@@ -86,8 +91,9 @@ export class ModalComponent implements OnDestroy {
    * 640 px viewport width and centred above — or `sheet` (always a bottom
    * sheet). The sheet spans the width, rounds its top corners, keeps clear of
    * `env(safe-area-inset-bottom)` and is at most 90 % of the dynamic viewport
-   * high; header and footer stay visible while the body scrolls. `full`
-   * size ignores it.
+   * high; header and footer stay visible while the body scrolls. `top` (3.44)
+   * anchors the dialog at `--lc-modal-top-offset` (default `10dvh`) and lets
+   * it grow downward only. `full` size ignores it.
    * @default 'center'
    */
   placement = input<ModalPlacement>('center');
@@ -243,13 +249,29 @@ export class ModalComponent implements OnDestroy {
   }
 
   /**
+   * Enter and Space on the × (3.44, usm-x row 22): handled on keydown and
+   * marked handled (`preventDefault` + `stopPropagation`), so neither a page
+   * listener nor a form's default action behind the dialog sees the key.
+   */
+  protected onCloseKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.closeModal();
+  }
+
+  /**
    * Escape closes the modal only while it is the top-most overlay; the event
-   * is consumed either way so overlays underneath stay open.
+   * is consumed either way so overlays underneath stay open. 3.44 (usm-x row
+   * 22): it is also marked handled (`preventDefault`), also with
+   * `closeOnEscape` false, so a page listener can tell (`defaultPrevented`)
+   * and a search field inside doesn't clear itself first.
    */
   @HostListener('document:keydown', ['$event'])
   protected onDocumentKeydown(event: KeyboardEvent): void {
     if (event.key !== 'Escape' || !this._open()) return;
     if (!this.overlayStack.claim(this.modalId, event)) return;
+    event.preventDefault();
     event.stopPropagation();
     if (this.closeOnEscape()) {
       this.closeModal();

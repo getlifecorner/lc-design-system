@@ -22,7 +22,11 @@ function themeTokens(file: string): Tokens {
 
 type Rgba = [number, number, number, number];
 
-/** A token's color: hex or rgba(), following var() references. */
+/**
+ * A token's color: hex or rgba(), following var() references. 3.44 (request
+ * 064): also `color-mix(in srgb, var(--x) N%, transparent)`, the token at N %
+ * alpha (`--color-primary-wash`, `--color-brand-tile-subtle`).
+ */
 function color(tokens: Tokens, name: string, depth = 0): Rgba {
   const value = tokens[name];
   if (value === undefined) throw new Error(`${name} is not defined`);
@@ -30,6 +34,11 @@ function color(tokens: Tokens, name: string, depth = 0): Rgba {
   if (ref) {
     if (depth > 10) throw new Error(`${name} does not resolve`);
     return tokens[ref[1]] !== undefined ? color(tokens, ref[1], depth + 1) : parse(ref[2]);
+  }
+  const mix = value.match(/^color-mix\(in srgb, var\((--[\w-]+)\) (\d+)%, transparent\)$/);
+  if (mix) {
+    const base = color(tokens, mix[1], depth + 1);
+    return [base[0], base[1], base[2], (base[3] * Number(mix[2])) / 100];
   }
   return parse(value);
 }
@@ -235,7 +244,11 @@ describe('Theme contrast (WCAG 2.2 AA)', () => {
 // theme tokens (no new token). The outline tint is the button stylesheet's own.
 describe('Component pairings of 3.15 (request 020)', () => {
   const buttonCss = compile(resolve(__dirname, '../lib/button/button.component.scss')).css;
-  const tint = parse(buttonCss.match(/\n\.btn-outline \{[^}]*background-color: (rgba\([^)]+\))/)?.[1] ?? '');
+  // 3.44 (request 064, usm-x row 26, AC-21): the outline tint is no longer a literal
+  // in the stylesheet (was rgba(132, 199, 212, 0.06)) but the --lc-button-outline-bg
+  // hook over a theme token; the token is read from the rule and resolved per palette.
+  const tintToken = buttonCss.match(/\n\.btn-outline \{[^}]*background-color: var\(--lc-button-outline-bg, var\((--[\w-]+)\)\)/)?.[1] ?? '';
+  const tintOf = (tokens: Tokens): Rgba => color(tokens, tintToken);
   const pages = ['--color-background', '--color-land-1', '--color-land-3', '--color-surface'];
 
   /** Design 020 §5, per palette: [light, dark]. */
@@ -263,7 +276,7 @@ describe('Component pairings of 3.15 (request 020)', () => {
 
     it.each(pages)('AC-13: outline primary at rest on %s: text 4.5:1 on the tint, border 3:1', (page) => {
       const ground = solid(page);
-      expect(ratio(solid('--color-primary-700'), over(tint, ground))).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(solid('--color-primary-700'), over(tintOf(tokens), ground))).toBeGreaterThanOrEqual(4.5);
       expect(ratio(solid('--color-primary-600'), ground)).toBeGreaterThanOrEqual(3);
     });
 
@@ -2226,5 +2239,60 @@ describe('Component pairings of 3.43 (request 063)', () => {
     expect(got).toEqual(Object.fromEntries(Object.entries(EXPECTED).map(([key, pair]) => [key, pair[i]])));
     expect(got.textOnTint).toBeGreaterThanOrEqual(4.5);
     for (const key of ['onSurface', 'onBackground', 'onTint'] as const) expect(got[key]).toBeGreaterThanOrEqual(3);
+  });
+});
+
+/**
+ * 3.44 (request 064, usm-x rows 17 and 26): the outline ground
+ * (`--color-primary-wash`), the subtle icon tile (`--color-brand-tile-subtle`),
+ * the brand tile gradient and its glow are derived from the `--color-primary-*`
+ * scale with `color-mix(in srgb, var(--color-primary-N) P%, transparent)`. They
+ * render the old literals in both themes (the dark scale is inverted, so each
+ * theme picks the step that holds the same raw colour). Design 064 §5, floored,
+ * [light, dark].
+ */
+describe('Component pairings of 3.44 (request 064)', () => {
+  const floor = (n: number) => Math.floor(n * 100) / 100;
+  const rgba = (c: Rgba) => `rgba(${c.slice(0, 3).map((v) => Math.round(v)).join(', ')}, ${Math.round(c[3] * 100) / 100})`;
+  const mixed = (tokens: Tokens, value: string): Rgba => color({ ...tokens, '--x-064': value }, '--x-064');
+
+  it.each(palettes)('%s palette: the derived tokens render the 3.43 literals', (palette, tokens) => {
+    expect(rgba(color(tokens, '--color-primary-wash'))).toBe('rgba(132, 199, 212, 0.06)');
+    expect(rgba(color(tokens, '--color-brand-tile-subtle'))).toBe('rgba(32, 132, 151, 0.14)');
+    const stops = tokens['--gradient-brand-tile'].match(/^linear-gradient\(135deg, var\((--[\w-]+)\), var\((--[\w-]+)\)\)$/);
+    expect(stops && [hex(tokens, stops[1]), hex(tokens, stops[2])]).toEqual(['#84c7d4', '#1a6a79']);
+    const glow = tokens['--shadow-brand-glow'].match(/^0 0 0 1px (color-mix\(.+\))$/);
+    expect(glow && rgba(mixed(tokens, glow[1]))).toBe(palette === 'light' ? 'rgba(32, 132, 151, 0.18)' : 'rgba(132, 199, 212, 0.3)');
+  });
+
+  // Design §5 quotes rounded values (3.67, 7.83, 12.58); these are floored.
+  const EXPECTED = {
+    textOnWashPage: [17.12, 15.71],
+    textOnWashSurface: [17.12, 14.17],
+    tonePrimaryOnWashPage: [8.81, 12.57],
+    tileIconOnSubtlePage: [3.66, 8.65],
+    tileIconOnSubtleSurface: [3.66, 7.82],
+    whiteOnBrandTileEnd: [6.21, 6.21],
+  };
+
+  it.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('%s palette: text and icons on the derived grounds', (_palette, tokens, i) => {
+    const c = (name: string) => color(tokens, name);
+    const page = c('--color-background');
+    const surface = c('--color-surface');
+    const wash = c('--color-primary-wash');
+    const subtle = c('--color-brand-tile-subtle');
+    const got = {
+      textOnWashPage: floor(ratio(c('--color-text-primary'), over(wash, page))),
+      textOnWashSurface: floor(ratio(c('--color-text-primary'), over(wash, surface))),
+      tonePrimaryOnWashPage: floor(ratio(c('--color-primary-700'), over(wash, page))),
+      tileIconOnSubtlePage: floor(ratio(c('--color-primary-500'), over(subtle, page))),
+      tileIconOnSubtleSurface: floor(ratio(c('--color-primary-500'), over(subtle, surface))),
+      whiteOnBrandTileEnd: floor(ratio('#ffffff', '#1a6a79')),
+    };
+    expect(got).toEqual(Object.fromEntries(Object.entries(EXPECTED).map(([key, pair]) => [key, pair[i]])));
+    for (const key of ['textOnWashPage', 'textOnWashSurface', 'tonePrimaryOnWashPage', 'whiteOnBrandTileEnd'] as const) {
+      expect(got[key]).toBeGreaterThanOrEqual(4.5);
+    }
+    for (const key of ['tileIconOnSubtlePage', 'tileIconOnSubtleSurface'] as const) expect(got[key]).toBeGreaterThanOrEqual(3);
   });
 });

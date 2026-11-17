@@ -13,16 +13,18 @@ import {
   inject,
   afterNextRender,
   EnvironmentInjector,
+  ElementRef,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgTemplateOutlet, NgStyle } from '@angular/common';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs';
 import { A11yModule } from '@angular/cdk/a11y';
-import { NavigationItem } from '@lifecorner/angular-ui-kit/models';
+import { NavigationItem, NavigationItemContextMenuEvent } from '@lifecorner/angular-ui-kit/models';
 import {
   currentItemParents,
   currentNavigationItem,
+  isNavigationGroup,
   navigationLinks,
   navigationPath,
   sortNavigationItems,
@@ -31,6 +33,8 @@ import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/ico
 import { ICON_CHEVRON_DOWN, ICON_CHEVRON_LEFT, ICON_CHEVRON_RIGHT } from '@lifecorner/angular-ui-kit/icons';
 import { BadgeComponent } from '@lifecorner/angular-ui-kit/badge';
 import { LogoComponent } from '@lifecorner/angular-ui-kit/logo';
+import { SpinnerComponent } from '@lifecorner/angular-ui-kit/spinner';
+import { TooltipDirective, type TooltipPosition } from '@lifecorner/angular-ui-kit/tooltip';
 import { focusReturnTarget } from '@lifecorner/angular-ui-kit/internal/overlay';
 
 export type SidenavPosition = 'left' | 'right';
@@ -90,6 +94,15 @@ export type SidenavVariant = 'default' | 'transparent';
  *   button on open, trapped while open, restored on close); `returnFocusTo`
  *   (3.35) names the element that gets the focus back after the drawer
  *   closed (WebKit doesn't focus a tapped button)
+ * - 3.44 (usm-x row 14): action items (`kind: 'action'`, a button that emits
+ *   `itemClicked` only; the app sets `current`), the row states of
+ *   `ItemRowState` (`busy`, `disabled` with a `disabledReason`, `tooltip`),
+ *   children on demand (`hasChildren`, `childrenLoading`, `expandRequested`),
+ *   a right-aligned `hint`, `matchRoutes`, `iconUrl`, `muted`, a badge with
+ *   its own `ariaLabel` and `tooltip`, `itemContextMenu`, and a brand
+ *   `brandSubtitle` and `brandLetter`. Busy and disabled items ignore click,
+ *   Enter and Space (also router links: a capture listener stops the click
+ *   before `RouterLink` sees it)
  *
  * @example
  * ```html
@@ -111,7 +124,17 @@ export type SidenavVariant = 'default' | 'transparent';
 @Component({
   selector: 'lc-sidenav',
   standalone: true,
-  imports: [NgTemplateOutlet, NgStyle, RouterLink, A11yModule, IconComponent, BadgeComponent, LogoComponent],
+  imports: [
+    NgTemplateOutlet,
+    NgStyle,
+    RouterLink,
+    A11yModule,
+    IconComponent,
+    BadgeComponent,
+    LogoComponent,
+    SpinnerComponent,
+    TooltipDirective,
+  ],
   viewProviders: [ɵprovideKitIcons([ICON_CHEVRON_DOWN, ICON_CHEVRON_LEFT, ICON_CHEVRON_RIGHT])],
   templateUrl: './sidenav.component.html',
   styleUrl: './sidenav.component.scss',
@@ -190,6 +213,23 @@ export class SidenavComponent implements OnDestroy {
    * @default ''
    */
   readonly brandAriaLabel = input('');
+
+  /**
+   * A second line under `brandName` (3.44, usm-x row 14), e.g. the area
+   * ("Customizing"); the name then keeps one line, each with an ellipsis, and
+   * the block keeps its height. Joins the link's name after the brand name
+   * (`brandAriaLabel` still wins). Hidden on the rail. Empty: one name of up
+   * to two lines, as before.
+   * @default ''
+   */
+  readonly brandSubtitle = input('');
+
+  /**
+   * The brand tile's letter (3.44) instead of the name's first one, e.g.
+   * `'X'` for "USM X". `brandIcon` wins over it.
+   * @default ''
+   */
+  readonly brandLetter = input('');
 
   /**
    * Docked mode: a button at the bottom of the rail collapses and expands it
@@ -325,6 +365,20 @@ export class SidenavComponent implements OnDestroy {
   readonly badgeAriaLabel = input('{value}');
 
   /**
+   * Read after a busy item's text (3.44): "Berichte Wird geladen". German:
+   * „Wird geladen“.
+   * @default 'Loading'
+   */
+  readonly busyLabel = input('Loading');
+
+  /**
+   * Text of the loading row in an open group whose children are loading
+   * (`childrenLoading`, 3.44). German: „Wird geladen …“.
+   * @default 'Loading…'
+   */
+  readonly childrenLoadingLabel = input('Loading…');
+
+  /**
    * Ids of the expanded parent items — the single source of truth for
    * `isExpanded`. Seeded with the current item's parent whenever it changes
    * (see constructor), so a group opens on navigation but can still
@@ -380,6 +434,20 @@ export class SidenavComponent implements OnDestroy {
    */
   readonly itemAction = output<NavigationItem>();
 
+  /**
+   * A group that loads its children on demand (`hasChildren`) was opened
+   * while it has none (3.44): load them, set `childrenLoading` meanwhile.
+   */
+  readonly expandRequested = output<NavigationItem>();
+
+  /**
+   * A `contextmenu` event on an item (3.44): a right click, Shift+F10, the
+   * Menu key or an Android long press (iOS fires none: pair it with the
+   * item's `action` button). The kit doesn't call `preventDefault`. Not
+   * emitted for disabled items.
+   */
+  readonly itemContextMenu = output<NavigationItemContextMenuEvent>();
+
   /** Whether the drawer panel is rendered (drawer mode and open). */
   private readonly drawerOpen = computed(() => this.isOpen() && this.effectiveMode() === 'drawer');
   /** Whether the drawer panel was shown without a close after it. */
@@ -427,11 +495,32 @@ export class SidenavComponent implements OnDestroy {
         }
       });
     });
+
+    // 3.44: busy and disabled items (`aria-disabled="true"`) ignore click,
+    // Enter and Space. `RouterLink` navigates whatever `defaultPrevented`
+    // says, so a capture listener on the host stops the click before it
+    // reaches the link (or the button's handler). Code, not a template
+    // binding: a template listener only bubbles.
+    afterNextRender(() => {
+      this.host.nativeElement.addEventListener('click', this.blockInertClick, true);
+    });
   }
+
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /** Capture-phase click guard for busy and disabled items (3.44). */
+  private readonly blockInertClick = (event: MouseEvent): void => {
+    const target = event.target as Element | null;
+    if (target?.closest?.('.lc-sidenav__nav-item[aria-disabled="true"]')) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
 
   ngOnDestroy(): void {
     this.teardownMediaQuery();
     this.drawerClosed();
+    this.host.nativeElement.removeEventListener?.('click', this.blockInertClick, true);
   }
 
   /** Ends a shown drawer panel; schedules `returnFocusTo` when set. */
@@ -500,17 +589,68 @@ export class SidenavComponent implements OnDestroy {
     width: this.isMobile() ? this.width() : (this.collapsed() ? '56px' : this.width()),
   }));
 
-  /** The brand tile's letter when there is no `brandIcon`: the name's first character, upper-cased. */
-  protected readonly brandInitial = computed(() => ([...this.brandName().trim()][0] ?? '').toUpperCase());
+  /**
+   * The brand tile's letter when there is no `brandIcon`: `brandLetter`
+   * (3.44), else the name's first character, upper-cased.
+   */
+  protected readonly brandInitial = computed(
+    () => this.brandLetter().trim() || ([...this.brandName().trim()][0] ?? '').toUpperCase(),
+  );
 
   /** Whether the rail shows only icons (as `lc-sidenav--collapsed`). */
   protected readonly isRail = computed(() => this.collapsed() && !this.isMobile());
 
-  /** Visually hidden badge text: `badgeAriaLabel` with `{value}`; on the rail, where labels are hidden, after the label. */
+  /**
+   * Visually hidden badge text: `badge.ariaLabel` (3.44), else
+   * `badgeAriaLabel` with `{value}`; on the rail, where labels are hidden,
+   * after the label.
+   */
   protected badgeText(item: NavigationItem): string {
     if (!item.badge) return '';
-    const text = this.badgeAriaLabel().replace('{value}', String(item.badge.value));
+    const text = item.badge.ariaLabel ?? this.badgeAriaLabel().replace('{value}', String(item.badge.value));
     return this.isRail() ? `${item.label} ${text}` : text;
+  }
+
+  /**
+   * Visually hidden busy text (3.44): `busyLabel`; on the rail, where labels
+   * are hidden, after the label, unless the badge text already leads with it
+   * („Berichte Wird geladen“).
+   */
+  protected busyText(item: NavigationItem): string {
+    return this.isRail() && !item.badge ? `${item.label} ${this.busyLabel()}` : this.busyLabel();
+  }
+
+  /** Where the row tooltip opens (3.44): beside the item, below it on the rail (clear of the label tooltip). */
+  protected readonly tooltipSide = computed<TooltipPosition>(() => (this.isRail() ? 'bottom' : 'right'));
+
+  /** Whether the item is a collapsible group (with children, or loading them on demand, 3.44). */
+  protected isGroup(item: NavigationItem): boolean {
+    return isNavigationGroup(item);
+  }
+
+  /** Busy or disabled (3.44): `aria-disabled`, activation ignored. */
+  protected isBlocked(item: NavigationItem): boolean {
+    return !!item.busy || !!item.disabled;
+  }
+
+  /** A disabled item without a reason leaves the tab order (3.44). */
+  protected itemTabIndex(item: NavigationItem): number | null {
+    return item.disabled && !item.disabledReason ? -1 : null;
+  }
+
+  /**
+   * The row tooltip (3.44): `disabledReason` while disabled, else `tooltip`,
+   * then the badge's `tooltip` after " · ". Empty: no tooltip.
+   */
+  protected rowTooltip(item: NavigationItem): string {
+    const main = item.disabled ? (item.disabledReason ?? '') : (item.tooltip ?? '');
+    return [main, item.badge?.tooltip ?? ''].filter(Boolean).join(' · ');
+  }
+
+  /** `contextmenu` on an item (3.44): emitted, never prevented; not for disabled items. */
+  protected onContextMenu(event: MouseEvent, item: NavigationItem): void {
+    if (item.disabled) return;
+    this.itemContextMenu.emit({ item, event });
   }
 
   /** The collapse button's accessible name: what a press does. */
@@ -552,6 +692,8 @@ export class SidenavComponent implements OnDestroy {
    * Handle navigation item click
    */
   handleItemClick(item: NavigationItem): void {
+    // 3.44: the capture listener stops these clicks first; a direct call too.
+    if (this.isBlocked(item)) return;
     this.itemClicked.emit(item);
     // Auto-close drawer on mobile after navigation
     if (this.isMobile()) {
@@ -588,12 +730,14 @@ export class SidenavComponent implements OnDestroy {
    * If the sidenav is collapsed, expand it first.
    */
   toggleExpanded(item: NavigationItem): void {
+    if (this.isBlocked(item)) return;
     if (this.collapsed()) {
       this.collapsed.set(false);
       // Expand the clicked item after uncollapsing
       const expanded = new Set(this.expandedItems());
       expanded.add(item.id);
       this.expandedItems.set(expanded);
+      this.requestChildren(item);
       return;
     }
     const expanded = new Set(this.expandedItems());
@@ -601,8 +745,14 @@ export class SidenavComponent implements OnDestroy {
       expanded.delete(item.id);
     } else {
       expanded.add(item.id);
+      this.requestChildren(item);
     }
     this.expandedItems.set(expanded);
+  }
+
+  /** 3.44: opening a group that loads on demand and has no children yet asks for them. */
+  private requestChildren(item: NavigationItem): void {
+    if (item.hasChildren && !item.children?.length) this.expandRequested.emit(item);
   }
 
   /**

@@ -83,6 +83,7 @@ and the CSP notes.
 | Logo | `lc-logo` | LifeCorner logo: Edu, the emblem, and the LifeCorner lockup, with dark and small drawings |
 | Markdown | `lc-markdown` | GFM renderer (tables with alignment, task lists, autolinks, code/mermaid) with in-place change highlighting |
 | Menu | `lc-menu` | Dropdown menu |
+| Split button | `lc-split-button` | A face that runs the default action and a menu caret (`lc-menu`) in one outline; two real buttons, `aria-haspopup="menu"`, primary/secondary/outline, sm/md/lg (3.44) |
 | Typography | `lc-typography` | Text with preset styles |
 
 ### Form

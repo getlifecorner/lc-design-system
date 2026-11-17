@@ -246,10 +246,20 @@
   // DS2.0 Visual Primitives (light-tuned values of the dark primitives)
   // ============================================================================
   --accent-line: linear-gradient(90deg, #{$color-primary-500}, transparent);
-  --shadow-brand-glow: 0 0 0 1px rgba(32, 132, 151, 0.18);
+  // 3.44 (request 064, usm-x rows 17 and 26): the brand tile, its glow, the
+  // subtle tile and the outline wash derive from the --color-primary-* scale,
+  // so a customer theme written on <html> or a `.lc-theme-*` scope recolours
+  // them. They resolve where they are declared: a subtree that re-points only
+  // the scale must re-declare these four too. Same render as before:
+  // rgba(32, 132, 151, .18) glow, #84c7d4 → #1a6a79 tile,
+  // rgba(32, 132, 151, .14) subtle tile, rgba(132, 199, 212, .06) wash.
+  --shadow-brand-glow: 0 0 0 1px color-mix(in srgb, var(--color-primary-500) 18%, transparent);
   --shadow-glow: 0 0 24px rgba(32, 132, 151, 0.10);
   --gradient-text: linear-gradient(100deg, #{$color-primary-500}, #{$color-primary-600} 55%, #{$color-accent-violet});
-  --gradient-brand-tile: linear-gradient(135deg, #{$color-primary-400}, #{$color-primary-600});
+  --gradient-brand-tile: linear-gradient(135deg, var(--color-primary-400), var(--color-primary-600));
+  --color-brand-tile-subtle: color-mix(in srgb, var(--color-primary-500) 14%, transparent);
+  // Ground of `lc-button variant="outline"` (was the literal #84c7d40f).
+  --color-primary-wash: color-mix(in srgb, var(--color-primary-400) 6%, transparent);
 
   // ============================================================================
   // "Weite" look (3.3: LK-1, LK-4, LK-5, LK-7, LK-10, LK-11)

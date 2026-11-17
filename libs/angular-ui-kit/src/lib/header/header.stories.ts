@@ -3,6 +3,7 @@ import { moduleMetadata } from '@storybook/angular';
 import { fn, expect, userEvent, within } from 'storybook/test';
 import { HeaderComponent } from './header.component';
 import { SidenavComponent } from '../sidenav/sidenav.component';
+import { ModalComponent } from '../modal/modal.component';
 
 /**
  * The application header provides top-level navigation, branding, user info,
@@ -329,6 +330,56 @@ export const LightThemeExplicit: Story = {
     userEmail: 'sarah@example.com',
     theme: 'light',
   },
+};
+
+/** 3.44 (request 064, usm-x row 4): the hooks set on an ancestor win, and the bar takes a gradient. */
+export const HooksOnAnAncestor: Story = {
+  name: 'Hooks On An Ancestor',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.44 (usm-x row 4): `--lc-header-bg`, `--lc-header-fg`, `--lc-header-fg-secondary`, `--lc-header-trigger-fg` and `--lc-header-border` are set on a wrapper (an app shell), not on the header: they win over the variant defaults. The bar paints `background`, so `--lc-header-bg` takes a gradient (`--color-primary-fill-active` → `--color-primary-fill`; white text 13.18:1 → 6.21:1). Before 3.44 the header declared the hooks on its own element, so an ancestor value never reached it. Below: the same header without the wrapper.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 24px;">
+        <div style="--lc-header-bg: linear-gradient(90deg, var(--color-primary-fill-active), var(--color-primary-fill)); --lc-header-fg: var(--color-on-primary); --lc-header-fg-secondary: var(--color-on-primary); --lc-header-trigger-fg: var(--color-on-primary); --lc-header-border: transparent;">
+          <lc-header title="USM X" subtitle="Arbeitsbereich" [sticky]="false" userName="Johanna Apfelbaum" />
+        </div>
+        <lc-header title="USM X" subtitle="Arbeitsbereich" [sticky]="false" userName="Johanna Apfelbaum" />
+      </div>`,
+  }),
+};
+
+/** 3.44 (request 064, usm-x row 4): an open lc-modal veils the sticky header. */
+export const UnderAModal: Story = {
+  name: 'Under A Modal',
+  decorators: [moduleMetadata({ imports: [ModalComponent] })],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.44 (usm-x row 4): the sticky header’s layer is `--lc-header-z` (default 900, was 1000): below `lc-modal` (backdrop 999, dialog 1000), the drawer (1100) and toasts (1200), above page content. The open modal’s backdrop covers the header, so the header is dimmed and not clickable while the dialog is open.',
+      },
+      story: { inline: false, height: '480px' },
+    },
+  },
+  render: () => ({
+    props: { open: true },
+    template: `
+      <div lang="de">
+        <lc-header title="USM X" subtitle="Arbeitsbereich" userName="Johanna Apfelbaum" />
+        <p style="padding: 16px; margin: 0; color: var(--color-text-secondary);">Seiteninhalt unter dem Kopf.</p>
+        <lc-modal [open]="open" (openChange)="open = $event" size="md" ariaLabelledBy="under-modal-title" closeAriaLabel="Schließen">
+          <div slot="header"><h2 id="under-modal-title">Fenster öffnen</h2></div>
+          <div slot="body"><p style="margin: 0;">Der Kopf liegt unter dem Schleier.</p></div>
+        </lc-modal>
+      </div>`,
+  }),
 };
 
 /** 3.27.1 (request 043, F-25): a themed header keeps its palette inside a page of the other theme. */

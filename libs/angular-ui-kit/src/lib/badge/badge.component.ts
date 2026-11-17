@@ -1,4 +1,5 @@
 import { Component, ChangeDetectionStrategy, ViewEncapsulation, input, computed } from '@angular/core';
+import { IconComponent } from '@lifecorner/angular-ui-kit/icon';
 
 export type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
 export type BadgeSize = 'xs' | 'sm' | 'md' | 'lg';
@@ -22,7 +23,7 @@ export type BadgeSize = 'xs' | 'sm' | 'md' | 'lg';
 @Component({
   selector: 'lc-badge',
   standalone: true,
-  imports: [],
+  imports: [IconComponent],
   templateUrl: './badge.component.html',
   styleUrl: './badge.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -57,6 +58,16 @@ export class BadgeComponent {
   wrap = input<boolean>(false);
 
   /**
+   * Leading decorative icon (3.44, usm-x row 28): an `lc-icon` name, drawn
+   * 1em square in the label ink after the dot and before the label, with a
+   * gap of `--lc-badge-gap` (default `0.4em` with an icon, `0` without; set it
+   * on the badge or any ancestor, as `--lc-chip-gap`). The app registers the
+   * icon (`provideLcIcons`). With `wrap` it stays on the first line.
+   * @default undefined
+   */
+  icon = input<string | undefined>(undefined);
+
+  /**
    * Computed CSS classes for the badge
    */
   badgeClasses = computed(() => {
@@ -75,6 +86,10 @@ export class BadgeComponent {
 
     if (this.wrap()) {
       classes.push('lc-badge--wrap');
+    }
+
+    if (this.icon()) {
+      classes.push('lc-badge--has-icon');
     }
 
     return classes.join(' ');

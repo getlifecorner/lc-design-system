@@ -1,10 +1,23 @@
+import type { ItemRowState } from './item-row-state.interface';
+
+/**
+ * Kind of a sidenav item (3.44): `link` (a router link, as before) or `action`
+ * (a button that emits `itemClicked` only; the app sets `current`).
+ */
+export type NavigationItemKind = 'link' | 'action';
+
 /**
  * NavigationItem interface for sidenav navigation
  *
  * Represents a navigation item with icon, label, route, and optional role requirement.
  * Can also represent a section header (group) when `isSection` is true.
+ *
+ * 3.44 (usm-x row 14): the shared row states of `ItemRowState` (`busy`,
+ * `disabled`, `disabledReason`, `tooltip`) and action items, an app-set
+ * `current`, children on demand, a `hint`, `matchRoutes`, `iconUrl` and
+ * `muted`.
  */
-export interface NavigationItem {
+export interface NavigationItem extends ItemRowState {
   /**
    * Unique identifier for the navigation item
    */
@@ -21,7 +34,8 @@ export interface NavigationItem {
   label: string;
 
   /**
-   * Angular route path (e.g., '/', '/trading')
+   * Angular route path (e.g., '/', '/trading'). Ignored on `kind: 'action'`
+   * (pass `''`).
    */
   route: string;
 
@@ -67,5 +81,61 @@ export interface NavigationItem {
     value: string | number;
     /** Badge color variant */
     variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+    /**
+     * Read after the label instead of the sidenav's `badgeAriaLabel` (3.44),
+     * e.g. "56/60" → "56 von 60 geladen".
+     */
+    ariaLabel?: string;
+    /** The badge's text in the row tooltip, after " · " (3.44). */
+    tooltip?: string;
   };
+
+  /**
+   * `'action'` (3.44): a `<button>` that emits `itemClicked` only; `route` is
+   * ignored and routes never make it current (the app sets `current`).
+   * Default `'link'`.
+   */
+  kind?: NavigationItemKind;
+
+  /**
+   * The current item (3.44): `aria-current="page"` and the current look. The
+   * first such item in display order wins over `activeRoute` and the router.
+   */
+  current?: boolean;
+
+  /**
+   * A group whose children load on demand (3.44): it shows the chevron with
+   * no children yet, and opening it emits `expandRequested` while it has none.
+   */
+  hasChildren?: boolean;
+
+  /** The open group's children are loading (3.44): a loading row and `aria-busy`. */
+  childrenLoading?: boolean;
+
+  /**
+   * Right-aligned text beside the label (3.44), e.g. where an editor lives
+   * instead ("Rich Client"). In the item's accessible name; hidden on the
+   * rail; ellipsis with the full text in `title`.
+   */
+  hint?: string;
+
+  /**
+   * Further routes the item is current for (3.44), matched like `route`
+   * (exact, then the longest prefix), e.g. every address an area owns.
+   */
+  matchRoutes?: string[];
+
+  /** An image URL instead of `icon` (3.44): `alt=""`, 20 px, 22 px on the rail. */
+  iconUrl?: string;
+
+  /** A quieter ink at rest (3.44); the item is still a link. */
+  muted?: boolean;
+}
+
+/** Payload of `lc-sidenav`'s `itemContextMenu` (3.44). */
+export interface NavigationItemContextMenuEvent {
+  /** The item the context menu was requested on. */
+  item: NavigationItem;
+  /** The `contextmenu` event (the kit doesn't call `preventDefault`). */
+  event: MouseEvent;
 }

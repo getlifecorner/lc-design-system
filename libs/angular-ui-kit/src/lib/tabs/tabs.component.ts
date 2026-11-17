@@ -8,17 +8,29 @@ import {
   computed,
   effect,
   untracked,
+  signal,
+  afterRenderEffect,
+  inject,
+  DestroyRef,
   ChangeDetectionStrategy,
   ViewEncapsulation,
   TemplateRef,
   ElementRef,
 } from '@angular/core';
 import { NgClass, NgTemplateOutlet } from '@angular/common';
+import { RouterLink, type Params, type QueryParamsHandling } from '@angular/router';
 import { BadgeComponent, BadgeVariant } from '@lifecorner/angular-ui-kit/badge';
 
 let nextUniqueId = 0;
 
 export type TabOrientation = 'horizontal' | 'vertical';
+
+/**
+ * What `lc-tabs` renders (3.44). `panels`: tabs and their panels (as
+ * before). `links`: a tab list of links for content shown elsewhere (a
+ * router outlet); the kit renders no panels.
+ */
+export type TabsMode = 'panels' | 'links';
 
 /**
  * Individual tab component
@@ -64,6 +76,50 @@ export class TabComponent {
   readonly badgeVariant = input<BadgeVariant>('default');
 
   /**
+   * `mode="links"` (3.44, usm-x row 11): the tab's router link (`RouterLink`
+   * commands), e.g. `route="."` with `[queryParams]="{ tab: 'kosten' }"` and
+   * `queryParamsHandling="merge"`, so a reload or a shared link lands on the
+   * same tab. Needs the app's router. Wins over `href`. Ignored in `panels`.
+   * @default null
+   */
+  readonly route = input<string | readonly unknown[] | null>(null);
+
+  /**
+   * Query parameters of `route` (`RouterLink`'s `queryParams`).
+   * @default null
+   */
+  readonly queryParams = input<Params | null>(null);
+
+  /**
+   * How `route` treats the current query (`RouterLink`'s
+   * `queryParamsHandling`: `'merge'`, `'preserve'` or `''`).
+   * @default null
+   */
+  readonly queryParamsHandling = input<QueryParamsHandling | null>(null);
+
+  /**
+   * `mode="links"` without the router (3.44): a plain link. `route` wins.
+   * @default ''
+   */
+  readonly href = input('');
+
+  /**
+   * `mode="links"` (3.44): the app's current tab, `aria-selected="true"` and
+   * the selected look. Clicks don't change it: the app sets it from its URL
+   * (`?tab=`). If several tabs have it, the first wins.
+   * @default false
+   */
+  readonly current = input(false);
+
+  /**
+   * Id of the tab element (3.44), so an app panel can point at it with
+   * `aria-labelledby`. In `panels` mode the kit's own panel follows it.
+   * Empty: the generated `lc-tab-N`.
+   * @default ''
+   */
+  readonly tabId = input('');
+
+  /**
    * Whether the badge should be rendered
    */
   readonly hasBadge = computed(() => {
@@ -80,6 +136,9 @@ export class TabComponent {
    * Unique ID for the panel
    */
   readonly panelId = `lc-tabpanel-${this.id}`;
+
+  /** Id of the tab element: `tabId`, or the generated id (3.44). */
+  readonly elementId = computed(() => this.tabId() || this.id);
 
   /**
    * Template reference for tab content
@@ -99,6 +158,13 @@ export class TabComponent {
  *   selection and DOM focus
  * - Lazy content rendering per tab
  * - Optional badge per tab (counts or status labels)
+ * - 3.44: a horizontal tab list scrolls on its own when the tabs don't fit
+ *   (WCAG 1.4.10), the selected tab is scrolled into view, and the focus ring
+ *   is drawn inside the tab
+ * - 3.44 (usm-x row 11): `mode="links"`, a tab list of links (`route` +
+ *   `queryParams`, or `href`) for content rendered elsewhere, such as a router
+ *   outlet; the app marks the `current` tab and wraps its outlet in
+ *   `<div role="tabpanel" [id]="panelId" [attr.aria-labelledby]="currentTabId">`
  *
  * @example
  * ```html
@@ -112,7 +178,7 @@ export class TabComponent {
 @Component({
   selector: 'lc-tabs',
   standalone: true,
-  imports: [NgClass, NgTemplateOutlet, BadgeComponent],
+  imports: [NgClass, NgTemplateOutlet, BadgeComponent, RouterLink],
   templateUrl: './tabs.component.html',
   styleUrl: './tabs.component.scss',
   encapsulation: ViewEncapsulation.None,
@@ -143,6 +209,27 @@ export class TabsComponent {
   readonly selectedIndexInput = input<number | undefined>(undefined);
 
   /**
+   * What the tabs render (3.44, usm-x row 11). `'links'`: a tab list of links
+   * for content shown elsewhere (a router outlet), with `role="tablist"` and
+   * `role="tab"` links; each `lc-tab` takes `route` (+ `queryParams`,
+   * `queryParamsHandling`) or `href`. The kit renders no panels, the `lc-tab`
+   * with `current` is the current tab (`aria-selected`), clicks only
+   * navigate, and `selectedIndex` is ignored. Arrow keys, Home and End move
+   * the focus (manual activation: a route load has latency); Enter or Space
+   * follows the link. Wrap the outlet in `<div role="tabpanel" [id]="panelId">`
+   * labelled by the current tab's `tabId`.
+   * @default 'panels'
+   */
+  readonly mode = input<TabsMode>('panels');
+
+  /**
+   * `mode="links"` (3.44): the `aria-controls` of every tab, the id of the
+   * element that shows the tab content. Empty renders no attribute.
+   * @default ''
+   */
+  readonly panelId = input('');
+
+  /**
    * Projected tab components (signal query — updates when tabs are added or
    * removed after init).
    */
@@ -157,6 +244,23 @@ export class TabsComponent {
    * Rendered tab buttons — used to move DOM focus on keyboard navigation.
    */
   private readonly tabButtons = viewChildren<ElementRef<HTMLButtonElement>>('tabButton');
+
+  /** The `role="tablist"` element of either mode (3.44: scrolls the selected tab into view). */
+  private readonly listElement = viewChild<ElementRef<HTMLElement>>('tabListEl');
+
+  /** `mode="links"` (3.44): index of the current tab, the first with `current`; -1 if none. */
+  protected readonly currentIndex = computed(() => this.tabs().findIndex((tab) => tab.current()));
+
+  /** `mode="links"`: index of the focused link while the focus is in the list, else `null`. */
+  private readonly focusedLink = signal<number | null>(null);
+
+  /** `mode="links"`: the tab stop: the current tab if enabled, else the first enabled one. */
+  private readonly linkStop = computed(() => {
+    const tabs = this.tabs();
+    const current = this.currentIndex();
+    if (current >= 0 && !tabs[current]?.disabled()) return current;
+    return tabs.findIndex((tab) => !tab.disabled());
+  });
 
   /**
    * CSS classes for tab list
@@ -182,11 +286,138 @@ export class TabsComponent {
     // the end would leave no panel visible and no tab reachable via Tab.
     effect(() => {
       const count = this.tabs().length;
+      if (this.mode() === 'links') return;
       const index = untracked(() => this.selectedIndex());
       if (count > 0 && index >= count) {
         untracked(() => this.selectTab(this.getLastEnabledTab()));
       }
     });
+
+    // 3.44 (WCAG 1.4.10): a horizontal list scrolls; keep the selected (or,
+    // in links mode, the current) tab fully in view after the first render and
+    // when it changes. Only `scrollLeft`: `scrollIntoView` would scroll the page.
+    afterRenderEffect(() => {
+      this.mode();
+      this.currentIndex();
+      this.selectedIndex();
+      this.orientation();
+      const list = this.listElement()?.nativeElement;
+      this.tabs();
+      untracked(() => {
+        this.scrollSelectedIntoView();
+        this.observeSizes(list);
+      });
+    });
+    // Web fonts and container changes resize the tabs after the first render:
+    // the observer scrolls the selected tab in again (never on a user scroll).
+    inject(DestroyRef).onDestroy(() => this.resizeObserver?.disconnect());
+  }
+
+  /** Re-scrolls when the list or a tab changes size (3.44). */
+  private resizeObserver?: ResizeObserver;
+
+  private observeSizes(list: HTMLElement | undefined): void {
+    if (typeof ResizeObserver === 'undefined') return;
+    this.resizeObserver ??= new ResizeObserver(() => this.scrollSelectedIntoView());
+    this.resizeObserver.disconnect();
+    if (!list || this.orientation() !== 'horizontal') return;
+    this.resizeObserver.observe(list);
+    list.querySelectorAll('[role="tab"]').forEach((tab) => this.resizeObserver?.observe(tab));
+  }
+
+  /** Scrolls the horizontal list so the selected (links: current) tab is fully in view; `scrollLeft` only. */
+  private scrollSelectedIntoView(): void {
+    const index = this.mode() === 'links' ? this.currentIndex() : this.selectedIndex();
+    const list = this.listElement()?.nativeElement;
+    if (!list || this.orientation() !== 'horizontal' || index < 0) return;
+    const tab = list.querySelectorAll<HTMLElement>('[role="tab"]')[index];
+    if (!tab) return;
+    const box = list.getBoundingClientRect();
+    const rect = tab.getBoundingClientRect();
+    if (rect.right > box.right) {
+      list.scrollLeft += rect.right - box.right;
+    } else if (rect.left < box.left) {
+      list.scrollLeft -= box.left - rect.left;
+    }
+  }
+
+  /** `mode="links"`: `aria-selected` of the tab at `index`. */
+  protected isCurrent(index: number): boolean {
+    return this.currentIndex() === index;
+  }
+
+  /**
+   * `mode="links"`: roving tab stop. The focused link while the focus is in
+   * the list, else the current tab (or the first enabled one). Disabled tabs
+   * get no tabindex: an `<a>` without `href` is not focusable.
+   */
+  protected linkTabIndex(index: number): number | null {
+    if (this.tabs()[index]?.disabled()) return null;
+    return index === (this.focusedLink() ?? this.linkStop()) ? 0 : -1;
+  }
+
+  /** The tab links of `mode="links"`, in order (disabled ones included). */
+  private linkElements(): HTMLElement[] {
+    const list = this.listElement()?.nativeElement;
+    return list ? [...list.querySelectorAll<HTMLElement>('[role="tab"]')] : [];
+  }
+
+  /** `mode="links"`: remember the focused link (the tab stop follows it). */
+  protected onLinkFocusIn(event: FocusEvent): void {
+    const index = this.linkElements().indexOf(event.target as HTMLElement);
+    if (index >= 0) this.focusedLink.set(index);
+  }
+
+  /** `mode="links"`: focus left the list: the tab stop returns to the current tab. */
+  protected onLinkFocusOut(event: FocusEvent): void {
+    const next = event.relatedTarget as Node | null;
+    if (!next || !this.listElement()?.nativeElement.contains(next)) this.focusedLink.set(null);
+  }
+
+  /**
+   * `mode="links"`: arrows, Home and End move the focus only (skipping
+   * disabled tabs, wrapping); Enter follows the link natively; Space clicks it
+   * (no page scroll). The current tab never changes here.
+   */
+  protected onLinkKeyDown(event: KeyboardEvent): void {
+    const links = this.linkElements();
+    const from = links.indexOf(event.target as HTMLElement);
+    if (from < 0) return;
+    const horizontal = this.orientation() === 'horizontal';
+    const enabled = (i: number) => !this.tabs()[i]?.disabled();
+    const step = (start: number, direction: 1 | -1): number => {
+      for (let n = 1; n <= links.length; n++) {
+        const i = (start + direction * n + links.length) % links.length;
+        if (enabled(i)) return i;
+      }
+      return -1;
+    };
+    let to: number;
+    switch (event.key) {
+      case horizontal ? 'ArrowRight' : 'ArrowDown':
+        to = step(from, 1);
+        break;
+      case horizontal ? 'ArrowLeft' : 'ArrowUp':
+        to = step(from, -1);
+        break;
+      case 'Home':
+        to = step(links.length - 1, 1);
+        break;
+      case 'End':
+        to = step(0, -1);
+        break;
+      case ' ':
+        event.preventDefault();
+        (event.target as HTMLElement).click();
+        return;
+      default:
+        return;
+    }
+    event.preventDefault();
+    if (to >= 0) {
+      this.focusedLink.set(to);
+      links[to]?.focus();
+    }
   }
 
   /**

@@ -23,6 +23,16 @@ export type CardHeadingLevel = 2 | 3 | 4 | 5 | 6;
 /** Layout of `lc-card`'s `[card-footer]` slot: `default` (a flex row, end-aligned) or `equal` (children at equal width). */
 export type CardFooterLayout = 'default' | 'equal';
 
+/**
+ * Where the button role of a `clickable` card sits (3.44): `card` (the card
+ * itself, as before) or `heading` (a button inside the title's heading,
+ * stretched over the card).
+ */
+export type CardClickTarget = 'card' | 'heading';
+
+/** Spacing of `lc-card`'s built-in head (3.44): `md` (as before) or the denser `sm`. */
+export type CardHeaderSize = 'md' | 'sm';
+
 /** Counter for generated ids (3.36): creation order, so prerendered HTML is the same in every build. */
 let nextCardId = 0;
 
@@ -262,6 +272,35 @@ export class CardComponent {
   readonly expanded = model<boolean>(true);
 
   /**
+   * Where the button role of a `clickable` card with a `title` sits (3.44,
+   * usm-x row 24). `'card'`: the card is the button (as before), so its heading
+   * is lost inside `role="button"`. `'heading'`: a `<button>` inside the
+   * title's heading, stretched over the card (the link card's pattern): the
+   * heading stays in the page outline, the card is still one tab stop, and a
+   * click anywhere, Enter or Space emit `cardClick` once. `ariaLabel` then
+   * names that button and must contain the title (WCAG 2.5.3). Without a
+   * title, `'card'` applies.
+   * @default 'card'
+   */
+  clickTarget = input<CardClickTarget>('card');
+
+  /**
+   * Keep the title on one line with an ellipsis (3.44, usm-x row 24); the full
+   * title is the heading's `title` attribute. A badge beside it never shrinks.
+   * @default false
+   */
+  truncateTitle = input<boolean>(false);
+
+  /**
+   * Spacing of the built-in head (3.44, usm-x row 17). `'sm'`: padding-bottom
+   * 8 px and margin-bottom 12 px (`md`: 12 / 16), and a collapsible head is at
+   * least 32 px high instead of 44 px, while its toggle's hit area stays 44 px
+   * (it reaches 6 px above and below the head).
+   * @default 'md'
+   */
+  headerSize = input<CardHeaderSize>('md');
+
+  /**
    * Emitted when a `clickable` card is clicked or activated with Enter or
    * Space. Not emitted on a link card (`href`/`route`): the link navigates by
    * itself (one navigation); bind the native `(click)` for analytics.
@@ -306,13 +345,29 @@ export class CardComponent {
     () => this.clickable() && this.variant() !== 'dashed' && !this.linkMode() && !this.isCollapsible(),
   );
 
+  /**
+   * Whether the button role sits in the heading (3.44): a clickable card with
+   * a built-in title and `clickTarget="heading"`.
+   */
+  protected readonly headingTarget = computed(
+    () => this.isClickable() && this.clickTarget() === 'heading' && !!this.title(),
+  );
+
+  /** The heading's `title` attribute while `truncateTitle` is on (3.44). */
+  protected readonly headingTitle = computed(() => (this.truncateTitle() ? this.title() ?? null : null));
+
   /** Opens or closes a collapsible card; `expandedChange` emits the new state. */
   protected toggle(): void {
     this.expanded.set(!this.expanded());
   }
 
-  /** `ariaLabel` on the card; on a link card it names the anchor instead. */
-  protected readonly cardAriaLabel = computed(() => (this.linkMode() ? undefined : this.ariaLabel()));
+  /**
+   * `ariaLabel` on the card; on a link card it names the anchor instead, and
+   * with `clickTarget="heading"` the heading's button (3.44).
+   */
+  protected readonly cardAriaLabel = computed(() =>
+    this.linkMode() || this.headingTarget() ? undefined : this.ariaLabel(),
+  );
 
   constructor() {
     if (isDevMode()) {
@@ -347,13 +402,23 @@ export class CardComponent {
       `card-radius-${this.borderRadius()}`,
     ];
 
-    if (this.isClickable()) {
+    // 3.44: with the button in the heading, the card looks and reacts like a
+    // link card (stretched control, ring on the card, nested controls lifted).
+    if (this.isClickable() && !this.headingTarget()) {
       classes.push('card-clickable');
     }
 
     // A link card looks and reacts like a clickable one (3.24).
-    if (this.linkMode()) {
+    if (this.linkMode() || this.headingTarget()) {
       classes.push('card-linked');
+    }
+
+    // 3.44: one-line title, dense head.
+    if (this.truncateTitle()) {
+      classes.push('card-truncate-title');
+    }
+    if (this.headerSize() === 'sm') {
+      classes.push('card-header-sm');
     }
 
     // The dashed tile is never interactive, so it is never selected either.
@@ -373,7 +438,10 @@ export class CardComponent {
   /**
    * Compute ARIA role based on clickable state
    */
-  protected role = computed(() => (this.isClickable() ? 'button' : 'article'));
+  protected role = computed(() => (this.isClickable() && !this.headingTarget() ? 'button' : 'article'));
+
+  /** The card itself is the tab stop only when it is the button. */
+  protected readonly cardTabindex = computed(() => (this.isClickable() && !this.headingTarget() ? 0 : null));
 
   /**
    * Handle card click events
@@ -389,6 +457,9 @@ export class CardComponent {
    */
   @HostListener('keydown', ['$event'])
   protected handleKeydown(event: KeyboardEvent): void {
+    // 3.44: the heading's native button turns Enter/Space into its own click,
+    // which reaches handleClick once.
+    if (this.headingTarget()) return;
     if (this.isClickable() && (event.key === 'Enter' || event.key === ' ')) {
       event.preventDefault();
       const mouseEvent = new MouseEvent('click', {

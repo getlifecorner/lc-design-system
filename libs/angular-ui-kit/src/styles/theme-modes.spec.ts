@@ -11,10 +11,12 @@ const light = compile(resolve(__dirname, '_theme-light.scss')).css;
 /**
  * Colour tokens per palette and all tokens per root rule. 3.43 (request 063,
  * usm-x row 8): `--color-accent-yellow` joined both palettes (172 → 173,
- * 252 → 253); every other token is unchanged.
+ * 252 → 253); every other token is unchanged. 3.44 (request 064, usm-x rows
+ * 17 and 26): `--color-brand-tile-subtle` and `--color-primary-wash` joined
+ * both palettes (173 → 175, 253 → 255).
  */
-const COLOUR_TOKENS = 173;
-const ALL_TOKENS = 253;
+const COLOUR_TOKENS = 175;
+const ALL_TOKENS = 255;
 
 /** Custom properties of the first rule whose selector list starts with `selector`. */
 function tokensOf(css: string, selector: string): Record<string, string> {
@@ -79,21 +81,21 @@ describe('Theme scope of a themed header', () => {
   const colours = (tokens: Record<string, string>) =>
     Object.fromEntries(Object.entries(tokens).filter(([name]) => COLOUR.test(name)));
 
-  it('AC-6: .lc-header--light declares exactly the colour tokens of the light root (173 since 3.43), with the same values', () => {
+  it('AC-6: .lc-header--light declares exactly the colour tokens of the light root (175 since 3.44), with the same values', () => {
     const root = tokensOf(light, ':root,');
     const header = tokensOf(light, '\n.lc-header--light {');
     expect(Object.keys(header)).toHaveLength(COLOUR_TOKENS);
     expect(header).toEqual(colours(root));
   });
 
-  it('AC-7: .lc-header--dark declares exactly the colour tokens of the dark root (173 since 3.43), with the same values', () => {
+  it('AC-7: .lc-header--dark declares exactly the colour tokens of the dark root (175 since 3.44), with the same values', () => {
     const root = tokensOf(dark, ':root.dark,');
     const header = tokensOf(dark, '\n.lc-header--dark {');
     expect(Object.keys(header)).toHaveLength(COLOUR_TOKENS);
     expect(header).toEqual(colours(root));
   });
 
-  it('AC-12: the root rules still declare the full token set (253 per theme since 3.43), colours and the rest', () => {
+  it('AC-12: the root rules still declare the full token set (255 per theme since 3.44), colours and the rest', () => {
     expect(Object.keys(tokensOf(light, ':root,'))).toHaveLength(ALL_TOKENS);
     expect(Object.keys(tokensOf(dark, ':root.dark,'))).toHaveLength(ALL_TOKENS);
     expect(Object.keys(colours(tokensOf(light, ':root,')))).toHaveLength(COLOUR_TOKENS);
@@ -126,13 +128,13 @@ describe('Theme scope of a themed sidenav rail badge (request 051)', () => {
   const LIGHT_RAIL = '.lc-sidenav-container--light .lc-sidenav__nav-badge,\nlc-hero lc-badge,\nlc-hero lc-chip {';
   const DARK_RAIL = '.lc-sidenav-container--dark .lc-sidenav__nav-badge {';
 
-  it('AC-3/AC-4: the light rail badge declares exactly the colour tokens of the light root (173 since 3.43), with the same values', () => {
+  it('AC-3/AC-4: the light rail badge declares exactly the colour tokens of the light root (175 since 3.44), with the same values', () => {
     const badge = tokensOf(light, `\n${LIGHT_RAIL}`);
     expect(Object.keys(badge)).toHaveLength(COLOUR_TOKENS);
     expect(badge).toEqual(colours(tokensOf(light, ':root,')));
   });
 
-  it('AC-3/AC-4: the dark rail badge declares exactly the colour tokens of the dark root (173 since 3.43), with the same values', () => {
+  it('AC-3/AC-4: the dark rail badge declares exactly the colour tokens of the dark root (175 since 3.44), with the same values', () => {
     const badge = tokensOf(dark, `\n${DARK_RAIL}`);
     expect(Object.keys(badge)).toHaveLength(COLOUR_TOKENS);
     expect(badge).toEqual(colours(tokensOf(dark, ':root.dark,')));

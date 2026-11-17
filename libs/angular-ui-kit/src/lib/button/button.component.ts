@@ -36,6 +36,12 @@ export type ButtonAriaPressed = boolean | 'mixed';
 /** Value of `aria-haspopup` for a popup trigger (3.42). */
 export type ButtonAriaHasPopup = boolean | 'menu' | 'listbox' | 'tree' | 'grid' | 'dialog';
 
+/**
+ * Shape of the button (3.44). `pill`: as before. `row`: a bare row body (no
+ * fill, border or hover fill, small radius, inset focus ring).
+ */
+export type ButtonShape = 'pill' | 'row';
+
 @Component({
   selector: 'lc-button',
   standalone: true,
@@ -66,6 +72,12 @@ export type ButtonAriaHasPopup = boolean | 'menu' | 'listbox' | 'tree' | 'grid' 
  * one-word button shrink with its neighbours, which is why the default stays
  * `break-word`. The kit sets it in `lc-footer`'s link row, the page-header
  * actions, the next-step-card's narrow actions and the narrow alert's actions.
+ *
+ * CSS hook `--lc-button-outline-bg` (3.44, default `var(--color-primary-wash)`,
+ * 6 % of the light primary in both themes): the ground of `variant="outline"`,
+ * both tones; the pressed tone is this ground under the `brightness(.92)`
+ * filter. The wash follows a customer theme and a scoped accent that
+ * re-points the semantic tokens.
  *
  * @example
  * ```html
@@ -198,6 +210,40 @@ export class ButtonComponent {
    * @default false
    */
   readonly flush = input(false);
+
+  /**
+   * Shape (3.44, usm-x row 27). `'row'` makes the button the body of a row:
+   * full width, start-aligned, the font and ink of its container, no fill,
+   * border or hover/active fill in any variant, radius `--border-radius-sm`
+   * and an inset focus ring (2 px at −2 px, not clipped by a row's
+   * `overflow: hidden`). The row container paints rest, hover and selection.
+   * It overrides `size` (padding and font), `inline`, `flush`, `iconOnly` and
+   * `fullWidth`; `disabled` and `loading` look as before (50 %). CSS hooks:
+   * `--lc-button-row-padding` (default `var(--spacing-2) var(--spacing-3)`)
+   * and `--lc-button-row-min-height` (default `44px`); keep at least 24 px
+   * (WCAG 2.5.8) and 4 px of padding where content touches the edge.
+   * @default 'pill'
+   */
+  readonly shape = input<ButtonShape>('pill');
+
+  /**
+   * `accesskey` on the inner `<button>` (3.44, usm-x row 29), e.g. a
+   * backend-defined letter. Avoid letters the browser or a screen reader
+   * takes, and pair it with `ariaKeyShortcuts` so it is announced. Empty
+   * renders no attribute. On `a[lcButton]` set `accesskey` on the link itself.
+   * @default ''
+   */
+  readonly accessKey = input('');
+
+  /**
+   * `aria-keyshortcuts` on the inner `<button>` (3.44), e.g.
+   * `'Alt+Shift+S'`. Empty renders no attribute.
+   * @default ''
+   */
+  readonly ariaKeyShortcuts = input('');
+
+  /** The row shape drops these modifiers (it overrides them, 3.44). */
+  protected readonly isRow = computed(() => this.shape() === 'row');
 
   readonly clicked = output<void>();
   readonly focused = output<void>();

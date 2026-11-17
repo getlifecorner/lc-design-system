@@ -64,6 +64,23 @@ const meta: Meta<ListComponent> = {
         '3.16: a plain left click on an `href` row ({ item, event }). Call `event.preventDefault()` and navigate with the router for in-app links; modified and middle clicks do not emit.',
       table: { defaultValue: { summary: '—' } },
     },
+    busyLabel: {
+      control: 'text',
+      description: '3.44: read after a `busy` row\'s text; rows with an `aria-label` get ", <busyLabel>" appended. German „Wird geladen“',
+      table: { defaultValue: { summary: "'Loading'" } },
+    },
+    headingLevel: {
+      control: 'select',
+      options: [2, 3, 4, 5, 6],
+      description: '3.44: the `h2`–`h6` of heading items (`ListItem.heading`)',
+      table: { defaultValue: { summary: '3' } },
+    },
+    multiColumn: {
+      control: 'boolean',
+      description:
+        '3.44: a vertical list flows into as many columns as fit (`--lc-list-column-width`, default 18rem; `--lc-list-column-gap`, default `--spacing-6`). Rows never split, a heading stays with its first row; reading order is down each column',
+      table: { defaultValue: { summary: 'false' } },
+    },
   },
 
   parameters: {
@@ -749,6 +766,147 @@ export const JumpMarks: Story = {
         <lc-list [items]="links" size="md" [showDividers]="true" [showChevron]="true" />
         <lc-list [items]="rows" size="md" [clickable]="true" [showDividers]="true" [showChevron]="true" />
         <lc-list [items]="plain" size="md" [showDividers]="true" />
+      </div>`,
+  }),
+};
+
+// ── 3.44 (request 064, usm-x row 20) ─────────────────────────────────────────
+
+/** 3.44: busy rows: spinner, `aria-busy`, no activation; the action shows `loading`. */
+export const BusyRows: Story = {
+  name: 'Busy Rows',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.44 (usm-x row 20): `busy` rows show a 16 px spinner in their leading slot (the icon’s 20 px box, the avatar’s 40 px box, or before the label of a row without either), carry `aria-busy` and `aria-disabled`, keep their focus and ignore click, Enter and Space (no `itemClick` / `linkClick`); a row’s built-in action shows `loading`. `busyLabel` is read after the row’s text, or appended to its `aria-label` („…, Wird geladen“). First list `clickable`, second a link list with one busy `href` row.',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      rows: [
+        { id: 'a', label: 'Berichte', subtitle: 'Icon', icon: 'chart-bar', busy: true },
+        { id: 'b', label: 'Johanna Apfelbaum', subtitle: 'Avatar', avatar: 'JA', avatarColor: 'member-2', busy: true },
+        { id: 'c', label: 'Kostenstellen', subtitle: 'Aktion', icon: 'building-bank', action: 'Laden', busy: true },
+        { id: 'd', label: 'Ohne Icon', subtitle: 'Kein Icon, kein Avatar', busy: true },
+        { id: 'e', label: 'Bereit', subtitle: 'Nicht beschäftigt', icon: 'check' },
+      ],
+      links: [
+        { id: 'l1', label: 'Zu Lücken', href: '#luecken', icon: 'file', busy: true },
+        { id: 'l2', label: 'Zu Zuordnungen', href: '#zuordnungen', icon: 'file' },
+      ],
+    },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 24px; max-width: 480px;">
+        <lc-list [items]="rows" [clickable]="true" [showDividers]="true" busyLabel="Wird geladen" />
+        <lc-list [items]="links" [showDividers]="true" [showChevron]="true" busyLabel="Wird geladen" />
+      </div>`,
+  }),
+};
+
+/** 3.44: a tooltip, a badge tooltip and disabled rows with a reason. */
+export const TooltipsAndReasons: Story = {
+  name: 'Tooltips And Reasons',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.44: `tooltip` and `badgeTooltip` show as one kit tooltip on the row’s focus target, on hover anywhere on the row and on keyboard focus (joined with „ · “; `aria-describedby` while shown; Escape hides it). A `disabled` row with a `disabledReason` stays focusable, its content dimmed (not its focus ring), and the reason is its tooltip. A plain row with a tooltip becomes a tab stop. Lists: clickable, links, plain.',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      clickable: [
+        { id: 'a', label: 'Incidents', icon: 'bell', badge: '12', badgeVariant: 'warning', tooltip: 'Zuletzt geladen heute, 06:00', badgeTooltip: '12 offen, davon 3 überfällig' },
+        { id: 'b', label: 'Planwerte', icon: 'chart-bar', disabled: true, disabledReason: 'Planwerte erst ab 1. Dezember' },
+      ],
+      links: [
+        { id: 'c', label: 'Zu Lücken', href: '#luecken', badge: '3', badgeTooltip: '3 Lücken im Oktober' },
+        { id: 'd', label: 'Zu Planwerten', href: '#plan', disabled: true, disabledReason: 'Planwerte erst ab 1. Dezember' },
+      ],
+      plain: [{ id: 'e', label: 'Stand', metadata: '06:00', tooltip: 'Zuletzt geladen heute, 06:00' }],
+    },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 24px; max-width: 480px; padding-top: 32px;">
+        <lc-list [items]="clickable" [clickable]="true" [showDividers]="true" />
+        <lc-list [items]="links" [showDividers]="true" [showChevron]="true" />
+        <lc-list [items]="plain" [showDividers]="true" />
+      </div>`,
+  }),
+};
+
+/** The rows of the *Headings In Columns* story. */
+const columnRows = [
+  { id: 'h1', label: 'Arbeit', heading: true },
+  { id: 'inc', label: 'Incidents', href: '#incidents', icon: 'bell', badge: '12', badgeVariant: 'warning' as const },
+  { id: 'open', label: 'Offen', href: '#offen', icon: 'file', badge: '5', indent: 1 },
+  { id: 'late', label: 'Überfällig', href: '#ueberfaellig', icon: 'clock', badge: '2', badgeVariant: 'error' as const, indent: 1 },
+  { id: 'kst', label: 'Kostenstellen', href: '#kostenstellen', icon: 'building-bank', badge: '48' },
+  { id: 'lv', label: 'Leistungsverrechnung', href: '#leistungsverrechnung', icon: 'arrow-path', badge: '7' },
+  { id: 'h2', label: 'Customizing', heading: true },
+  { id: 'cls', label: 'Klassen', href: '#klassen', icon: 'clipboard', badge: '31' },
+  { id: 'ui', label: 'Oberfläche', href: '#oberflaeche', icon: 'device-desktop', badge: '9' },
+  { id: 'ext', label: 'Erweiterungen', href: '#erweiterungen', icon: 'plus', badge: '4' },
+  { id: 'nav', label: 'Navigation', href: '#navigation', icon: 'settings', badge: '3' },
+  { id: 'h3', label: 'Nachschlagen', heading: true },
+  { id: 'doc', label: 'Dokumentation', href: '#doku', icon: 'file-text', badge: '120' },
+  { id: 'faq', label: 'Häufige Fragen', href: '#faq', icon: 'info-circle', badge: '18' },
+  { id: 'glo', label: 'Glossar', href: '#glossar', icon: 'hashtag', badge: '240' },
+  { id: 'chg', label: 'Änderungsverlauf', href: '#aenderungen', icon: 'clock', badge: '6' },
+  { id: 'sup', label: 'Unterstützung', href: '#support', icon: 'users', badge: '2' },
+];
+
+/** 3.44: heading items in one list that flows into columns. */
+export const HeadingsInColumns: Story = {
+  name: 'Headings In Columns',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.44: heading items (`heading: true`, `h3` here, inside `role="listitem"`, label only, no control or divider) in one `multiColumn` list of 14 link rows with badges and dividers. The list flows into as many 18rem columns as fit (one at 360 px, four at 1280 px), rows never split, and a heading never ends a column. Reading order is down each column. German strings; no `max-width` wrapper.',
+      },
+    },
+  },
+  render: () => ({
+    props: { rows: columnRows },
+    template: `<lc-list lang="de" [items]="rows" [multiColumn]="true" [showDividers]="true" />`,
+  }),
+};
+
+/** 3.44: indent levels 0–3 in the three sizes, with an indented heading. */
+export const IndentedRows: Story = {
+  name: 'Indented Rows',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.44: `indent` 0–3 on `clickable` rows with dividers, in `sm` (28 px a step), `md` (32) and `lg` (36): a child’s icon lands at its parent’s label. Hover, divider and focus ring stay full width. One heading item is indented too.',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      sizes: ['sm', 'md', 'lg'],
+      rows: [
+        { id: 'r0', label: 'Kosten', icon: 'wallet', indent: 0 },
+        { id: 'r1', label: 'Kostenstellen', icon: 'building-bank', indent: 1 },
+        { id: 'h', label: 'Verwaltung', heading: true, indent: 1 },
+        { id: 'r2', label: 'Personal', icon: 'users', indent: 2 },
+        { id: 'r3', label: 'Schulungen', icon: 'file', indent: 3 },
+        { id: 'r4', label: 'Erlöse', icon: 'banknotes', indent: 0 },
+      ],
+    },
+    template: `
+      <div lang="de" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+        @for (s of sizes; track s) {
+          <lc-list [items]="rows" [size]="s" [clickable]="true" [showDividers]="true" />
+        }
       </div>`,
   }),
 };

@@ -18,6 +18,9 @@ import { NgTemplateOutlet } from '@angular/common';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
 import { ICON_CHEVRON_RIGHT } from '@lifecorner/angular-ui-kit/icons';
 import { ButtonComponent, ButtonSize, ButtonVariant } from '@lifecorner/angular-ui-kit/button';
+import { SpinnerComponent } from '@lifecorner/angular-ui-kit/spinner';
+import { TooltipDirective } from '@lifecorner/angular-ui-kit/tooltip';
+import type { ItemRowState } from '@lifecorner/angular-ui-kit/models';
 import { ListItemTemplateDirective } from './list-item-template.directive';
 import type { AvatarColor } from '@lifecorner/angular-ui-kit/avatar';
 
@@ -36,10 +39,15 @@ export type ListOrientation = 'vertical' | 'horizontal';
  */
 export type ListVariant = 'default' | 'card';
 
+/** Heading level of `lc-list`'s heading items (3.44). */
+export type ListHeadingLevel = 2 | 3 | 4 | 5 | 6;
+
 /**
- * List item interface
+ * List item interface. 3.44 (usm-x row 20): the shared row states of
+ * `ItemRowState` (`busy`, `disabled` with a `disabledReason`, `tooltip`),
+ * `badgeTooltip`, heading items and an `indent` level.
  */
-export interface ListItem {
+export interface ListItem extends ItemRowState {
   /** Item label text (primary line) */
   label: string;
   /** Secondary text shown below the label */
@@ -100,6 +108,22 @@ export interface ListItem {
    * as a badge; the tint alone is colour.
    */
   selected?: boolean;
+  /** The badge's text in the row tooltip, after the tooltip or reason and " · " (3.44). */
+  badgeTooltip?: string;
+  /**
+   * The row is a sub-heading (3.44): its `label` as an `h2`–`h6`
+   * (`headingLevel`) inside a `role="listitem"`, no control, hover or
+   * divider; every other field but `indent` is ignored. In `multiColumn` a
+   * heading stays with its first row.
+   */
+  heading?: boolean;
+  /**
+   * Indent level 0–4 (3.44), floored and clamped: the row starts one
+   * `--lc-list-indent-step` further in per level (sm 28, md 32, lg 36 px, so a
+   * child's icon lands at its parent's label). Hover, divider and focus ring
+   * stay full width.
+   */
+  indent?: number;
   /** Any additional data */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
@@ -147,6 +171,14 @@ export type ListItemPart = 'row' | 'action';
  * - 3.37: a `clickable` row with an `action` holds a native button stretched
  *   over the row (named by the row) beside its action, so no control sits
  *   inside another (WCAG 4.1.2); one Tab stop for the row, then the action
+ * - 3.44 (usm-x row 20): per-row `busy` (spinner, `aria-busy`, no
+ *   activation; the built-in action shows `loading`), a `tooltip` and a
+ *   `badgeTooltip` on the row's focus target, `disabledReason` (the disabled
+ *   row stays focusable and its reason is the tooltip), heading items
+ *   (`heading`, `headingLevel`), an `indent` level, and `multiColumn` (one
+ *   list flows into columns; rows never split, a heading stays with its first
+ *   row). CSS hooks: `--lc-list-column-width` (18rem), `--lc-list-column-gap`
+ *   (`--spacing-6`), `--lc-list-indent-step` (sm 28 / md 32 / lg 36 px)
  *
  * @example
  * ```html
@@ -161,7 +193,7 @@ export type ListItemPart = 'row' | 'action';
 @Component({
   selector: 'lc-list',
   standalone: true,
-  imports: [NgTemplateOutlet, IconComponent, ButtonComponent],
+  imports: [NgTemplateOutlet, IconComponent, ButtonComponent, SpinnerComponent, TooltipDirective],
   templateUrl: './list.component.html',
   styleUrl: './list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -223,6 +255,30 @@ export class ListComponent {
    * @default false
    */
   showChevron = input<boolean>(false);
+
+  /**
+   * Read after a busy row's text (3.44); rows with an `aria-label` get
+   * ", <busyLabel>" appended to it. German: „Wird geladen“.
+   * @default 'Loading'
+   */
+  busyLabel = input<string>('Loading');
+
+  /**
+   * Level of the heading items (`ListItem.heading`, 3.44): `h2`–`h6`, so the
+   * list fits the page's outline.
+   * @default 3
+   */
+  headingLevel = input<ListHeadingLevel>(3);
+
+  /**
+   * A vertical list flows into as many columns as fit (3.44), each at least
+   * `--lc-list-column-width` (default 18rem) wide, `--lc-list-column-gap`
+   * (default `--spacing-6`) apart. Rows never split, and a heading item stays
+   * with its first row. Reading order is the DOM order, down each column.
+   * Ignored in `horizontal`.
+   * @default false
+   */
+  multiColumn = input<boolean>(false);
 
   /** Event emitted when an item is clicked */
   readonly itemClick = output<ListItem>();
@@ -364,6 +420,10 @@ export class ListComponent {
       classes.push('lc-list--no-clamp');
     }
 
+    if (this.multiColumn() && this.orientation() === 'vertical') {
+      classes.push('lc-list--columns');
+    }
+
     return classes.join(' ');
   });
 
@@ -375,13 +435,83 @@ export class ListComponent {
 
     if (item.disabled) {
       classes.push('lc-list__item--disabled');
+      // 3.44: a disabled row with a reason stays hoverable and focusable.
+      if (item.disabledReason) classes.push('lc-list__item--has-reason');
     }
 
     if (item.selected) {
       classes.push('lc-list__item--selected');
     }
 
+    if (item.busy) {
+      classes.push('lc-list__item--busy');
+    }
+
+    const indent = this.indentOf(item);
+    if (indent) {
+      classes.push(`lc-list__indent-${indent}`);
+    }
+
     return classes.join(' ');
+  }
+
+  /** The indent level 0–4, floored and clamped (3.44). */
+  protected indentOf(item: ListItem): number {
+    const n = Math.floor(Number(item.indent) || 0);
+    return Math.max(0, Math.min(4, n));
+  }
+
+  /** Classes of a heading item (3.44). */
+  protected headingClasses(item: ListItem): string {
+    const indent = this.indentOf(item);
+    return indent ? `lc-list__heading-item lc-list__indent-${indent}` : 'lc-list__heading-item';
+  }
+
+  /** Busy or disabled (3.44): `aria-disabled`, activation ignored. */
+  protected isBlocked(item: ListItem): boolean {
+    return !!item.busy || !!item.disabled;
+  }
+
+  /** A disabled row leaves the tab order unless it has a reason (3.44). */
+  protected isUnreachable(item: ListItem): boolean {
+    return !!item.disabled && !item.disabledReason;
+  }
+
+  /**
+   * The row tooltip (3.44): `disabledReason` while disabled, else `tooltip`,
+   * then `badgeTooltip` after " · ". Empty: no tooltip.
+   */
+  protected rowTooltip(item: ListItem): string {
+    const main = item.disabled ? (item.disabledReason ?? '') : (item.tooltip ?? '');
+    return [main, item.badgeTooltip ?? ''].filter(Boolean).join(' · ');
+  }
+
+  /** A plain row with a tooltip or a reason is a tab stop, so the tooltip is reachable by keyboard (3.44). */
+  protected plainRowTabindex(item: ListItem): number | null {
+    return this.rowTooltip(item) ? 0 : null;
+  }
+
+  /** The row's `aria-label` (3.44): `ariaLabel`, with ", <busyLabel>" while busy. */
+  protected rowAriaLabel(item: ListItem): string | null {
+    const label = this.ariaLabelOf(item);
+    return label && item.busy ? `${label}, ${this.busyLabel()}` : label;
+  }
+
+  /** The split row button's name (3.44): its parts, with ", <busyLabel>" while busy. */
+  protected splitRowLabel(item: ListItem): string {
+    const name = this.splitRowName(item);
+    return item.busy ? `${name}, ${this.busyLabel()}` : name;
+  }
+
+  /** Whether a busy row reads `busyLabel` from hidden text in its content (no `aria-label` names it). */
+  protected busyInContent(item: ListItem): boolean {
+    return !!item.busy && !this.ariaLabelOf(item) && !(this.clickable() && item.action && !this.isLinkRow(item));
+  }
+
+  /** Classes of the busy spinner's slot: the avatar's box, the icon's box, or the spinner alone (3.44). */
+  protected busyClasses(item: ListItem): string {
+    if (item.avatar) return 'lc-list__busy lc-list__busy--avatar';
+    return item.icon ? 'lc-list__busy lc-list__busy--icon' : 'lc-list__busy';
   }
 
   /** CSS classes of an item's avatar (member colour, LK-7). */
@@ -396,7 +526,8 @@ export class ListComponent {
    * Handle item click
    */
   onItemClick(item: ListItem): void {
-    if (!item.disabled) {
+    // 3.44: a busy row ignores activation too.
+    if (!item.disabled && !item.busy) {
       this.itemClick.emit(item);
     }
   }
@@ -425,6 +556,11 @@ export class ListComponent {
    * The default (following the link) is left to the browser and the consumer.
    */
   protected onLinkClick(event: MouseEvent, item: ListItem): void {
+    // 3.44: a busy link row doesn't navigate and emits nothing.
+    if (item.busy) {
+      event.preventDefault();
+      return;
+    }
     if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
     this.linkClick.emit({ item, event });
   }

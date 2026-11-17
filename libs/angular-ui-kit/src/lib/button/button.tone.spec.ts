@@ -87,7 +87,10 @@ describe('lc-button / a[lcButton] — outline tone (020)', () => {
 
     it('keeps the default outline of 3.14', () => {
       const outline = rule('.btn-outline');
-      expect(outline).toContain('background-color: rgba(132, 199, 212, 0.06)');
+      // 3.44 (request 064, usm-x row 26, AC-21): the literal rgba(132, 199, 212, 0.06)
+      // became the --lc-button-outline-bg hook over the --color-primary-wash token,
+      // which renders the same colour in both themes (theme-contrast.spec.ts).
+      expect(outline).toContain('background-color: var(--lc-button-outline-bg, var(--color-primary-wash))');
       expect(outline).toContain('border-color: var(--color-border-strong)');
       expect(outline).toContain('color: var(--color-text-primary)');
     });

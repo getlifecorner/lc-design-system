@@ -124,7 +124,7 @@
     }
 
     &--subtle {
-      background-color: rgba(32, 132, 151, 0.14);
+      background-color: var(--color-brand-tile-subtle);
       color: var(--color-primary-500);
       border: 1px solid var(--color-border-strong);
     }
@@ -161,6 +161,13 @@
   //                                         default display; `none` = no clamp)
   //   --lc-page-header-title-hyphens        title hyphenation, default `auto`
   //                                         (`manual` keeps a name in one piece)
+  //   --lc-page-header-title-font-size      title size for every `size`, default
+  //                                         the size's value (24 px for `default`)
+  //   --lc-page-header-overline-color       overline ink, default `--color-overline`
+  //   --lc-page-header-title-aside-below    `0` (default) or `1`: `1` puts the
+  //                                         `title-aside` slot on its own line
+  //                                         under the title row, so the actions
+  //                                         keep the title's line (3.44, row 25)
   // The default display is -webkit-box (which renders plain text identically
   // to block) so that setting only the line-clamp hook is enough to clamp.
   &__subtitle {
@@ -187,6 +194,23 @@
     display: none;
   }
 
+  // `title-aside` (3.44, usm-x rows 16 and 25): the same chip row, beside the
+  // heading but outside it. With the hook at 1 it moves after the actions
+  // (order 1) and takes a full line, so the title and the actions keep line 1
+  // and the aside wraps first. Hidden when nothing is projected.
+  &__title-aside {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--lc-density-gap-sm, 0.5rem);
+    order: var(--lc-page-header-title-aside-below, 0);
+    min-inline-size: calc(var(--lc-page-header-title-aside-below, 0) * 100%);
+  }
+
+  &__title-aside:empty {
+    display: none;
+  }
+
   // Overline (3.3, LK-3): after the heading in the DOM, above it on screen —
   // `order: -1` moves it to the front of the wrapping title row and the full
   // basis gives it a line of its own. Uppercase through CSS only.
@@ -201,7 +225,7 @@
     line-height: var(--line-height-overline, 1.3);
     letter-spacing: var(--letter-spacing-overline, 0.12em);
     text-transform: uppercase;
-    color: var(--color-overline, var(--color-primary-700));
+    color: var(--lc-page-header-overline-color, var(--color-overline, var(--color-primary-700)));
     overflow-wrap: break-word;
   }
 
@@ -250,7 +274,7 @@
     --lc-density-padding-md: 0.75rem;
 
     .lc-page-header__title {
-      font-size: var(--font-size-lg, 1.125rem);
+      font-size: var(--lc-page-header-title-font-size, var(--font-size-lg, 1.125rem));
     }
     .lc-page-header__subtitle {
       font-size: var(--lc-page-header-subtitle-font-size, var(--font-size-sm, 0.875rem));
@@ -266,7 +290,7 @@
     --lc-density-padding-md: 0.75rem;
 
     .lc-page-header__title {
-      font-size: var(--font-size-xl, 1.25rem);
+      font-size: var(--lc-page-header-title-font-size, var(--font-size-xl, 1.25rem));
     }
     .lc-page-header__subtitle {
       font-size: var(--lc-page-header-subtitle-font-size, var(--font-size-sm, 0.875rem));
@@ -275,7 +299,7 @@
 
   &--size-default {
     .lc-page-header__title {
-      font-size: var(--font-size-2xl, 1.5rem);
+      font-size: var(--lc-page-header-title-font-size, var(--font-size-2xl, 1.5rem));
     }
     .lc-page-header__subtitle {
       font-size: var(--lc-page-header-subtitle-font-size, var(--font-size-base, 1rem));
@@ -287,7 +311,7 @@
     --lc-density-padding-md: 2.5rem;
 
     .lc-page-header__title {
-      font-size: var(--font-size-3xl, 1.875rem);
+      font-size: var(--lc-page-header-title-font-size, var(--font-size-3xl, 1.875rem));
     }
     .lc-page-header__subtitle {
       font-size: var(--lc-page-header-subtitle-font-size, var(--font-size-lg, 1.125rem));
@@ -298,7 +322,7 @@
   // The tokens grow with the viewport; the fallbacks are the phone steps.
   &--size-title {
     .lc-page-header__title {
-      font-size: var(--font-size-title, 2rem);
+      font-size: var(--lc-page-header-title-font-size, var(--font-size-title, 2rem));
       line-height: var(--line-height-title, 1.08);
       letter-spacing: var(--letter-spacing-title, -0.03em);
     }
@@ -309,7 +333,7 @@
 
   &--size-display {
     .lc-page-header__title {
-      font-size: var(--font-size-display, 2.5rem);
+      font-size: var(--lc-page-header-title-font-size, var(--font-size-display, 2.5rem));
       line-height: var(--line-height-display, 1.05);
       letter-spacing: var(--letter-spacing-display, -0.035em);
     }
@@ -320,7 +344,7 @@
 
   &--size-auth {
     .lc-page-header__title {
-      font-size: var(--font-size-auth-title, 1.875rem);
+      font-size: var(--lc-page-header-title-font-size, var(--font-size-auth-title, 1.875rem));
       line-height: var(--line-height-auth-title, 1.12);
       letter-spacing: var(--letter-spacing-auth-title, -0.03em);
     }

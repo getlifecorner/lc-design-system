@@ -75,11 +75,6 @@
       color: var(--color-on-primary-subtle);
       border-bottom-color: var(--color-primary-500);
       font-weight: var(--font-weight-semibold);
-
-      .lc-tabs--vertical & {
-        border-bottom-color: transparent;
-        border-right: 2px solid var(--color-primary-500);
-      }
     }
 
     &--disabled {
@@ -99,6 +94,13 @@
       .lc-tabs__badge {
         margin-left: auto;
       }
+    }
+
+    // The selected vertical tab's line comes after the rest rule above (same
+    // weight). It used to come first, so every vertical tab drew a transparent
+    // line (3.44, review 064 r2). The forced-colours rules below still win.
+    .lc-tabs--vertical &--selected {
+      border-right: 2px solid var(--color-primary-500);
     }
   }
 
@@ -137,10 +139,49 @@
 }
 
 // Forced colours: the ring is Highlight (request 042).
+// Only the selected tab shows its 2 px line (3.44, review 064 r1): the others'
+// `transparent` border is forced to LinkText / ButtonText otherwise, so every
+// tab looked selected. Both orientations, both modes.
 @media (forced-colors: active) {
   .lc-tabs__panel:focus-visible {
     outline-color: Highlight;
   }
+
+  .lc-tabs__list .lc-tabs__tab {
+    border-bottom-color: Canvas;
+  }
+
+  .lc-tabs__list.lc-tabs--vertical .lc-tabs__tab {
+    border-right-color: Canvas;
+  }
+
+  .lc-tabs__list.lc-tabs--horizontal .lc-tabs__tab--selected {
+    border-bottom-color: CanvasText;
+  }
+
+  .lc-tabs__list.lc-tabs--vertical .lc-tabs__tab--selected {
+    border-right-color: CanvasText;
+  }
+}
+
+// 3.44 (request 064, WCAG 1.4.10): a horizontal tab list that doesn't fit
+// scrolls on its own instead of widening the page (at 360 px the badge tabs
+// measured 557 px in a 328 px list). The selected tab is scrolled into view
+// (scrollLeft only); the ring is drawn inside the tab, so the scroller does
+// not clip it. Never smooth: no motion.
+.lc-tabs__list.lc-tabs--horizontal {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.lc-tabs--horizontal .lc-tabs__tab:focus-visible {
+  outline-offset: -2px;
+}
+
+// `mode="links"` (3.44, usm-x row 11): the tabs are links with the tab look.
+a.lc-tabs__tab {
+  text-decoration: none;
 }
 
 @keyframes fadeIn {

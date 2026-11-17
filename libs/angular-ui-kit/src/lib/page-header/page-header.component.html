@@ -58,6 +58,11 @@
           @if (overline()) {
             <p class="lc-page-header__overline lc-overline">{{ overline() }}</p>
           }
+          <!-- Beside the heading, outside it (3.44, usm-x row 16): status chips
+               and live regions here are not part of the heading's name. After
+               the overline in the DOM, so the overline stays the heading's next
+               sibling; on screen it follows the heading (same flex order). -->
+          <div class="lc-page-header__title-aside"><ng-content select="[slot='title-aside']" /></div>
         }
 
         <div class="lc-page-header__actions">

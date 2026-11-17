@@ -1,58 +1,129 @@
-<div
-  class="lc-tabs__container"
-  [class.lc-tabs__container--horizontal]="orientation() === 'horizontal'"
-  [class.lc-tabs__container--vertical]="orientation() === 'vertical'"
->
-  <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- keydown bubbles from the focused tab (roving tabindex) -->
+@if (mode() === 'links') {
+  <!-- 3.44 (usm-x row 11): a tab list of links for content rendered elsewhere
+       (a router outlet). The app sets the current tab; the kit renders no panels. -->
   <div
-    [ngClass]="tabListClasses()"
-    role="tablist"
-    [attr.aria-orientation]="orientation()"
-    (keydown)="handleKeyDown($event)"
+    class="lc-tabs__container"
+    [class.lc-tabs__container--horizontal]="orientation() === 'horizontal'"
+    [class.lc-tabs__container--vertical]="orientation() === 'vertical'"
   >
-    @for (tab of tabList(); track tab.id; let i = $index) {
-      <button
-        #tabButton
-        type="button"
-        class="lc-tabs__tab"
-        [class.lc-tabs__tab--selected]="isSelected(i)"
-        [class.lc-tabs__tab--disabled]="tab.disabled()"
-        role="tab"
-        [attr.id]="tab.id"
-        [attr.aria-selected]="isSelected(i)"
-        [attr.aria-controls]="tab.panelId"
-        [attr.aria-disabled]="tab.disabled() || null"
-        [tabindex]="getTabIndex(i)"
-        [disabled]="tab.disabled()"
-        (click)="selectTab(i)"
-      >
-        {{ tab.label() }}
-        @if (tab.hasBadge()) {
-          <lc-badge
-            class="lc-tabs__badge"
-            [variant]="tab.badgeVariant()"
-            size="xs"
-            [rounded]="true"
-            >{{ tab.badge() }}</lc-badge
-          >
+    <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- keydown and focus events bubble from the focused tab link (roving tabindex) -->
+    <div
+      #tabListEl
+      [ngClass]="tabListClasses()"
+      role="tablist"
+      [attr.aria-orientation]="orientation()"
+      (keydown)="onLinkKeyDown($event)"
+      (focusin)="onLinkFocusIn($event)"
+      (focusout)="onLinkFocusOut($event)"
+    >
+      @for (tab of tabList(); track tab.id; let i = $index) {
+        @if (tab.disabled()) {
+          <a
+            class="lc-tabs__tab lc-tabs__tab--link lc-tabs__tab--disabled"
+            [class.lc-tabs__tab--selected]="isCurrent(i)"
+            role="tab"
+            [attr.id]="tab.elementId()"
+            [attr.aria-selected]="isCurrent(i)"
+            [attr.aria-controls]="panelId() || null"
+            aria-disabled="true"
+            ><ng-container [ngTemplateOutlet]="linkContent" [ngTemplateOutletContext]="{ $implicit: tab }"
+          /></a>
+        } @else if (tab.route() !== null) {
+          <a
+            class="lc-tabs__tab lc-tabs__tab--link"
+            [class.lc-tabs__tab--selected]="isCurrent(i)"
+            role="tab"
+            [attr.id]="tab.elementId()"
+            [attr.aria-selected]="isCurrent(i)"
+            [attr.aria-controls]="panelId() || null"
+            [attr.tabindex]="linkTabIndex(i)"
+            [routerLink]="tab.route()"
+            [queryParams]="tab.queryParams()"
+            [queryParamsHandling]="tab.queryParamsHandling()"
+            ><ng-container [ngTemplateOutlet]="linkContent" [ngTemplateOutletContext]="{ $implicit: tab }"
+          /></a>
+        } @else {
+          <a
+            class="lc-tabs__tab lc-tabs__tab--link"
+            [class.lc-tabs__tab--selected]="isCurrent(i)"
+            role="tab"
+            [attr.id]="tab.elementId()"
+            [attr.aria-selected]="isCurrent(i)"
+            [attr.aria-controls]="panelId() || null"
+            [attr.tabindex]="linkTabIndex(i)"
+            [attr.href]="tab.href() || null"
+            ><ng-container [ngTemplateOutlet]="linkContent" [ngTemplateOutletContext]="{ $implicit: tab }"
+          /></a>
         }
-      </button>
-    }
+      }
+    </div>
   </div>
+} @else {
+  <div
+    class="lc-tabs__container"
+    [class.lc-tabs__container--horizontal]="orientation() === 'horizontal'"
+    [class.lc-tabs__container--vertical]="orientation() === 'vertical'"
+  >
+    <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- keydown bubbles from the focused tab (roving tabindex) -->
+    <div
+      #tabListEl
+      [ngClass]="tabListClasses()"
+      role="tablist"
+      [attr.aria-orientation]="orientation()"
+      (keydown)="handleKeyDown($event)"
+    >
+      @for (tab of tabList(); track tab.id; let i = $index) {
+        <button
+          #tabButton
+          type="button"
+          class="lc-tabs__tab"
+          [class.lc-tabs__tab--selected]="isSelected(i)"
+          [class.lc-tabs__tab--disabled]="tab.disabled()"
+          role="tab"
+          [attr.id]="tab.elementId()"
+          [attr.aria-selected]="isSelected(i)"
+          [attr.aria-controls]="tab.panelId"
+          [attr.aria-disabled]="tab.disabled() || null"
+          [tabindex]="getTabIndex(i)"
+          [disabled]="tab.disabled()"
+          (click)="selectTab(i)"
+        >
+          {{ tab.label() }}
+          @if (tab.hasBadge()) {
+            <lc-badge
+              class="lc-tabs__badge"
+              [variant]="tab.badgeVariant()"
+              size="xs"
+              [rounded]="true"
+              >{{ tab.badge() }}</lc-badge
+            >
+          }
+        </button>
+      }
+    </div>
 
-  <div class="lc-tabs__panels">
-    @for (tab of tabList(); track tab.id; let i = $index) {
-      <div
-        class="lc-tabs__panel"
-        [class.lc-tabs__panel--active]="isSelected(i)"
-        role="tabpanel"
-        [attr.id]="tab.panelId"
-        [attr.aria-labelledby]="tab.id"
-        [attr.hidden]="!isSelected(i) || null"
-        [tabindex]="0"
-      >
-        <ng-container [ngTemplateOutlet]="tab.template()"></ng-container>
-      </div>
-    }
+    <div class="lc-tabs__panels">
+      @for (tab of tabList(); track tab.id; let i = $index) {
+        <div
+          class="lc-tabs__panel"
+          [class.lc-tabs__panel--active]="isSelected(i)"
+          role="tabpanel"
+          [attr.id]="tab.panelId"
+          [attr.aria-labelledby]="tab.elementId()"
+          [attr.hidden]="!isSelected(i) || null"
+          [tabindex]="0"
+        >
+          <ng-container [ngTemplateOutlet]="tab.template()"></ng-container>
+        </div>
+      }
+    </div>
   </div>
-</div>
+}
+
+<!-- The label and badge of a link tab (3.44), as in the panels tabs. -->
+<ng-template #linkContent let-tab>
+  {{ tab.label() }}
+  @if (tab.hasBadge()) {
+    <lc-badge class="lc-tabs__badge" [variant]="tab.badgeVariant()" size="xs" [rounded]="true">{{ tab.badge() }}</lc-badge>
+  }
+</ng-template>

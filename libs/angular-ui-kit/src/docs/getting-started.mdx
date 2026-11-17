@@ -171,17 +171,29 @@ Some components support an explicit `theme` input, allowing them to have a dark 
 <lc-header [theme]="'light'" [title]="'My App'"></lc-header>
 ```
 
-The header sets internal CSS tokens that you can override without touching global neutrals:
+The header reads these CSS hooks, which you can set without touching global neutrals. Since 3.44 they can be set on the `lc-header` element **or any ancestor** (`:root`, the app shell) and win over the `theme` defaults; `variant="transparent"` still declares its own.
 
 | Token | Purpose |
 |---|---|
-| `--lc-header-bg` | Background color |
+| `--lc-header-bg` | Background, painted with `background` since 3.44, so a gradient works |
 | `--lc-header-fg` | Primary text/icon color |
 | `--lc-header-fg-secondary` | Secondary text (subtitle, email) |
 | `--lc-header-border` | Bottom border color |
 | `--lc-header-hover-bg` | Hover background |
 | `--lc-header-trigger-border` | Profile button border |
 | `--lc-header-trigger-fg` | Profile button icon color |
+| `--lc-header-z` | Stack level of the sticky header (3.44, default `900`): below `lc-modal` (999/1000), the drawer (1100) and toasts (1200) |
+
+```css
+/* 3.44: a petrol gradient bar set on the app shell */
+.app-shell {
+  --lc-header-bg: linear-gradient(90deg, var(--color-primary-fill-active), var(--color-primary-fill));
+  --lc-header-fg: var(--color-on-primary);
+  --lc-header-fg-secondary: var(--color-on-primary);
+  --lc-header-trigger-fg: var(--color-on-primary);
+  --lc-header-border: transparent;
+}
+```
 
 ### Sidenav
 

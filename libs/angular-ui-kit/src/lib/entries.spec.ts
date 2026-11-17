@@ -69,9 +69,11 @@ describe('secondary entries (AS-15)', () => {
   // 3.16 (request 022, BA-4) the public `money` entry; 3.36 (request 056,
   // quellen row 1) the public `state-strip` entry; 3.39 (request 059, G-SS1,
   // G-SS2) the public `device-frame` and `picture` entries; 3.40 (request 060,
-  // G-HV2) the public `area-map` entry.
-  it('has one entry per folder: 118 public and 6 internal', () => {
-    expect(publicEntries).toHaveLength(118);
+  // G-HV2) the public `area-map` entry; 3.44 (request 064, usm-x row 30) the
+  // public `split-button` entry.
+  it('has one entry per folder: 119 public and 6 internal', () => {
+    expect(publicEntries).toHaveLength(119);
+    expect(publicEntries).toContain('split-button');
     expect(publicEntries).toContain('area-map');
     expect(publicEntries).toContain('money');
     expect(publicEntries).toContain('state-strip');

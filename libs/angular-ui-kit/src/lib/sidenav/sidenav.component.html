@@ -156,7 +156,7 @@
                 <ul class="lc-sidenav__section-items">
                   @for (child of item.children; track child.id) {
                     <li>
-                      @if (child.children?.length) {
+                      @if (isGroup(child)) {
                         <!-- Section child with nested children (collapsible) -->
                         <div class="lc-sidenav__nav-item-row">
                           <button
@@ -167,14 +167,18 @@
                             (click)="toggleExpanded(child)"
                             [attr.aria-expanded]="isExpanded(child)"
                             [title]="collapsed() && !child.badge ? child.label : ''"
-                            [attr.data-tooltip]="collapsed() ? child.label : null">
-                            @if (child.icon) {
-                              <lc-icon [name]="child.icon" size="sm" [decorative]="true" class="lc-sidenav__nav-icon" />
-                            }
-                            <span class="lc-sidenav__nav-label">{{ child.label }}</span>
-                            @if (child.badge) {
-                              <lc-badge aria-hidden="true" [variant]="child.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ child.badge.value }}</lc-badge>&ngsp;<span class="lc-sidenav__sr-only">{{ badgeText(child) }}</span>
-                            }
+                            [attr.data-tooltip]="collapsed() ? child.label : null"
+                            [class.lc-sidenav__nav-item--busy]="!!child.busy"
+                            [class.lc-sidenav__nav-item--disabled]="!!child.disabled"
+                            [class.lc-sidenav__nav-item--muted]="!!child.muted"
+                            [class.lc-sidenav__nav-item--hint]="!!child.hint"
+                            [attr.aria-busy]="child.busy ? 'true' : null"
+                            [attr.aria-disabled]="isBlocked(child) ? 'true' : null"
+                            [attr.tabindex]="itemTabIndex(child)"
+                            [lcTooltip]="rowTooltip(child)"
+                            [tooltipPosition]="tooltipSide()"
+                            (contextmenu)="onContextMenu($event, child)">
+                            <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: child, optionalIcon: true }" />
                             <lc-icon name="chevron-down" size="xs" [decorative]="true" class="lc-sidenav__nav-chevron" />
                           </button>
                           @if (child.action) {
@@ -187,45 +191,100 @@
                             </button>
                           }
                         </div>
-                        @if (isExpanded(child)) {
-                          <div class="lc-sidenav__nav-children">
+                        @if (isExpanded(child) && (child.children?.length || child.childrenLoading)) {
+                          <div class="lc-sidenav__nav-children" [attr.aria-busy]="child.childrenLoading ? 'true' : null">
                             @for (grandchild of child.children; track grandchild.id) {
-                              <a
-                                [routerLink]="grandchild.route"
-                                class="lc-sidenav__nav-item lc-sidenav__nav-item--child"
-                                (click)="handleItemClick(grandchild)"
-                                [class.lc-sidenav__nav-item--active]="isItemActive(grandchild)"
-                                [attr.aria-current]="isItemActive(grandchild) ? 'page' : null">
-                                @if (grandchild.icon) {
-                                  <lc-icon [name]="grandchild.icon" size="sm" [decorative]="true" class="lc-sidenav__nav-icon" />
-                                }
-                                <span class="lc-sidenav__nav-label">{{ grandchild.label }}</span>
-                                @if (grandchild.badge) {
-                                  <lc-badge aria-hidden="true" [variant]="grandchild.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ grandchild.badge.value }}</lc-badge>&ngsp;<span class="lc-sidenav__sr-only">{{ badgeText(grandchild) }}</span>
-                                }
-                              </a>
+                              @if (grandchild.kind === 'action') {
+                                <button
+                                  type="button"
+                                  class="lc-sidenav__nav-item lc-sidenav__nav-item--child lc-sidenav__nav-item--action"
+                                  (click)="handleItemClick(grandchild)"
+                                  [class.lc-sidenav__nav-item--active]="isItemActive(grandchild)"
+                                  [attr.aria-current]="isItemActive(grandchild) ? 'page' : null"
+                                  [class.lc-sidenav__nav-item--busy]="!!grandchild.busy"
+                                  [class.lc-sidenav__nav-item--disabled]="!!grandchild.disabled"
+                                  [class.lc-sidenav__nav-item--muted]="!!grandchild.muted"
+                                  [class.lc-sidenav__nav-item--hint]="!!grandchild.hint"
+                                  [attr.aria-busy]="grandchild.busy ? 'true' : null"
+                                  [attr.aria-disabled]="isBlocked(grandchild) ? 'true' : null"
+                                  [attr.tabindex]="itemTabIndex(grandchild)"
+                                  [lcTooltip]="rowTooltip(grandchild)"
+                                  [tooltipPosition]="tooltipSide()"
+                                  (contextmenu)="onContextMenu($event, grandchild)">
+                                  <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: grandchild, optionalIcon: true }" />
+                                </button>
+                              } @else {
+                                <a
+                                  [routerLink]="grandchild.route"
+                                  class="lc-sidenav__nav-item lc-sidenav__nav-item--child"
+                                  (click)="handleItemClick(grandchild)"
+                                  [class.lc-sidenav__nav-item--active]="isItemActive(grandchild)"
+                                  [attr.aria-current]="isItemActive(grandchild) ? 'page' : null"
+                                  [class.lc-sidenav__nav-item--busy]="!!grandchild.busy"
+                                  [class.lc-sidenav__nav-item--disabled]="!!grandchild.disabled"
+                                  [class.lc-sidenav__nav-item--muted]="!!grandchild.muted"
+                                  [class.lc-sidenav__nav-item--hint]="!!grandchild.hint"
+                                  [attr.aria-busy]="grandchild.busy ? 'true' : null"
+                                  [attr.aria-disabled]="isBlocked(grandchild) ? 'true' : null"
+                                  [attr.tabindex]="itemTabIndex(grandchild)"
+                                  [lcTooltip]="rowTooltip(grandchild)"
+                                  [tooltipPosition]="tooltipSide()"
+                                  (contextmenu)="onContextMenu($event, grandchild)">
+                                  <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: grandchild, optionalIcon: true }" />
+                                </a>
+                              }
+                            }
+                            @if (child.childrenLoading) {
+                              <ng-container [ngTemplateOutlet]="childrenLoadingRow" />
                             }
                           </div>
                         }
                       } @else {
                         <!-- Section child (simple link) -->
                         <div class="lc-sidenav__nav-item-row">
-                          <a
-                            [routerLink]="child.route"
-                            class="lc-sidenav__nav-item lc-sidenav__nav-item--child"
-                            (click)="handleItemClick(child)"
-                            [class.lc-sidenav__nav-item--active]="isItemActive(child)"
-                            [attr.aria-current]="isItemActive(child) ? 'page' : null"
-                            [title]="collapsed() && !child.badge ? child.label : ''"
-                            [attr.data-tooltip]="collapsed() ? child.label : null">
-                            @if (child.icon) {
-                              <lc-icon [name]="child.icon" size="sm" [decorative]="true" class="lc-sidenav__nav-icon" />
-                            }
-                            <span class="lc-sidenav__nav-label">{{ child.label }}</span>
-                            @if (child.badge) {
-                              <lc-badge aria-hidden="true" [variant]="child.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ child.badge.value }}</lc-badge>&ngsp;<span class="lc-sidenav__sr-only">{{ badgeText(child) }}</span>
-                            }
-                          </a>
+                          @if (child.kind === 'action') {
+                            <button
+                              type="button"
+                              class="lc-sidenav__nav-item lc-sidenav__nav-item--child lc-sidenav__nav-item--action"
+                              (click)="handleItemClick(child)"
+                              [class.lc-sidenav__nav-item--active]="isItemActive(child)"
+                              [attr.aria-current]="isItemActive(child) ? 'page' : null"
+                              [title]="collapsed() && !child.badge ? child.label : ''"
+                              [attr.data-tooltip]="collapsed() ? child.label : null"
+                              [class.lc-sidenav__nav-item--busy]="!!child.busy"
+                              [class.lc-sidenav__nav-item--disabled]="!!child.disabled"
+                              [class.lc-sidenav__nav-item--muted]="!!child.muted"
+                              [class.lc-sidenav__nav-item--hint]="!!child.hint"
+                              [attr.aria-busy]="child.busy ? 'true' : null"
+                              [attr.aria-disabled]="isBlocked(child) ? 'true' : null"
+                              [attr.tabindex]="itemTabIndex(child)"
+                              [lcTooltip]="rowTooltip(child)"
+                              [tooltipPosition]="tooltipSide()"
+                              (contextmenu)="onContextMenu($event, child)">
+                              <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: child, optionalIcon: true }" />
+                            </button>
+                          } @else {
+                            <a
+                              [routerLink]="child.route"
+                              class="lc-sidenav__nav-item lc-sidenav__nav-item--child"
+                              (click)="handleItemClick(child)"
+                              [class.lc-sidenav__nav-item--active]="isItemActive(child)"
+                              [attr.aria-current]="isItemActive(child) ? 'page' : null"
+                              [title]="collapsed() && !child.badge ? child.label : ''"
+                              [attr.data-tooltip]="collapsed() ? child.label : null"
+                              [class.lc-sidenav__nav-item--busy]="!!child.busy"
+                              [class.lc-sidenav__nav-item--disabled]="!!child.disabled"
+                              [class.lc-sidenav__nav-item--muted]="!!child.muted"
+                              [class.lc-sidenav__nav-item--hint]="!!child.hint"
+                              [attr.aria-busy]="child.busy ? 'true' : null"
+                              [attr.aria-disabled]="isBlocked(child) ? 'true' : null"
+                              [attr.tabindex]="itemTabIndex(child)"
+                              [lcTooltip]="rowTooltip(child)"
+                              [tooltipPosition]="tooltipSide()"
+                              (contextmenu)="onContextMenu($event, child)">
+                              <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: child, optionalIcon: true }" />
+                            </a>
+                          }
                           @if (child.action) {
                             <button
                               type="button"
@@ -242,7 +301,7 @@
                 </ul>
               }
             </div>
-          } @else if (item.children?.length) {
+          } @else if (isGroup(item)) {
             <!-- Parent item with children (collapsible group) -->
             <div class="lc-sidenav__nav-item-row">
               <button
@@ -253,12 +312,18 @@
                 (click)="toggleExpanded(item)"
                 [attr.aria-expanded]="isExpanded(item)"
                 [title]="collapsed() && !item.badge ? item.label : ''"
-                [attr.data-tooltip]="collapsed() ? item.label : null">
-                <lc-icon [name]="item.icon" size="sm" [decorative]="true" class="lc-sidenav__nav-icon" />
-                <span class="lc-sidenav__nav-label">{{ item.label }}</span>
-                @if (item.badge) {
-                  <lc-badge aria-hidden="true" [variant]="item.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ item.badge.value }}</lc-badge>&ngsp;<span class="lc-sidenav__sr-only">{{ badgeText(item) }}</span>
-                }
+                [attr.data-tooltip]="collapsed() ? item.label : null"
+                [class.lc-sidenav__nav-item--busy]="!!item.busy"
+                [class.lc-sidenav__nav-item--disabled]="!!item.disabled"
+                [class.lc-sidenav__nav-item--muted]="!!item.muted"
+                [class.lc-sidenav__nav-item--hint]="!!item.hint"
+                [attr.aria-busy]="item.busy ? 'true' : null"
+                [attr.aria-disabled]="isBlocked(item) ? 'true' : null"
+                [attr.tabindex]="itemTabIndex(item)"
+                [lcTooltip]="rowTooltip(item)"
+                [tooltipPosition]="tooltipSide()"
+                (contextmenu)="onContextMenu($event, item)">
+                <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: item, optionalIcon: false }" />
                 <lc-icon name="chevron-down" size="xs" [decorative]="true" class="lc-sidenav__nav-chevron" />
               </button>
               @if (item.action) {
@@ -271,41 +336,100 @@
                 </button>
               }
             </div>
-            @if (isExpanded(item)) {
-              <div class="lc-sidenav__nav-children">
+            @if (isExpanded(item) && (item.children?.length || item.childrenLoading)) {
+              <div class="lc-sidenav__nav-children" [attr.aria-busy]="item.childrenLoading ? 'true' : null">
                 @for (child of item.children; track child.id) {
-                  <a
-                    [routerLink]="child.route"
-                    class="lc-sidenav__nav-item lc-sidenav__nav-item--child"
-                    (click)="handleItemClick(child)"
-                    [class.lc-sidenav__nav-item--active]="isItemActive(child)"
-                    [attr.aria-current]="isItemActive(child) ? 'page' : null">
-                    <lc-icon [name]="child.icon" size="sm" [decorative]="true" class="lc-sidenav__nav-icon" />
-                    <span class="lc-sidenav__nav-label">{{ child.label }}</span>
-                    @if (child.badge) {
-                      <lc-badge aria-hidden="true" [variant]="child.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ child.badge.value }}</lc-badge>&ngsp;<span class="lc-sidenav__sr-only">{{ badgeText(child) }}</span>
-                    }
-                  </a>
+                  @if (child.kind === 'action') {
+                    <button
+                      type="button"
+                      class="lc-sidenav__nav-item lc-sidenav__nav-item--child lc-sidenav__nav-item--action"
+                      (click)="handleItemClick(child)"
+                      [class.lc-sidenav__nav-item--active]="isItemActive(child)"
+                      [attr.aria-current]="isItemActive(child) ? 'page' : null"
+                      [class.lc-sidenav__nav-item--busy]="!!child.busy"
+                      [class.lc-sidenav__nav-item--disabled]="!!child.disabled"
+                      [class.lc-sidenav__nav-item--muted]="!!child.muted"
+                      [class.lc-sidenav__nav-item--hint]="!!child.hint"
+                      [attr.aria-busy]="child.busy ? 'true' : null"
+                      [attr.aria-disabled]="isBlocked(child) ? 'true' : null"
+                      [attr.tabindex]="itemTabIndex(child)"
+                      [lcTooltip]="rowTooltip(child)"
+                      [tooltipPosition]="tooltipSide()"
+                      (contextmenu)="onContextMenu($event, child)">
+                      <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: child, optionalIcon: false }" />
+                    </button>
+                  } @else {
+                    <a
+                      [routerLink]="child.route"
+                      class="lc-sidenav__nav-item lc-sidenav__nav-item--child"
+                      (click)="handleItemClick(child)"
+                      [class.lc-sidenav__nav-item--active]="isItemActive(child)"
+                      [attr.aria-current]="isItemActive(child) ? 'page' : null"
+                      [class.lc-sidenav__nav-item--busy]="!!child.busy"
+                      [class.lc-sidenav__nav-item--disabled]="!!child.disabled"
+                      [class.lc-sidenav__nav-item--muted]="!!child.muted"
+                      [class.lc-sidenav__nav-item--hint]="!!child.hint"
+                      [attr.aria-busy]="child.busy ? 'true' : null"
+                      [attr.aria-disabled]="isBlocked(child) ? 'true' : null"
+                      [attr.tabindex]="itemTabIndex(child)"
+                      [lcTooltip]="rowTooltip(child)"
+                      [tooltipPosition]="tooltipSide()"
+                      (contextmenu)="onContextMenu($event, child)">
+                      <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: child, optionalIcon: false }" />
+                    </a>
+                  }
+                }
+                @if (item.childrenLoading) {
+                  <ng-container [ngTemplateOutlet]="childrenLoadingRow" />
                 }
               </div>
             }
           } @else {
             <!-- Simple item without children -->
             <div class="lc-sidenav__nav-item-row">
-              <a
-                [routerLink]="item.route"
-                class="lc-sidenav__nav-item"
-                (click)="handleItemClick(item)"
-                [class.lc-sidenav__nav-item--active]="isItemActive(item)"
-                [attr.aria-current]="isItemActive(item) ? 'page' : null"
-                [title]="collapsed() && !item.badge ? item.label : ''"
-                [attr.data-tooltip]="collapsed() ? item.label : null">
-                <lc-icon [name]="item.icon" size="sm" [decorative]="true" class="lc-sidenav__nav-icon" />
-                <span class="lc-sidenav__nav-label">{{ item.label }}</span>
-                @if (item.badge) {
-                  <lc-badge aria-hidden="true" [variant]="item.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ item.badge.value }}</lc-badge>&ngsp;<span class="lc-sidenav__sr-only">{{ badgeText(item) }}</span>
-                }
-              </a>
+              @if (item.kind === 'action') {
+                <button
+                  type="button"
+                  class="lc-sidenav__nav-item lc-sidenav__nav-item--action"
+                  (click)="handleItemClick(item)"
+                  [class.lc-sidenav__nav-item--active]="isItemActive(item)"
+                  [attr.aria-current]="isItemActive(item) ? 'page' : null"
+                  [title]="collapsed() && !item.badge ? item.label : ''"
+                  [attr.data-tooltip]="collapsed() ? item.label : null"
+                  [class.lc-sidenav__nav-item--busy]="!!item.busy"
+                  [class.lc-sidenav__nav-item--disabled]="!!item.disabled"
+                  [class.lc-sidenav__nav-item--muted]="!!item.muted"
+                  [class.lc-sidenav__nav-item--hint]="!!item.hint"
+                  [attr.aria-busy]="item.busy ? 'true' : null"
+                  [attr.aria-disabled]="isBlocked(item) ? 'true' : null"
+                  [attr.tabindex]="itemTabIndex(item)"
+                  [lcTooltip]="rowTooltip(item)"
+                  [tooltipPosition]="tooltipSide()"
+                  (contextmenu)="onContextMenu($event, item)">
+                  <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: item, optionalIcon: false }" />
+                </button>
+              } @else {
+                <a
+                  [routerLink]="item.route"
+                  class="lc-sidenav__nav-item"
+                  (click)="handleItemClick(item)"
+                  [class.lc-sidenav__nav-item--active]="isItemActive(item)"
+                  [attr.aria-current]="isItemActive(item) ? 'page' : null"
+                  [title]="collapsed() && !item.badge ? item.label : ''"
+                  [attr.data-tooltip]="collapsed() ? item.label : null"
+                  [class.lc-sidenav__nav-item--busy]="!!item.busy"
+                  [class.lc-sidenav__nav-item--disabled]="!!item.disabled"
+                  [class.lc-sidenav__nav-item--muted]="!!item.muted"
+                  [class.lc-sidenav__nav-item--hint]="!!item.hint"
+                  [attr.aria-busy]="item.busy ? 'true' : null"
+                  [attr.aria-disabled]="isBlocked(item) ? 'true' : null"
+                  [attr.tabindex]="itemTabIndex(item)"
+                  [lcTooltip]="rowTooltip(item)"
+                  [tooltipPosition]="tooltipSide()"
+                  (contextmenu)="onContextMenu($event, item)">
+                  <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: item, optionalIcon: false }" />
+                </a>
+              }
               @if (item.action) {
                 <button
                   type="button"
@@ -353,5 +477,47 @@
       {{ brandInitial() }}
     }
   </span>
-  <span class="lc-sidenav__brand-name" [class.lc-sidenav__sr-only]="isRail()">{{ brandName() }}</span>
+  @if (brandSubtitle()) {
+    <!-- 3.44: name and subtitle, one line each; the subtitle joins the link name. -->
+    <span class="lc-sidenav__brand-text" [class.lc-sidenav__sr-only]="isRail()"
+      ><span class="lc-sidenav__brand-name lc-sidenav__brand-name--one-line">{{ brandName() }}</span>&ngsp;<span class="lc-sidenav__brand-subtitle">{{
+        brandSubtitle()
+      }}</span></span
+    >
+  } @else {
+    <span class="lc-sidenav__brand-name" [class.lc-sidenav__sr-only]="isRail()">{{ brandName() }}</span>
+  }
+</ng-template>
+
+<!-- An item's content (3.44), shared by every item site: the leading slot
+     (spinner while busy, an image, or the icon), the label, the hint, the
+     badge with its hidden text, and the busy text. `optionalIcon`: section
+     children draw no icon without one. Keep `</lc-badge>&ngsp;<span …sr-only>`
+     together (check-angular-majors.mjs reads it). -->
+<ng-template #itemContent let-item let-optionalIcon="optionalIcon">
+  @if (item.busy) {
+    <span class="lc-sidenav__nav-icon lc-sidenav__nav-spinner" aria-hidden="true"><lc-spinner size="xs" /></span>
+  } @else if (item.iconUrl) {
+    <img class="lc-sidenav__nav-icon lc-sidenav__nav-img" [src]="item.iconUrl" alt="" />
+  } @else if (item.icon || !optionalIcon) {
+    <lc-icon [name]="item.icon" size="sm" [decorative]="true" class="lc-sidenav__nav-icon" />
+  }
+  <span class="lc-sidenav__nav-label">{{ item.label }}</span>
+  @if (item.hint) {
+    &ngsp;<span class="lc-sidenav__nav-hint" [attr.title]="item.hint">{{ item.hint }}</span>
+  }
+  @if (item.badge) {
+    <lc-badge aria-hidden="true" [variant]="item.badge.variant || 'default'" size="xs" [rounded]="true" class="lc-sidenav__nav-badge">{{ item.badge.value }}</lc-badge>&ngsp;<span class="lc-sidenav__sr-only">{{ badgeText(item) }}</span>
+  }
+  @if (item.busy) {
+    &ngsp;<span class="lc-sidenav__sr-only">{{ busyText(item) }}</span>
+  }
+</ng-template>
+
+<!-- The loading row of an open group whose children load (3.44). -->
+<ng-template #childrenLoadingRow>
+  <div class="lc-sidenav__nav-loading">
+    <span class="lc-sidenav__nav-icon lc-sidenav__nav-spinner" aria-hidden="true"><lc-spinner size="xs" /></span>
+    <span class="lc-sidenav__nav-label">{{ childrenLoadingLabel() }}</span>
+  </div>
 </ng-template>
