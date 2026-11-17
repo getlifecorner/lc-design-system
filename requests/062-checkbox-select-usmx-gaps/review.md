@@ -52,3 +52,23 @@ Screenshots: `tmp/story-shots/062/` — developer `new/` (360 · 1280), `cmp/` +
 | F-2 | should-fix | `ICON_MINUS` (spec constraint "from the existing generator") | `npm run generate:icon-names` run, `git diff --exit-code` on the 4 generated files | written by hand "as the script writes them"; drift specs pass. Retry in the fix round; if approval is still refused, the release-manager runs it before tagging |
 
 **Verdict:** changes requested
+
+## Round 2 — 2026-11-17, commit fd26cd8 (libs/tools = b3bc8cc)
+
+Fix diff `924479a..b3bc8cc`: 4 files, only `@media (forced-colors: active)` blocks at the end of `checkbox.component.scss` / `radio.component.scss` plus 2 spec pins. No source file is newer than the developer's `r2-fc` shots (`find -newer`), so `r2-fc` and the Storybook build were reused. Review run `r2-review` (`--forced-colors`, 360 L/D, composite measure: mark colour × opacity chain up to the host, over a `Canvas` probe).
+
+| AC | Result | Evidence |
+|---|---|---|
+| AC-22 | pass | `r2-fc.log` (5 stories × 360 L/D): every editable, checked, indeterminate and read-only check/dot = `CanvasText` (0 0 0 L / 255 255 255 D, i.e. system colour, not the read-only ink), 21:1 on the box; unchecked stay op 0. Disabled = `GrayText`; after the disabled dimming (`r2-review.log`): checkbox box .75 → 7.38 L / 7.81 D, radio row .5 → 3.38 L / 3.82 D (inactive controls are exempt from 1.4.11; still ≥ 3:1). Shots opened: checkbox *Read-only and Disabled* L (the F-1 shot: „an“/„teilweise“ now drawn in all three rows), radio-group *Disabled* L, radio *Payment Method* D: every dot visible |
+| AC-22 (rule) | pass | matches design §6 r1: check `CanvasText` + `forced-color-adjust: none`, disabled `GrayText`; the read-only (0,3,0) selector is repeated and comes later (pinned in `checkbox.readonly.spec`); radio dot `CanvasText`, `.radio-disabled .radio-dot` `GrayText` (pinned in `radio.component.spec`). No other file styles `.checkbox-icon`/`.radio-dot` (grep) |
+| AC-23 | pass | no assertion changed in r1; 2 added |
+| AC-25 | pass | changelog draft *Fixed* names F-1; see N-1 for its number |
+| others | pass | unchanged since round 1: at rest, `r2-rest-a|b|c` 10/10 byte-identical to round-0 `cmp`/`cmp2`/`new` (checked with `cmp`) |
+
+| # | Severity | Status | Note |
+|---|---|---|---|
+| F-1 | must-fix | **closed** | as above |
+| F-2 | should-fix | open → release-manager | generator still refused for the developer (build.md Deviation 1): run `npm run generate:icon-names`, then `git diff --exit-code -- libs/angular-ui-kit/src`; a diff goes back to web-developer |
+| N-1 | nit | open → release-manager | changelog *Fixed* says „`GrayText` when disabled (14:1)“: that is the undimmed value. Expected wording: „`GrayText` when disabled (7.4:1 checkbox, 3.4:1 radio after the disabled dimming)“ (`r2-review.log`) |
+
+**Verdict:** approved (F-2 and N-1 stay visible in release.md)

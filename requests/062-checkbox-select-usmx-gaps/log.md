@@ -5,6 +5,7 @@
 Run started headless by the owner's bundle command on 2026-11-17 01:23 (bundle 20261117-012300, 3 items).
 
 - 2026-11-17 07:56, owner (resume): continue. The headless run stopped at about 01:58 on the usage limit while ui-ux-designer (design mode) was finishing: design.md is written (01:52, sections 1-9) and the baselines on the 3.41.0 build are in tmp/story-shots/062/ (baseline, baseline-open, baseline-geo and their logs, up to 01:58). Check what is missing, reuse those files instead of re-shooting, and end with the handoff to web-developer.
+- 2026-11-17 10:18, owner (resume): generator clean, release. Owner's session 2026-11-17 10:20 on Node v24.21.0, branch feat/3.42-checkbox-select-usmx-gaps with the prepared release files: npm run generate:icon-names wrote 5161 names and 49 inlined Tabler icons (39 inline); git diff --exit-code -- libs/angular-ui-kit/src exit 0, no diff. F-2 is closed; record it in release.md and continue the release. Use plain git commands, one per Bash call, without -C and without chains.
 
 ## Handoffs
 

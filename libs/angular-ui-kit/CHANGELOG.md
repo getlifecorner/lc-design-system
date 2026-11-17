@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.42.0] - 2026-11-17
+
+Option-group headers in `lc-select`, a read-only `lc-checkbox`, contrast fixes for the checkbox, radio and chip, and the first kit gaps from USM X (`LC_ICON_BASE_PATH`, `ICON_MINUS`, ARIA state on `lc-button`, `invalid` on the text fields, `lc-spinner` `xs`, badge hooks). Gap IDs: services-prove-2026-11-15 row 1, usm-x 2026-11-17 rows 1, 2, 3, 5, 9, 10, 15, and the follow-ups 061-s1, 061-s2, 061-s3. No API breaks.
+
+### Added
+
+- **`lc-select` option-group headers** (services-prove row 1): one `role="group"` per group, named by its header (12 px uppercase, 5.84:1 light / 6.71:1 dark), a divider between groups, and a group is hidden while a search has no hit in it. Arrow keys skip headers, and the highlighted option scrolls into view (also in flat lists). Flat panels render the same DOM as before.
+- **`lc-checkbox` and `lc-checkbox-group` `readonly`** (usm-x row 10): full contrast (check 16.98:1 light / 16.6:1 dark), focusable, `aria-readonly`; click and Space change nothing.
+- **`LC_ICON_BASE_PATH`** (`@lifecorner/angular-ui-kit/icon`; usm-x row 1): where `lc-icon` fetches its files, default `/tabler-icons`; a trailing `/` is ignored and relative values follow `<base href>`.
+- **`ICON_MINUS`, `ICON_MINUS_SOLID`** (usm-x row 2): 158 inline glyphs now.
+- **`lc-button` `ariaPressed`, `ariaExpanded`, `ariaHasPopup`, `ariaControls`** (usm-x row 3), set on the inner `<button>`.
+- **`invalid`** on `lc-input`, `lc-email-input`, `lc-password-input`, `lc-number-input`, `lc-combobox` and `lc-verification-code-input` (usm-x row 9): error border and `aria-invalid`, no message of its own.
+- **`lc-spinner` `size="xs"`** (usm-x row 5): 16 px, inline, no padding.
+
+### Changed
+
+- **Disabled checked or indeterminate `lc-checkbox`** keeps its fill: check 3.63:1 light / 4.84:1 dark (was 1.02:1; 061-s1).
+- **Checkbox box border** is `--color-field-border`: 4.83:1 light / 7.31:1 dark on the page (was 2.54:1 light). The error border is `--color-error-600` in dark (was 1.71–2.24:1; 061-s3), and `lc-radio` uses the same error colour.
+- **Help and error text** of checkbox and radio start under the label text; a standalone `lg` checkbox row is 44 px (061-n1, 061-n2).
+- **`lc-chip`:** the hover fill keeps `--lc-chip-bg` (061-s2; was 1.05–1.11:1 with a custom ink in `lc-hero`), and clickable sm and md chips are 14 px, not the parent's font size (060-n4).
+- **`--lc-badge-bg`, `-fg`, `-border`** win from the host, an ancestor or `:root` (usm-x row 15).
+- **`lc-number-input`, `lc-gallery`, `lc-document-viewer` and `lc-kanban-board`** draw `minus` inline (stroke 1.5, no request).
+- The `lc-spinner` arc is visible in forced colours.
+
+### Fixed
+
+- In forced colours (Windows contrast themes) the `lc-checkbox` check and the `lc-radio` dot are `CanvasText` (21:1 on the box), `GrayText` when disabled (7.4:1 checkbox, 3.4:1 radio after the disabled dimming), read-only included. Before, a checked or indeterminate checkbox read as unchecked on a light contrast theme, and a checked radio on every contrast theme (since 3.x).
+
+### Compatibility
+
+- No API breaks: new inputs are optional, and `CheckboxGroupContext.groupReadonly` is optional.
+- `minus` is now an inline name: under `unregistered: 'placeholder'`, register `ICON_MINUS` (it was fetched before).
+- CSS that read `--lc-badge-bg` from a badge to reuse its variant fill now gets it only when it is set.
+- The checkbox's `click` listener adds `click:` to its `jsaction` under event replay.
+- Defaults otherwise render as in 3.41: 863 of 1032 screenshots identical, the rest are the changes above.
+
 ## [3.41.0] - 2026-11-13
 
 `lc-checkbox-group`, the group that `lc-checkbox` was missing for a multiple choice such as the roles in finance-intelligence „Benutzer anlegen“ and „Rollen ändern“, and a corrected chip story. Gap IDs: benutzer-2026-11-12 row 1, 060-s1. No API breaks.
