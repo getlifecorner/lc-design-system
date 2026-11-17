@@ -2,6 +2,47 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.44.0] - 2026-11-17
+
+The USM X frame and control gaps: header hooks from any ancestor and a header below the modal, a slot beside the page title, card tiles that follow a theme, combobox attributes on the search field, handled keys and a top placement in the modal, a row shape and access keys on the button, an icon in the badge, a tab list for the router outlet, action entries and row states in the side navigation and the list, and the new `lc-split-button`. Gap IDs: usm-x 2026-11-17 rows 4, 11, 14, 16, 17, 20–30, backlog 064-n2. No API breaks.
+
+### Added
+
+- **`lc-split-button`** (`@lifecorner/angular-ui-kit/split-button`, usm-x row 30): a face (`lc-button`, emits `clicked`) and a caret that opens an `lc-menu` of `items` (emits `itemClick`), in one outline; two tab stops, `aria-haspopup="menu"` and `aria-expanded` on the caret (also in prerendered HTML), `menuAriaLabel` (default "More actions"). `variant` outline (default), primary, secondary; `size` sm, md, lg (caret at least 36, 44, 48 px wide, as high as the face; in a stretching flex row it keeps its own height, md 42 px, like `lc-button`); `disabled`, `loading`.
+- **`lc-tabs` `mode="links"`** and `panelId` (usm-x row 11): a tab list of links for a router outlet; `lc-tab` takes `route`, `queryParams`, `queryParamsHandling` or `href`, `current` (`aria-selected`) and `tabId`. A reload or a shared `?tab=` link shows the same tab, also before JS. Arrows, Home and End move the focus; Enter or Space follow the link.
+- **`lc-sidenav`** (usm-x row 14): action items (`kind: 'action'`, a button that emits `itemClicked`; the app sets `current`); `busy` (spinner, `aria-busy`, no activation, `busyLabel`; on the rail the item reads „Berichte Wird geladen“); `disabled` with a `disabledReason` (stays focusable, the reason is its tooltip); `tooltip`; groups that load on demand (`hasChildren`, `childrenLoading`, `expandRequested`, `childrenLoadingLabel`); a right-aligned `hint` (hidden on the rail). Backlog 064-n2: `matchRoutes`, `iconUrl`, `muted`, `badge.ariaLabel` (e.g. „56 von 60 geladen“) and `badge.tooltip`, `itemContextMenu`, `brandSubtitle`, `brandLetter`.
+- **`lc-list`** (usm-x row 20): `busy` rows (spinner, `aria-busy`, no `itemClick`/`linkClick`, the action shows `loading`), `tooltip` and `badgeTooltip`, `disabledReason`, heading items (`heading`, `headingLevel`), `indent` 0–4 (sm 28 / md 32 / lg 36 px a step, `--lc-list-indent-step`), `multiColumn` (`--lc-list-column-width` 18rem, `--lc-list-column-gap`; at 1280 px four columns, a heading stays with its first row). `ItemRowState` (`@lifecorner/angular-ui-kit/models`) is the shared row model.
+- **`lc-page-header`** (usm-x rows 16, 25): `[slot='title-aside']` beside the heading but outside it (chips and `role="status"` are no longer part of the heading's name); `--lc-page-header-overline-color`, `--lc-page-header-title-font-size` (24 px default), `--lc-page-header-title-aside-below` (`1`: the aside wraps under the title before the actions).
+- **`lc-card`** (usm-x rows 17, 24): `clickTarget="heading"` (the button sits in the heading, which stays in the page outline; one tab stop), `truncateTitle` (one line, full title in `title`), `headerSize="sm"` (8/12 px; collapsible head 32 px, hit area 44 px), `--lc-card-divider-color`.
+- **`lc-search-input`** (usm-x row 21): `inputRole="combobox"`, `ariaExpanded`, `ariaControls`, `ariaActiveDescendant`, `ariaAutocomplete`, `ariaHasPopup` on the inner input.
+- **`lc-modal` `placement="top"`** (usm-x row 22): anchored at `--lc-modal-top-offset` (10dvh: 90 px on a 900 px screen), grows downward, the body scrolls 16 px above the edge.
+- **`lc-button`**: `shape="row"` (usm-x row 27; full width, start-aligned, no fill or pill ring, radius 10 px, inset ring; `--lc-button-row-padding`, `--lc-button-row-min-height` 44 px), `accessKey` and `ariaKeyShortcuts` (row 29), `--lc-button-outline-bg` (row 26).
+- **`lc-badge` `icon`** and **`--lc-badge-gap`** (usm-x row 28): icon 1em, 0.4em from the label (md 14 / 5.6 px); with `wrap`, the icon stays on the first line and the label's lines start 5.6 px after it.
+- **Tokens** `--color-primary-wash` and `--color-brand-tile-subtle` (usm-x rows 17, 26); `--gradient-brand-tile` and `--shadow-brand-glow` now derive from `--color-primary-*`, so a customer theme recolours tiles and the outline ground. Same colours as before in both themes; text on the wash 17.12:1 light, 15.71:1 dark.
+
+### Changed
+
+- **`lc-header`** (usm-x row 4): `--lc-header-*` set on any ancestor (`:root`, the app shell) now win over the defaults; the bar paints `background` (a gradient works). Its sticky layer is `--lc-header-z` (900, was 1000): an open `lc-modal` now covers it.
+- **`lc-modal`**: Escape is marked handled (`defaultPrevented`), also with `closeOnEscape` false; Enter and Space on the × no longer reach page listeners.
+- **`lc-stat-trend`** without a label and an icon renders no empty header (and its 4 px gap).
+- **`lc-card`**: a titled card with neither body nor footer draws no rule and no space under its head.
+- **`lc-tabs`**: a horizontal tab list that does not fit scrolls on its own instead of widening the page (WCAG 1.4.10; at 360 px the badge tabs were 557 px wide in 328 px), keeps the selected tab in view, and draws the focus ring inside the tab.
+
+### Fixed
+
+- **`lc-tabs` in forced colours** (Windows high contrast): only the selected tab draws its 2 px line (CanvasText), in both modes and orientations. Before, every tab's transparent line was forced to the text colour, so all tabs looked selected and the selection showed only as a heavier weight.
+- **`lc-tabs` vertical**: the selected tab now draws its 2 px line on the right (`--color-primary-500`: 4.37:1 light, 9.95:1 dark against the surface), as horizontal tabs draw their underline. Before, a later rule made every vertical tab's line transparent, so the selection showed only as an ink 1.21:1 apart from the other tabs and a heavier weight.
+
+### Known
+
+- `lc-list` `multiColumn`: a group that continues in the next column does not repeat its heading, and the rows at the foot of a column draw a divider (backlog 064-n4, 064-n5).
+- `lc-tabs` at 360 px: no cue on the list edge that more tabs follow (064-n6). A vertical list keeps its 200 px minimum width, so the panel beside it is narrow on a phone (064-n8).
+- `lc-sidenav` rail: a long badge value („56/60“) covers the icon (064-n7); a busy item is named by its label and „Wird geladen“, and the `title` repeats the label as the description (064-n9).
+
+### Compatibility
+
+- No API breaks: every input, field, slot, hook and output is optional and renders as before when unset. `ModalPlacement` and `NavigationItem` only widen; `route` stays required (pass `''` for an action item). Visible differences only where described above (header layering under a modal, body-less titled cards, label-less stat-trends, horizontal tabs that overflow, the selected vertical tab's line).
+
 ## [3.43.0] - 2026-11-17
 
 Lazy tree rows and gaps and dashes in the line chart for the finance-intelligence page "Kosten", and the next USM X gaps: a one-line `lc-textarea`, an `alertdialog` role and colour hooks on `lc-alert`, grouped `lc-menu` items, a string value in `lc-number-input`, an icon size hook and light and dark theme scopes. Gap IDs: kosten-2026-11-17 rows 1, 2; usm-x 2026-11-17 rows 6, 7, 8, 12, 13, 18, 19. No API breaks.

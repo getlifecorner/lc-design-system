@@ -81,3 +81,18 @@ Developer's Storybook build (newer than the source). Since r1 only `tabs.scss`, 
 **Decision on the vertical line:** fix now (finding 10). It is one rule in a file this release changes, this round's forced-colour rule already draws the line, and queueing it would cost a separate pipeline pass. Recorded in design.md (change note 21:18). Round 3 needs only `navigation-tabs--vertical` ×4 to differ (by the line) and every other tabs shot identical to `r2r-c1`/`r2r-cb`/`r2r-forced`.
 
 **Verdict:** changes requested (finding 10). Findings 6–9, 11, 12 stay open as nits for the backlog.
+
+## Round 3 — 2026-11-17, commit 6784cc6 (gate tree = 89d542d)
+
+Developer's Storybook build (21:21:59, after `tabs.component.scss` 21:21:37; no source newer than the r3 shots). Only `.lc-tabs--vertical .lc-tabs__tab--selected` moved; *Vertical* is the only story with vertical `lc-tabs` (grep of stories and mdx). Developer's compares re-checked with `diff -rq`: `r3-c1`/`r3-cb` differ from `r2r-c1`/`r2r-cb` only in *Vertical* ×4 (28 other tabs shots identical), `r3-forced` = `r2r-forced` (10/10), `r3-proto` = `r2-proto` (4/4). Own run `r3-review` (*Vertical* 360/1024/1280 × L/D, `--axe`, measure in `r3-review.log`); 2 shots opened (360 L, 1024 D).
+
+| AC / finding | Result | Evidence |
+|---|---|---|
+| AC-2 / 10 | pass | selected „General“: `border-right: solid 2px` rgb(32,132,151) L / rgb(132,199,212) D, the 3 others `rgba(0,0,0,0)`, `border-bottom` 0 on all; line on the surface 4.37 L / 9.95 D, on the hover fill (243,244,246 / 17,29,38) 3.97 / 9.05; line ends at x 215 against the list's 1 px divider (216); 360/1280 L/D pixel-identical to my prototype `r2-proto`; 1024 the same values; overflow 0; axe 0 in 6 shots |
+| AC-2 forced colours | pass | `r3-forced` = `r2r-forced`: the 0,3,0 forced rules still win over the new 0,2,0 rule |
+| AC-27 | pass | horizontal tabs (*Default*, *Keyboard Focus*, *With Badges*, *With Disabled Tab*, *With Icons*, *Router Links* (+ German)) identical to r2 |
+| AC-31 | pass | `tabs.links` pin: rule body, order after the rest rule, no later normal `border-right`, horizontal underline kept; build.md changelog draft has the *Fixed* line (4.37 / 9.95) and names it under *Compatibility* |
+
+No new findings. Selection now reads as line + ink 9.13 / 9.95 + weight 600, not by the 1.21 ink step alone.
+
+**Verdict:** approved. Open for the release (backlog, nits): 6, 7, 8, 9, 11, 12. No open `must-fix` or `should-fix`.
