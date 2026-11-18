@@ -5,4 +5,4 @@ Open findings that don't need a request of their own: nits, known limits, wordin
 | ID | Component | Finding | Source |
 |---|---|---|---|
 | 054-n2 | modal, confirm-dialog | AC-6: WebKit not automated; manual Safari/iOS check of the *Focus return (3.34)* stories (`document.activeElement` = the trigger's `<button>` after close). Still open after 055: WebKit is not installed here. Still open after 056 (2026-11-07): no Playwright/WebKit installed. Still open after 057 (2026-11-10): WebKit not installed, not checkable here. Folded into 065 AC-24 (2026-11-17); stays here if still not checkable. | 054 build.md, Deviations |
-| 065-n1 | timeline | N3: horizontal timeline, the title is start-aligned in `.timeline__header`; centre it over its marker (`.timeline--horizontal .timeline__header { justify-content: center }`; *Horizontal* 1280 item 2: title centre 173.7 vs marker 192 px). Pre-existing. | 065 review r3 N3 |
+| 066-n1 | description-list | A total row's 1 px rule above and double rule below run to the row ends, so they bend at the clickable row's rounded corners (`--border-radius-sm`; *Item Icons* rows md clickable, 1280 L). Pre-existing. | 066 review F-6 |

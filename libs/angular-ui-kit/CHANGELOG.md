@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.46.0] - 2026-11-18
+
+An icon before a description-list value, a nested `lc-accordion` that keeps its own state, and a horizontal `lc-timeline` that can be scrolled by keyboard at 360 px. Gap IDs: finance-intelligence kosten-2026-11-17 rows 3 and 4, follow-ups 065-s1 and 065-n1. No API breaks.
+
+### Added
+
+- **`DescriptionListItem.icon`** (kosten-2026-11-17 row 3, budget page): a kit icon before an item's value, decorative (`aria-hidden`), in the value's colour and at its text size (14 px in `md`, 12 px in `sm`), centred on the first line within 0.9 px and 4 px before its first glyph, never alone on a line. In `rows` a wrapped value stays right-aligned with the icon before line 1, and the icon counts toward the value's share (`min(100%, 7em + 4 px)` instead of 6em), so „+12.400,00 €“ stays on one line at 1280 px; in `stacked` the lines hang after the icon. The icon stays outside a link and before a badge, and works with `datetime`, `valueSuffix`, `total` and `clickable` (the row's accessible name is unchanged). Forced colours draw it in the text colour. Without `icon` the list renders exactly as before.
+- **`lc-timeline` `scrollLabel`** (`'Timeline'`; follow-up 065-s1, WCAG 2.1.1): a horizontal timeline without `selectable` that is wider than its box becomes a tab stop named `scrollLabel`, which the arrow keys scroll, with a 2 px focus ring 2 px outside (`Highlight` in forced colours). At 360 px with four items the list is 512 px in 328 px, and axe `scrollable-region-focusable` reports 0 violations. The check is live (ResizeObserver); while the list fits, on the server, when vertical and with `selectable`, nothing is added.
+
+### Fixed
+
+- `lc-accordion` in the body of another one (kosten-2026-11-17 row 4, since 3.41.0) took the parent's open state, size and chevron side: a closed child showed a 36 px body and an upturned chevron. Each accordion now styles only its own parts (child selectors; specificity weights unchanged). Non-nested accordions are pixel-identical (108/108 story shots).
+
+### Changed
+
+- Horizontal `lc-timeline`: each title is centred over its marker (065-n1; was 173.7 px against 192 px on item 2 at 1280 px). A header with `meta` still spreads.
+
+### Compatibility
+
+- `@lifecorner/angular-ui-kit/description-list` now imports `@lifecorner/angular-ui-kit/icon`; an item with `icon` needs `HttpClient`, as any `lc-icon`. A value with `icon` carries the class `lc-dl__value--icon`.
+- No API breaks.
+
 ## [3.45.0] - 2026-11-18
 
 The USM X fourth batch and the whole backlog: the new `lc-command-palette`, checkbox and radio items in `lc-menu`, Escape and a description on `lc-search-input`, the sortable header on your own `<th>`, popover triggers and placement, selectable timeline items, avatar colour hooks and one initials rule, plus 24 backlog rows (foldable sidenav sections, a middle slot in the header, tab icons and overflow fade, contrast and layout fixes). Gap IDs: usm-x 2026-11-17 rows 31–37, backlog 054-n2 … 064-n9 (all but 054-n2, which needs a manual Safari check). No API breaks.

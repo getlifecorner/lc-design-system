@@ -40,3 +40,30 @@ Screenshots: `tmp/story-shots/066/r1-new/` (4 new stories × 360 · 1024 · 1280
 | F-6 | nit (pre-existing, backlog) | *Item Icons* rows md clickable, 1280 L | a total row's rules run straight to the row ends | the row radius (`--border-radius-sm`) curves both ends of the 1 px rule above and of the double rule below |
 
 **Verdict:** changes requested (F-1, F-2). In round 2, re-shoot *Item Icons* only, with r1 glyph gaps and row heights per §9 AC-2. The other three new stories and the at-rest compares stay approved as long as the timeline and accordion sources are unchanged.
+
+## Round 2 — 2026-11-18, HEAD 2299c57 (libs/tools = gate commit 4eb369a)
+
+Surfaces: the developer's `r2-build/` (*Item Icons* 360/1024/1280 × L/D, `--axe`), `r2-build.log` (measure `tmp/066/measure/r1.mjs`: Range rects per glyph, read and found sound), full page `r2-build-full/`. Storybook build 13:10 is newer than every source file. Own check `r2-ovf.log` (360 L, long-word swaps on the build). Opened: 360 L full page, 1280 L. Since 18b6636 only the dl files and one parameter line of the timeline story changed, so the accordion and timeline approvals of round 1 stand (*Horizontal, German* 6/6 byte-identical, `r2-tl.log`).
+
+| AC | Result | Evidence |
+|---|---|---|
+| AC-1 | pass | the r2 rules need `.lc-dl__icon-row` or `lc-dl__value--icon`, which only icon items render; `valueClass` returns the 3.45 string without `icon` (r2 spec); r1 96/96 stands |
+| AC-2 | pass | glyph gap 4 on 150/150 icon rows (25 × 6 shots); centre − line-1 centre −0.3…0.9; 14×14 md, 12×12 sm; ink eq 150/150. Rows 360/1024 `59/38/38.5/38/59/62 · 62/62/62.5/62/62/66 · 45/27/27/27/45/30 · 66/45/69 · 101/79`, 1280 `sm …/45/48` = §9 r1 exactly; new 156 `stacked` 104/83. Total „+12.400,00 €“ on one line, dd 112.3 (rows md, clickable) |
+| AC-5 | pass | 360 L/D icon top − line-1 top −2.3…−0.6; long first word („Budgetüberschreitungsprognose“) in rows md/sm, 156 rows and stacked: the first part beside the icon, gap 4, row heights unchanged (59/45/101), dd and list overflow 0 (`r2-ovf.log`) |
+| AC-6 | pass | axe 0 violations on 6 shots (incomplete `color-contrast:6`, as in r1) |
+| AC-3, AC-4, AC-7…16 | pass | round 1 stands (sources unchanged; r2 spec +3 tests on gate commit) |
+
+**F-3 (story, SCSS comment, changelog):** the *Item Icons* description, the meta bullet, the SCSS comments and the Added entry say what r1 does: `rows` 4 px before line 1, lines right-aligned, the icon counts toward the share (7em + 4 px); `stacked` lines hang after it. The 156 px `stacked` card stands beside the `rows` card (328 = 156 + 16 + 156 at 360); its line 2 starts at line 1's x (Δ 0 on both rows, also with the long word). Closed.
+
+| # | Status r2 | Evidence |
+|---|---|---|
+| F-1 | closed | gap 4.0 on every row, wrapped ones included (`r2-build.log`) |
+| F-2 | closed | 1280 rows md and clickable: „↑ +12.400,00 €“ one line, dd 112.3 |
+| F-3 | closed | see above |
+| F-4 | closed | html comment „kosten row 3“ |
+| F-5 | closed | `controls.include: ['items', 'orientation', 'scrollLabel']` |
+| F-6 | open, nit (pre-existing) | unchanged; for the backlog |
+
+**API (§2) r2:** unchanged public API; `lc-dl__value--icon` is named under Compatibility in the changelog draft. Changelog draft: accurate against the measures (0.9 px, 4 px, 1280 total, 108/108, 512 in 328).
+
+**Verdict:** approved. Open: F-6 (nit, backlog).
