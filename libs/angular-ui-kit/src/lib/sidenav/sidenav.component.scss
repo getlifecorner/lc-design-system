@@ -23,7 +23,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  // 3.47 (usm-x row 43): the public hook `--lc-sidenav-backdrop`, read here
+  // (set it on any ancestor); the literal is its fallback.
+  background-color: var(--lc-sidenav-backdrop, rgba(0, 0, 0, 0.5));
   opacity: 0;
   animation: fadeIn 0.3s ease-out forwards;
   z-index: 1000;
@@ -153,7 +155,7 @@
   cursor: pointer;
 
   &:focus-visible {
-    outline: 2px solid var(--_lc-sidenav-t-accent, var(--color-primary-500));
+    outline: 2px solid var(--lc-sidenav-focus-ring, var(--_lc-sidenav-t-accent, var(--color-primary-500)));
     outline-offset: 4px;
     border-radius: var(--border-radius-sm, 0.25rem);
   }
@@ -180,7 +182,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--_lc-sidenav-t-accent, var(--color-primary-500));
+    outline: 2px solid var(--lc-sidenav-focus-ring, var(--_lc-sidenav-t-accent, var(--color-primary-500)));
     outline-offset: 2px;
   }
 }
@@ -209,7 +211,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--_lc-sidenav-t-accent, var(--color-primary-500, rgb(59, 130, 246)));
+    outline: 2px solid var(--lc-sidenav-focus-ring, var(--_lc-sidenav-t-accent, var(--color-primary-500, rgb(59, 130, 246))));
     outline-offset: 2px;
   }
 
@@ -243,7 +245,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--_lc-sidenav-t-accent, var(--color-primary-500));
+    outline: 2px solid var(--lc-sidenav-focus-ring, var(--_lc-sidenav-t-accent, var(--color-primary-500)));
     outline-offset: 2px;
   }
 
@@ -369,6 +371,14 @@
   &:hover .lc-sidenav__action-btn {
     opacity: 1;
   }
+
+  // 3.47 (067 r1, WCAG 2.4.7): the rest rule above outweighs the button's own
+  // `:focus-visible`, so a focused row action stayed invisible since 3.0.
+  // Shown at this weight when focused or while the app's menu is open on it.
+  .lc-sidenav__action-btn:focus-visible,
+  .lc-sidenav__action-btn[aria-expanded='true'] {
+    opacity: 1;
+  }
 }
 
 // Action button (section headers & items)
@@ -393,7 +403,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--_lc-sidenav-t-accent, var(--color-primary-500));
+    outline: 2px solid var(--lc-sidenav-focus-ring, var(--_lc-sidenav-t-accent, var(--color-primary-500)));
     outline-offset: 2px;
     opacity: 1;
   }
@@ -474,7 +484,7 @@
   a,
   button {
     &:focus-visible {
-      outline: 2px solid var(--_lc-sidenav-t-accent, var(--color-primary-500, rgb(59, 130, 246)));
+      outline: 2px solid var(--lc-sidenav-focus-ring, var(--_lc-sidenav-t-accent, var(--color-primary-500, rgb(59, 130, 246))));
       outline-offset: 2px;
       border-radius: var(--border-radius-sm, 0.25rem);
     }
@@ -532,7 +542,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--_lc-sidenav-t-accent, var(--color-primary-500));
+    outline: 2px solid var(--lc-sidenav-focus-ring, var(--_lc-sidenav-t-accent, var(--color-primary-500)));
     outline-offset: 2px;
   }
 }
@@ -596,7 +606,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--_lc-sidenav-t-accent, var(--color-primary-500));
+    outline: 2px solid var(--lc-sidenav-focus-ring, var(--_lc-sidenav-t-accent, var(--color-primary-500)));
     outline-offset: 2px;
   }
 }
@@ -661,8 +671,9 @@
     padding-inline-end: 58px;
   }
 
+  // 3.47: centred in a brand block of `--lc-sidenav-brand-height` (10 px by default).
   .lc-sidenav__logo--brand ~ .lc-sidenav__close {
-    top: 10px;
+    top: calc((var(--lc-sidenav-brand-height, 64px) - 44px) / 2);
     right: 10px;
     width: var(--size-min-touch-width, 2.75rem);
     height: var(--size-min-touch-height, 2.75rem);
@@ -768,8 +779,10 @@
 }
 
 // Muted (dimmed but clickable): the section ink and regular weight at rest.
+// 3.47 (usm-x row 43): its own hook `--lc-sidenav-muted-fg`, falling back to
+// the section ink.
 .lc-sidenav__nav-item--muted:not(:hover, .lc-sidenav__nav-item--active, [aria-current='page']) {
-  color: var(--lc-sidenav-section-fg, var(--_lc-sidenav-t-section-fg));
+  color: var(--lc-sidenav-muted-fg, var(--lc-sidenav-section-fg, var(--_lc-sidenav-t-section-fg)));
   font-weight: 400;
 }
 
@@ -836,7 +849,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--_lc-sidenav-t-accent, var(--color-primary-500));
+    outline: 2px solid var(--lc-sidenav-focus-ring, var(--_lc-sidenav-t-accent, var(--color-primary-500)));
     outline-offset: -2px;
   }
 }
@@ -872,6 +885,92 @@
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+}
+
+// ── USM X fifth batch (3.47, usm-x rows 38–46) ───────────────────────────
+// Row 38: the `[sidenav-top]` slot between the brand and the items, on the
+// nav's gutter, scrolling with the items. Projected children carry no
+// `_ngcontent`, so only the wrapper is styled; it is written on one line, so
+// `:empty` draws no box without content.
+.lc-sidenav__top {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2, 0.5rem);
+  flex-shrink: 0;
+  padding: var(--lc-density-padding-md, 1rem) var(--lc-sidenav-nav-padding-x) 0;
+
+  &:empty {
+    display: none;
+  }
+}
+
+// A drawer without a text brand: room for the close button, as the nav has.
+.lc-sidenav--drawer .lc-sidenav__top {
+  padding-top: 4rem;
+}
+
+.lc-sidenav--drawer .lc-sidenav__logo--brand ~ .lc-sidenav__top {
+  padding-top: var(--lc-density-padding-md, 1rem);
+}
+
+// The nav after a filled slot keeps the slot's gap (also over the drawer's
+// 4rem and the transparent variant's 3rem).
+.lc-sidenav__top:not(:empty) ~ .lc-sidenav__nav {
+  padding-top: var(--lc-density-padding-md, 1rem);
+}
+
+.lc-sidenav--transparent .lc-sidenav__top {
+  padding-inline: var(--spacing-6, 1.5rem);
+}
+
+.lc-sidenav--collapsed .lc-sidenav__top {
+  display: none;
+}
+
+.lc-sidenav--collapsed .lc-sidenav__top:not(:empty) ~ .lc-sidenav__nav {
+  padding-top: 0.5rem;
+}
+
+// Row 39: a brand that is no link keeps the link's box, without hover fill.
+.lc-sidenav__brand--static {
+  cursor: default;
+}
+
+.lc-sidenav__brand--static:hover {
+  background-color: transparent;
+}
+
+// Row 39: an image in the brand tile, filtered by the public hook
+// `--lc-sidenav-brand-logo-filter` (e.g. `brightness(0) invert(1)`).
+.lc-sidenav__brand-img {
+  display: block;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  filter: var(--lc-sidenav-brand-logo-filter, none);
+}
+
+// Row 42: the action button of an item row is a 44 × 44 target (28 px
+// button, 8 px around it: over the item's end padding and the nav gutter).
+// Section headings keep 28 px (a 44 px box would cover the first item).
+.lc-sidenav__nav-item-row .lc-sidenav__action-btn {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+  }
+}
+
+// Row 46: a `highlight` match, in the label's own ink (bold and underlined,
+// no fill to lose in forced colours).
+.lc-sidenav__mark {
+  background: none;
+  color: inherit;
+  font-weight: var(--font-weight-bold, 700);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
 @media (forced-colors: active) {

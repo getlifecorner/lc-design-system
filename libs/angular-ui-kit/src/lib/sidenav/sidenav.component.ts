@@ -14,13 +14,20 @@ import {
   afterNextRender,
   EnvironmentInjector,
   ElementRef,
+  WritableSignal,
+  contentChild,
+  linkedSignal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgTemplateOutlet, NgStyle } from '@angular/common';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs';
 import { A11yModule } from '@angular/cdk/a11y';
-import { NavigationItem, NavigationItemContextMenuEvent } from '@lifecorner/angular-ui-kit/models';
+import {
+  NavigationItem,
+  NavigationItemActionEvent,
+  NavigationItemContextMenuEvent,
+} from '@lifecorner/angular-ui-kit/models';
 import {
   currentItemParents,
   currentNavigationItem,
@@ -35,7 +42,8 @@ import { BadgeComponent } from '@lifecorner/angular-ui-kit/badge';
 import { LogoComponent } from '@lifecorner/angular-ui-kit/logo';
 import { SpinnerComponent } from '@lifecorner/angular-ui-kit/spinner';
 import { TooltipDirective, type TooltipPosition } from '@lifecorner/angular-ui-kit/tooltip';
-import { focusReturnTarget } from '@lifecorner/angular-ui-kit/internal/overlay';
+import { OverlayStackService, focusReturnTarget } from '@lifecorner/angular-ui-kit/internal/overlay';
+import { SidenavLabelDirective } from './sidenav-label.directive';
 
 export type SidenavPosition = 'left' | 'right';
 export type SidenavMode = 'drawer' | 'docked';
@@ -61,6 +69,18 @@ function containsItem(item: NavigationItem, target: NavigationItem): boolean {
   return !!item.children?.some((child) => child === target || containsItem(child, target));
 }
 
+/** Whether a list of ids and a set hold the same ids (3.47). */
+function sameIds(ids: readonly string[], set: ReadonlySet<string>): boolean {
+  const unique = new Set(ids);
+  return unique.size === set.size && ids.every((id) => set.has(id));
+}
+
+/** A label split into marked and plain parts (3.47, `highlight`). */
+interface LabelPart {
+  text: string;
+  mark: boolean;
+}
+
 /**
  * Sidenav component for application navigation sidebar.
  *
@@ -73,7 +93,7 @@ function containsItem(item: NavigationItem, target: NavigationItem): boolean {
  *   one link to home (`brandHref`, else `routerLink="/"`), as high as the
  *   `lc-header` next to it; the rail shows only the tile. It never toggles:
  *   `showCollapseToggle` adds a collapse button at the bottom of the rail
- * - Hierarchical navigation with collapsible groups (up to 3 levels)
+ * - Hierarchical navigation with collapsible groups (3.47: any depth)
  * - Section headlines for item grouping with optional action buttons
  * - Action buttons on any item (hover-reveal)
  * - Badge support on items (count / status indicator), read after the label
@@ -116,6 +136,16 @@ function containsItem(item: NavigationItem, target: NavigationItem): boolean {
  *   `brandSubtitle` and `brandLetter`. Busy and disabled items ignore click,
  *   Enter and Space (also router links: a capture listener stops the click
  *   before `RouterLink` sees it)
+ * - 3.47 (usm-x rows 38–46): a `[sidenav-top]` slot between the brand and
+ *   the items, `brandRoute`, `brandLink`, `brandLogoSrc`, groups nested to
+ *   any depth, `expandedGroups` (two-way), `itemActionClick` with the action
+ *   button, an `lcSidenavLabel` template and `highlight`, a `title` on a
+ *   truncated label, Escape only when the drawer is the top-most layer, and
+ *   the CSS hooks `--lc-sidenav-focus-ring`, `--lc-sidenav-muted-fg`,
+ *   `--lc-sidenav-icon-size` (default 20px), `--lc-sidenav-backdrop`
+ *   (default `rgba(0, 0, 0, 0.5)`), `--lc-sidenav-brand-height` (default by
+ *   `logoSize`: 56, 56, 64, 80, 112 px) and `--lc-sidenav-brand-logo-filter`
+ *   (default `none`), read where used (set them on any ancestor)
  *
  * @example
  * ```html
@@ -245,6 +275,32 @@ export class SidenavComponent implements OnDestroy {
   readonly brandLetter = input('');
 
   /**
+   * `routerLink` of the brand when `brandHref` is empty (3.47, usm-x
+   * row 39), e.g. `'/start'`.
+   * @default '/'
+   */
+  readonly brandRoute = input('/');
+
+  /**
+   * `false`: the brand is a plain block (a `<div>`, no link, no tab stop)
+   * with the same tile, name and subtitle (3.47, usm-x row 39), for an app
+   * whose brand leads nowhere. `brandHref`, `brandRoute` and
+   * `brandAriaLabel` are then ignored.
+   * @default true
+   */
+  readonly brandLink = input(true);
+
+  /**
+   * Image in the brand tile (3.47, usm-x row 39), decorative (`alt=""`),
+   * 24 × 24 px contained; wins over `brandIcon` and `brandLetter`. The CSS
+   * hook `--lc-sidenav-brand-logo-filter` (default `none`) filters it, e.g.
+   * `brightness(0) invert(1)` for a white silhouette on a dark rail; pair it
+   * with `--lc-sidenav-brand-tile-bg: transparent` for a logo without a tile.
+   * @default ''
+   */
+  readonly brandLogoSrc = input('');
+
+  /**
    * Docked mode: a button at the bottom of the rail collapses and expands it
    * (`collapsed`). Independent of the brand. With `showLogo` the image logo
    * toggles already, so use one of the two.
@@ -317,7 +373,8 @@ export class SidenavComponent implements OnDestroy {
   /**
    * Navigation items (`NavigationItem[]`): `id`, `icon`, `label`, `route`,
    * `displayOrder` (sort order, 1 = first); optional `children`
-   * (`NavigationItem[]`, a collapsible group, up to 3 levels), `isSection`
+   * (`NavigationItem[]`, a collapsible group; 3.47: nested to any depth, a
+   * child with children or `hasChildren` is a group of its own), `isSection`
    * (renders `label` as a section headline over its `children`),
    * `collapsible` (3.45: a section heading becomes a disclosure button, see
    * `collapsedSections`), `badge` (`{ value: string | number; variant?:
@@ -417,17 +474,57 @@ export class SidenavComponent implements OnDestroy {
   readonly childrenLoadingLabel = input('Loading…');
 
   /**
-   * Ids of the expanded parent items — the single source of truth for
-   * `isExpanded`. Seeded with the current item's parent whenever it changes
-   * (see constructor), so a group opens on navigation but can still
-   * be collapsed by the user. (It used to be OR-ed with `hasActiveChild` at
-   * read time, so toggling such a group flipped the set without ever closing
-   * it — the set drifted out of sync with what was on screen.)
+   * Ids of the open groups, at any depth (3.47, usm-x row 41; two-way). A
+   * value seeds and replaces the open set; every change (a toggle, the
+   * current item's groups opening, a write to `expandedItems`) is reported as
+   * the full list. Ids not yet in `items` stay and apply when the group
+   * arrives (lazy loading). Opening a group through this input emits no
+   * `expandRequested`. The first render, also prerendered, opens these ids
+   * and the current item's groups; later the current item's groups open only
+   * when the current item changes, not on an `items` update, so a group the
+   * user folded stays folded.
+   * @default []
    */
-  readonly expandedItems = signal<Set<string>>(new Set());
+  readonly expandedGroups = model<readonly string[]>([]);
 
-  /** Ids of the collapsible parents (top-level groups, section sub-groups) that contain the current item. */
+  /**
+   * Text marked in every item label (3.47, usm-x row 46), e.g. a search
+   * query: case-insensitive, every match, trimmed, in a
+   * `<mark class="lc-sidenav__mark">` (bold, underlined, the label's ink).
+   * Ignored when an `lcSidenavLabel` template is set (it gets the text in
+   * its context). `''`: no marks.
+   * @default ''
+   */
+  readonly highlight = input('');
+
+  /**
+   * The `lcSidenavLabel` template (3.47, usm-x row 46): replaces the label
+   * text of every item, see `SidenavLabelDirective`.
+   */
+  protected readonly labelTemplate = contentChild(SidenavLabelDirective);
+
+  /**
+   * Ids of the expanded parent items — the single source of truth for
+   * `isExpanded`. (It used to be OR-ed with `hasActiveChild` at read time, so
+   * toggling such a group flipped the set without ever closing it — the set
+   * drifted out of sync with what was on screen.) 3.47: linked to
+   * `expandedGroups`, which seeds and replaces it; the first value adds the
+   * current item's groups, so they are open in the first (also prerendered)
+   * render. A write is reported through `expandedGroups`.
+   */
+  readonly expandedItems: WritableSignal<Set<string>> = linkedSignal<readonly string[], Set<string>>({
+    source: this.expandedGroups,
+    computation: (ids, previous) => {
+      if (!previous) return new Set([...ids, ...untracked(() => this.activeChildParents())]);
+      return sameIds(ids, previous.value) ? previous.value : new Set(ids);
+    },
+  });
+
+  /** Ids of the groups (any depth, 3.47) that contain the current item, top down. */
   private readonly activeChildParents = computed(() => currentItemParents(this.items(), this.currentItem()));
+
+  /** The current item's id (3.47): its groups open when it changes, not on every `items` update. */
+  private readonly currentItemId = computed(() => this.currentItem()?.id ?? null);
 
   /**
    * Computed sorted navigation items by displayOrder
@@ -480,6 +577,19 @@ export class SidenavComponent implements OnDestroy {
   readonly itemAction = output<NavigationItem>();
 
   /**
+   * An action button was pressed (3.47, usm-x row 42): `{ item, event,
+   * element }`, for rows at any level and section headings, right after
+   * `itemAction` and in the same cases. `element` is the button, to anchor a
+   * menu to it and to return the focus to after the menu closes. While the
+   * menu is open, set `aria-haspopup="menu"` and `aria-expanded="true"` on
+   * `element` (`"false"` when it closes): a row's action button shows on
+   * hover, on keyboard focus and while `aria-expanded="true"`. In the
+   * drawer, render the menu inside the panel (the default slot): the drawer
+   * is a modal dialog.
+   */
+  readonly itemActionClick = output<NavigationItemActionEvent>();
+
+  /**
    * A group that loads its children on demand (`hasChildren`) was opened
    * while it has none (3.44): load them, set `childrenLoading` meanwhile.
    */
@@ -519,13 +629,26 @@ export class SidenavComponent implements OnDestroy {
 
     // Navigating into a group opens it: add the active child's parent(s) to
     // the expanded set. Only additive — the user's own collapses/expands of
-    // other groups survive a route change.
+    // other groups survive a route change. 3.47 (usm-x row 41): only when the
+    // current item's id changes; an `items` update (children loaded) keeps a
+    // group the user folded over the current item folded.
     effect(() => {
-      const parents = this.activeChildParents();
-      if (parents.length === 0) return;
-      const expanded = untracked(this.expandedItems);
-      if (parents.every((id) => expanded.has(id))) return;
-      this.expandedItems.set(new Set([...expanded, ...parents]));
+      this.currentItemId();
+      untracked(() => {
+        const parents = this.activeChildParents();
+        if (parents.length === 0) return;
+        const expanded = this.expandedItems();
+        if (parents.every((id) => expanded.has(id))) return;
+        this.expandedItems.set(new Set([...expanded, ...parents]));
+      });
+    });
+
+    // 3.47: every change of the open set is reported through `expandedGroups`.
+    effect(() => {
+      const open = this.expandedItems();
+      untracked(() => {
+        if (!sameIds(this.expandedGroups(), open)) this.expandedGroups.set([...open]);
+      });
     });
 
     // 3.45: the current item moving into a folded section unfolds it. The
@@ -540,12 +663,17 @@ export class SidenavComponent implements OnDestroy {
 
     // 3.35: `returnFocusTo` after the drawer panel closed. Untracked: a
     // change of the input alone must not schedule anything.
+    // 3.47 (usm-x row 44): the open drawer is a layer of the overlay stack,
+    // so Escape closes it only while nothing (a modal, the command palette, a
+    // menu, popover or tooltip) stands above it.
     effect(() => {
       const open = this.drawerOpen();
       untracked(() => {
         if (open) {
           this.drawerShown = true;
+          this.overlayStack.push(this.drawerStackId);
         } else {
+          this.overlayStack.remove(this.drawerStackId);
           this.drawerClosed();
         }
       });
@@ -566,13 +694,36 @@ export class SidenavComponent implements OnDestroy {
       host.addEventListener('pointerup', this.onLongPressEnd);
       host.addEventListener('pointercancel', this.onLongPressEnd);
       host.addEventListener('contextmenu', this.onNativeContextMenu, true);
+      // 3.47: a truncated label gets its full text as `title` when the
+      // pointer enters its item (never in prerendered HTML).
+      host.addEventListener('pointerover', this.onItemPointerOver);
     });
   }
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly overlayStack = inject(OverlayStackService);
 
   /** Prefix of the ids the template links (`aria-controls` of a foldable section). */
   private readonly baseId = `lc-sidenav-${++nextSidenavId}`;
+
+  /** The open drawer's id in the overlay stack (3.47). */
+  private readonly drawerStackId = `${this.baseId}-drawer`;
+
+  /**
+   * The label whose text is cut by its ellipsis, under the pointer (3.47):
+   * it alone carries a `title` with the full label.
+   */
+  private readonly truncatedLabel = signal<Element | null>(null);
+
+  /** Pointer over an item (3.47): its label's `title` follows whether the label is cut. */
+  private readonly onItemPointerOver = (event: Event): void => {
+    const item = (event.target as Element | null)?.closest?.('.lc-sidenav__nav-item');
+    const label = item?.querySelector('.lc-sidenav__nav-label') ?? null;
+    if (!label) return;
+    const cut = label.scrollWidth > label.clientWidth;
+    if (cut) this.truncatedLabel.set(label);
+    else if (this.truncatedLabel() === label) this.truncatedLabel.set(null);
+  };
 
   /** The running long press (3.45): its timer, start point and pointer. */
   private longPress: { timer: ReturnType<typeof setTimeout>; x: number; y: number; pointerId: number } | null = null;
@@ -666,6 +817,8 @@ export class SidenavComponent implements OnDestroy {
     host.removeEventListener?.('pointerup', this.onLongPressEnd);
     host.removeEventListener?.('pointercancel', this.onLongPressEnd);
     host.removeEventListener?.('contextmenu', this.onNativeContextMenu, true);
+    host.removeEventListener?.('pointerover', this.onItemPointerOver);
+    this.overlayStack.remove(this.drawerStackId);
   }
 
   /** Ends a shown drawer panel; schedules `returnFocusTo` when set. */
@@ -783,6 +936,39 @@ export class SidenavComponent implements OnDestroy {
     return this.isRail() && !!item.badge && String(item.badge.value).length > 2;
   }
 
+  /**
+   * A label's `title` (3.47, usm-x row 46): the full label while its text is
+   * cut by the ellipsis (checked when the pointer enters the item), not on
+   * the rail (its tooltip names the item) and not when the row has a kit
+   * tooltip (`rowTooltip`). `null`: no attribute.
+   */
+  protected labelTitle(item: NavigationItem, label: Element): string | null {
+    return this.truncatedLabel() === label && !this.isRail() && !this.rowTooltip(item) ? item.label : null;
+  }
+
+  /** The trimmed `highlight` (3.47). */
+  protected readonly highlightText = computed(() => this.highlight().trim());
+
+  /**
+   * The label split into marked and plain parts (3.47): every
+   * case-insensitive match of `highlight`, as `lc-command-palette` marks.
+   */
+  protected labelParts(label: string): readonly LabelPart[] {
+    const q = this.highlightText();
+    if (!q) return [{ text: label, mark: false }];
+    const lower = label.toLocaleLowerCase();
+    const needle = q.toLocaleLowerCase();
+    const out: LabelPart[] = [];
+    let from = 0;
+    for (let at = lower.indexOf(needle); at !== -1; at = lower.indexOf(needle, from)) {
+      if (at > from) out.push({ text: label.slice(from, at), mark: false });
+      out.push({ text: label.slice(at, at + needle.length), mark: true });
+      from = at + needle.length;
+    }
+    if (from < label.length) out.push({ text: label.slice(from), mark: false });
+    return out;
+  }
+
   /** A `collapsible` section listed in `collapsedSections` (3.45). */
   protected isSectionFolded(item: NavigationItem): boolean {
     return !!item.collapsible && this.collapsedSections().includes(item.id);
@@ -887,6 +1073,8 @@ export class SidenavComponent implements OnDestroy {
   handleItemAction(event: Event, item: NavigationItem): void {
     event.stopPropagation();
     this.itemAction.emit(item);
+    // 3.47 (usm-x row 42): the same press with its event and button.
+    this.itemActionClick.emit({ item, event: event as MouseEvent, element: event.currentTarget as HTMLButtonElement });
   }
 
   /**
@@ -898,11 +1086,12 @@ export class SidenavComponent implements OnDestroy {
   }
 
   /**
-   * Check if a parent item contains the current link
+   * Check if a parent item contains the current link (3.47: at any depth
+   * below it, also while folded).
    */
   hasActiveChild(item: NavigationItem): boolean {
     const current = this.currentItem();
-    return !!current && !!item.children?.includes(current);
+    return !!current && containsItem(item, current);
   }
 
   /**
@@ -945,12 +1134,17 @@ export class SidenavComponent implements OnDestroy {
   /**
    * Handle keyboard navigation. Keyed on the EFFECTIVE mode: a docked sidenav
    * that has become a drawer below the mobile breakpoint must close on Escape
-   * like any drawer.
+   * like any drawer. 3.47 (usm-x row 44): an Escape another handler already
+   * took (`defaultPrevented`) is ignored, and the drawer closes only while it
+   * is the top-most layer of the overlay stack (no modal, command palette,
+   * menu, popover or tooltip above it); it then prevents the default.
    */
   @HostListener('document:keydown', ['$event'])
   handleKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape' && this.isOpen() && this.effectiveMode() === 'drawer') {
-      this.handleClose();
-    }
+    if (event.key !== 'Escape' || !this.isOpen() || this.effectiveMode() !== 'drawer') return;
+    if (event.defaultPrevented) return;
+    if (!this.overlayStack.claim(this.drawerStackId, event)) return;
+    event.preventDefault();
+    this.handleClose();
   }
 }

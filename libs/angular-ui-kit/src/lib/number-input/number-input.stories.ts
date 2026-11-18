@@ -49,6 +49,12 @@ const meta: Meta<NumberInputComponent> = {
         "3.43 (usm-x row 13): `'string'` keeps the typed decimal as text: the model and `stringValueChange` carry a string with `.` as the separator (`\"1.50\"`, a 20-digit id), `null` without a digit; nothing passes through a double. The steppers add `step` in decimal at the larger scale (`\"1.50\"` + 0.5 → `\"2.00\"`); blur clamps only a value out of range, at its scale; `locale` changes only the shown separator; `valueChange` does not emit",
       table: { defaultValue: { summary: "'number'" } },
     },
+    showSteppers: {
+      control: 'boolean',
+      description:
+        '3.47 (kosten row 5): draws the − and + buttons. `false`: only the value box (and the `suffix`) in the field, as high as with steppers (xs 24, sm 32, md 40, lg 44 px inside the border), for a typed amount where a step of 1 means nothing. ArrowUp/ArrowDown still step by `step`. Size the box with `--lc-number-input-value-width`',
+      table: { defaultValue: { summary: 'true' } },
+    },
   },
 
   parameters: {
@@ -64,6 +70,7 @@ Number input component with increment/decrement controls.
 - Helper text and error message linked via \`aria-describedby\`
 - Disabled state support
 - ControlValueAccessor integration for reactive forms
+- 3.47: \`[showSteppers]="false"\` draws only the value box (a typed amount), same height
 
 **CSS hook (3.43):** \`--lc-number-input-value-width\`, on the element or any ancestor, sets the width of the value box between the steppers. Default: the size's width (\`xs\` 3rem, \`sm\` 3.5rem, \`md\` 4rem, \`lg\` 4.5rem). Size it for the longest value, e.g. \`calc(7ch + 0.5rem)\` for „1250,00“ or \`calc(20ch + 0.5rem)\` for a 20-digit id (the digits are tabular, so 1ch is one digit).
 `,
@@ -254,6 +261,55 @@ export const StringModeDe: Story = {
           [(ngModel)]="wrong" />
         <lc-number-input label="Betrag (gesperrt)" valueType="string" locale="de-DE" [step]="0.5" [disabled]="true"
           decrementAriaLabel="Wert verringern" incrementAriaLabel="Wert erhöhen" [(ngModel)]="locked" />
+      </div>`,
+  }),
+};
+
+/** 3.47 (request 067, kosten row 5): a typed euro amount without steppers. */
+export const AmountWithoutSteppers: Story = {
+  name: 'Betrag ohne Schrittknöpfe',
+  parameters: {
+    controls: { include: ['showSteppers'] },
+    docs: {
+      description: {
+        story:
+          '3.47 (request 067, kosten row 5): an amount the user types, up to the remaining amount, in a bottom sheet at 360 px. `[showSteppers]="false"`: no − and + (a step of 1 means nothing for euros), the field is the value box and the unit, 44 px high inside its border (`size="lg"`). `locale="de-DE"`, `suffix="€"` (read „Euro“), `valueType="string"` (`"2960.00"` stays exact), `min` 0, `max` 2960 (blur clamps), `step` 0.01 (decimal keyboard; ArrowUp/ArrowDown still step by it). The wrapper sets `--lc-number-input-value-width: calc(7ch + 0.5rem)`, so „2960,00“ fits. The field shows no digit grouping (since 3.29): „2960,00“, not „2.960,00“.',
+      },
+    },
+  },
+  args: { showSteppers: false },
+  render: (args) => ({
+    moduleMetadata: { imports: [NumberInputComponent, FormsModule] },
+    props: { ...args, amount: '2960.00' },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px; max-width: 360px; --lc-number-input-value-width: calc(7ch + 0.5rem);">
+        <lc-number-input label="Erklärter Betrag" locale="de-DE" suffix="€" suffixAriaLabel="Euro" size="lg"
+          [showSteppers]="showSteppers" valueType="string" [min]="0" [max]="2960" [step]="0.01"
+          helperText="Höchstens 2960,00 € (Restbetrag)" decrementAriaLabel="Wert verringern" incrementAriaLabel="Wert erhöhen"
+          [(ngModel)]="amount" />
+      </div>`,
+  }),
+};
+
+/** 3.47 (request 067, AC-N3): the four sizes without steppers. */
+export const SizesWithoutSteppers: Story = {
+  name: 'Sizes Without Steppers',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.47 (request 067, AC-N3): `[showSteppers]="false"` in every size. The field keeps the height it has with steppers: `xs` 24, `sm` 32, `md` 40, `lg` 44 px inside the 1 px border (26, 34, 42, 46 outside); the value box keeps its width (3, 3.5, 4, 4.5 rem, or the hook).',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [NumberInputComponent, FormsModule] },
+    props: { sizes: ['xs', 'sm', 'md', 'lg'] },
+    template: `
+      <div lang="de" style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px;">
+        @for (s of sizes; track s) {
+          <lc-number-input [size]="s" [label]="'Menge (' + s + ')'" locale="de-DE" [showSteppers]="false" [ngModel]="12" />
+        }
       </div>`,
   }),
 };

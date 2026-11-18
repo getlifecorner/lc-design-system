@@ -45,7 +45,12 @@
         [class.lc-sidenav__logo--size-lg]="logoSize() === 'lg'"
         [class.lc-sidenav__logo--size-xl]="logoSize() === 'xl'"
       >
-        @if (brandHref()) {
+        @if (!brandLink()) {
+          <!-- 3.47 (usm-x row 39): a plain block, no link, no tab stop; the rail tooltip stays. -->
+          <div class="lc-sidenav__brand lc-sidenav__brand--static" [attr.data-tooltip]="brandName()">
+            <ng-container [ngTemplateOutlet]="brandContent" />
+          </div>
+        } @else if (brandHref()) {
           <!-- Plain link: works without the router and without JavaScript. -->
           <a
             [href]="brandHref()"
@@ -55,9 +60,19 @@
             (click)="handleBrandClick()">
             <ng-container [ngTemplateOutlet]="brandContent" />
           </a>
-        } @else {
+        } @else if (brandRoute() === '/') {
           <a
             routerLink="/"
+            class="lc-sidenav__brand"
+            [attr.aria-label]="brandAriaLabel() || null"
+            [attr.data-tooltip]="brandName()"
+            (click)="handleBrandClick()">
+            <ng-container [ngTemplateOutlet]="brandContent" />
+          </a>
+        } @else {
+          <!-- 3.47 (usm-x row 39): `brandRoute`. -->
+          <a
+            [routerLink]="brandRoute()"
             class="lc-sidenav__brand"
             [attr.aria-label]="brandAriaLabel() || null"
             [attr.data-tooltip]="brandName()"
@@ -130,6 +145,9 @@
       </button>
     }
 
+    <!-- 3.47 (usm-x row 38): content between the brand and the items (an area picker, a search). One line: `:empty` hides the box without content. -->
+    <div class="lc-sidenav__top"><ng-content select="[sidenav-top]"></ng-content></div>
+
     <!-- Navigation items (if provided) -->
     @if (items().length > 0) {
       <nav
@@ -177,88 +195,8 @@
                   @for (child of item.children; track child.id) {
                     <li>
                       @if (isGroup(child)) {
-                        <!-- Section child with nested children (collapsible) -->
-                        <div class="lc-sidenav__nav-item-row">
-                          <button
-                            type="button"
-                            class="lc-sidenav__nav-item lc-sidenav__nav-item--parent"
-                            [class.lc-sidenav__nav-item--expanded]="isExpanded(child)"
-                            [class.lc-sidenav__nav-item--has-active-child]="hasActiveChild(child)"
-                            (click)="toggleExpanded(child)"
-                            [attr.aria-expanded]="isExpanded(child)"
-                            [title]="railTitle(child)"
-                            [attr.data-tooltip]="collapsed() ? child.label : null"
-                            [class.lc-sidenav__nav-item--busy]="!!child.busy"
-                            [class.lc-sidenav__nav-item--disabled]="!!child.disabled"
-                            [class.lc-sidenav__nav-item--muted]="!!child.muted"
-                            [class.lc-sidenav__nav-item--hint]="!!child.hint"
-                            [attr.aria-busy]="child.busy ? 'true' : null"
-                            [attr.aria-disabled]="isBlocked(child) ? 'true' : null"
-                            [attr.tabindex]="itemTabIndex(child)"
-                            [lcTooltip]="rowTooltip(child)"
-                            [tooltipPosition]="tooltipSide()"
-                            (contextmenu)="onContextMenu($event, child)">
-                            <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: child, optionalIcon: true }" />
-                            <lc-icon name="chevron-down" size="xs" [decorative]="true" class="lc-sidenav__nav-chevron" />
-                          </button>
-                          @if (child.action) {
-                            <button
-                              type="button"
-                              class="lc-sidenav__action-btn"
-                              [attr.aria-label]="child.action.ariaLabel || child.label + ' action'"
-                              (click)="handleItemAction($event, child)">
-                              <lc-icon [name]="child.action.icon" size="xs" [decorative]="true" />
-                            </button>
-                          }
-                        </div>
-                        @if (isExpanded(child) && (child.children?.length || child.childrenLoading)) {
-                          <div class="lc-sidenav__nav-children" [attr.aria-busy]="child.childrenLoading ? 'true' : null">
-                            @for (grandchild of child.children; track grandchild.id) {
-                              @if (grandchild.kind === 'action') {
-                                <button
-                                  type="button"
-                                  class="lc-sidenav__nav-item lc-sidenav__nav-item--child lc-sidenav__nav-item--action"
-                                  (click)="handleItemClick(grandchild)"
-                                  [class.lc-sidenav__nav-item--active]="isItemActive(grandchild)"
-                                  [attr.aria-current]="isItemActive(grandchild) ? 'page' : null"
-                                  [class.lc-sidenav__nav-item--busy]="!!grandchild.busy"
-                                  [class.lc-sidenav__nav-item--disabled]="!!grandchild.disabled"
-                                  [class.lc-sidenav__nav-item--muted]="!!grandchild.muted"
-                                  [class.lc-sidenav__nav-item--hint]="!!grandchild.hint"
-                                  [attr.aria-busy]="grandchild.busy ? 'true' : null"
-                                  [attr.aria-disabled]="isBlocked(grandchild) ? 'true' : null"
-                                  [attr.tabindex]="itemTabIndex(grandchild)"
-                                  [lcTooltip]="rowTooltip(grandchild)"
-                                  [tooltipPosition]="tooltipSide()"
-                                  (contextmenu)="onContextMenu($event, grandchild)">
-                                  <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: grandchild, optionalIcon: true }" />
-                                </button>
-                              } @else {
-                                <a
-                                  [routerLink]="grandchild.route"
-                                  class="lc-sidenav__nav-item lc-sidenav__nav-item--child"
-                                  (click)="handleItemClick(grandchild)"
-                                  [class.lc-sidenav__nav-item--active]="isItemActive(grandchild)"
-                                  [attr.aria-current]="isItemActive(grandchild) ? 'page' : null"
-                                  [class.lc-sidenav__nav-item--busy]="!!grandchild.busy"
-                                  [class.lc-sidenav__nav-item--disabled]="!!grandchild.disabled"
-                                  [class.lc-sidenav__nav-item--muted]="!!grandchild.muted"
-                                  [class.lc-sidenav__nav-item--hint]="!!grandchild.hint"
-                                  [attr.aria-busy]="grandchild.busy ? 'true' : null"
-                                  [attr.aria-disabled]="isBlocked(grandchild) ? 'true' : null"
-                                  [attr.tabindex]="itemTabIndex(grandchild)"
-                                  [lcTooltip]="rowTooltip(grandchild)"
-                                  [tooltipPosition]="tooltipSide()"
-                                  (contextmenu)="onContextMenu($event, grandchild)">
-                                  <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: grandchild, optionalIcon: true }" />
-                                </a>
-                              }
-                            }
-                            @if (child.childrenLoading) {
-                              <ng-container [ngTemplateOutlet]="childrenLoadingRow" />
-                            }
-                          </div>
-                        }
+                        <!-- Section child with nested children (collapsible); 3.47: groups nest to any depth -->
+                        <ng-container [ngTemplateOutlet]="groupItem" [ngTemplateOutletContext]="{ $implicit: child, level: 2, optionalIcon: true }" />
                       } @else {
                         <!-- Section child (simple link) -->
                         <div class="lc-sidenav__nav-item-row">
@@ -281,7 +219,7 @@
                               [lcTooltip]="rowTooltip(child)"
                               [tooltipPosition]="tooltipSide()"
                               (contextmenu)="onContextMenu($event, child)">
-                              <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: child, optionalIcon: true }" />
+                              <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: child, optionalIcon: true, level: 2 }" />
                             </button>
                           } @else {
                             <a
@@ -302,7 +240,7 @@
                               [lcTooltip]="rowTooltip(child)"
                               [tooltipPosition]="tooltipSide()"
                               (contextmenu)="onContextMenu($event, child)">
-                              <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: child, optionalIcon: true }" />
+                              <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: child, optionalIcon: true, level: 2 }" />
                             </a>
                           }
                           @if (child.action) {
@@ -322,88 +260,8 @@
               }
             </div>
           } @else if (isGroup(item)) {
-            <!-- Parent item with children (collapsible group) -->
-            <div class="lc-sidenav__nav-item-row">
-              <button
-                type="button"
-                class="lc-sidenav__nav-item lc-sidenav__nav-item--parent"
-                [class.lc-sidenav__nav-item--expanded]="isExpanded(item)"
-                [class.lc-sidenav__nav-item--has-active-child]="hasActiveChild(item)"
-                (click)="toggleExpanded(item)"
-                [attr.aria-expanded]="isExpanded(item)"
-                [title]="railTitle(item)"
-                [attr.data-tooltip]="collapsed() ? item.label : null"
-                [class.lc-sidenav__nav-item--busy]="!!item.busy"
-                [class.lc-sidenav__nav-item--disabled]="!!item.disabled"
-                [class.lc-sidenav__nav-item--muted]="!!item.muted"
-                [class.lc-sidenav__nav-item--hint]="!!item.hint"
-                [attr.aria-busy]="item.busy ? 'true' : null"
-                [attr.aria-disabled]="isBlocked(item) ? 'true' : null"
-                [attr.tabindex]="itemTabIndex(item)"
-                [lcTooltip]="rowTooltip(item)"
-                [tooltipPosition]="tooltipSide()"
-                (contextmenu)="onContextMenu($event, item)">
-                <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: item, optionalIcon: false }" />
-                <lc-icon name="chevron-down" size="xs" [decorative]="true" class="lc-sidenav__nav-chevron" />
-              </button>
-              @if (item.action) {
-                <button
-                  type="button"
-                  class="lc-sidenav__action-btn"
-                  [attr.aria-label]="item.action.ariaLabel || item.label + ' action'"
-                  (click)="handleItemAction($event, item)">
-                  <lc-icon [name]="item.action.icon" size="xs" [decorative]="true" />
-                </button>
-              }
-            </div>
-            @if (isExpanded(item) && (item.children?.length || item.childrenLoading)) {
-              <div class="lc-sidenav__nav-children" [attr.aria-busy]="item.childrenLoading ? 'true' : null">
-                @for (child of item.children; track child.id) {
-                  @if (child.kind === 'action') {
-                    <button
-                      type="button"
-                      class="lc-sidenav__nav-item lc-sidenav__nav-item--child lc-sidenav__nav-item--action"
-                      (click)="handleItemClick(child)"
-                      [class.lc-sidenav__nav-item--active]="isItemActive(child)"
-                      [attr.aria-current]="isItemActive(child) ? 'page' : null"
-                      [class.lc-sidenav__nav-item--busy]="!!child.busy"
-                      [class.lc-sidenav__nav-item--disabled]="!!child.disabled"
-                      [class.lc-sidenav__nav-item--muted]="!!child.muted"
-                      [class.lc-sidenav__nav-item--hint]="!!child.hint"
-                      [attr.aria-busy]="child.busy ? 'true' : null"
-                      [attr.aria-disabled]="isBlocked(child) ? 'true' : null"
-                      [attr.tabindex]="itemTabIndex(child)"
-                      [lcTooltip]="rowTooltip(child)"
-                      [tooltipPosition]="tooltipSide()"
-                      (contextmenu)="onContextMenu($event, child)">
-                      <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: child, optionalIcon: false }" />
-                    </button>
-                  } @else {
-                    <a
-                      [routerLink]="child.route"
-                      class="lc-sidenav__nav-item lc-sidenav__nav-item--child"
-                      (click)="handleItemClick(child)"
-                      [class.lc-sidenav__nav-item--active]="isItemActive(child)"
-                      [attr.aria-current]="isItemActive(child) ? 'page' : null"
-                      [class.lc-sidenav__nav-item--busy]="!!child.busy"
-                      [class.lc-sidenav__nav-item--disabled]="!!child.disabled"
-                      [class.lc-sidenav__nav-item--muted]="!!child.muted"
-                      [class.lc-sidenav__nav-item--hint]="!!child.hint"
-                      [attr.aria-busy]="child.busy ? 'true' : null"
-                      [attr.aria-disabled]="isBlocked(child) ? 'true' : null"
-                      [attr.tabindex]="itemTabIndex(child)"
-                      [lcTooltip]="rowTooltip(child)"
-                      [tooltipPosition]="tooltipSide()"
-                      (contextmenu)="onContextMenu($event, child)">
-                      <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: child, optionalIcon: false }" />
-                    </a>
-                  }
-                }
-                @if (item.childrenLoading) {
-                  <ng-container [ngTemplateOutlet]="childrenLoadingRow" />
-                }
-              </div>
-            }
+            <!-- Parent item with children (collapsible group); 3.47: groups nest to any depth -->
+            <ng-container [ngTemplateOutlet]="groupItem" [ngTemplateOutletContext]="{ $implicit: item, level: 1, optionalIcon: false }" />
           } @else {
             <!-- Simple item without children -->
             <div class="lc-sidenav__nav-item-row">
@@ -426,7 +284,7 @@
                   [lcTooltip]="rowTooltip(item)"
                   [tooltipPosition]="tooltipSide()"
                   (contextmenu)="onContextMenu($event, item)">
-                  <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: item, optionalIcon: false }" />
+                  <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: item, optionalIcon: false, level: 1 }" />
                 </button>
               } @else {
                 <a
@@ -447,7 +305,7 @@
                   [lcTooltip]="rowTooltip(item)"
                   [tooltipPosition]="tooltipSide()"
                   (contextmenu)="onContextMenu($event, item)">
-                  <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: item, optionalIcon: false }" />
+                  <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: item, optionalIcon: false, level: 1 }" />
                 </a>
               }
               @if (item.action) {
@@ -488,10 +346,124 @@
   </aside>
 </ng-template>
 
+<!-- A group at any level (3.47, usm-x row 40), one recursive template: its
+     row (the disclosure button and the action) and, while open, its
+     children. A child with children or `hasChildren` is a group again; a
+     child with an `action` sits in a row with its action button; any other
+     child is the bare link or button (the 3.46 markup). `level`: 1 for a
+     top-level group, +1 per group. `optionalIcon` comes from the level-1
+     parent (a section's groups draw no icon without one). -->
+<ng-template #groupItem let-item let-level="level" let-optionalIcon="optionalIcon">
+  <div class="lc-sidenav__nav-item-row">
+    <button
+      type="button"
+      class="lc-sidenav__nav-item lc-sidenav__nav-item--parent"
+      [class.lc-sidenav__nav-item--expanded]="isExpanded(item)"
+      [class.lc-sidenav__nav-item--has-active-child]="hasActiveChild(item)"
+      (click)="toggleExpanded(item)"
+      [attr.aria-expanded]="isExpanded(item)"
+      [title]="railTitle(item)"
+      [attr.data-tooltip]="collapsed() ? item.label : null"
+      [class.lc-sidenav__nav-item--busy]="!!item.busy"
+      [class.lc-sidenav__nav-item--disabled]="!!item.disabled"
+      [class.lc-sidenav__nav-item--muted]="!!item.muted"
+      [class.lc-sidenav__nav-item--hint]="!!item.hint"
+      [attr.aria-busy]="item.busy ? 'true' : null"
+      [attr.aria-disabled]="isBlocked(item) ? 'true' : null"
+      [attr.tabindex]="itemTabIndex(item)"
+      [lcTooltip]="rowTooltip(item)"
+      [tooltipPosition]="tooltipSide()"
+      (contextmenu)="onContextMenu($event, item)">
+      <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: item, optionalIcon: optionalIcon, level: level }" />
+      <lc-icon name="chevron-down" size="xs" [decorative]="true" class="lc-sidenav__nav-chevron" />
+    </button>
+    @if (item.action) {
+      <button
+        type="button"
+        class="lc-sidenav__action-btn"
+        [attr.aria-label]="item.action.ariaLabel || item.label + ' action'"
+        (click)="handleItemAction($event, item)">
+        <lc-icon [name]="item.action.icon" size="xs" [decorative]="true" />
+      </button>
+    }
+  </div>
+  @if (isExpanded(item) && (item.children?.length || item.childrenLoading)) {
+    <div class="lc-sidenav__nav-children" [attr.aria-busy]="item.childrenLoading ? 'true' : null">
+      @for (child of item.children; track child.id) {
+        @if (isGroup(child)) {
+          <ng-container [ngTemplateOutlet]="groupItem" [ngTemplateOutletContext]="{ $implicit: child, level: level + 1, optionalIcon: optionalIcon }" />
+        } @else if (child.action) {
+          <!-- 3.47 (usm-x row 42): the action at every level. -->
+          <div class="lc-sidenav__nav-item-row">
+            <ng-container [ngTemplateOutlet]="childItem" [ngTemplateOutletContext]="{ $implicit: child, level: level + 1, optionalIcon: optionalIcon }" />
+            <button
+              type="button"
+              class="lc-sidenav__action-btn"
+              [attr.aria-label]="child.action.ariaLabel || child.label + ' action'"
+              (click)="handleItemAction($event, child)">
+              <lc-icon [name]="child.action.icon" size="xs" [decorative]="true" />
+            </button>
+          </div>
+        } @else {
+          <ng-container [ngTemplateOutlet]="childItem" [ngTemplateOutletContext]="{ $implicit: child, level: level + 1, optionalIcon: optionalIcon }" />
+        }
+      }
+      @if (item.childrenLoading) {
+        <ng-container [ngTemplateOutlet]="childrenLoadingRow" />
+      }
+    </div>
+  }
+</ng-template>
+
+<!-- A group's child without children (the 3.46 grandchild markup): a link, or a button for an action item. -->
+<ng-template #childItem let-item let-level="level" let-optionalIcon="optionalIcon">
+  @if (item.kind === 'action') {
+    <button
+      type="button"
+      class="lc-sidenav__nav-item lc-sidenav__nav-item--child lc-sidenav__nav-item--action"
+      (click)="handleItemClick(item)"
+      [class.lc-sidenav__nav-item--active]="isItemActive(item)"
+      [attr.aria-current]="isItemActive(item) ? 'page' : null"
+      [class.lc-sidenav__nav-item--busy]="!!item.busy"
+      [class.lc-sidenav__nav-item--disabled]="!!item.disabled"
+      [class.lc-sidenav__nav-item--muted]="!!item.muted"
+      [class.lc-sidenav__nav-item--hint]="!!item.hint"
+      [attr.aria-busy]="item.busy ? 'true' : null"
+      [attr.aria-disabled]="isBlocked(item) ? 'true' : null"
+      [attr.tabindex]="itemTabIndex(item)"
+      [lcTooltip]="rowTooltip(item)"
+      [tooltipPosition]="tooltipSide()"
+      (contextmenu)="onContextMenu($event, item)">
+      <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: item, optionalIcon: optionalIcon, level: level }" />
+    </button>
+  } @else {
+    <a
+      [routerLink]="item.route"
+      class="lc-sidenav__nav-item lc-sidenav__nav-item--child"
+      (click)="handleItemClick(item)"
+      [class.lc-sidenav__nav-item--active]="isItemActive(item)"
+      [attr.aria-current]="isItemActive(item) ? 'page' : null"
+      [class.lc-sidenav__nav-item--busy]="!!item.busy"
+      [class.lc-sidenav__nav-item--disabled]="!!item.disabled"
+      [class.lc-sidenav__nav-item--muted]="!!item.muted"
+      [class.lc-sidenav__nav-item--hint]="!!item.hint"
+      [attr.aria-busy]="item.busy ? 'true' : null"
+      [attr.aria-disabled]="isBlocked(item) ? 'true' : null"
+      [attr.tabindex]="itemTabIndex(item)"
+      [lcTooltip]="rowTooltip(item)"
+      [tooltipPosition]="tooltipSide()"
+      (contextmenu)="onContextMenu($event, item)">
+      <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: item, optionalIcon: optionalIcon, level: level }" />
+    </a>
+  }
+</ng-template>
+
 <!-- The brand link's content: the tile (decorative) and the name. -->
 <ng-template #brandContent>
   <span class="lc-sidenav__brand-tile" aria-hidden="true">
-    @if (brandIcon()) {
+    @if (brandLogoSrc()) {
+      <img class="lc-sidenav__brand-img" [src]="brandLogoSrc()" alt="" />
+    } @else if (brandIcon()) {
       <lc-icon [name]="brandIcon()" size="sm" [decorative]="true" />
     } @else {
       {{ brandInitial() }}
@@ -513,8 +485,11 @@
      (spinner while busy, an image, or the icon), the label, the hint, the
      badge with its hidden text, and the busy text. `optionalIcon`: section
      children draw no icon without one. Keep `</lc-badge>&ngsp;<span …sr-only>`
-     together (check-angular-majors.mjs reads it). -->
-<ng-template #itemContent let-item let-optionalIcon="optionalIcon">
+     together (check-angular-majors.mjs reads it). 3.47 (usm-x row 46): the
+     label is the `lcSidenavLabel` template, the label with `highlight`
+     marked, or the plain label (one text node, as before); a cut label gets
+     its full text as `title` (`labelTitle`). `level`: the template's. -->
+<ng-template #itemContent let-item let-optionalIcon="optionalIcon" let-level="level">
   @if (item.busy) {
     <span class="lc-sidenav__nav-icon lc-sidenav__nav-spinner" aria-hidden="true"><lc-spinner size="xs" /></span>
   } @else if (item.iconUrl) {
@@ -522,7 +497,7 @@
   } @else if (item.icon || !optionalIcon) {
     <lc-icon [name]="item.icon" size="sm" [decorative]="true" class="lc-sidenav__nav-icon" />
   }
-  <span class="lc-sidenav__nav-label">{{ item.label }}</span>
+  <span #navLabel class="lc-sidenav__nav-label" [attr.title]="labelTitle(item, navLabel)">@if (labelTemplate(); as tpl) {<ng-container [ngTemplateOutlet]="tpl.template" [ngTemplateOutletContext]="{ $implicit: item, level: level, highlight: highlightText() }" />} @else if (highlightText()) {@for (part of labelParts(item.label); track $index) {@if (part.mark) {<mark class="lc-sidenav__mark">{{ part.text }}</mark>} @else {{{ part.text }}}}} @else {{{ item.label }}}</span>
   @if (item.hint) {
     &ngsp;<span class="lc-sidenav__nav-hint" [attr.title]="item.hint">{{ item.hint }}</span>
   }

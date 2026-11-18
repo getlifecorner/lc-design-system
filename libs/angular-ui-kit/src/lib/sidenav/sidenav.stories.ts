@@ -3,9 +3,14 @@ import { applicationConfig } from '@storybook/angular';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { provideRouter, withHashLocation } from '@angular/router';
 import { fn, expect, userEvent, within } from 'storybook/test';
-import type { NavigationItem } from '@lifecorner/angular-ui-kit/models';
+import { FormsModule } from '@angular/forms';
+import type { NavigationItem, NavigationItemActionEvent } from '@lifecorner/angular-ui-kit/models';
 import { SidenavComponent } from './sidenav.component';
+import { SidenavLabelDirective } from './sidenav-label.directive';
 import { HeaderComponent } from '../header/header.component';
+import { MenuComponent, type MenuItem } from '../menu/menu.component';
+import { SelectComponent, type SelectOption } from '../select/select.component';
+import { SearchInputComponent } from '../search-input/search-input.component';
 
 /**
  * Sidenav provides a vertical navigation panel for application-level routing.
@@ -146,6 +151,40 @@ const meta: Meta<SidenavComponent> = {
       description: '3.44: the brand tile\'s letter instead of the name\'s first one; `brandIcon` wins',
       table: { defaultValue: { summary: "''" } },
     },
+    brandRoute: {
+      control: 'text',
+      description: '3.47 (usm-x row 39): `routerLink` of the brand when `brandHref` is empty, e.g. `\'/start\'`',
+      table: { defaultValue: { summary: "'/'" } },
+    },
+    brandLink: {
+      control: 'boolean',
+      description:
+        '3.47 (usm-x row 39): `false` draws the brand as a plain block (a `<div>`, no link, no tab stop) with the same tile, name and subtitle; `brandHref`, `brandRoute` and `brandAriaLabel` are then ignored',
+      table: { defaultValue: { summary: 'true' } },
+    },
+    brandLogoSrc: {
+      control: 'text',
+      description:
+        '3.47 (usm-x row 39): an image in the brand tile (decorative, `alt=""`, 24 × 24 contained), over `brandIcon` and `brandLetter`. The CSS hook `--lc-sidenav-brand-logo-filter` (default `none`) filters it, e.g. `brightness(0) invert(1)` for a white silhouette; `--lc-sidenav-brand-tile-bg: transparent` drops the tile',
+      table: { defaultValue: { summary: "''" } },
+    },
+    expandedGroups: {
+      control: 'object',
+      description:
+        '3.47 (usm-x row 41): ids of the open groups at any depth (two-way). A value seeds and replaces the open set; every change (a toggle, the current item\'s groups opening, a write to `expandedItems`) is reported as the full list. Unknown ids stay and apply when the group arrives; opening by input emits no `expandRequested`. The first render (also prerendered) opens these ids and the current item\'s groups; later those open only when the current item changes, not on an `items` update',
+      table: { defaultValue: { summary: '[]' } },
+    },
+    highlight: {
+      control: 'text',
+      description:
+        '3.47 (usm-x row 46): text marked in every label (case-insensitive, every match, trimmed) with `<mark class="lc-sidenav__mark">`: bold and underlined in the label\'s ink. Ignored with an `lcSidenavLabel` template (it gets the text in its context)',
+      table: { defaultValue: { summary: "''" } },
+    },
+    itemActionClick: {
+      action: 'itemActionClick',
+      description:
+        '3.47 (usm-x row 42): `{ item, event, element }` for every action button press (rows at any level, section headings), after `itemAction`; `element` is the button, to anchor a menu and to return the focus to. While the menu is open set `aria-haspopup="menu"` and `aria-expanded="true"` on `element` (`"false"` on close): a row action shows on hover, keyboard focus and `aria-expanded="true"`. In the drawer render the menu inside the panel (default slot)',
+    },
     expandRequested: { action: 'expandRequested', description: '3.44: a `hasChildren` group was opened while it has no children: load them' },
     itemContextMenu: { action: 'itemContextMenu', description: '3.44: `{ item, event }` for a `contextmenu` event on an item (not prevented; not for disabled items)' },
     returnFocusTo: {
@@ -167,7 +206,7 @@ Sidenav component for application navigation sidebar.
 - **Responsive mobile mode** — docked automatically switches to drawer below \`mobileBreakpoint\` (default 768px); auto-closes after navigation
 - **Collapsed icon-rail** mode (56px narrow sidebar with icons only and hover tooltips); clicking a collapsible parent auto-expands the sidebar
 - **Integrated logo** area (\`showLogo\`) with full logo / emblem toggle and a dedicated collapse chevron in the brand row (docked + expanded). Click the logo or chevron to collapse/expand in sidebar-first layouts. Use \`logoSize\` (\`xs | sm | md | lg | xl\`) to scale the brand block — the area grows automatically to fit the logo.
-- **Hierarchical navigation** with collapsible groups (up to 3 levels deep)
+- **Hierarchical navigation** with collapsible groups (3.47: nested to any depth, 12 px more indent per level; see *Deep Tree*)
 - **Section headlines** for item grouping with optional action buttons (\`item.action\`)
 - **Action buttons** on any item — hover-reveal icon buttons that emit \`itemAction\`
 - **Badges** on items (\`item.badge\`) for counts or status indicators with color variants, read after the label with \`badgeAriaLabel\` (on the collapsed rail the label and the badge text name the item)
@@ -204,13 +243,21 @@ Sidenav component for application navigation sidebar.
 | \`showCollapseToggle\` | \`boolean\` | \`false\` | Collapse button at the bottom of the docked rail |
 | \`expandAriaLabel\` | \`string\` | \`'Expand navigation'\` | Name of that button while collapsed |
 | \`badgeAriaLabel\` | \`string\` | \`'{value}'\` | Text read after a badged item's label; \`{value}\` is the badge value |
+| \`brandRoute\` | \`string\` | \`'/'\` | 3.47: \`routerLink\` of the brand without \`brandHref\` |
+| \`brandLink\` | \`boolean\` | \`true\` | 3.47: \`false\`: the brand is a plain block, no link |
+| \`brandLogoSrc\` | \`string\` | \`''\` | 3.47: an image in the brand tile (decorative) |
+| \`expandedGroups\` | \`readonly string[]\` | \`[]\` | 3.47: ids of the open groups, any depth (two-way) |
+| \`highlight\` | \`string\` | \`''\` | 3.47: text marked in every label (\`<mark>\`) |
+
+**Slots:** the default slot below the items; 3.47 \`[sidenav-top]\` between the brand and the items (an area picker, a search), in the docked rail and the drawer, hidden on the collapsed rail, no box without content. **Label template (3.47):** \`<ng-template lcSidenavLabel let-item let-level="level" let-highlight="highlight">\` (\`SidenavLabelDirective\`) replaces every label; it must show the label text (the link's name). A label cut by its ellipsis gets its full text as \`title\` when the pointer enters the item (not on the rail, not with a row tooltip).
 
 **Outputs:**
 | Output | Payload | Description |
 |---|---|---|
-| \`closed\` | \`void\` | Sidenav close requested (overlay click, Escape) |
+| \`closed\` | \`void\` | Sidenav close requested (overlay click, Escape). 3.47: Escape only while the drawer is the top-most layer (no modal, command palette, menu, popover or tooltip above it) and not \`defaultPrevented\` |
 | \`itemClicked\` | \`NavigationItem\` | Item navigated |
 | \`itemAction\` | \`NavigationItem\` | Item action button clicked |
+| \`itemActionClick\` | \`NavigationItemActionEvent\` | 3.47: \`{ item, event, element }\` of the same press, to anchor a menu; set \`aria-haspopup="menu"\` and \`aria-expanded\` on \`element\` while it is open |
 
 **NavigationItem shape:**
 \`\`\`ts
@@ -231,7 +278,7 @@ interface NavigationItem {
 
 Dark mode adds: \`--lc-sidenav-active-bg\`, \`--lc-sidenav-active-fg\`, \`--lc-sidenav-active-icon\`; the collapsed rail's badge ring is \`--lc-sidenav-badge-ring\` (default: the rail's background).
 
-Set them on \`lc-sidenav\` or any ancestor (3.15; until 3.14 only on the element): a value on the element wins over an ancestor's, and both win over \`theme="light"\` / \`"dark"\` (3.14), so a themed rail can be recoloured. A rule on a shared ancestor recolours \`lc-sidenav-placeholder\` the same way. Theme-stable hooks, read where used (set them on any ancestor): \`--lc-sidenav-active-indicator\` (the current item's 2 px bar, default \`var(--color-primary-500)\`; on a \`theme="light"\` rail \`#208497\` on any page, the colour of its focus rings: 4.37:1 on the rail, 4.06:1 on the current item), \`--lc-sidenav-brand-tile-bg\` (default \`var(--color-primary-fill)\`) and \`--lc-sidenav-brand-tile-fg\` (default \`var(--color-on-primary)\`).
+Set them on \`lc-sidenav\` or any ancestor (3.15; until 3.14 only on the element): a value on the element wins over an ancestor's, and both win over \`theme="light"\` / \`"dark"\` (3.14), so a themed rail can be recoloured. A rule on a shared ancestor recolours \`lc-sidenav-placeholder\` the same way. Theme-stable hooks, read where used (set them on any ancestor): \`--lc-sidenav-active-indicator\` (the current item's 2 px bar, default \`var(--color-primary-500)\`; on a \`theme="light"\` rail \`#208497\` on any page, the colour of its focus rings: 4.37:1 on the rail, 4.06:1 on the current item), \`--lc-sidenav-brand-tile-bg\` (default \`var(--color-primary-fill)\`) and \`--lc-sidenav-brand-tile-fg\` (default \`var(--color-on-primary)\`). 3.47 (usm-x rows 39, 43, 45), read where used too: \`--lc-sidenav-focus-ring\` (every focus ring of the rail; default the theme accent, then \`--color-primary-500\`), \`--lc-sidenav-muted-fg\` (\`muted\` items at rest; default \`--lc-sidenav-section-fg\`), \`--lc-sidenav-icon-size\` (item icons, images and spinners; default \`20px\`, the rail box 2 px more), \`--lc-sidenav-backdrop\` (the drawer's backdrop; default \`rgba(0, 0, 0, 0.5)\`), \`--lc-sidenav-brand-height\` (the brand block; default by \`logoSize\`: 56, 56, 64, 80, 112 px) and \`--lc-sidenav-brand-logo-filter\` (on \`brandLogoSrc\`; default \`none\`).
 
 **Icon-column geometry:** \`--lc-sidenav-rail-width\` (56px), \`--lc-sidenav-nav-padding-x\` (8px),
 \`--lc-sidenav-item-padding-x\` (10px). Expanded and collapsed share the gutters, so the icon
@@ -1444,7 +1491,7 @@ export const FoldableSections: Story = {
     docs: {
       description: {
         story:
-          'Sections with `collapsible: true` get a disclosure button in their `h2` (`aria-expanded`, `aria-controls` → the list); „Auswertungen“ starts folded through `collapsedSections` (two-way). Navigating to an item in a folded section unfolds it; the rail ignores folding. With `contextMenuOnLongPress` a 500 ms touch hold on an item emits `itemContextMenu` (the line on the right shows the last one), suppresses the iOS callout and the click after it. A second collapsible level below a section’s group is not offered: it needs tree semantics (`role="tree"`, `aria-level`, arrow keys) that would change every sidenav’s screen-reader model; `lc-tree-view` covers deep trees.',
+          'Sections with `collapsible: true` get a disclosure button in their `h2` (`aria-expanded`, `aria-controls` → the list); „Auswertungen“ starts folded through `collapsedSections` (two-way). Navigating to an item in a folded section unfolds it; the rail ignores folding. With `contextMenuOnLongPress` a 500 ms touch hold on an item emits `itemContextMenu` (the line on the right shows the last one), suppresses the iOS callout and the click after it. 3.47: groups nest to any depth (*Deep Tree*) with the same disclosure buttons; the depth is not announced (tree semantics — `role="tree"`, `aria-level`, arrow keys — would change every sidenav’s screen-reader model; `lc-tree-view` covers a tree).',
       },
     },
     controls: { include: ['collapsedSections', 'contextMenuOnLongPress'] },
@@ -1488,5 +1535,269 @@ export const FoldableSections: Story = {
                     (itemContextMenu)="status = 'Kontextmenü: ' + $event.item.label" />
         <p role="status" style="flex: 1; min-width: 12rem; margin: 0; padding: 24px; color: var(--color-text-secondary);">{{ status }}</p>
       </div>`,
+  }),
+};
+
+/** 3.47 (usm-x rows 38, 39, 43, 46): an area picker and a search in the slot, the search marking the labels. */
+@Component({
+  selector: 'lc-sidenav-top-slot-demo',
+  standalone: true,
+  imports: [SidenavComponent, SelectComponent, SearchInputComponent, FormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div
+      lang="de"
+      style="display: flex; flex-wrap: wrap; height: 560px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;
+             --lc-sidenav-backdrop: color-mix(in srgb, var(--color-primary-fill-active) 60%, transparent);"
+    >
+      <lc-sidenav [isOpen]="true" mode="docked" [items]="items" activeRoute="/rechnungseingang" [highlight]="query()"
+                  brandName="USM X" brandSubtitle="Arbeitsbereich" brandRoute="/start"
+                  ariaLabel="Hauptnavigation" closeAriaLabel="Navigation schließen">
+        <lc-select sidenav-top ariaLabel="Bereich" [options]="areas" [clearable]="false" [(ngModel)]="area" />
+        <lc-search-input sidenav-top ariaLabel="Navigation durchsuchen" placeholder="Navigation durchsuchen" clearAriaLabel="Suche leeren"
+                         [debounceMs]="0" [(value)]="query" />
+      </lc-sidenav>
+      <p role="status" style="flex: 1; min-width: 12rem; margin: 0; padding: 24px; color: var(--color-text-secondary);">Suche: „{{ query() }}“</p>
+    </div>
+  `,
+})
+class SidenavTopSlotDemoComponent {
+  protected readonly query = signal('rech');
+  protected area = 'work';
+  protected readonly areas: SelectOption[] = [
+    { value: 'work', label: 'Arbeitsbereich' },
+    { value: 'custom', label: 'Customizing' },
+  ];
+  protected readonly items: NavigationItem[] = [
+    { id: 'start', icon: 'home', label: 'Start', route: '/start', displayOrder: 1 },
+    {
+      id: 'invoices', icon: 'file', label: 'Rechnungen', route: '', displayOrder: 2,
+      children: [
+        { id: 'in', icon: 'file', label: 'Rechnungseingangsprüfung Lieferantenstammdaten', route: '/rechnungseingang', displayOrder: 1 },
+        { id: 'out', icon: 'file', label: 'Rechnungsausgang', route: '/rechnungsausgang', displayOrder: 2 },
+      ],
+    },
+    { id: 'contracts', icon: 'clipboard', label: 'Verträge', route: '/vertraege', displayOrder: 3 },
+    { id: 'reports', icon: 'chart-bar', label: 'Berichte und Abrechnungen', route: '/berichte', displayOrder: 4 },
+    { id: 'settings', icon: 'settings', label: 'Einstellungen', route: '/einstellungen', displayOrder: 5 },
+  ];
+}
+
+/** 3.47 (usm-x rows 38, 39, 43, 46): the slot between the brand and the items. */
+export const TopSlot: Story = {
+  name: 'Top Slot',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.47 (usm-x rows 38, 39, 46): `[sidenav-top]` content sits between the brand and the items: an `lc-select` „Bereich“ and an `lc-search-input` „Navigation durchsuchen“, on the nav gutter (8 px), 8 px apart, 16 px above the items; it scrolls with the items, is hidden on the collapsed rail, and is inside the drawer (at 360 px: brand, ×, slot, items in this tab order). Without content nothing is drawn. The search is bound to `highlight`: every „rech“ in a label is marked (bold, underlined, in the label’s ink). The long label „Rechnungseingangsprüfung Lieferantenstammdaten“ ends in „…“ and gets its full text as `title` when the pointer enters it. The brand links to `brandRoute="/start"`. The drawer’s backdrop is `--lc-sidenav-backdrop: color-mix(in srgb, var(--color-primary-fill-active) 60%, transparent)`. Docked from 768 px, the open drawer below.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [SidenavTopSlotDemoComponent] },
+    template: `<lc-sidenav-top-slot-demo />`,
+  }),
+};
+
+/** A coloured customer mark, drawn white on the petrol rail through `--lc-sidenav-brand-logo-filter`. */
+const CUSTOMER_LOGO =
+  'data:image/svg+xml,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="9" cy="12" r="7" fill="#e4572e"/><rect x="12" y="5" width="10" height="14" rx="2" fill="#2e86ab"/></svg>',
+  );
+
+/** 3.47 (usm-x rows 39, 43, 45, 46): a customer's rail and the customizing rail. */
+export const BrandAndHooks: Story = {
+  name: 'Brand And Hooks',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.47. Left, „Kunde AG“ (usm-x rows 39, 43, 45): the petrol rail of *App Shell › Full Height Nav* (`theme="dark"`, `--lc-sidenav-bg: var(--color-primary-fill-active)`, `-hover-bg: var(--color-primary-fill-hover)`, `-active-bg: var(--color-primary-fill)`, `-active-fg` / `-active-icon` / `-active-indicator: var(--color-on-primary)`) with the new hooks `--lc-sidenav-focus-ring: var(--color-on-primary)` (13.18:1 on the rail, 6.21:1 on the current item), `--lc-sidenav-icon-size: 18px`, `--lc-sidenav-brand-height: 48px` and a customer logo (`brandLogoSrc`, a coloured data URI) drawn as a white silhouette by `--lc-sidenav-brand-logo-filter: brightness(0) invert(1)` on `--lc-sidenav-brand-tile-bg: transparent`. `[brandLink]="false"`: the brand is a plain block, no link, no tab stop. Right, „USM X / Customizing“ (rows 43, 46): `--lc-sidenav-section-fg: var(--color-text-secondary)` for the headings and `--lc-sidenav-muted-fg: var(--color-text-tertiary)` for the muted areas (Darstellungen, Klassen, Benutzer und Rollen), now two inks; an `lcSidenavLabel` template draws each area’s code before its label (tabular figures, the section ink), at every level.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [SidenavLabelDirective] },
+    props: {
+      logo: CUSTOMER_LOGO,
+      customerItems: [
+        { id: 'overview', icon: 'home', label: 'Übersicht', route: '/uebersicht', displayOrder: 1 },
+        { id: 'orders', icon: 'clipboard', label: 'Aufträge', route: '/auftraege', displayOrder: 2 },
+        { id: 'invoices', icon: 'file', label: 'Rechnungen', route: '/rechnungen', displayOrder: 3 },
+        { id: 'reports', icon: 'chart-bar', label: 'Berichte', route: '/berichte', displayOrder: 4 },
+      ],
+      customizingItems: [
+        {
+          id: 'C10', icon: '', label: 'Oberfläche', route: '', isSection: true, displayOrder: 1,
+          children: [
+            { id: 'C11', icon: 'device-desktop', label: 'Masken', route: '/masken', displayOrder: 1 },
+            { id: 'C12', icon: 'file', label: 'Menüs', route: '/menues', displayOrder: 2 },
+            { id: 'C13', icon: 'eye', label: 'Darstellungen', route: '/darstellungen', muted: true, displayOrder: 3 },
+            { id: 'C14', icon: 'clipboard', label: 'Klassen', route: '/klassen', muted: true, displayOrder: 4 },
+          ],
+        },
+        {
+          id: 'C20', icon: '', label: 'System', route: '', isSection: true, displayOrder: 2,
+          children: [
+            { id: 'C21', icon: 'users', label: 'Benutzer und Rollen', route: '/benutzer', muted: true, displayOrder: 1 },
+            { id: 'C22', icon: 'settings', label: 'Einstellungen', route: '/einstellungen', displayOrder: 2 },
+          ],
+        },
+      ],
+    },
+    template: `
+      <div lang="de" style="display: flex; flex-wrap: wrap; gap: 16px;">
+        <div style="display: flex; height: 440px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;
+                    --lc-sidenav-bg: var(--color-primary-fill-active); --lc-sidenav-border: transparent;
+                    --lc-sidenav-hover-bg: var(--color-primary-fill-hover); --lc-sidenav-active-bg: var(--color-primary-fill);
+                    --lc-sidenav-active-fg: var(--color-on-primary); --lc-sidenav-active-icon: var(--color-on-primary);
+                    --lc-sidenav-active-indicator: var(--color-on-primary); --lc-sidenav-focus-ring: var(--color-on-primary);
+                    --lc-sidenav-icon-size: 18px; --lc-sidenav-brand-height: 48px; --lc-sidenav-brand-tile-bg: transparent;
+                    --lc-sidenav-brand-logo-filter: brightness(0) invert(1);">
+          <lc-sidenav [isOpen]="true" mode="docked" width="280px" [mobileBreakpoint]="0" theme="dark" [items]="customerItems"
+                      activeRoute="/auftraege" brandName="Kunde AG" [brandLink]="false" [brandLogoSrc]="logo" ariaLabel="Kundenbereich" />
+        </div>
+        <div style="display: flex; height: 440px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;
+                    --lc-sidenav-section-fg: var(--color-text-secondary); --lc-sidenav-muted-fg: var(--color-text-tertiary);">
+          <lc-sidenav [isOpen]="true" mode="docked" width="280px" [mobileBreakpoint]="0" [items]="customizingItems"
+                      activeRoute="/masken" brandName="USM X" brandSubtitle="Customizing" brandLetter="X" ariaLabel="Customizing">
+            <ng-template lcSidenavLabel let-item
+              ><span style="font-variant-numeric: tabular-nums; color: var(--lc-sidenav-section-fg);">{{ item.id }}</span> {{ item.label }}</ng-template
+            >
+          </lc-sidenav>
+        </div>
+      </div>`,
+  }),
+};
+
+/** 3.47 (usm-x rows 40, 41, 42): a deep tree, open groups from the backend, a menu at the action. */
+@Component({
+  selector: 'lc-sidenav-deep-tree-demo',
+  standalone: true,
+  imports: [SidenavComponent, MenuComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div lang="de" style="display: flex; flex-wrap: wrap; height: 560px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
+      <lc-sidenav [isOpen]="true" mode="docked" width="280px" [mobileBreakpoint]="0" [items]="items()" activeRoute="/rechnungsfreigabe-4711"
+                  ariaLabel="Arbeitsbereich" childrenLoadingLabel="Wird geladen …" [(expandedGroups)]="open"
+                  (expandRequested)="load($event)" (itemActionClick)="openMenu($event)" />
+      <p role="status" style="flex: 1; min-width: 12rem; margin: 0; padding: 24px; color: var(--color-text-secondary);">
+        Offene Gruppen: {{ open().join(', ') }}<br />Letzte Aktion: {{ last() }}
+      </p>
+    </div>
+    <!-- A box as high as the action button, at its right edge: the menu opens 8 px below the button, right-aligned
+         (no trigger of its own: the button is the sidenav's). -->
+    <div style="position: fixed; z-index: 1100; display: flex;" [style.top.px]="anchor().top" [style.left.px]="anchor().right" [style.height.px]="anchor().height">
+      <lc-menu style="display: flex;" [items]="menuItems" [isOpen]="menuOpen()" position="bottom-right" (itemClick)="pick($event)" (closed)="closeMenu()" />
+    </div>
+  `,
+})
+class SidenavDeepTreeDemoComponent {
+  protected readonly open = signal<readonly string[]>(['outgoing']);
+  protected readonly last = signal('–');
+  protected readonly menuOpen = signal(false);
+  protected readonly anchor = signal({ top: 0, right: 0, height: 0 });
+  private target: NavigationActionTarget | null = null;
+  protected readonly menuItems: MenuItem[] = [
+    { id: 'rename', label: 'Umbenennen', icon: 'pencil' },
+    { id: 'move', label: 'Verschieben', icon: 'arrow-right' },
+    { id: 'delete', label: 'Löschen', icon: 'trash', variant: 'danger' },
+  ];
+  protected readonly items = signal<NavigationItem[]>(deepTreeItems());
+
+  protected openMenu(event: NavigationItemActionEvent): void {
+    const rect = event.element.getBoundingClientRect();
+    this.anchor.set({ top: rect.top, right: rect.right, height: rect.height });
+    if (this.target && this.target.element !== event.element) this.target.element.setAttribute('aria-expanded', 'false');
+    this.target = { label: event.item.label, element: event.element };
+    // The popup state on the sidenav's button: it stays visible while its menu is open.
+    event.element.setAttribute('aria-haspopup', 'menu');
+    event.element.setAttribute('aria-expanded', 'true');
+    this.menuOpen.set(true);
+  }
+
+  protected pick(item: MenuItem): void {
+    this.last.set(`${item.label}: ${this.target?.label ?? ''}`);
+    this.closeMenu();
+  }
+
+  /** Closes the menu, marks the action button collapsed and returns the focus to it. */
+  protected closeMenu(): void {
+    this.menuOpen.set(false);
+    this.target?.element.setAttribute('aria-expanded', 'false');
+    this.target?.element.focus();
+  }
+
+  protected load(item: NavigationItem): void {
+    if (item.id !== 'archive') return;
+    this.items.set(deepTreeItems({ childrenLoading: true }));
+    setTimeout(() => {
+      this.items.set(
+        deepTreeItems({
+          children: ['2024', '2025', '2026'].map((year, i) => ({ id: `archive-${year}`, icon: 'file', label: `Archiv ${year}`, route: `/archiv/${year}`, displayOrder: i + 1 })),
+        }),
+      );
+    }, 600);
+  }
+}
+
+interface NavigationActionTarget {
+  label: string;
+  element: HTMLButtonElement;
+}
+
+/** The deep tree of *Deep Tree*; `archive` patches the lazy „Archiv“ group (level 4). */
+function deepTreeItems(archive: Partial<NavigationItem> = {}): NavigationItem[] {
+  return [
+    { id: 'start', icon: 'home', label: 'Start', route: '/start', displayOrder: 1 },
+    {
+      id: 'workflows', icon: 'folder', label: 'Workflows', route: '', displayOrder: 2,
+      children: [
+        {
+          id: 'incoming', icon: 'folder', label: 'Eingangsrechnungen', route: '', displayOrder: 1,
+          children: [
+            {
+              id: 'review', icon: 'folder', label: 'Prüfung', route: '', displayOrder: 1, action: { icon: 'dots', ariaLabel: 'Aktionen für Prüfung' },
+              children: [
+                {
+                  id: 'approval', icon: 'folder', label: 'Freigabe', route: '', displayOrder: 1,
+                  children: [
+                    { id: 'approval-4711', icon: 'file', label: 'Rechnungsfreigabe Kostenstelle 4711', route: '/rechnungsfreigabe-4711', displayOrder: 1, action: { icon: 'dots', ariaLabel: 'Aktionen für Rechnungsfreigabe Kostenstelle 4711' } },
+                    { id: 'collective', icon: 'file', label: 'Freigabe Sammelrechnung', route: '/sammelrechnung', displayOrder: 2 },
+                  ],
+                },
+                { id: 'archive', icon: 'folder', label: 'Archiv', route: '', displayOrder: 2, hasChildren: true, ...archive },
+              ],
+            },
+          ],
+        },
+        {
+          id: 'outgoing', icon: 'folder', label: 'Ausgangsrechnungen', route: '', displayOrder: 2,
+          children: [
+            { id: 'reminders', icon: 'file', label: 'Mahnungen', route: '/mahnungen', displayOrder: 1 },
+            { id: 'credits', icon: 'file', label: 'Gutschriften', route: '/gutschriften', displayOrder: 2 },
+          ],
+        },
+      ],
+    },
+  ];
+}
+
+/** 3.47 (usm-x rows 40, 41, 42): groups at any depth, open groups as a model, a menu anchored at the action. */
+export const DeepTree: Story = {
+  name: 'Deep Tree',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.47 (usm-x rows 40–42): `children` nest to any depth, drawn by one recursive template: Workflows › Eingangsrechnungen › Prüfung › Freigabe › „Rechnungsfreigabe Kostenstelle 4711“ (level 5, current; every group above it is open and marked). Each level indents 12 px more (the first 16); each group folds on its own with the same disclosure button (`aria-expanded`). „Archiv“ (level 4) loads its children on demand: open it, „Wird geladen …“ shows, its three years arrive after 600 ms. „Ausgangsrechnungen“ starts open through `[(expandedGroups)]` (the backend’s open folders); the line on the right shows the open ids as the sidenav reports them. Folding „Prüfung“ keeps it folded when the archive loads (an `items` update). The `action` button („…“) now renders at every level, 44 × 44 px to hit: `itemActionClick` gives `{ item, event, element }`, and the story anchors an `lc-menu` (Umbenennen, Verschieben, Löschen) at `element`, sets `aria-haspopup="menu"` and `aria-expanded="true"` on it while the menu is open (the button stays visible; `"false"` on close) and returns the focus to it when the menu closes. A row action shows on hover, on keyboard focus and while `aria-expanded="true"`.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [SidenavDeepTreeDemoComponent] },
+    template: `<lc-sidenav-deep-tree-demo />`,
   }),
 };

@@ -179,11 +179,11 @@
   position: relative;
 }
 
-// Inside `.lc-sidenav--collapsed`.
+// Inside `.lc-sidenav--collapsed`. 3.47: the icon size hook + 2 px (22).
 @mixin collapsed-icon {
   .lc-sidenav__nav-icon {
-    width: 22px;
-    height: 22px;
+    width: calc(var(--lc-sidenav-icon-size, 20px) + 2px);
+    height: calc(var(--lc-sidenav-icon-size, 20px) + 2px);
   }
 }
 
@@ -225,16 +225,18 @@
     gap: var(--spacing-3);
     padding: 0 var(--spacing-4);
     border-bottom: 1px solid var(--lc-sidenav-border, var(--_lc-sidenav-t-border));
-    min-height: 64px;
+    min-height: var(--lc-sidenav-brand-height, 64px);
     flex-shrink: 0;
 
     // Heights aligned with `<lc-header>` size variants so a sidebar
-    // brand block lines up perfectly with the header next to it.
-    &--size-xs { min-height: 56px; }
-    &--size-sm { min-height: 56px; }
-    &--size-md { min-height: 64px; }
-    &--size-lg { min-height: 80px; }
-    &--size-xl { min-height: 112px; }
+    // brand block lines up perfectly with the header next to it. 3.47
+    // (usm-x row 45): the public hook `--lc-sidenav-brand-height` (on any
+    // ancestor) sets the block's height, e.g. 48px beside a compact header.
+    &--size-xs { min-height: var(--lc-sidenav-brand-height, 56px); }
+    &--size-sm { min-height: var(--lc-sidenav-brand-height, 56px); }
+    &--size-md { min-height: var(--lc-sidenav-brand-height, 64px); }
+    &--size-lg { min-height: var(--lc-sidenav-brand-height, 80px); }
+    &--size-xl { min-height: var(--lc-sidenav-brand-height, 112px); }
   }
 }
 
@@ -340,29 +342,39 @@
   padding: var(--lc-density-padding-xs, var(--spacing-2, 0.5rem)) var(--lc-sidenav-item-padding-x);
 }
 
+// 3.47 (usm-x row 43): the public hook `--lc-sidenav-icon-size` (default
+// 20px) sizes the icon box (icon, image, spinner); an `lc-icon` glyph follows
+// through its own non-inherited `--lc-icon-size`, set on its host only while
+// the hook is set (unset, the icon keeps its `sm` 20 px).
 @mixin icon {
   .lc-sidenav__nav-icon {
-    width: 20px;
-    height: 20px;
+    width: var(--lc-sidenav-icon-size, 20px);
+    height: var(--lc-sidenav-icon-size, 20px);
     flex-shrink: 0;
     color: currentColor;
+    --lc-icon-size: var(--lc-sidenav-icon-size);
   }
 }
 
 @mixin icon-boxes {
   .lc-sidenav__nav-icon {
-    width: 20px;
-    height: 20px;
+    width: var(--lc-sidenav-icon-size, 20px);
+    height: var(--lc-sidenav-icon-size, 20px);
     flex-shrink: 0;
   }
 }
 
+// 3.47 (usm-x row 40): every deeper level indents another 12 px.
 @mixin children {
   .lc-sidenav__nav-children {
     display: flex;
     flex-direction: column;
     gap: var(--lc-density-gap-xs, var(--spacing-1, 0.25rem));
     padding-left: var(--spacing-4, 1rem);
+  }
+
+  .lc-sidenav__nav-children .lc-sidenav__nav-children {
+    padding-left: var(--spacing-3, 0.75rem);
   }
 }
 

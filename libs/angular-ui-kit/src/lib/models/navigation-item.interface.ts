@@ -51,7 +51,9 @@ export interface NavigationItem extends ItemRowState {
   displayOrder: number;
 
   /**
-   * Optional nested navigation items for multi-level navigation
+   * Optional nested navigation items for multi-level navigation. In
+   * `lc-sidenav` they nest to any depth (3.47): a child with children is a
+   * group of its own.
    */
   children?: NavigationItem[];
 
@@ -149,4 +151,14 @@ export interface NavigationItemContextMenuEvent {
    * event at the press point.
    */
   event: MouseEvent;
+}
+
+/** Payload of `lc-sidenav`'s `itemActionClick` (3.47, usm-x row 42). */
+export interface NavigationItemActionEvent {
+  /** The item whose `action` button was pressed. */
+  item: NavigationItem;
+  /** The button's `click` event. */
+  event: MouseEvent;
+  /** The action button, to anchor a menu to it (and to return the focus to). */
+  element: HTMLButtonElement;
 }

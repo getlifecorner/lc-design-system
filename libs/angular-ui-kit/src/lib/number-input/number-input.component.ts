@@ -133,6 +133,7 @@ function compareDecimal(a: Decimal, b: Decimal): number {
  * - The value is shown in `locale` („7,5“ in `de-DE`), with an optional unit
  *   after it (`suffix`, „7,5 %“), read once (`suffixAriaLabel`)
  * - Sizes `xs`, `sm`, `md` (default), `lg` (44 px touch targets)
+ * - 3.47: `[showSteppers]="false"` hides the − and + buttons (a typed amount)
  * - Disabled state support
  * - ControlValueAccessor integration for reactive forms; the model is a
  *   `number`, clamped to `min`/`max` on blur
@@ -249,6 +250,16 @@ export class NumberInputComponent implements ControlValueAccessor {
    */
   valueType = input<NumberInputValueType>('number');
 
+  /**
+   * Draws the − and + buttons (3.47, kosten row 5). `false`: only the value
+   * box (and the `suffix`) in the field, as high as with steppers (xs 24,
+   * sm 32, md 40, lg 44 px inside the border), for a typed amount where a
+   * step of 1 means nothing. ArrowUp/ArrowDown still step by `step`. Size
+   * the box for the longest value with `--lc-number-input-value-width`.
+   * @default true
+   */
+  showSteppers = input<boolean>(true);
+
   /** Emits value on change */
   valueChange = output<number>();
 
@@ -311,6 +322,8 @@ export class NumberInputComponent implements ControlValueAccessor {
     if (size === 'xs' || size === 'sm' || size === 'lg') classes.push(`number-input--${size}`);
     if (this.isDisabled()) classes.push('number-input--disabled');
     if (this.isInvalid()) classes.push('number-input--error');
+    // 3.47: a class only without steppers, so the default keeps its classes.
+    if (!this.showSteppers()) classes.push('number-input--no-steppers');
     return classes.join(' ');
   });
 

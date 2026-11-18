@@ -412,6 +412,32 @@ const EXPECT_IN_HTML = [
       && (tl.match(/<li[^>]*\sclass="timeline__item/g) ?? []).length === 4
       && /\.timeline--horizontal\[_ngcontent-[^\]]*\]\s+\.timeline__header\[_ngcontent-[^\]]*\]\s*\{\s*justify-content:\s*center;?\s*\}/.test(html);
   }],
+  // 3.47 (request 067, probe-347.ts): before JS
+  ['waterfall long labels from estimated widths: two tspans, the cut label with its title, one line higher (kosten row 6, AC-W4)', (html) => {
+    const wf = html.match(/<div(?=[^>]*\sid="compat-waterfall-347")[^>]*>([^]*?)<\/lc-waterfall-chart>/)?.[1] ?? '';
+    const svg = wf.match(/<svg[^>]*>/)?.[0] ?? '';
+    return /\sheight="264"/.test(svg) && /\sviewbox="0 0 564 264"/i.test(svg)
+      && /<tspan[^>]*>Periodi-<\/tspan>(?:<!--[^]*?-->|\s)*<tspan(?=[^>]*\sdy="1\.2em")[^>]*>sierung<\/tspan>/.test(wf)
+      && /<text(?=[^>]*\sclass="lc-waterfall-chart__label")[^>]*>(?:<!--[^]*?-->|\s)*<title[^>]*>Nicht eingetreten<\/title>/.test(wf)
+      && (wf.match(/<title[^>]*>/g) ?? []).length === 2;
+  }],
+  ['number input without steppers: the value box only, no button (kosten row 5)', (html) => {
+    const ni = html.match(/<lc-number-input(?=[^>]*\sid="compat-number-347")[^>]*>([^]*?)<\/lc-number-input>/)?.[1] ?? '';
+    return /<div(?=[^>]*\sclass="number-input number-input--lg number-input--no-steppers")[^>]*>/.test(ni)
+      && !/<button/.test(ni) && /<input(?=[^>]*\sclass="number-input__input")[^>]*>/.test(ni);
+  }],
+  ['sidenav: the top slot, a brand without link, the current item’s groups and a seeded one open, marks (usm-x rows 38–46, AC-S12)', (html) => {
+    const sn = html.match(/<div(?=[^>]*\sid="compat-sidenav-347")[^>]*>([^]*?)<\/lc-sidenav>/)?.[1] ?? '';
+    const open = sn.match(/<button(?=[^>]*\sclass="[^"]*\blc-sidenav__nav-item--parent\b)(?=[^>]*\saria-expanded="true")[^>]*>/g) ?? [];
+    return /<div(?=[^>]*\sclass="lc-sidenav__top")[^>]*>(?:<!--[^]*?-->|\s)*<input(?=[^>]*\sid="compat-search-347")[^>]*>/.test(sn)
+      && /<div(?=[^>]*\sclass="lc-sidenav__brand lc-sidenav__brand--static")(?![^>]*\s(?:tabindex|role|href)=)[^>]*>/.test(sn)
+      && !/<a(?=[^>]*\sclass="lc-sidenav__brand")/.test(sn)
+      && open.length === 4
+      && /<a(?=[^>]*\shref="\/compat-347\/freigabe")(?=[^>]*\saria-current="page")[^>]*>/.test(sn)
+      && /<a(?=[^>]*\shref="\/compat-347\/mahnungen")[^>]*>/.test(sn)
+      && /<mark(?=[^>]*\sclass="lc-sidenav__mark")[^>]*>rech<\/mark>/.test(sn)
+      && /<button(?=[^>]*\sclass="lc-sidenav__action-btn")(?=[^>]*\saria-label="Aktionen für Prüfung")[^>]*>/.test(sn);
+  }],
   // (minified or not: spaces optional, the container longhands or their shorthand)
   ['vertical tabs stack in a narrow container, pure CSS (backlog 064-n8)', (html) => /\.lc-tabs:has\(\s*>\s*\.lc-tabs__container--vertical\s*\)\s*\{\s*(?:container-name:\s*lc-tabs;\s*container-type:\s*inline-size|container:\s*lc-tabs\s*\/\s*inline-size);?\s*\}/.test(html)
     && /@container\s+lc-tabs\s*\(\s*(?:width\s*<\s*31rem|max-width:\s*30\.\d+rem)\s*\)\s*\{\s*\.lc-tabs__container--vertical\s*\{\s*flex-direction:\s*column;?\s*\}/.test(html)],

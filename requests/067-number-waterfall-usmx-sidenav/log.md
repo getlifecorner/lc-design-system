@@ -1,0 +1,14 @@
+# Log 067: lc-number-input without steppers, lc-waterfall-chart long labels, USM X lc-sidenav gaps
+
+## Owner decisions
+
+## Handoffs
+
+Times come from `date '+%Y-%m-%d %H:%M'` when the row is written, never estimated.
+
+| Time | From → to | Status | Reason | Task |
+|---|---|---|---|---|
+| 2026-11-18 14:03 | spec-writer → ui-ux-designer | done | Spec is ready and the normal route goes to design. | Design the API and visuals for AC-N1…N4, AC-W1…W5 and AC-S1…S12 in requests/067-number-waterfall-usmx-sidenav/spec.md. Name the slot, the expanded-groups model, the new action output, the label template and highlight inputs, and the brand-link input. Define the "topmost layer" check for Escape, and how the waterfall wraps labels without browser text measurement during prerender. |
+| 2026-11-18 14:43 | ui-ux-designer → web-developer | done | The design covers AC-N1…S12 with measured values and stable baselines; the spec had no contradiction that needs the spec-writer. | Implement design.md (requests/067-number-waterfall-usmx-sidenav): showSteppers, wrapLabels with the layout function and char table, and the sidenav slot, brand inputs, recursive groups, expandedGroups, itemActionClick, lcSidenavLabel, highlight, six hooks and Escape via OverlayStackService, plus the 7 stories of §8. |
+| 2026-11-18 15:32 | web-developer → ui-ux-designer | done | All gates are green on 334a293 and the design is built as specified; the stories need the design review. | Review request 067 (stories form-number-input--amount-without-steppers, form-number-input--sizes-without-steppers, charts-waterfall-chart--german-cause-names, charts-waterfall-chart--five-causes, navigation-sidenav--top-slot, navigation-sidenav--brand-and-hooks, navigation-sidenav--deep-tree); shots and measures in tmp/story-shots/067/build-* and tmp/067/, deviations 1–5 in build.md (incl. the 2 AA-only baseline diffs and the action button fading while its menu is open). |
+| 2026-11-18 16:00 | ui-ux-designer → web-developer | changes-requested | A focused row action button stays invisible (measured opacity 0 with :focus-visible true, WCAG 2.4.7), and the 3.47 menu flow returns focus to it; the fix is one rule plus the story. | Fix review.md F-1: in the `.lc-sidenav__nav-item-row` block add `.lc-sidenav__action-btn:focus-visible, .lc-sidenav__action-btn[aria-expanded='true'] { opacity: 1; }` (design §4 change note r1). Have *Deep Tree* set `aria-haspopup="menu"` and `aria-expanded` true/false on `element` on open/close, say so in the `itemActionClick` JSDoc and argType, add a CSS pin to the spec, then rebuild Storybook and update build.md. |

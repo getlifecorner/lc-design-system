@@ -178,6 +178,27 @@
     }
   }
 
+  // 3.47 (request 067, kosten row 5): `showSteppers=false`. The value box is
+  // the whole field, as high as the steppers were (xs 24, sm 32, md 40,
+  // lg 44 px); without the height the field shrank to its text (xs 20, sm 23,
+  // lg 29).
+  &--no-steppers &__input {
+    height: 2.5rem;
+    padding-block: 0;
+  }
+
+  &--no-steppers.number-input--xs &__input {
+    height: var(--size-interactive-xs-height);
+  }
+
+  &--no-steppers.number-input--sm &__input {
+    height: var(--size-interactive-sm-height);
+  }
+
+  &--no-steppers.number-input--lg &__input {
+    height: var(--size-interactive-lg-height);
+  }
+
   &__helper,
   &__error {
     margin: 0;

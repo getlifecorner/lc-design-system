@@ -76,10 +76,15 @@ describe('SidenavComponent text brand (019)', () => {
     it('renders no brand, no collapse row and no theme class on the host by default', () => {
       render(docked);
       const aside = el.querySelector('aside') as HTMLElement;
+      // 3.47 (067 design §3, AC-S1): + the `[sidenav-top]` slot's wrapper,
+      // always rendered and empty without projected content (`:empty` draws
+      // no box), before the nav. Everything else as before.
       expect([...aside.children].map((c) => c.className)).toEqual([
+        'lc-sidenav__top',
         'lc-sidenav__nav lc-sidenav__nav--docked',
         'lc-sidenav__content lc-sidenav__content--docked',
       ]);
+      expect(aside.querySelector('.lc-sidenav__top')?.childNodes).toHaveLength(0);
       expect(el.querySelector('.lc-sidenav__brand, .lc-sidenav__logo, .lc-sidenav__collapse-row')).toBeNull();
       expect([...el.classList].sort()).toEqual(['lc-sidenav-container', 'lc-sidenav-container--docked', 'lc-sidenav-container--open']);
     });
@@ -110,8 +115,11 @@ describe('SidenavComponent text brand (019)', () => {
       expect(icon.name()).toBe('presentation-chart-line');
       expect(icon.decorative()).toBe(true);
       expect(link.querySelector('.lc-sidenav__brand-name')?.textContent).toBe('Finance Intelligence');
-      // The brand sits before the navigation landmark.
-      expect(block.nextElementSibling?.tagName).toBe('NAV');
+      // The brand sits before the navigation landmark; 3.47 (067 AC-S1): only
+      // the empty `[sidenav-top]` wrapper between them.
+      expect(block.nextElementSibling?.className).toBe('lc-sidenav__top');
+      expect(block.nextElementSibling?.childNodes).toHaveLength(0);
+      expect(block.nextElementSibling?.nextElementSibling?.tagName).toBe('NAV');
     });
 
     it('uses a plain href with brandHref and brandAriaLabel as the accessible name', () => {
@@ -132,7 +140,8 @@ describe('SidenavComponent text brand (019)', () => {
       expect(el.querySelector('.lc-sidenav__logo--brand')?.classList).toContain('lc-sidenav__logo--size-lg');
       const css = compile(resolve(__dirname, 'sidenav.component.scss')).css;
       expect(ruleOf(css, '.lc-sidenav__brand')).toContain('min-height: var(--size-min-touch-height, 2.75rem)');
-      expect(ruleOf(css, '.lc-sidenav__logo--size-md')).toContain('min-height: 64px');
+      // 3.47 (067 AC-S10): 64 px is now the fallback of `--lc-sidenav-brand-height`.
+      expect(ruleOf(css, '.lc-sidenav__logo--size-md')).toContain('min-height: var(--lc-sidenav-brand-height, 64px)');
     });
   });
 
@@ -211,7 +220,13 @@ describe('SidenavComponent text brand (019)', () => {
       render({ ...docked, brandName: 'Finanz-Controlling Cockpit', closeAriaLabel: 'Navigation schließen' });
       const aside = el.querySelector('aside') as HTMLElement;
       expect(aside.getAttribute('role')).toBe('dialog');
-      expect([...aside.children].slice(0, 3).map((c) => c.classList[0])).toEqual(['lc-sidenav__logo', 'lc-sidenav__close', 'lc-sidenav__nav']);
+      // 3.47 (067 AC-S1): the `[sidenav-top]` wrapper (empty here) sits between the close button and the items.
+      expect([...aside.children].slice(0, 4).map((c) => c.classList[0])).toEqual([
+        'lc-sidenav__logo',
+        'lc-sidenav__close',
+        'lc-sidenav__top',
+        'lc-sidenav__nav',
+      ]);
       (el.querySelector('.lc-sidenav__brand') as HTMLElement).click();
       expect(closed).toHaveBeenCalledTimes(1);
     });
@@ -228,8 +243,10 @@ describe('SidenavComponent text brand (019)', () => {
       // 020: hooks are no longer declared on `:host`, so ancestor values reach
       // the rail; the read falls back to the theme's private variable.
       expect(ruleOf(css, '.lc-sidenav__brand')).toContain('color: var(--lc-sidenav-fg-active, var(--_lc-sidenav-t-fg-active))');
+      // 3.47 (067 AC-S8): the ring reads `--lc-sidenav-focus-ring` first; the
+      // fallback is the 3.46 value unchanged.
       expect(css).toMatch(
-        /\n\.lc-sidenav__brand:focus-visible \{\s*outline: 2px solid var\(--_lc-sidenav-t-accent, var\(--color-primary-500\)\);\s*outline-offset: 2px;/,
+        /\n\.lc-sidenav__brand:focus-visible \{\s*outline: 2px solid var\(--lc-sidenav-focus-ring, var\(--_lc-sidenav-t-accent, var\(--color-primary-500\)\)\);\s*outline-offset: 2px;/,
       );
     });
 
@@ -246,8 +263,10 @@ describe('SidenavComponent text brand (019)', () => {
       const outlines = css.match(/outline: 2px solid [^;]+;/g) ?? [];
       // 3.45 (065, AC-39): +1, the foldable section's button, on the same accent.
       expect(outlines).toHaveLength(9);
+      // 3.47 (067 AC-S8): every ring reads the public `--lc-sidenav-focus-ring`
+      // first, then the same theme accent as before.
       for (const o of outlines) {
-        expect(o).toMatch(/^outline: 2px solid var\(--_lc-sidenav-t-accent, var\(--color-primary-500[,)]/);
+        expect(o).toMatch(/^outline: 2px solid var\(--lc-sidenav-focus-ring, var\(--_lc-sidenav-t-accent, var\(--color-primary-500[,)]/);
       }
     });
 

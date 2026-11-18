@@ -17,23 +17,33 @@ export function sortNavigationItems(items: readonly NavigationItem[]): Navigatio
 /**
  * Every item rendered as a link, in display order (depth first): simple
  * items, the children of a group, the children of a section, and the
- * children of a section's sub-group.
+ * children of a section's sub-group. 3.47 (usm-x row 40): groups nest to any
+ * depth, so a group's child with children is a group too (its children are
+ * the links); up to three levels the list is the same as before.
  */
 export function navigationLinks(sortedItems: readonly NavigationItem[]): NavigationItem[] {
   const links: NavigationItem[] = [];
+  const collect = (item: NavigationItem): void => {
+    if (isNavigationGroup(item)) for (const child of item.children ?? []) collect(child);
+    else links.push(item);
+  };
   for (const item of sortedItems) {
-    if (item.isSection) {
-      for (const child of item.children ?? []) {
-        if (isNavigationGroup(child)) links.push(...(child.children ?? []));
-        else links.push(child);
-      }
-    } else if (isNavigationGroup(item)) {
-      links.push(...(item.children ?? []));
-    } else {
-      links.push(item);
-    }
+    if (item.isSection) for (const child of item.children ?? []) collect(child);
+    else collect(item);
   }
   return links;
+}
+
+/** The items from the top level down to `target`'s parent (3.47), or null when `target` isn't in the tree. */
+function ancestorsOf(items: readonly NavigationItem[], target: NavigationItem, path: NavigationItem[]): NavigationItem[] | null {
+  for (const item of items) {
+    if (item === target) return path;
+    if (item.children?.length) {
+      const found = ancestorsOf(item.children, target, [...path, item]);
+      if (found) return found;
+    }
+  }
+  return null;
 }
 
 /**
@@ -88,17 +98,12 @@ export function currentNavigationItem(
   return best;
 }
 
-/** Ids of the collapsible parents (top-level groups, section sub-groups) that contain the current item. */
+/**
+ * Ids of the collapsible parents (top-level groups, section sub-groups) that
+ * contain the current item. 3.47: every group above it, at any depth, top
+ * down (sections are not groups).
+ */
 export function currentItemParents(items: readonly NavigationItem[], current: NavigationItem | null): string[] {
-  const ids: string[] = [];
-  if (!current) return ids;
-  for (const item of items) {
-    const collapsibles = item.isSection ? (item.children ?? []) : [item];
-    for (const parent of collapsibles) {
-      if (parent.children?.includes(current)) {
-        ids.push(parent.id);
-      }
-    }
-  }
-  return ids;
+  if (!current) return [];
+  return (ancestorsOf(items, current, []) ?? []).filter((item) => !item.isSection).map((item) => item.id);
 }
