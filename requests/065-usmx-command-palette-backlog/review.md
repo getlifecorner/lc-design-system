@@ -84,3 +84,24 @@ Code diff r2 → r3: `timeline.component.scss` (+8, the two §3 r2 paddings) and
 | N3 | nit | timeline horizontal, pre-existing | the title centred over its marker like the time (`.timeline--horizontal .timeline__header { justify-content: center }`) | `.timeline__header` is a start-aligned flex row: with a description wider than the title, the title sits left (*Horizontal* 1280 item 2: title centre 173.7 vs marker 192; *Selectable Horizontal* 1280: −25.5 / −33.4 px) → backlog |
 
 **Verdict:** changes requested (M6 only; S4 to the release queue, N3 to the backlog).
+
+## Round 4 — 2026-11-18, code fbb7852 (HEAD c7e5f59, `git diff --quiet fbb7852 -- libs tools` holds)
+
+Code diff r3 → r4: timeline `(focus)` → `onItemFocus` (`closest('li')?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' })`), 2 `scroll-margin` rules, 3 specs; exactly design §6 r3. Build reused (09:53, newer than the sources). Developer's folders checked by `diff -rq`: `r4-new` = `r3-new` (12/12 byte-identical), `r4-tl` = `r2-c-tl` (42/42, 7 stories × 6). My measure `065/r4-rev` (log `tmp/story-shots/065/r4-rev.log`). Shots opened: 1 (`r4-key` *Selectable Horizontal* 360 L after End).
+
+| AC | Result | Evidence |
+|---|---|---|
+| 21 (M6, keyboard walk) | pass | `tmp/065/r4-key.log` *Selectable Horizontal* 360: scrollLeft focus 0, → 0, → 64, Home 0, End 64, ← 64, ← 0, End 64; focused box margins ≥ 0 at every step (item 3 right 0, item 1 left 0); page `scrollY` 0: identical row by row to my `r3-proto.log` (also vertical *Selectable* 360). 1280 and vertical 1280: no scroll, margins ≥ 0. Shot: item 3 whole, ring on all four sides |
+| 21 (pointer path) | pass | `r4-rev`: item 3 at scroll 0 (68 px visible), point (310, 81) on its button; `focus()` → scrollLeft 64, the same point still hits that button (before/after `true`), so a click on a cut item still activates it; button 4 px inside the edge (= box outset); `scrollY` 0 |
+| 19–21 (at rest), defaults | pass | computed `scroll-margin`: selectable vertical `4px 8px`, selectable horizontal `4px`, plain *Horizontal* `0px` (default unchanged); at-rest shots identical as above, axe 0 (`r4-new`) |
+| unit | pass | spy (focus, →, End, Home → li 0, 1, 3, 0; options nearest/nearest; no click), no-`scrollIntoView` guard, CSS pin (only the two rules set `scroll-margin`) |
+
+### Findings
+
+| # | Severity | Where | Expected | Actual |
+|---|---|---|---|---|
+| M6 | — | timeline selectable | as r3 | **fixed** (above) |
+| S4 | should-fix | timeline *Horizontal* (not selectable) | as r2 | open → release queue |
+| N3 | nit | timeline horizontal title alignment | as r3 | open → backlog |
+
+**Verdict:** approved. No must-fix open; S4 (queue) and N3 (backlog) go to `release.md` → *Open items*.

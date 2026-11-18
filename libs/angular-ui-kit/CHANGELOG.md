@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.45.0] - 2026-11-18
+
+The USM X fourth batch and the whole backlog: the new `lc-command-palette`, checkbox and radio items in `lc-menu`, Escape and a description on `lc-search-input`, the sortable header on your own `<th>`, popover triggers and placement, selectable timeline items, avatar colour hooks and one initials rule, plus 24 backlog rows (foldable sidenav sections, a middle slot in the header, tab icons and overflow fade, contrast and layout fixes). Gap IDs: usm-x 2026-11-17 rows 31–37, backlog 054-n2 … 064-n9 (all but 054-n2, which needs a manual Safari check). No API breaks.
+
+### Added
+
+- **`lc-command-palette`** (`@lifecorner/angular-ui-kit/command-palette`, usm-x row 34): a search field over grouped results in a top-anchored dialog (a full-width sheet below 640 px, a 640 px panel above; `--lc-command-palette-width`, `--lc-command-palette-max-height`). `groups` (heading; items with label, icon, description, hint, shortcut, `disabled` + `disabledReason`, `keepOpen`), `[(open)]`, `[(query)]`, debounced `searchChange` (`debounceMs` 300) for a server search, `itemSelect`, async groups (`loading` with `aria-busy` and a polite status, `error` with a „Try again“ option → `groupRetry`, `emptyText`). The results list scrolls; the keyboard cursor stays on its option, in place, while results arrive; ↑/↓ across groups (a group's first option brings its heading into view), Home/End, PageUp/Down, Enter; Escape clears, then closes. Each option is named by all its visible text (WCAG 2.5.3); hints keep up to a third of the row, a disabled reason wraps. Optional `shortcut` (`'mod+k'`), `highlightMatches`, `labels` (EN, `COMMAND_PALETTE_LABELS_DE`). Fetches nothing; closed, it renders only its host (also prerendered).
+- **`lc-menu` checkbox and radio items** (usm-x row 31): `MenuItem.type`, `checked`, `radioGroup`, `closeOnSelect`; `menuitemcheckbox`/`menuitemradio` with `aria-checked` and a check or dot; `itemToggle` emits `{ item, checked }`, the menu stays open and the focus stays on the item.
+- **`th[lcSortableHead]`** (entry `table`, usm-x row 33): `lc-table`'s sortable header on your own `<th>`: same look and arrows, `aria-sort`, Enter/Space, `sortChange`, `sortedAscendingLabel`/`sortedDescendingLabel`; type `TableSortDirection`. `lc-table`'s own head is unchanged (its CSS is byte-identical).
+- **`lc-search-input`** (usm-x row 32): `description` (help linked by `aria-describedby`) and `clearOnEscape`.
+- **`lc-popover`** (usm-x row 35): `trigger` takes `focus`, `longpress` (`longPressMs` 500; right click, Shift+F10, Menu key) or an array of kinds; `openDelay`/`closeDelay`; `open()`, `close()`, `toggle()`; `align` start/center/end; the panel flips and shifts to stay 8 px inside the viewport, its arrow on the trigger (measured at 360 and 1280 px: 4 of 4 panels inside).
+- **`lc-timeline`** (usm-x row 36): `selectable` (one tab stop, arrows/Home/End, Enter/Space), `[(selectedId)]` with `aria-current`, `itemClick` `{ item, index }`, `TimelineItem.ariaLabel`; `title: ''` renders no title element. A selectable list pads by its item boxes (4/8 px, horizontal 4 px), so the selected bar and the focus ring stay whole, also in a horizontal timeline that scrolls; there, the keyboard-focused item scrolls fully into view (360 px, three items: → → scrolls 64 px, item 3 whole; the page doesn't move).
+- **`lc-avatar`** (usm-x row 37): `--lc-avatar-bg`/`--lc-avatar-color` on the avatar or any ancestor; `avatarInitials(name)`, the one rule of avatar, avatar group and header (`ɵavatarInitials` stays as a deprecated alias).
+- **`lc-header`** (064-n1): `[slot='middle']`, `userMenuItems` + `userMenuItemClick`, `homeLink`. **`lc-sidenav`** (064-n2): `NavigationItem.collapsible` + `[(collapsedSections)]`, `contextMenuOnLongPress` (iOS). **`lc-tabs` `showIcons`** (064-n3). **`LineChartSeries.dotted`** (063-n1).
+
+### Changed
+
+- `lc-search-input`: Escape with text clears it (one `''`, focus stays, the key is consumed); on an empty field it passes on. Opt out: `[clearOnEscape]="false"`.
+- `lc-popover`: hover/focus-only panels are `role="tooltip"` and describe the trigger (no `aria-haspopup`/`aria-expanded`); panels flip/shift into the viewport; panel text always starts (`text-align: start`), also inside a centred or end-aligned parent.
+- `lc-timeline`: `success` and `warning` markers use the text inks (light 2.72 → 5.30:1 and 2.26 → 6.03:1 on the page; WCAG 1.4.11).
+- Chart palette entry 2 is `--color-secondary-graphic` (057-n2): light 2.98 → 4.41:1 on `--color-surface-2`, 2.83 → 4.19:1 on sunken.
+- `lc-textarea` multi-line: the host ends at the field (−6 px, 133 → 127 at md; 063-n2). `lc-radio-group`: the error moves below the options, the `*` is hidden and the legend reads „required“ (061-n3). `lc-select`: group headers at most 2 lines, full text in `title` (062-n1).
+- `lc-tabs`: an overflowing list fades 24 px at the hidden side(s) (064-n6); vertical tabs stack in a container below 31rem (064-n8). `lc-sidenav` rail: badge values over 2 characters become an 8 px dot (064-n7); busy items lose the `title` (064-n9).
+- `lc-list` `multiColumn` with headings: a heading and its rows stay in one column (wrapper `div.lc-list__group`), no divider at a group's foot, corners not clipped (064-n4/n5). `lc-hero`: media column at most 62 % of the row (at 200 % text on 1024 px: 496 of 800 px instead of running past the band), the title hyphenates (060-n1/n2). `lc-device-frame` laptop: base height 0 hides the base (060-n3). `lc-chip`: the × has a 24 × 24 hit area (060-n5).
+
+### Known
+
+- `lc-timeline` horizontal, not selectable: an overflowing list (four 128 px items in 328 px) scrolls only by pointer; it has no focusable element (axe `scrollable-region-focusable`, pre-existing). Use `selectable` for keyboard access.
+- `lc-timeline` horizontal: with a description wider than the title, the title sits at the start, not centred over its marker (pre-existing).
+- 054-n2: the focus return of `lc-modal` and `lc-confirm-dialog` in WebKit is not checked by an automated test.
+
+### Compatibility
+
+No API breaks: every new input is optional with an unchanged default (default DOM proven identical for 11 templates); `TimelineItem.title` stays `string`; `PopoverTrigger` unchanged. Peer range and dependencies unchanged.
+
 ## [3.44.0] - 2026-11-17
 
 The USM X frame and control gaps: header hooks from any ancestor and a header below the modal, a slot beside the page title, card tiles that follow a theme, combobox attributes on the search field, handled keys and a top placement in the modal, a row shape and access keys on the button, an icon in the badge, a tab list for the router outlet, action entries and row states in the side navigation and the list, and the new `lc-split-button`. Gap IDs: usm-x 2026-11-17 rows 4, 11, 14, 16, 17, 20–30, backlog 064-n2. No API breaks.
