@@ -1,0 +1,18 @@
+# Log 068: USM X menu, tabs, palette and form gaps, lc-table hidden actions head, 067 follow-ups, all backlog rows
+
+## Owner decisions
+
+2026-11-18 18:28: Bundle 20261118-182805 (item 6) → everything in this bundle ships as one version: usm-x rows 47–70, finance-intelligence kosten-prove row 7, 067-s1..s3 and backlog rows 054-n2, 066-n1, 067-n1..n5. The about-8-items bundle limit does not apply; do not split the bundle or return anything to the inbox. 054-n2 stays in the backlog if WebKit cannot check it here.
+
+## Handoffs
+
+Times come from `date '+%Y-%m-%d %H:%M'` when the row is written, never estimated.
+
+| Time | From → to | Status | Reason | Task |
+|---|---|---|---|---|
+| 2026-11-18 18:32 | spec-writer → ui-ux-designer | done | The spec is ready and the normal route is design next. | Design the API, anatomy, states, tokens and accessibility for AC-1…42 of requests/068-usmx-menu-tabs-table-followups/spec.md. Pick one option wherever a row offers "or", and record why. Measure the `--line-height-base` value against the list (AC-18). Give the AC-8 menu overlay and the AC-24 datepicker modes their own sections in design.md. |
+| 2026-11-18 21:23 | ui-ux-designer → web-developer | done | The design is complete with measured values and baselines, and nothing needs the spec-writer or the owner. | Implement design.md for request 068 (AC-1…42, sections 2, 3, 3A, 3B, 5, 6, 8 and 9). Run the review compare against tmp/story-shots/068/baseline; the expected diffs are listed in §9 Compare. |
+| 2026-11-18 22:28 | web-developer → ui-ux-designer | done | All gates are green and the build matches design.md apart from 8 small deviations the designer should confirm. | Review request 068 (the 22 new stories in tmp/story-shots/068/build-new2, the compare in build-cmp/build-cmp2) and deviations D-1…D-8 in build.md. |
+| 2026-11-18 22:48 | ui-ux-designer → web-developer | changes-requested | F-1 is a measured AC-16/AC-35 failure, and per the owner decision F-2 and F-3 can't be queued, so they are fixed in the same round. | Fix review.md round 1 F-1 (must-fix: the hidden actions-head span widens the 360 px page to 725; make the actions th its containing block while the label is hidden, add a spec, re-measure 360 L/D), F-2 (menu focus returns to the anchor element given at open, also after scroll/outside/item close; add a spec) and F-3 (put lc-menu inside the lang="de" wrapper of Anchored Overlay); then rebuild Storybook and hand back for round 2. |
+| 2026-11-18 22:58 | web-developer → ui-ux-designer | done | All three round-1 findings are fixed and every gate passed on d492453, so the review can continue. | Review request 068 round 2 (stories data-display-table--hidden-actions-head and navigation-menu--anchored-overlay): check F-1 (page scrollWidth 360 at 360 px, light and dark), F-2 (focus returns to the anchor after a scroll, outside click or item close when the app clears `anchor`) and F-3 (panel `lang="de"`). The Storybook build in dist is current; shots and measures are in tmp/story-shots/068/r2/. |
+| 2026-11-18 23:08 | ui-ux-designer → web-developer | changes-requested | A documented WCAG 2.4.3 failure (F85) in the new overlay mode must not ship, and per the owner's decision nothing goes back to the inbox. | Fix F-4 in review.md round 2: in lc-menu overlay mode, call returnFocus() synchronously in the Tab keydown before close() (no preventDefault; in-place mode unchanged), add the spec (anchor is activeElement right after Tab, defaultPrevented false, in-place Tab unchanged) and adjust the Anchored Overlay description; re-run the gates and the r2 shots of that story. |

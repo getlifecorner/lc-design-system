@@ -3,6 +3,7 @@ import { moduleMetadata } from '@storybook/angular';
 import { userEvent } from 'storybook/test';
 import type { MenuItem } from '../menu/menu.component';
 import { IconComponent } from '../icon/icon.component';
+import { ButtonComponent } from '../button/button.component';
 import { SplitButtonComponent } from './split-button.component';
 
 const ITEMS_EN: MenuItem[] = [
@@ -58,6 +59,34 @@ A face that runs the default action and a caret that opens a menu of the other a
       options: ['bottom-left', 'bottom-right', 'top-left', 'top-right'],
       description: 'Where the menu opens; `bottom-right` puts its end edge at the group’s end edge',
       table: { defaultValue: { summary: 'bottom-right' } },
+    },
+    tone: {
+      control: 'inline-radio',
+      options: ['neutral', 'primary'],
+      description: '3.48 (usm-x row 63): colour tone of the `outline` look, on the face and the caret (`primary`: primary text and border, as `lc-button` `tone`)',
+      table: { defaultValue: { summary: 'neutral' } },
+    },
+    accessKey: {
+      control: 'text',
+      description: '3.48 (usm-x row 63): the face’s `accesskey`; pair it with `ariaKeyShortcuts`. Empty renders none',
+      table: { defaultValue: { summary: "''" } },
+    },
+    ariaKeyShortcuts: {
+      control: 'text',
+      description: '3.48 (usm-x row 63): the face’s `aria-keyshortcuts` (e.g. `Alt+O`). Empty renders none',
+      table: { defaultValue: { summary: "''" } },
+    },
+    menuSize: {
+      control: 'inline-radio',
+      options: ['sm', 'md', 'lg'],
+      description: '3.48 (usm-x row 63): `lc-menu` `size` of the menu',
+      table: { defaultValue: { summary: 'md' } },
+    },
+    menuMinWidth: { control: 'text', description: '3.48: `lc-menu` `minWidth` of the menu', table: { defaultValue: { summary: '220px' } } },
+    menuMaxWidth: {
+      control: 'text',
+      description: '3.48: `lc-menu` `maxWidth` of the menu; empty leaves it unbounded',
+      table: { defaultValue: { summary: "''" } },
     },
     clicked: { action: 'clicked', description: 'The face was activated' },
     itemClick: { action: 'itemClick', description: 'A menu item was activated (the menu closes, focus returns to the caret)' },
@@ -174,6 +203,54 @@ export const MenuOpen: Story = {
       <div lang="de" style="display: flex; justify-content: flex-end; min-height: 220px; align-items: flex-start;">
         <lc-split-button [items]="items" size="sm" menuAriaLabel="Weitere Aktionen">Speichern</lc-split-button>
       </div>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    const caret = canvasElement.querySelector<HTMLButtonElement>('.lc-split-button__caret');
+    if (caret) await userEvent.click(caret);
+  },
+};
+
+const OPEN_ITEMS_DE: MenuItem[] = [
+  { id: 'open-new', label: 'In neuem Fenster öffnen' },
+  { id: 'open-rich', label: 'Im Rich Client öffnen' },
+  { id: 'copy-link', label: 'Link kopieren' },
+];
+
+export const ToneAndMenuSize: Story = {
+  name: 'Tone And Menu Size',
+  args: {
+    items: OPEN_ITEMS_DE,
+    variant: 'outline',
+    size: 'sm',
+    tone: 'primary',
+    accessKey: 'o',
+    ariaKeyShortcuts: 'Alt+O',
+    menuSize: 'sm',
+    menuMinWidth: '220px',
+    menuMaxWidth: '',
+    menuAriaLabel: 'Weitere Aktionen',
+    menuPosition: 'bottom-left',
+  },
+  parameters: {
+    controls: { include: ['tone', 'accessKey', 'ariaKeyShortcuts', 'menuSize', 'menuMinWidth', 'menuMaxWidth', 'size', 'variant'] },
+    docs: {
+      description: {
+        story:
+          '3.48 (request 068, usm-x row 63): a group beside brand-outline single buttons. `tone="primary"` gives the face and the caret the primary outline (as `lc-button` `tone`); `accessKey="o"` with `ariaKeyShortcuts="Alt+O"` sit on the face; `menuSize="sm"` opens an sm menu beside the page\'s other sm menus (`menuMinWidth`, `menuMaxWidth` pass through too). The menu is open for the shot.',
+      },
+    },
+  },
+  // `items` is outside `controls.include` (it would arrive undefined): a prop of its own.
+  render: (args) => ({
+    props: { ...args, openItems: OPEN_ITEMS_DE },
+    template: `
+      <div lang="de" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; min-height: 220px;">
+        <lc-split-button [items]="openItems" [variant]="variant" [size]="size" [tone]="tone" [accessKey]="accessKey" [ariaKeyShortcuts]="ariaKeyShortcuts"
+          [menuSize]="menuSize" [menuMinWidth]="menuMinWidth" [menuMaxWidth]="menuMaxWidth" menuAriaLabel="Weitere Aktionen" menuPosition="bottom-left">Öffnen</lc-split-button>
+        <lc-button variant="outline" tone="primary" size="sm">Bearbeiten</lc-button>
+      </div>`,
+    moduleMetadata: { imports: [ButtonComponent] },
   }),
   play: async ({ canvasElement, viewMode }) => {
     if (viewMode !== 'story') return;

@@ -8,6 +8,8 @@
       [size]="size()"
       [color]="avatar.color ?? 'default'"
       [ring]="ring()"
+      [style.--lc-avatar-bg]="avatar.bg ?? null"
+      [style.--lc-avatar-color]="avatar.fg ?? null"
     />
   }
   @if (overflowCount() > 0) {

@@ -1007,3 +1007,13 @@
     display: none;
   }
 }
+
+// 3.48 (request 068, 067-s1): on touch (`hover: none`) nothing reveals a row
+// action, while its 44 × 44 box still answers taps: there it is always shown,
+// at every level. Same weight as the rest rule, after it. Hover devices keep
+// the reveal on hover and focus.
+@media (hover: none) {
+  .lc-sidenav__nav-item-row .lc-sidenav__action-btn {
+    opacity: 1;
+  }
+}

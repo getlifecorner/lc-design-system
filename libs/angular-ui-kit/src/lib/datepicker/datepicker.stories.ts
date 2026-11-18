@@ -15,6 +15,7 @@ const meta: Meta<DatepickerComponent> = {
     dateChange: fn(),
     opened: fn(),
     closed: fn(),
+    stringValueChange: fn(),
   },
   argTypes: {
     dateChange: { action: 'dateChange', description: 'Emitted when a date is selected (Date | null)' },
@@ -72,6 +73,29 @@ const meta: Meta<DatepickerComponent> = {
         '3.30 (regeln row 7): visible label above the field: a `<label for>` in day and month mode that names the field, so `ariaLabel` is not used while it is set. Empty: no label element, as before.',
       table: { defaultValue: { summary: "''" } },
     },
+    mode: {
+      control: 'inline-radio',
+      options: ['date', 'time', 'datetime'],
+      description:
+        '3.48 (usm-x row 67): `time`: one time field (24 h, a list of `timeStep` options, typed `930`, `9.30` → 09:30 on Enter or blur). `datetime`: a date and a time field in one value, a `role="group"` named by the label, each field named „<label> Datum / Uhrzeit“; they wrap below 19.5rem. `date`: as before',
+      table: { defaultValue: { summary: "'date'" } },
+    },
+    valueType: {
+      control: 'inline-radio',
+      options: ['date', 'string'],
+      description:
+        '3.48 (usm-x row 67): `string`: the forms value and `stringValueChange` are ISO 8601 local text (`YYYY-MM-DD`, `HH:mm`, `YYYY-MM-DDTHH:mm`), no `Date`, no zone; `dateChange` is silent; validators `lcDatepickerParse` (invalid text, kept in the field), `lcDatepickerMin` / `lcDatepickerMax`, `lcDatepickerIncomplete`. `mode="time"` always uses strings',
+      table: { defaultValue: { summary: "'date'" } },
+    },
+    timeStep: { control: 'number', description: '3.48: minutes between the time list\'s options', table: { defaultValue: { summary: '15' } } },
+    minTime: { control: 'text', description: '3.48: earliest time `HH:mm` (inclusive; options before it are disabled)', table: { defaultValue: { summary: "''" } } },
+    maxTime: { control: 'text', description: '3.48: latest time `HH:mm` (inclusive)', table: { defaultValue: { summary: "''" } } },
+    timePlaceholder: { control: 'text', description: '3.48: placeholder of the time field', table: { defaultValue: { summary: 'HH:MM' } } },
+    dateAriaLabel: { control: 'text', description: '3.48: the date part\'s name after the label in `datetime` (German „Datum“)', table: { defaultValue: { summary: 'Date' } } },
+    timeAriaLabel: { control: 'text', description: '3.48: the time part\'s name after the label (German „Uhrzeit“)', table: { defaultValue: { summary: 'Time' } } },
+    timeListAriaLabel: { control: 'text', description: '3.48: name of the time list (German „Uhrzeit wählen“)', table: { defaultValue: { summary: 'Choose time' } } },
+    clearTimeAriaLabel: { control: 'text', description: '3.48: name of the time field\'s clear button (German „Uhrzeit löschen“)', table: { defaultValue: { summary: 'Clear time' } } },
+    stringValueChange: { action: 'stringValueChange', description: '3.48: every model change in the string value mode (ISO text or null)' },
   },
   parameters: {
     docs: {
@@ -430,6 +454,100 @@ export const BookingForm: Story = {
               size="sm"
             ></lc-datepicker>
           </div>
+        </div>
+      </div>`,
+  }),
+};
+
+// ── 3.48 (request 068, usm-x row 67): time, date-time and the string value ──
+
+export const Time: Story = {
+  args: { mode: 'time', label: 'Start', timeStep: 15, minTime: '07:00', maxTime: '19:00' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.48 (usm-x row 67): `mode="time"`: one 24 h time field with the date field\'s look and a clock icon. ArrowDown (or a click) opens a list of `timeStep` options (44 px rows, at most six, it scrolls itself), at the selected time or the next step from now; arrows, PageUp/Down (± 1 h), Home and End move, Enter picks, Escape closes. Typed `930`, `9.30` or `0930` become 09:30 on Enter or blur. Options outside `minTime`/`maxTime` (07:00–19:00 here) are disabled and skipped. The value is always text (`HH:mm`).',
+      },
+    },
+  },
+};
+
+export const TimeDe: Story = {
+  name: 'Time (DE)',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.48: the German texts (`timeAriaLabel`, `timeListAriaLabel`, `clearTimeAriaLabel`) on a field with a value, the list open on 14:30. The list takes the host\'s `lang`.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [FormsModule] },
+    props: { value: '14:30' },
+    template: `
+      <div lang="de" style="max-width: 20rem; min-height: 340px;">
+        <lc-datepicker mode="time" label="Beginn" [(ngModel)]="value" timeAriaLabel="Uhrzeit" timeListAriaLabel="Uhrzeit wählen" clearTimeAriaLabel="Uhrzeit löschen" helperText="Zwischen 07:00 und 19:00 Uhr" minTime="07:00" maxTime="19:00" />
+      </div>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    const field = canvasElement.querySelector<HTMLInputElement>('input[aria-haspopup="listbox"]');
+    if (!field) return;
+    field.focus();
+    await userEvent.keyboard('{ArrowDown}');
+  },
+};
+
+export const DateAndTimeDe: Story = {
+  name: 'Date And Time (DE)',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.48 (usm-x row 67): `mode="datetime"`: „Termin“ names a `role="group"` with a date field („Termin Datum“) and a time field („Termin Uhrzeit“) in one row (date 11rem and growing, time 8rem); below 19.5rem they wrap and both take the full width. Each field opens its own panel. The value is one: here `valueType="string"`, `2026-11-18T14:30`; with one part only it is `null` and the field reports `lcDatepickerIncomplete`.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [FormsModule] },
+    props: { value: '2026-11-18T14:30' },
+    template: `
+      <div lang="de" style="max-width: 26rem; display: grid; gap: 8px;">
+        <lc-datepicker mode="datetime" valueType="string" label="Termin" format="DD.MM.YYYY" locale="de-DE" [firstDayOfWeek]="1"
+          dateAriaLabel="Datum" timeAriaLabel="Uhrzeit" timeListAriaLabel="Uhrzeit wählen" clearAriaLabel="Datum löschen" clearTimeAriaLabel="Uhrzeit löschen"
+          placeholder="TT.MM.JJJJ" helperText="Lokale Zeit, ohne Zeitzone" [(ngModel)]="value" />
+        <code style="font-size: 12px; color: var(--color-text-secondary);">Wert: {{ value === null ? 'null' : value }}</code>
+      </div>`,
+  }),
+};
+
+export const StringValue: Story = {
+  name: 'String Value',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.48 (usm-x row 67): `valueType="string"` keeps the text the backend validates: the model under each field is ISO 8601 local text (`YYYY-MM-DD`, `HH:mm`), no `Date` and no zone; the shown date still follows `format`. Type an invalid date and leave the field: the text stays, the model is `null`, and the control reports `lcDatepickerParse` (the visible error is the app\'s, `error` / `errorMessage`).',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [FormsModule] },
+    props: { day: '2026-11-18', time: '09:30' },
+    template: `
+      <div lang="de" style="max-width: 22rem; display: grid; gap: 16px;">
+        <div style="display: grid; gap: 4px;">
+          <lc-datepicker valueType="string" label="Fällig am" format="DD.MM.YYYY" placeholder="TT.MM.JJJJ" [(ngModel)]="day" />
+          <code style="font-size: 12px; color: var(--color-text-secondary);">Modell: {{ day === null ? 'null' : '"' + day + '"' }}</code>
+        </div>
+        <div style="display: grid; gap: 4px;">
+          <lc-datepicker mode="time" label="Uhrzeit" timeAriaLabel="Uhrzeit" [(ngModel)]="time" />
+          <code style="font-size: 12px; color: var(--color-text-secondary);">Modell: {{ time === null ? 'null' : '"' + time + '"' }}</code>
         </div>
       </div>`,
   }),

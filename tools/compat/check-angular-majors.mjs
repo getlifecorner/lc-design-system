@@ -364,7 +364,8 @@ const EXPECT_IN_HTML = [
     const field = html.match(/<div(?=[^>]*\sid="compat-textarea-343")[^>]*>([^]*?)<\/lc-textarea>/)?.[1] ?? '';
     return /<textarea(?=[^>]*\sclass="[^"]*\blc-textarea--one-line\b)(?=[^>]*\srows="1")[^>]*>/.test(field)
       && !/lc-textarea-footer/.test(field)
-      && /\.lc-textarea--one-line\[_ngcontent-[^\]]*\]\s*\{\s*min-height:\s*0;\s*display:\s*block;?\s*\}/.test(html);
+      // 3.48 (request 068, usm-x row 61): the floor reads --lc-textarea-min-height over the same 0
+      && /\.lc-textarea--one-line\[_ngcontent-[^\]]*\]\s*\{\s*min-height:\s*var\(--lc-textarea-min-height,\s*0\);\s*display:\s*block;?\s*\}/.test(html);
   }],
   // 3.44 (request 064, probe-344.ts, AC-29): before JS
   ['split button: a group of the face and the caret with aria-haspopup and aria-expanded (usm-x row 30)', /<lc-split-button(?=[^>]*\sid="compat-split-344")[^>]*>(?:<!--[^]*?-->|\s)*<div(?=[^>]*\srole="group")(?=[^>]*\sclass="[^"]*\blc-split-button\b)[^>]*>[^]*?<button(?=[^>]*\sclass="[^"]*\bbtn-sm\b)[^>]*>(?:(?!<\/button>)[^])*?Speichern(?:(?!<\/button>)[^])*<\/button>[^]*?<button(?=[^>]*\sclass="[^"]*\blc-split-button__caret\b)(?=[^>]*\saria-haspopup="menu")(?=[^>]*\saria-expanded="false")(?=[^>]*\saria-label="Weitere Aktionen")[^>]*>/],
@@ -437,6 +438,31 @@ const EXPECT_IN_HTML = [
       && /<a(?=[^>]*\shref="\/compat-347\/mahnungen")[^>]*>/.test(sn)
       && /<mark(?=[^>]*\sclass="lc-sidenav__mark")[^>]*>rech<\/mark>/.test(sn)
       && /<button(?=[^>]*\sclass="lc-sidenav__action-btn")(?=[^>]*\saria-label="Aktionen für Prüfung")[^>]*>/.test(sn);
+  }],
+  // 3.48 (request 068, probe-348.ts): before JS
+  ['square avatar: the class on the avatar box (usm-x row 65)', (html) => {
+    const av = html.match(/<div(?=[^>]*\sid="compat-avatar-348")[^>]*>([^]*?)<\/lc-avatar>/)?.[1] ?? '';
+    return /<div(?=[^>]*\sclass="[^"]*\blc-avatar--square\b)(?=[^>]*\srole="img")[^>]*>/.test(av);
+  }],
+  ['actions head named for screen readers only, its width kept (finance-intelligence row 7)', (html) => {
+    const tb = html.match(/<div(?=[^>]*\sid="compat-table-348")[^>]*>([^]*?)<\/lc-table>/)?.[1] ?? '';
+    const th = tb.match(/<th(?=[^>]*\sclass="[^"]*\blc-table__actions-cell\b)[^>]*>([^]*?)<\/th>/);
+    // review r1 (F-1): the head is the span's containing block before JS too
+    return !!th && /\sstyle="width:\s*240px;?"/.test(th[0])
+      && /^<th[^>]*\sclass="[^"]*\blc-table__actions-cell--label-hidden\b/.test(th[0])
+      && /^(?:<!--[^]*?-->|\s)*<span(?=[^>]*\sclass="lc-table__sr-only")[^>]*>Aktionen<\/span>(?:<!--[^]*?-->|\s)*$/.test(th[1]);
+  }],
+  ['sidenav action popup state, declarative (backlog 067-n4)', (html) => {
+    const sn = html.match(/<div(?=[^>]*\sid="compat-sidenav-348")[^>]*>([^]*?)<\/lc-sidenav>/)?.[1] ?? '';
+    return /<button(?=[^>]*\saria-label="Aktionen für Eingang")(?=[^>]*\saria-haspopup="menu")(?=[^>]*\saria-expanded="true")[^>]*>/.test(sn)
+      && /<button(?=[^>]*\saria-label="Aktionen für Entwürfe")(?=[^>]*\saria-haspopup="menu")(?=[^>]*\saria-expanded="false")[^>]*>/.test(sn);
+  }],
+  ['tabs: a named list, the hint, a reason tab that takes focus, the panel padding hook (usm-x rows 49, 50, 52, 69)', (html) => {
+    const tabs = html.match(/<div(?=[^>]*\sid="compat-tabs-348")[^>]*>([^]*?)<\/lc-tabs>/)?.[1] ?? '';
+    return /<div(?=[^>]*\srole="tablist")(?=[^>]*\saria-label="Facetten")[^>]*>/.test(tabs)
+      && /<span(?=[^>]*\sclass="lc-tabs__hint")[^>]*>12 Status<\/span>/.test(tabs)
+      && /<button(?=[^>]*\saria-disabled="true")(?![^>]*\sdisabled(?:=|\s|>))[^>]*>(?:<!--[^]*?-->|\s)*Workflow/.test(tabs)
+      && /padding:\s*var\(--lc-tabs-panel-padding,\s*var\(--lc-density-padding-md,\s*var\(--spacing-4\)\)\)/.test(html);
   }],
   // (minified or not: spaces optional, the container longhands or their shorthand)
   ['vertical tabs stack in a narrow container, pure CSS (backlog 064-n8)', (html) => /\.lc-tabs:has\(\s*>\s*\.lc-tabs__container--vertical\s*\)\s*\{\s*(?:container-name:\s*lc-tabs;\s*container-type:\s*inline-size|container:\s*lc-tabs\s*\/\s*inline-size);?\s*\}/.test(html)

@@ -250,6 +250,111 @@
   padding-inline-start: calc(var(--spacing-5) + 1.25rem + var(--lc-density-gap-md, var(--spacing-4)));
 }
 
+// ── 3.48 (request 068, usm-x rows 53–56, 68) ──
+// A capped or overlay panel is a column whose item list scrolls; the header,
+// the footer and the busy row keep their height.
+.lc-menu__dropdown--scroll {
+  display: flex;
+  flex-direction: column;
+
+  > * {
+    flex-shrink: 0;
+  }
+
+  > .lc-menu__items {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+// The overlay pane holds the panel in flow (CDK places the pane): 8 px from
+// an element on either side, so a flipped panel keeps the gap; none at a point.
+.lc-menu__dropdown.lc-menu__dropdown--overlay {
+  position: relative;
+  inset: auto;
+  z-index: auto;
+  margin-block: var(--spacing-2);
+  max-height: calc(100dvh - 32px);
+}
+
+.lc-menu__dropdown.lc-menu__dropdown--at-point {
+  margin-block: 0;
+  max-height: calc(100dvh - 16px);
+}
+
+// A disabled item with a reason keeps its focus and hover (for the tooltip):
+// its content is dimmed, not the item, so the focus ring stays full.
+.lc-menu__item--reason {
+  cursor: not-allowed;
+
+  > * {
+    opacity: 0.5;
+  }
+}
+
+.lc-menu__item--reason:hover:not(:focus-visible) {
+  background-color: transparent;
+}
+
+.lc-menu__item--emphasis .lc-menu__item-label {
+  font-weight: var(--font-weight-bold);
+}
+
+// A colour sample (a theme): 20 px, a 1 px rim (4.63:1 or more on the panel),
+// drawn as given in forced colours too.
+.lc-menu__item-swatch {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid var(--color-field-border);
+  border-radius: 50%;
+  forced-color-adjust: none;
+}
+
+.lc-menu__dropdown--sm .lc-menu__item-swatch {
+  width: 1rem;
+  height: 1rem;
+}
+
+.lc-menu__dropdown--lg .lc-menu__item-swatch {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+// The busy row: padded as an item, a spinner and the status text.
+.lc-menu__loading {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-height: 2.75rem;
+  padding: var(--lc-density-padding-sm, var(--spacing-3)) var(--lc-density-padding-md, var(--spacing-4));
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-tight);
+}
+
+.lc-menu__loading-spinner {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.lc-menu__dropdown--sm .lc-menu__loading {
+  min-height: 2.25rem;
+  padding: var(--lc-density-padding-xs, var(--spacing-2)) var(--lc-density-padding-sm, var(--spacing-3));
+}
+
+.lc-menu__dropdown--lg .lc-menu__loading {
+  padding: var(--lc-density-padding-md, var(--spacing-4)) var(--spacing-5);
+}
+
+@media (forced-colors: active) {
+  .lc-menu__item-swatch {
+    border-color: CanvasText;
+  }
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;

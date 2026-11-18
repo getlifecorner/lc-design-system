@@ -283,3 +283,16 @@
     animation: none;
   }
 }
+
+// 3.48 (request 068, usm-x row 48): a count at the line's end. The badge never
+// shrinks or wraps (the hint ellipsises first); inline-flex, so the host is the
+// badge box, not a line box. In a disabled row its text takes the disabled ink.
+.lc-command-palette__badge {
+  display: inline-flex;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.lc-command-palette__option--disabled .lc-command-palette__badge .lc-badge {
+  --_lc-badge-fg: var(--color-text-disabled);
+}

@@ -48,29 +48,32 @@
     box-shadow: none;
   }
 
-  // Size variants
+  // Size variants. 3.48 (request 068, usm-x row 61): `--lc-textarea-padding`
+  // and `--lc-textarea-min-height` over the size's values (read here, never
+  // declared); a one-line md field at 36 px beside a button:
+  // `--lc-textarea-padding: 5px 12px` (24 line + 10 + 2 border).
   &--xs {
-    padding: var(--spacing-2) var(--spacing-3);
+    padding: var(--lc-textarea-padding, var(--spacing-2) var(--spacing-3));
     font-size: var(--font-size-xs);
-    min-height: 4rem;
+    min-height: var(--lc-textarea-min-height, 4rem);
   }
-  
+
   &--sm {
-    padding: var(--spacing-2-5) var(--spacing-3-5);
+    padding: var(--lc-textarea-padding, var(--spacing-2-5) var(--spacing-3-5));
     font-size: var(--font-size-sm);
-    min-height: 5rem;
+    min-height: var(--lc-textarea-min-height, 5rem);
   }
-  
+
   &--md {
-    padding: var(--spacing-3) var(--spacing-4);
+    padding: var(--lc-textarea-padding, var(--spacing-3) var(--spacing-4));
     font-size: var(--font-size-base);
-    min-height: 6rem;
+    min-height: var(--lc-textarea-min-height, 6rem);
   }
-  
+
   &--lg {
-    padding: var(--spacing-3-5) var(--spacing-5);
+    padding: var(--lc-textarea-padding, var(--spacing-3-5) var(--spacing-5));
     font-size: var(--font-size-lg);
-    min-height: 7rem;
+    min-height: var(--lc-textarea-min-height, 7rem);
   }
   
   // Variant styles
@@ -156,7 +159,7 @@
   // so the host ends at the field: the inline-block <textarea> left a 6 px
   // line gap below it (review 063 F1; multi-line modes keep it, AC-15).
   &--one-line {
-    min-height: 0;
+    min-height: var(--lc-textarea-min-height, 0);
     display: block;
   }
 }

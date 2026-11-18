@@ -24,6 +24,7 @@ import { ICON_ARROW_PATH, ICON_EXCLAMATION_CIRCLE } from '@lifecorner/angular-ui
 import { ModalComponent } from '@lifecorner/angular-ui-kit/modal';
 import { SearchInputComponent } from '@lifecorner/angular-ui-kit/search-input';
 import { SpinnerComponent } from '@lifecorner/angular-ui-kit/spinner';
+import { BadgeComponent, type BadgeVariant } from '@lifecorner/angular-ui-kit/badge';
 
 /** One result of `lc-command-palette` (3.45, usm-x row 34). */
 export interface CommandPaletteItem<T = unknown> {
@@ -48,6 +49,17 @@ export interface CommandPaletteItem<T = unknown> {
   disabledReason?: string;
   /** Keeps the palette open after the item is selected. */
   keepOpen?: boolean;
+  /**
+   * 3.48 (usm-x row 48): a count at the line's end („56/60“), an `lc-badge`
+   * xs after the hint and before the shortcut. It never shrinks or wraps (the
+   * hint ellipsises first) and is part of the option's name.
+   */
+  badge?: string;
+  /**
+   * 3.48: variant of `badge`.
+   * @default 'default'
+   */
+  badgeVariant?: BadgeVariant;
   /** Anything the app needs back in `itemSelect`. */
   data?: T;
 }
@@ -217,7 +229,7 @@ let nextId = 0;
 @Component({
   selector: 'lc-command-palette',
   standalone: true,
-  imports: [ModalComponent, SearchInputComponent, ButtonComponent, IconComponent, SpinnerComponent],
+  imports: [ModalComponent, SearchInputComponent, ButtonComponent, IconComponent, SpinnerComponent, BadgeComponent],
   viewProviders: [ɵprovideKitIcons([ICON_ARROW_PATH, ICON_EXCLAMATION_CIRCLE])],
   templateUrl: './command-palette.component.html',
   styleUrls: ['./command-palette.component.scss'],
@@ -283,6 +295,19 @@ export class CommandPaletteComponent implements OnDestroy {
    * @default null
    */
   readonly returnFocusTo = input<HTMLElement | null>(null);
+
+  /**
+   * 3.48 (usm-x row 47): id of the item under the keyboard cursor (two-way).
+   * Setting it moves the cursor to the first enabled option with that item id
+   * (visual order), sets `aria-activedescendant` and scrolls it into view; an
+   * unknown or disabled id falls back to the first enabled option and writes
+   * its id back. The palette writes it on every cursor move (arrows, a new
+   * query, arriving groups), `null` on a retry option or none. After a
+   * `keepOpen` item, set it in the same change as the groups that hold the
+   * line that took the chosen one's place.
+   * @default null
+   */
+  readonly activeId = model<string | null>(null);
 
   /** The query after `debounceMs` (for a server search). */
   readonly searchChange = output<string>();
@@ -366,8 +391,27 @@ export class CommandPaletteComponent implements OnDestroy {
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private statusTimer: ReturnType<typeof setTimeout> | undefined;
   private readonly onDocumentKeydown = (event: KeyboardEvent): void => this.handleShortcut(event);
+  /** 3.48: the `activeId` the palette wrote last (`undefined`: none yet), so its own writes don't move the cursor. */
+  private writtenId: string | null | undefined;
 
   constructor() {
+    // 3.48 (usm-x row 47): the app set `activeId`: the cursor moves to that
+    // item (first enabled option with the id), else to the first enabled one.
+    // Created before the cursor effect below, so an id set together with new
+    // groups wins over the "cursor's option is gone" fallback.
+    effect(() => {
+      const id = this.activeId();
+      untracked(() => {
+        if (id == null || id === this.writtenId) return;
+        const options = this.options();
+        const target = options.find((o) => !o.disabled && o.item?.id === id) ?? options.find((o) => !o.disabled) ?? null;
+        this.setActive(target);
+        // The fallback's id goes back also when the cursor was already there
+        this.writtenId = target?.item?.id ?? null;
+        if (this.writtenId !== id) this.activeId.set(this.writtenId);
+      });
+    });
+
     // A new query puts the cursor on the first enabled option and the list at
     // its top. Then arriving groups keep it on its option (by key); when that
     // one is gone, the first enabled one takes it. The listbox (the scroll
@@ -443,6 +487,17 @@ export class CommandPaletteComponent implements OnDestroy {
 
     // The global shortcut, added in code (no listener in prerendered HTML).
     afterNextRender(() => document.addEventListener('keydown', this.onDocumentKeydown));
+
+    // 3.48 (usm-x row 47): while open, every cursor move is written to `activeId`.
+    effect(() => {
+      const open = this.open();
+      const id = this.active()?.item?.id ?? null;
+      if (!open) return;
+      untracked(() => {
+        this.writtenId = id;
+        this.activeId.set(id);
+      });
+    });
   }
 
   ngOnDestroy(): void {
@@ -486,6 +541,7 @@ export class CommandPaletteComponent implements OnDestroy {
     const ids = [`${option.id}-label`];
     if (item?.description) ids.push(`${option.id}-desc`);
     if (item && this.hintOf(item)) ids.push(`${option.id}-hint`);
+    if (item?.badge) ids.push(`${option.id}-badge`);
     if (item?.shortcut) ids.push(`${option.id}-kbd`);
     return ids.join(' ');
   }

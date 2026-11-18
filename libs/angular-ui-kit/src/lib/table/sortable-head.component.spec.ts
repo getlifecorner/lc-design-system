@@ -122,13 +122,19 @@ describe('th[lcSortableHead] (3.45)', () => {
     const css = compile(resolve(__dirname, 'sortable-head.component.scss')).css;
 
     it('draws the lc-table header values on the host', () => {
-      expect(css).toMatch(/:host \{[^}]*text-transform: uppercase;[^}]*letter-spacing: 0\.04em;[^}]*color: var\(--color-text-secondary\);[^}]*background-color: var\(--color-surface-2\);[^}]*border-bottom: 2px solid var\(--color-border-strong\);/);
+      // 3.48 (request 068, usm-x row 60): the rule reads `--lc-sortable-head-border-bottom`
+      // over the same `2px solid var(--color-border-strong)` (the hook's fallback).
+      expect(css).toMatch(/:host \{[^}]*text-transform: uppercase;[^}]*letter-spacing: 0\.04em;[^}]*color: var\(--color-text-secondary\);[^}]*background-color: var\(--color-surface-2\);[^}]*border-bottom: var\(--lc-sortable-head-border-bottom, 2px solid var\(--color-border-strong\)\);/);
       expect(css).toMatch(/:host\(\.lc-sortable-head--sortable\) \{[^}]*padding-right: var\(--spacing-8\);/);
       expect(css).toMatch(/\.sort-indicator \{[^}]*right: var\(--spacing-3\);[^}]*font-size: var\(--typography-font-size-xs\);[^}]*color: var\(--color-primary\);/);
     });
 
     it("leaves lc-table's compiled CSS byte-identical (the mixins replace its rules in place)", () => {
-      const table = compile(resolve(__dirname, 'table.component.scss')).css;
+      const full = compile(resolve(__dirname, 'table.component.scss')).css;
+      // 3.48 (request 068, F7): `.lc-table__sr-only` is appended at the file's
+      // end; everything before it is still byte-identical to 3.44.0.
+      const cut = full.search(/\s*\n\.lc-table__sr-only \{/);
+      const table = cut === -1 ? full : full.slice(0, cut);
       // sha256 of main 5dd20b9's compiled table.component.scss (3.44.0).
       expect(createHash('sha256').update(table).digest('hex')).toBe(
         'a11830c61ae426c68e368297f43635a24edd189f57e2d2a0c21792d2c64c2e1e',

@@ -7,7 +7,8 @@ const meta: Meta<AvatarGroupComponent> = {
   argTypes: {
     avatars: {
       description:
-        'Avatars to show (`AvatarGroupItem[]`: `name`, `src`, `alt`, `color` — `default` or a member colour `member-1` … `member-6`)',
+        'Avatars to show (`AvatarGroupItem[]`: `name`, `src`, `alt`, `color` — `default` or a member colour `member-1` … `member-6`). 3.48 (usm-x row 66): `bg` / `fg` set the item\'s identity colours (`--lc-avatar-bg` / `--lc-avatar-color` on that avatar; any colour or `var()`), pick a 4.5:1 pair',
+      table: { defaultValue: { summary: '[]' } },
     },
     size: { control: 'select', options: ['xs', 'sm', 'md', 'lg', 'xl'], description: 'Size of every avatar' },
     max: { control: 'number', description: 'Maximum visible avatars before the "+N" count' },
@@ -97,6 +98,29 @@ export const MemberRow: Story = {
     size: 'sm',
     ring: true,
     overlap: '4px',
+  },
+};
+
+/** 3.48 (request 068, usm-x row 66): presence wears the tone of each person's chip. */
+export const IdentityColours: Story = {
+  name: 'Identity Colours',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.48 (usm-x row 66): `AvatarGroupItem.bg` / `fg` give each avatar its identity colour (set as `--lc-avatar-bg` / `--lc-avatar-color` on that avatar), so presence wears the same tone as the person\'s chip. The demo pairs are theme-independent: white on #0f5e74 (7.31:1), #9a4a14 (6.24:1) and #4b3f8f (8.73:1); the fourth avatar keeps a member colour.',
+      },
+    },
+  },
+  args: {
+    avatars: [
+      { name: 'Lena Brandt', bg: '#0f5e74', fg: '#ffffff' },
+      { name: 'Tom Ek', bg: '#9a4a14', fg: '#ffffff' },
+      { name: 'Kai von Stein', bg: '#4b3f8f', fg: '#ffffff' },
+      { name: 'Ada Morgen', color: 'member-2' },
+    ],
+    size: 'md',
+    ring: true,
   },
 };
 

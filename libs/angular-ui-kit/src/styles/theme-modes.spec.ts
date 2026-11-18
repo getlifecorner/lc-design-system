@@ -13,10 +13,11 @@ const light = compile(resolve(__dirname, '_theme-light.scss')).css;
  * usm-x row 8): `--color-accent-yellow` joined both palettes (172 → 173,
  * 252 → 253); every other token is unchanged. 3.44 (request 064, usm-x rows
  * 17 and 26): `--color-brand-tile-subtle` and `--color-primary-wash` joined
- * both palettes (173 → 175, 253 → 255).
+ * both palettes (173 → 175, 253 → 255). 3.48 (request 068, usm-x row 61):
+ * `--line-height-base` (not a colour) joined both roots (255 → 256).
  */
 const COLOUR_TOKENS = 175;
-const ALL_TOKENS = 255;
+const ALL_TOKENS = 256;
 
 /** Custom properties of the first rule whose selector list starts with `selector`. */
 function tokensOf(css: string, selector: string): Record<string, string> {

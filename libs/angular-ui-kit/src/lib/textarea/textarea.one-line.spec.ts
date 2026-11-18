@@ -97,7 +97,8 @@ describe('TextareaComponent one-line mode and footer (3.43, request 063)', () =>
       const css = compile(resolve(__dirname, 'textarea.component.scss')).css;
       const oneLine = css.indexOf('.lc-textarea--one-line {');
       expect(oneLine).toBeGreaterThan(css.indexOf('.lc-textarea--lg {'));
-      expect(css.slice(oneLine).replace(/\s+/g, ' ')).toMatch(/^\.lc-textarea--one-line \{ min-height: 0; display: block; \}/);
+      // 3.48 (request 068, usm-x row 61): the floor reads `--lc-textarea-min-height` over the same 0.
+      expect(css.slice(oneLine).replace(/\s+/g, ' ')).toMatch(/^\.lc-textarea--one-line \{ min-height: var\(--lc-textarea-min-height, 0\); display: block; \}/);
     });
 
     it('SCSS: the base field and the one-line class set display (3.45: multi-line fields are blocks too)', () => {

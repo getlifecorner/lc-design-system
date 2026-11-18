@@ -73,6 +73,17 @@
                       [attr.title]="hint"
                     >{{ hint }}</span>&ngsp;
                   }
+                  <!-- 3.48 (usm-x row 48): a count at the line's end, part of the name -->
+                  @if (item.badge) {
+                    <lc-badge
+                      class="lc-command-palette__badge"
+                      [attr.id]="option.id + '-badge'"
+                      [variant]="item.badgeVariant ?? 'default'"
+                      size="xs"
+                      [rounded]="true"
+                      >{{ item.badge }}</lc-badge
+                    >&ngsp;
+                  }
                   @if (item.shortcut) {
                     <kbd class="lc-command-palette__kbd" [id]="option.id + '-kbd'">{{ item.shortcut }}</kbd>
                   }

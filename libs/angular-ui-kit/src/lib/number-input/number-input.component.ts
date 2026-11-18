@@ -43,6 +43,58 @@ function sanitizeNumericText(raw: string, separator: '.' | ','): string {
   return out;
 }
 
+/**
+ * 3.48 (request 068, 067-s2): the group separator of `locale` when it is `.`
+ * or `,` and the decimal separator is the other one (`de-DE` `.`, `en-US`
+ * `,`); `''` otherwise (no locale, `fr-FR`, `de-CH`, an invalid locale).
+ */
+function groupSeparatorOf(locale: string): '.' | ',' | '' {
+  if (!locale) return '';
+  try {
+    const parts = new Intl.NumberFormat(locale).formatToParts(12345.6);
+    const group = parts.find((p) => p.type === 'group')?.value;
+    const decimal = parts.find((p) => p.type === 'decimal')?.value;
+    if (group === '.' && decimal === ',') return '.';
+    if (group === ',' && decimal === '.') return ',';
+    return '';
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * 3.48 (067-s2): keeps digits, one leading minus and every `.` and `,` as
+ * typed (a locale with a `.` / `,` group separator reads them as a whole).
+ */
+function keepNumericText(raw: string): string {
+  let out = '';
+  for (const ch of raw) {
+    if ((ch >= '0' && ch <= '9') || ch === '.' || ch === ',' || (ch === '-' && out.length === 0)) out += ch;
+  }
+  return out;
+}
+
+/**
+ * 3.48 (067-s2): typed text of a locale whose group separator is `group` as a
+ * decimal with `.` and no grouping. Both separators present: the last one is
+ * the decimal, the others are dropped („2.960,00“ → `2960.00` in `de-DE`).
+ * Only the group character, in whole groups after a first group of 1–3 digits
+ * („1.234“, „12.345.678“): grouping, dropped. Otherwise the first separator is
+ * the decimal (as before: „7.5“, „1.23“, „0.500“).
+ */
+function normalizeGroupedText(text: string, group: '.' | ','): string {
+  const decimal = group === '.' ? ',' : '.';
+  const last = Math.max(text.lastIndexOf('.'), text.lastIndexOf(','));
+  if (last < 0) return text;
+  if (text.includes(group) && text.includes(decimal)) {
+    return `${text.slice(0, last).replace(/[.,]/g, '')}.${text.slice(last + 1).replace(/[.,]/g, '')}`;
+  }
+  const grouped = group === '.' ? /^-?[1-9]\d{0,2}(\.\d{3})+$/ : /^-?[1-9]\d{0,2}(,\d{3})+$/;
+  if (grouped.test(text)) return text.replace(/[.,]/g, '');
+  const first = text.search(/[.,]/);
+  return `${text.slice(0, first)}.${text.slice(first + 1).replace(/[.,]/g, '')}`;
+}
+
 /** The decimal separator of `locale`: `,` or `.`; any other separator, `''` and an invalid locale give `.`. */
 function decimalSeparatorOf(locale: string): '.' | ',' {
   if (!locale) return '.';
@@ -207,7 +259,13 @@ export class NumberInputComponent implements ControlValueAccessor {
    * separator is neither `,` nor `.` shows a point. No grouping. `''`: a
    * point, as before. Typing accepts `,` and `.` in every locale and shows
    * the locale's separator; the model stays a `number`; blur clamps to
-   * `min`/`max`.
+   * `min`/`max`. 3.48 (067-s2): in a locale whose group separator is `.` or
+   * `,` (`de-DE`, `en-US`) the typed separators show as typed until blur and
+   * are read as a whole: both present, the last is the decimal („2.960,00“ →
+   * 2960); only the group character in whole groups is grouping („1.234“ →
+   * 1234 in `de-DE`, „1,234“ in `en-US`); otherwise the first is the decimal
+   * („7.5“, „0.500“). Blur shows the canonical text (the locale's decimal,
+   * no grouping). Pasted text is read the same way.
    * @default ''
    */
   locale = input<string>('');
@@ -301,6 +359,9 @@ export class NumberInputComponent implements ControlValueAccessor {
   /** The decimal separator shown in the field: the `locale`'s `,` or `.`. */
   private readonly separator = computed(() => decimalSeparatorOf(this.locale()));
 
+  /** 3.48 (067-s2): the locale's group separator when it is `.` or `,`; else `''`. */
+  private readonly groupSeparator = computed(() => groupSeparatorOf(this.locale()));
+
   /** The spoken unit: `suffixAriaLabel`, else the `suffix`; `''` = none. */
   protected readonly spokenSuffix = computed(() => this.suffixAriaLabel() || this.suffix());
 
@@ -391,7 +452,11 @@ export class NumberInputComponent implements ControlValueAccessor {
   onInput(event: Event): void {
     const target = event.target as HTMLInputElement;
     const raw = target.value;
-    const text = sanitizeNumericText(raw, this.separator());
+    // 3.48 (067-s2): a locale with a `.` / `,` group separator keeps the typed
+    // separators until blur and reads them as a whole („2.960,00“ → 2960);
+    // rewriting them live is what turned „2.960“ into 2,96.
+    const group = this.groupSeparator();
+    const text = group ? keepNumericText(raw) : sanitizeNumericText(raw, this.separator());
     // Property binding alone would not repaint the field when the model does
     // not change (typing "a" after "12" leaves 12 as-is), so the stripped
     // text is written straight back to the element.
@@ -401,15 +466,16 @@ export class NumberInputComponent implements ControlValueAccessor {
       target.setSelectionRange(caret, caret);
     }
     this.text.set(text);
+    const decimalText = group ? normalizeGroupedText(text, group) : text.replace(',', '.');
     if (this.isStringMode()) {
       // 3.43: the typed text is the model, with `.` as the separator; without
       // a digit ("", "-", ",") there is no value yet.
-      this.setStringValue(/\d/.test(text) ? text.replace(',', '.') : null);
+      this.setStringValue(/\d/.test(text) ? decimalText : null);
       return;
     }
     // "" would parse as 0; it and the other in-progress entries ("-", ".")
     // mean the model has no number yet.
-    const parsed = text === '' ? NaN : Number(text.replace(',', '.'));
+    const parsed = text === '' ? NaN : Number(decimalText);
     if (Number.isNaN(parsed)) {
       if (this.value() !== null) {
         this.value.set(null);
@@ -430,6 +496,10 @@ export class NumberInputComponent implements ControlValueAccessor {
       if (clamped !== null && clamped !== val) {
         this.setStringValue(clamped);
         this.showString(clamped);
+      } else if (this.groupSeparator() && val !== null) {
+        // 3.48 (067-s2): the typed separators give way to the canonical text
+        // (the locale's decimal, no grouping): „2.960,00“ → „2960,00“.
+        this.showString(val);
       }
       return;
     }

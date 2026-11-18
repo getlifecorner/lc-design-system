@@ -21,6 +21,7 @@ import { NgClass, NgTemplateOutlet } from '@angular/common';
 import { RouterLink, type Params, type QueryParamsHandling } from '@angular/router';
 import { BadgeComponent, BadgeVariant } from '@lifecorner/angular-ui-kit/badge';
 import { IconComponent } from '@lifecorner/angular-ui-kit/icon';
+import { TooltipDirective } from '@lifecorner/angular-ui-kit/tooltip';
 
 let nextUniqueId = 0;
 
@@ -127,6 +128,45 @@ export class TabComponent {
   readonly tabId = input('');
 
   /**
+   * 3.48 (usm-x row 50): a kit tooltip on hover and keyboard focus of the tab
+   * (`aria-describedby` while it shows). Not a native `title`, which never
+   * shows on focus.
+   * @default ''
+   */
+  readonly tooltip = input('');
+
+  /**
+   * 3.48 (usm-x row 50): why a `disabled` tab can't be opened ("Wird im Rich
+   * Client bearbeitet"). It is the tab's tooltip, and the tab stays reachable
+   * by the arrow keys (`aria-disabled`, never selected or followed). Without
+   * it a disabled tab is skipped as before.
+   * @default ''
+   */
+  readonly disabledReason = input('');
+
+  /**
+   * 3.48 (usm-x row 50): quiet ink (tertiary, weight 400; 5.84:1 light, 7.31:1
+   * dark on the page) for a tab that names a place edited elsewhere. It is
+   * still selectable; the selected look wins.
+   * @default false
+   */
+  readonly muted = input(false);
+
+  /**
+   * 3.48 (usm-x row 69): a quiet second text after the label, before the badge
+   * (12 px, tertiary ink), e.g. label "Ticket", hint "12 Status", badge
+   * "3 Treffer". Part of the tab's accessible name.
+   * @default ''
+   */
+  readonly hint = input('');
+
+  /** 3.48: the arrow keys reach the tab: enabled, or disabled with a reason. */
+  readonly reachable = computed(() => !this.disabled() || !!this.disabledReason());
+
+  /** 3.48: the tab's tooltip: the reason while disabled, else `tooltip`. */
+  readonly tooltipText = computed(() => (this.disabled() ? this.disabledReason() : this.tooltip()));
+
+  /**
    * Whether the badge should be rendered
    */
   readonly hasBadge = computed(() => {
@@ -185,7 +225,7 @@ export class TabComponent {
 @Component({
   selector: 'lc-tabs',
   standalone: true,
-  imports: [NgClass, NgTemplateOutlet, BadgeComponent, RouterLink, IconComponent],
+  imports: [NgClass, NgTemplateOutlet, BadgeComponent, RouterLink, IconComponent, TooltipDirective],
   templateUrl: './tabs.component.html',
   styleUrl: './tabs.component.scss',
   encapsulation: ViewEncapsulation.None,
@@ -243,6 +283,22 @@ export class TabsComponent {
    * @default false
    */
   readonly showIcons = input(false);
+
+  /**
+   * 3.48 (usm-x row 49): accessible name of the `role="tablist"` ("Facetten"),
+   * in both modes. Empty renders no `aria-label`.
+   * @default ''
+   */
+  readonly ariaLabel = input('');
+
+  /**
+   * 3.48 (usm-x row 51): `mode="links"`: route tabs navigate with
+   * `replaceUrl` (`RouterLink.replaceUrl`), so the browser's Back leaves the
+   * tool instead of walking back through its tabs. A Ctrl/Cmd/Shift or middle
+   * click stays the browser's. `href` tabs ignore it.
+   * @default false
+   */
+  readonly replaceUrl = input(false);
 
   /**
    * Projected tab components (signal query — updates when tabs are added or
@@ -432,7 +488,8 @@ export class TabsComponent {
    * get no tabindex: an `<a>` without `href` is not focusable.
    */
   protected linkTabIndex(index: number): number | null {
-    if (this.tabs()[index]?.disabled()) return null;
+    // 3.48: a disabled tab with a reason is in the roving order (tabindex -1)
+    if (!this.tabs()[index]?.reachable()) return null;
     return index === (this.focusedLink() ?? this.linkStop()) ? 0 : -1;
   }
 
@@ -464,7 +521,8 @@ export class TabsComponent {
     const from = links.indexOf(event.target as HTMLElement);
     if (from < 0) return;
     const horizontal = this.orientation() === 'horizontal';
-    const enabled = (i: number) => !this.tabs()[i]?.disabled();
+    // 3.48: disabled tabs with a reason are reached too (focus only)
+    const enabled = (i: number) => !!this.tabs()[i]?.reachable();
     const step = (start: number, direction: 1 | -1): number => {
       for (let n = 1; n <= links.length; n++) {
         const i = (start + direction * n + links.length) % links.length;
@@ -520,35 +578,48 @@ export class TabsComponent {
 
   /**
    * Handle keyboard navigation (automatic activation: focus and selection
-   * move together).
+   * move together). 3.48 (usm-x row 50): a disabled tab with a
+   * `disabledReason` takes the focus (its tooltip shows) but not the
+   * selection; the next key moves on from the focused tab.
    */
   handleKeyDown(event: KeyboardEvent): void {
-    const currentIndex = this.selectedIndex();
+    const tabs = this.tabList();
+    const focused = this.tabButtons().findIndex((button) => button.nativeElement === event.target);
+    const currentIndex = focused >= 0 ? focused : this.selectedIndex();
     let nextIndex = currentIndex;
 
     const isHorizontal = this.orientation() === 'horizontal';
     const nextKey = isHorizontal ? 'ArrowRight' : 'ArrowDown';
     const prevKey = isHorizontal ? 'ArrowLeft' : 'ArrowUp';
+    const reachable = (i: number) => !!tabs[i]?.reachable();
+    /** The next reachable tab from `start` in `direction` (wrapping); `fallback` if none. */
+    const step = (start: number, direction: 1 | -1, fallback: number): number => {
+      for (let n = 1; n <= tabs.length; n++) {
+        const i = (start + direction * n + tabs.length) % tabs.length;
+        if (reachable(i)) return i;
+      }
+      return fallback;
+    };
 
     switch (event.key) {
       case nextKey:
         event.preventDefault();
-        nextIndex = this.getNextEnabledTab(currentIndex);
+        nextIndex = step(currentIndex, 1, currentIndex);
         break;
 
       case prevKey:
         event.preventDefault();
-        nextIndex = this.getPreviousEnabledTab(currentIndex);
+        nextIndex = step(currentIndex, -1, currentIndex);
         break;
 
       case 'Home':
         event.preventDefault();
-        nextIndex = this.getFirstEnabledTab();
+        nextIndex = step(tabs.length - 1, 1, 0);
         break;
 
       case 'End':
         event.preventDefault();
-        nextIndex = this.getLastEnabledTab();
+        nextIndex = step(0, -1, tabs.length - 1);
         break;
 
       default:
@@ -573,62 +644,6 @@ export class TabsComponent {
    */
   private focusTab(index: number): void {
     this.tabButtons()[index]?.nativeElement.focus();
-  }
-
-  /**
-   * Get next enabled tab index (with wrapping)
-   */
-  private getNextEnabledTab(currentIndex: number): number {
-    const tabs = this.tabList();
-    let nextIndex = (currentIndex + 1) % tabs.length;
-    const startIndex = nextIndex;
-
-    while (tabs[nextIndex]?.disabled()) {
-      nextIndex = (nextIndex + 1) % tabs.length;
-      if (nextIndex === startIndex) {
-        return currentIndex; // No enabled tabs found
-      }
-    }
-
-    return nextIndex;
-  }
-
-  /**
-   * Get previous enabled tab index (with wrapping)
-   */
-  private getPreviousEnabledTab(currentIndex: number): number {
-    const tabs = this.tabList();
-    let prevIndex = currentIndex - 1;
-    if (prevIndex < 0) {
-      prevIndex = tabs.length - 1;
-    }
-    const startIndex = prevIndex;
-
-    while (tabs[prevIndex]?.disabled()) {
-      prevIndex = prevIndex - 1;
-      if (prevIndex < 0) {
-        prevIndex = tabs.length - 1;
-      }
-      if (prevIndex === startIndex) {
-        return currentIndex; // No enabled tabs found
-      }
-    }
-
-    return prevIndex;
-  }
-
-  /**
-   * Get first enabled tab index
-   */
-  private getFirstEnabledTab(): number {
-    const tabs = this.tabList();
-    for (let i = 0; i < tabs.length; i++) {
-      const tab = tabs[i];
-      if (tab && !tab.disabled()) {
-        return i;
-      }
-    }
-    return 0;
   }
 
   /**

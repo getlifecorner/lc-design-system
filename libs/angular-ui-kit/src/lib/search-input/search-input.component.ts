@@ -33,6 +33,13 @@ interface SearchEmission {
   readonly immediate: boolean;
   /** Only update the dedupe baseline, never reach `searchChange` (external writes). */
   readonly silent: boolean;
+  /**
+   * 3.48 (usm-x row 62): emit even when the last emitted value is the same.
+   * A clear always reaches `searchChange`: after Enter applied the typed text
+   * (`searchSubmit`) inside the debounce, the last emitted value can still be
+   * `''`, and the deduped `''` left the search applied.
+   */
+  readonly force?: boolean;
 }
 
 let nextUniqueId = 0;
@@ -183,7 +190,10 @@ export class SearchInputComponent {
   readonly value = model<string>('');
 
   /**
-   * Emitted when the search value changes (debounced).
+   * Emitted when the search value changes (debounced). 3.48 (usm-x row 62): a
+   * clear (× or Escape) emits `''` at once, also when `''` was the last
+   * emitted value (Enter applied the text through `searchSubmit` inside the
+   * debounce), and drops the pending debounced value.
    */
   readonly searchChange = output<string>();
 
@@ -220,7 +230,7 @@ export class SearchInputComponent {
           const ms = this.debounceMs();
           return immediate || ms <= 0 ? of(null) : timer(ms);
         }),
-        distinctUntilChanged((a, b) => a.value === b.value),
+        distinctUntilChanged((a, b) => a.value === b.value && !b.force),
         filter(({ silent }) => !silent),
         takeUntilDestroyed(),
       )
@@ -259,8 +269,10 @@ export class SearchInputComponent {
 
   protected clear(): void {
     this.value.set('');
-    // immediate: emits '' synchronously through the pipe, exactly once
-    this.push('', { immediate: true, silent: false });
+    // immediate: emits '' synchronously through the pipe, exactly once, and
+    // drops a pending debounced value; force (3.48, usm-x row 62): also when
+    // '' was the last emitted value
+    this.push('', { immediate: true, silent: false, force: true });
     this.inputRef()?.nativeElement.focus();
   }
 

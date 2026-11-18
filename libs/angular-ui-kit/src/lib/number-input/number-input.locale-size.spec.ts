@@ -89,14 +89,19 @@ describe('lc-number-input locale, suffix and size (3.29)', () => {
     it('de-DE: a typed point is taken as the decimal separator and shown as a comma', () => {
       create();
       type('7.5');
-      expect(field().value).toBe('7,5');
+      // 3.48 (request 068, 067-s2): the typed point shows as typed until blur
+      // (the live rewrite is what turned „2.960“ into 2,96); canonical after it.
+      expect(field().value).toBe('7.5');
       expect(host.control.value).toBe(7.5);
+      blur();
+      expect(field().value).toBe('7,5');
     });
 
     it('en-US: "7,5" and "7.5" both give 7.5 and show "7.5"', () => {
       create({ locale: 'en-US' });
       type('7,5');
-      expect(field().value).toBe('7.5');
+      // 3.48 (request 068, 067-s2): as typed until blur, canonical after it.
+      expect(field().value).toBe('7,5');
       expect(host.control.value).toBe(7.5);
       blur();
       expect(field().value).toBe('7.5');

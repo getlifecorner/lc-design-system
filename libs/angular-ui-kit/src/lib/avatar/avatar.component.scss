@@ -197,3 +197,16 @@ $lc-avatar-member-colors: (
     box-shadow: 0 0 0 var(--lc-avatar-ring-width, 2px) var(--lc-avatar-ring-color, var(--color-background));
   }
 }
+
+// ── Square (3.48, request 068, usm-x row 65) ──────────────────────────────
+// A thing (a ticket, a CI) wears a rounded square beside round people: 25 %
+// of the box (xs 6, sm 8, md 10, lg 12, xl 16 px). The image, the ring (a
+// box-shadow) and the person glyph's box follow the radius; the status dot
+// stays round. After the base rule, so it wins at equal specificity.
+.lc-avatar--square {
+  border-radius: var(--lc-avatar-square-radius, 25%);
+
+  .lc-avatar__image {
+    border-radius: inherit;
+  }
+}

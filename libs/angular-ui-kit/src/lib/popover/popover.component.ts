@@ -35,6 +35,13 @@ export type PopoverTriggerKind = 'click' | 'hover' | 'focus' | 'longpress';
  */
 export type PopoverAlign = 'start' | 'center' | 'end';
 
+/**
+ * Role of the `lc-popover` panel (3.48, usm-x row 64): `auto` (a dialog with
+ * `click` or `longpress`, else a tooltip) or `tooltip` (a long press only
+ * shows a description).
+ */
+export type PopoverPanelRole = 'auto' | 'tooltip';
+
 /** Natively focusable elements a projected trigger may be or contain. */
 const INTERACTIVE_SELECTOR = 'button, a[href], input, select, textarea, [tabindex]';
 
@@ -143,6 +150,19 @@ export class PopoverComponent implements OnDestroy {
   align = input<PopoverAlign>('center');
 
   /**
+   * Role of the panel (3.48, usm-x row 64). `'auto'`: a dialog with `click`
+   * or `longpress`, else a tooltip (as before). `'tooltip'`: a `longpress`
+   * (with or without `hover` / `focus`) keeps the panel `role="tooltip"`, for
+   * a card the long press only shows while the trigger's own click does
+   * something else (a relation chip opens the object): the trigger gets no
+   * `aria-haspopup` / `aria-expanded` / `aria-controls`, only
+   * `aria-describedby` while open, and a tap outside or Escape closes it.
+   * Ignored with `click` (its panel is a dialog).
+   * @default 'auto'
+   */
+  panelRole = input<PopoverPanelRole>('auto');
+
+  /**
    * Emitted when the popover opens or closes (3.45: once per real change).
    */
   readonly openChange = output<boolean>();
@@ -158,8 +178,13 @@ export class PopoverComponent implements OnDestroy {
     return new Set(typeof t === 'string' ? [t] : t);
   });
 
-  /** A dialog (click / longpress) rather than a tooltip (hover / focus only). */
-  protected readonly interactive = computed(() => this.kinds().has('click') || this.kinds().has('longpress'));
+  /**
+   * A dialog (click / longpress) rather than a tooltip (hover / focus only).
+   * 3.48: `panelRole="tooltip"` keeps a long-press panel a tooltip.
+   */
+  protected readonly interactive = computed(
+    () => this.kinds().has('click') || (this.kinds().has('longpress') && this.panelRole() !== 'tooltip'),
+  );
 
   /** The side the panel is on after flipping; `null` until it is placed. */
   private readonly placed = signal<PopoverPosition | null>(null);
@@ -251,7 +276,8 @@ export class PopoverComponent implements OnDestroy {
    */
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    if (!this.isOpen() || !this.interactive()) return;
+    // 3.48: a long-press tooltip (`panelRole="tooltip"`) closes on a tap outside too
+    if (!this.isOpen() || !(this.interactive() || this.kinds().has('longpress'))) return;
     const el = this.elementRef.nativeElement;
     if (el.contains(event.target as Node)) return;
     if (!this.overlayStack.claim(this.overlayId, event)) return;

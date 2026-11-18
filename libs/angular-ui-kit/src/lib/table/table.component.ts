@@ -405,6 +405,15 @@ export class TableComponent {
   /** Header label for the actions column */
   actionsLabel = input<string>('');
 
+  /**
+   * 3.48 (finance-intelligence kosten-prove row 7): `false` keeps
+   * `actionsLabel` as the actions head's name in visually hidden text and
+   * shows none, like `showCaption`; the column keeps `actionsWidth`. For rows
+   * whose buttons say what they do („Erklären“, „Zurückziehen“).
+   * @default true
+   */
+  showActionsLabel = input<boolean>(true);
+
   /** Width of the actions column (e.g. '120px') */
   actionsWidth = input<string | undefined>(undefined);
 

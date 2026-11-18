@@ -313,3 +313,44 @@ export const SizesWithoutSteppers: Story = {
       </div>`,
   }),
 };
+
+/** 3.48 (request 068, 067-s2): the grouping separator of `de-DE` and `en-US` is read, not lost. */
+export const GermanGrouping: Story = {
+  name: 'German Grouping',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.48 (067-s2, kosten row 5): in a locale whose group separator is `.` or `,` the typed separators stay as typed until blur and are read as a whole. `de-DE`: „2.960,00“ is 2960 (both present: the last is the decimal), „1.234“ is 1234 (whole groups: grouping), „7.5“ and „0.500“ stay decimals. `en-US`: „1,234“ is 1234, „7,5“ is 7.5. Blur shows the canonical text („2960“, „2960,00“ in string mode). The first field has „2.960,00“ typed for the shot; the model is printed under each field. Other locales and `\'\'` keep the 3.29 rule. Forced colours: a focused field shows a 2 px Highlight outline (067-n3).',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [NumberInputComponent, FormsModule] },
+    props: { de: null, en: null, deString: null },
+    template: `
+      <div lang="de" style="display: grid; gap: 16px; max-width: 360px; --lc-number-input-value-width: calc(9ch + 0.5rem);">
+        <div style="display: grid; gap: 4px;">
+          <lc-number-input label="Betrag (de-DE)" locale="de-DE" suffix="€" suffixAriaLabel="Euro" [showSteppers]="false" [step]="0.01" [(ngModel)]="de" />
+          <code style="font-size: 12px; color: var(--color-text-secondary);">Modell: {{ de === null ? 'null' : de }}</code>
+        </div>
+        <div lang="en" style="display: grid; gap: 4px;">
+          <lc-number-input label="Amount (en-US)" locale="en-US" suffix="$" suffixAriaLabel="dollars" [showSteppers]="false" [step]="0.01" [ngModel]="1234.5" (ngModelChange)="en = $event" />
+          <code style="font-size: 12px; color: var(--color-text-secondary);">Model: {{ en === null ? '1234.5' : en }}</code>
+        </div>
+        <div style="display: grid; gap: 4px;">
+          <lc-number-input label="Betrag als Text (de-DE)" locale="de-DE" valueType="string" suffix="€" suffixAriaLabel="Euro" [showSteppers]="false" [step]="0.01" [ngModel]="'2960.00'" (ngModelChange)="deString = $event" />
+          <code style="font-size: 12px; color: var(--color-text-secondary);">Modell: {{ deString === null ? '"2960.00"' : '"' + deString + '"' }}</code>
+        </div>
+      </div>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    const field = canvasElement.querySelector<HTMLInputElement>('lc-number-input input');
+    if (!field) return;
+    field.focus();
+    field.value = '2.960,00';
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+  },
+};

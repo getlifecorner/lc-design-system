@@ -5,6 +5,15 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideLcIcons, type LcIconDefinition } from '@lifecorner/angular-ui-kit/icon';
 import { NotificationCenterComponent, type Notification } from './notification-center.component';
 
+/**
+ * 3.48 (request 068, backlog 067-n5): fixed timestamps a minute apart, newest
+ * first. The list sorts newest first; five `new Date()` calls tied in the
+ * same millisecond and kept this order, but under load they crossed a
+ * millisecond, a later item sorted first and the order assertion failed.
+ */
+const NOW = new Date(2026, 10, 18, 12, 0).getTime();
+const at = (minutesAgo: number) => new Date(NOW - minutesAgo * 60_000);
+
 @Component({
   standalone: true,
   imports: [NotificationCenterComponent],
@@ -13,11 +22,11 @@ import { NotificationCenterComponent, type Notification } from './notification-c
 })
 class NcIconHostComponent {
   readonly notifications = signal<Notification[]>([
-    { id: '1', title: 'Deploy success', type: 'success', timestamp: new Date(), read: false },
-    { id: '2', title: 'Error in pipeline', type: 'error', timestamp: new Date(), read: false },
-    { id: '3', title: 'Disk warning', type: 'warning', timestamp: new Date(), read: true },
-    { id: '4', title: 'New comment', type: 'info', timestamp: new Date(), read: true },
-    { id: '5', title: 'No type', timestamp: new Date(), read: true },
+    { id: '1', title: 'Deploy success', type: 'success', timestamp: at(0), read: false },
+    { id: '2', title: 'Error in pipeline', type: 'error', timestamp: at(1), read: false },
+    { id: '3', title: 'Disk warning', type: 'warning', timestamp: at(2), read: true },
+    { id: '4', title: 'New comment', type: 'info', timestamp: at(3), read: true },
+    { id: '5', title: 'No type', timestamp: at(4), read: true },
   ]);
 }
 

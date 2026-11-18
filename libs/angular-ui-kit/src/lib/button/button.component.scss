@@ -504,3 +504,43 @@ a.btn {
   display: inline-flex;
   align-items: center;
 }
+
+// 3.48 (request 068, usm-x row 70): `ariaPressed` true on an outline or ghost
+// button draws a pressed look: the selected tint, primary ink and a 2 px
+// primary border (1 px + an inset 1 px). Ink 7.85:1 light, 10.57:1 dark on the
+// fill; border 6.21 / 11.78 against the page. Hooks: --lc-button-pressed-bg,
+// -fg, -border, --lc-button-pressed-hover-bg. Off (`false`), `mixed` and the
+// other variants are unchanged. At the end, so it wins over tone="primary".
+.btn-outline[aria-pressed="true"],
+.btn-ghost[aria-pressed="true"] {
+  background-color: var(--lc-button-pressed-bg, var(--color-surface-selected));
+  border-color: var(--lc-button-pressed-border, var(--color-primary-600));
+  box-shadow: inset 0 0 0 1px var(--lc-button-pressed-border, var(--color-primary-600));
+  color: var(--lc-button-pressed-fg, var(--color-primary-700));
+
+  &:hover:not(:disabled, .btn-loading) {
+    background-color: var(--lc-button-pressed-hover-bg, var(--color-primary-200));
+    border-color: var(--lc-button-pressed-border, var(--color-primary-600));
+    color: var(--lc-button-pressed-fg, var(--color-primary-700));
+  }
+}
+
+// Forced colours: the pressed button is Highlight (not a tint alone), also on
+// hover; its ring Highlight on the Canvas around it.
+@media (forced-colors: active) {
+  .btn-outline[aria-pressed="true"],
+  .btn-ghost[aria-pressed="true"],
+  .btn-outline[aria-pressed="true"]:hover:not(:disabled, .btn-loading),
+  .btn-ghost[aria-pressed="true"]:hover:not(:disabled, .btn-loading) {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    border-color: Highlight;
+    box-shadow: none;
+    color: HighlightText;
+  }
+
+  .btn-outline[aria-pressed="true"]:focus-visible,
+  .btn-ghost[aria-pressed="true"]:focus-visible {
+    outline-color: Highlight;
+  }
+}

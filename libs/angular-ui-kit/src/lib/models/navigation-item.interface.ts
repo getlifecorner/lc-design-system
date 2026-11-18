@@ -79,6 +79,12 @@ export interface NavigationItem extends ItemRowState {
     icon: string;
     /** Accessible label for the action button */
     ariaLabel?: string;
+    /**
+     * 3.48 (backlog 067-n4): the action opens a popup: `aria-haspopup` on the
+     * button and `aria-expanded` (`true` while `lc-sidenav`
+     * `expandedActionId` is this item's id), also in prerendered HTML.
+     */
+    hasPopup?: 'menu' | 'dialog';
   };
 
   /**

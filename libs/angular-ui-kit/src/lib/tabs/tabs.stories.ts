@@ -71,6 +71,17 @@ Use it for settings pages, multi-section views, and content categorization.
       table: { defaultValue: { summary: '0' } },
     },
     selectedIndexChange: { action: 'selectedIndexChange', description: 'Emitted when a tab is selected (index)' },
+    ariaLabel: {
+      control: 'text',
+      description: '3.48 (usm-x row 49): accessible name of the `role="tablist"` (both modes). Empty renders none',
+      table: { defaultValue: { summary: "''" } },
+    },
+    replaceUrl: {
+      control: 'boolean',
+      description:
+        '3.48 (usm-x row 51): `mode="links"`: route tabs navigate with `replaceUrl`, so Back leaves the tool. Ctrl/Cmd/Shift or middle clicks stay the browser\'s; `href` tabs ignore it. `lc-tab` (3.48): `tooltip`, `disabledReason` (a disabled tab stays arrow-reachable with the reason as tooltip), `muted` (quiet ink), `hint` (a quiet second text before the badge). CSS hooks: `--lc-tabs-gap`, `--lc-tabs-panel-padding` (default 16 px each)',
+      table: { defaultValue: { summary: 'false' } },
+    },
   },
 };
 
@@ -317,7 +328,7 @@ class TabsRoutePageComponent {}
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div [attr.lang]="lang()">
-      <lc-tabs mode="links" panelId="demo-tab-panel">
+      <lc-tabs mode="links" panelId="demo-tab-panel" [replaceUrl]="replaceUrl()" [ariaLabel]="ariaLabel()">
         @for (t of tabs(); track t.key) {
           <lc-tab
             [label]="t.label"
@@ -340,6 +351,10 @@ class TabsRouterLinksDemoComponent {
   readonly lang = input<'en' | 'de'>('en');
   /** The tab shown when the URL has no `?tab=`. */
   readonly defaultKey = input('');
+  /** 3.48: the tabs replace the history entry. */
+  readonly replaceUrl = input(false);
+  /** 3.48: the tab list's name. */
+  readonly ariaLabel = input('');
   private readonly query = toSignal(inject(ActivatedRoute).queryParamMap);
   protected readonly tabs = computed(() => LINK_TABS[this.lang()]);
   protected readonly currentKey = computed(() => {
@@ -385,4 +400,82 @@ export const RouterLinksGerman: Story = {
     },
   },
   render: () => ({ template: `<lc-tabs-router-links-demo lang="de" defaultKey="aenderungsverlauf" />` }),
+};
+
+/** 3.48 (request 068, usm-x row 51): a tool's tabs replace the address. */
+export const RouterLinksReplaceUrl: Story = {
+  name: 'Router Links Replace Url',
+  decorators: routerLinksDecorators,
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.48 (usm-x row 51): `[replaceUrl]="true"` on `lc-tabs mode="links"`: a plain click on a route tab navigates with `replaceUrl` (`RouterLink.replaceUrl`), so the browser\'s Back leaves the tool instead of walking back through its tabs. A Ctrl/Cmd/Shift or middle click stays the browser\'s (a new tab or window). The list is named „Bereiche“ (`ariaLabel`). Without `replaceUrl` every tab click pushes a history entry, as before.',
+      },
+    },
+  },
+  render: () => ({ template: `<lc-tabs-router-links-demo lang="de" [replaceUrl]="true" ariaLabel="Bereiche" />` }),
+};
+
+/** 3.48 (request 068, usm-x rows 49, 50, 69): the facet's part tabs. */
+export const TabStatesGerman: Story = {
+  name: 'Tab States (DE)',
+  args: { ariaLabel: 'Facetten', selectedIndex: 0 },
+  parameters: {
+    controls: { include: ['ariaLabel', 'orientation', 'selectedIndex'] },
+    docs: {
+      description: {
+        story:
+          '3.48 (usm-x rows 49, 50, 69): the list is named „Facetten“ (`ariaLabel`). „Ticket“ and „Problem“ carry a `hint` (12 px, tertiary ink: „12 Status“) before the badge („3 Treffer“); the tab\'s name is „Ticket 12 Status 3 Treffer“. „Änderung“ has a `tooltip` (on hover and keyboard focus). „Workflow“ is `disabled` with a `disabledReason`: dimmed, never selected, but the arrow keys reach it and show the reason (`aria-describedby`); „Archiv“ is disabled without a reason and is skipped, as before. „Regeln“ is `muted` (quiet ink, weight 400; 5.84:1 light, 7.31:1 dark): it names a place edited elsewhere and is still selectable. At 360 px the list scrolls.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    moduleMetadata: { imports: [TabComponent] },
+    template: `
+      <div lang="de">
+        <lc-tabs [ariaLabel]="ariaLabel" [orientation]="orientation || 'horizontal'" [(selectedIndex)]="selectedIndex">
+          <lc-tab label="Ticket" hint="12 Status" badge="3 Treffer" badgeVariant="primary">Statusmodell der Tickets: 12 Status, 3 Treffer.</lc-tab>
+          <lc-tab label="Problem" hint="4 Status" badge="1 Treffer">Statusmodell der Probleme.</lc-tab>
+          <lc-tab label="Änderung" tooltip="Änderungen folgen dem Ticket-Modell">Statusmodell der Änderungen.</lc-tab>
+          <lc-tab label="Workflow" [disabled]="true" disabledReason="Wird im Rich Client bearbeitet">—</lc-tab>
+          <lc-tab label="Archiv" [disabled]="true">—</lc-tab>
+          <lc-tab label="Regeln" [muted]="true">Die Regeln werden in der Regelverwaltung gepflegt.</lc-tab>
+        </lc-tabs>
+      </div>`,
+  }),
+};
+
+/** 3.48 (request 068, usm-x row 52): a pane that is a card of its own sits flush. */
+export const FlushPanel: Story = {
+  name: 'Flush Panel',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.48 (usm-x row 52): `--lc-tabs-gap` (list to panel) and `--lc-tabs-panel-padding` are read where they apply and never declared, so they can be set on the tabs or any ancestor. Here both are `0`: the pane is a card of its own and sits flush under the list. Defaults: 16 px each (`--lc-density-gap-md`, `--lc-density-padding-md`), as before.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [TabComponent] },
+    template: `
+      <div lang="de" style="--lc-tabs-gap: 0; --lc-tabs-panel-padding: 0;">
+        <lc-tabs ariaLabel="Was aufgenommen wird">
+          <lc-tab label="Felder">
+            <div style="padding: 16px; border: 1px solid var(--color-border); border-top: 0; border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg); background: var(--color-surface); color: var(--color-text-primary);">
+              Titel, Beschreibung, Priorität und Kategorie werden aufgenommen.
+            </div>
+          </lc-tab>
+          <lc-tab label="Anhänge">
+            <div style="padding: 16px; border: 1px solid var(--color-border); border-top: 0; border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg); background: var(--color-surface); color: var(--color-text-primary);">
+              Anhänge bis 10 MB.
+            </div>
+          </lc-tab>
+        </lc-tabs>
+      </div>`,
+  }),
 };

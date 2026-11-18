@@ -5,6 +5,9 @@
     [size]="size()"
     [disabled]="disabled()"
     [loading]="loading()"
+    [tone]="tone()"
+    [accessKey]="accessKey()"
+    [ariaKeyShortcuts]="ariaKeyShortcuts()"
     (clicked)="onFaceClick()"
   >
     <ng-container ngProjectAs="[slot='icon-before']"><ng-content select="[slot='icon-before']" /></ng-container>
@@ -15,6 +18,9 @@
     [items]="items()"
     [isOpen]="open()"
     [position]="menuPosition()"
+    [size]="menuSize()"
+    [minWidth]="menuMinWidth()"
+    [maxWidth]="menuMaxWidth()"
     (itemClick)="onItemClick($event)"
     (closed)="open.set(false)"
   >
@@ -26,6 +32,7 @@
       type="button"
       class="btn lc-split-button__caret btn-{{ variant() }} btn-{{ size() }}"
       [class.btn-loading]="caretInert()"
+      [class.btn-tone-primary]="variant() === 'outline' && tone() === 'primary'"
       [disabled]="caretDisabled()"
       aria-haspopup="menu"
       [attr.aria-expanded]="open()"

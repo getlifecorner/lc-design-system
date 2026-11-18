@@ -583,3 +583,107 @@
   color: var(--color-text-secondary);
   margin-top: var(--spacing-1);
 }
+
+// ── 3.48 (request 068, usm-x row 67): time and date-time ──────────────────
+// `datetime`: the label, the two fields and the helper in one wrapping row: the
+// date field 11rem and growing, the time field 8rem (at least 7rem); below
+// 19.5rem (both + 8 px) they wrap and the time field takes the row too.
+.lc-datepicker-wrapper--datetime {
+  container: lc-datepicker-datetime / inline-size;
+  flex-direction: row;
+  flex-wrap: wrap;
+  column-gap: var(--spacing-2);
+
+  > .lc-datepicker__label,
+  > .lc-datepicker__error,
+  > .lc-datepicker__helper {
+    flex: 0 0 100%;
+  }
+
+  > .lc-datepicker-input-wrapper {
+    flex: 1 1 11rem;
+    width: auto;
+    min-width: 0;
+  }
+
+  > .lc-datepicker-time-wrapper {
+    flex: 0 1 8rem;
+    min-width: 7rem;
+  }
+}
+
+@container lc-datepicker-datetime (width < 19.5rem) {
+  .lc-datepicker-wrapper--datetime > .lc-datepicker-time-wrapper {
+    flex-grow: 1;
+  }
+}
+
+// The time list: in the overlay as the day panel (8 px margin around the
+// origin box), as wide as the field (8–16 rem), at most six 44 px options
+// (6 × 44 + 8 = 272 px); it scrolls itself.
+.lc-datepicker-times {
+  box-sizing: border-box;
+  margin: var(--spacing-2);
+  max-height: 17rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--spacing-1) 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--elevation-3);
+}
+
+.lc-datepicker-time {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+  min-height: 2.75rem;
+  padding: 0 var(--spacing-3);
+  font-size: var(--font-size-base);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+  cursor: pointer;
+
+  &.lc-datepicker-time--active {
+    background-color: var(--color-surface-hover);
+  }
+
+  &.lc-datepicker-time--selected {
+    color: var(--color-on-primary);
+    background-color: var(--color-primary-fill);
+  }
+
+  &.lc-datepicker-time--active.lc-datepicker-time--selected {
+    box-shadow: inset 0 0 0 2px var(--color-primary-500);
+  }
+
+  &.lc-datepicker-time--disabled {
+    color: var(--color-text-disabled);
+    cursor: not-allowed;
+  }
+}
+
+.lc-datepicker-time__check {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+}
+
+@media (forced-colors: active) {
+  .lc-datepicker-time.lc-datepicker-time--active {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  .lc-datepicker-time.lc-datepicker-time--selected {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+  }
+
+  .lc-datepicker-time.lc-datepicker-time--disabled {
+    color: GrayText;
+  }
+}

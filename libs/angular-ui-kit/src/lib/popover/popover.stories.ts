@@ -50,6 +50,38 @@ class PopoverPlacementDemoComponent implements AfterViewInit {
   }
 }
 
+/** 3.48 (usm-x row 64): a relation chip opens the object; a long press only shows its card. */
+@Component({
+  selector: 'lc-popover-long-press-description-demo',
+  standalone: true,
+  imports: [PopoverComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div lang="de" style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-bottom: 160px;">
+      <span style="${NOTE_STYLE}">Verknüpft mit</span>
+      <lc-popover trigger="longpress" panelRole="tooltip" align="start">
+        <a
+          popover-trigger
+          href="#ticket-4711"
+          style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: var(--border-radius-full); background: var(--color-surface-2); border: 1px solid var(--color-border-strong); color: var(--color-text-primary); text-decoration: none; font: inherit;"
+          >Ticket 4711</a
+        >
+        <div popover-content style="width: 16rem;">
+          <p style="${NOTE_STYLE}"><strong>Drucker im 3. OG</strong></p>
+          <p style="${NOTE_STYLE} color: var(--color-text-secondary);">Offen · Priorität hoch · seit 4 Tagen</p>
+        </div>
+      </lc-popover>
+    </div>
+  `,
+})
+class PopoverLongPressDescriptionDemoComponent implements AfterViewInit {
+  private readonly popovers = viewChildren(PopoverComponent);
+  ngAfterViewInit(): void {
+    // Demo only: the card is open at load, so the shot shows it.
+    this.popovers().forEach((p) => p.open());
+  }
+}
+
 const meta: Meta<PopoverComponent> = {
   title: 'Feedback/Popover',
   component: PopoverComponent,
@@ -104,6 +136,13 @@ A floating panel for rich content triggered by click or hover.
       options: ['start', 'center', 'end'],
       description: '3.45: the panel’s start / end edge on the trigger’s, or centred. The panel shifts to stay 8 px inside the viewport; the arrow follows the trigger.',
       table: { defaultValue: { summary: 'center' } },
+    },
+    panelRole: {
+      control: 'inline-radio',
+      options: ['auto', 'tooltip'],
+      description:
+        '3.48 (usm-x row 64): `tooltip` keeps a `longpress` panel `role="tooltip"` (the trigger gets no `aria-haspopup`/`aria-expanded`/`aria-controls`, only `aria-describedby` while open; a tap outside or Escape closes it), for a card the long press only shows while the trigger’s own click does something else. Ignored with `click`.',
+      table: { defaultValue: { summary: 'auto' } },
     },
   },
 };
@@ -253,5 +292,22 @@ export const Placement: Story = {
   render: () => ({
     moduleMetadata: { imports: [PopoverPlacementDemoComponent] },
     template: `<lc-popover-placement-demo />`,
+  }),
+};
+
+export const LongPressDescription: Story = {
+  name: 'Long Press Description',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.48 (request 068, usm-x row 64): the relation chip „Ticket 4711“ is a link that opens the object; a long press (or a right click, Shift+F10, the Menu key) only shows its card. `trigger="longpress"` with `panelRole="tooltip"`: the panel stays `role="tooltip"`, the chip is not announced as „has popup dialog“ (no `aria-haspopup`, `aria-expanded` or `aria-controls`), it is described by the card (`aria-describedby`) while open, and a tap outside or Escape closes it. The chip’s own click is untouched. The card is open at load (demo).',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [PopoverLongPressDescriptionDemoComponent] },
+    template: `<lc-popover-long-press-description-demo />`,
   }),
 };

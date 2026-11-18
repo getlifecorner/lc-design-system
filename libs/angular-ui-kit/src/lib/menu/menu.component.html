@@ -5,8 +5,28 @@
   </div>
 
   <!-- Dropdown menu -->
-  @if (isOpen()) {
+  @if (overlayOrigin(); as origin) {
+    <!-- 3.48 (usm-x row 53): the panel in an overlay at an element or a point -->
+    <ng-template
+      cdkConnectedOverlay
+      [cdkConnectedOverlayOrigin]="origin"
+      [cdkConnectedOverlayOpen]="isOpen()"
+      [cdkConnectedOverlayPositions]="overlayPositions()"
+      [cdkConnectedOverlayPush]="true"
+      [cdkConnectedOverlayViewportMargin]="8"
+      [cdkConnectedOverlayFlexibleDimensions]="false"
+      [cdkConnectedOverlayDisableClose]="true"
+      (detach)="onOverlayDetach()"
+    >
+      <ng-container [ngTemplateOutlet]="panel" />
+    </ng-template>
+  } @else if (isOpen()) {
+    <ng-container [ngTemplateOutlet]="panel" />
+  }
+
+  <ng-template #panel>
     <div
+      #dropdown
       class="lc-menu__dropdown"
       [class.lc-menu__dropdown--bottom-left]="position() === 'bottom-left'"
       [class.lc-menu__dropdown--bottom-right]="position() === 'bottom-right'"
@@ -18,6 +38,11 @@
       [style.max-width]="maxWidth() || null"
       [class.lc-menu__dropdown--capped]="!!maxWidth()"
       [class.lc-menu__dropdown--has-toggles]="hasToggles()"
+      [style.max-height]="maxHeight() || null"
+      [class.lc-menu__dropdown--scroll]="scrolls()"
+      [class.lc-menu__dropdown--overlay]="!!anchor()"
+      [class.lc-menu__dropdown--at-point]="atPoint()"
+      [attr.lang]="panelLang()"
     >
       <!-- Optional header slot (outside the menu role: it is not an item) -->
       <ng-content select="[header]" />
@@ -25,9 +50,12 @@
       <!-- Menu items -->
       <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- keydown bubbles from the focused menu items (roving tabindex) -->
       <div
+        #list
         class="lc-menu__items"
         role="menu"
         [id]="panelId"
+        [attr.aria-label]="ariaLabel() || null"
+        [attr.aria-busy]="loading() ? 'true' : null"
         (keydown)="onPanelKeydown($event)"
       >
         @for (item of items(); track item.id; let i = $index) {
@@ -53,9 +81,15 @@
                     [attr.aria-disabled]="member.disabled ? 'true' : null"
                     class="lc-menu__item"
                     [class.lc-menu__item--danger]="member.variant === 'danger'"
-                    [class.lc-menu__item--disabled]="member.disabled"
+                    [class.lc-menu__item--disabled]="member.disabled && !hasReason(member)"
+                    [class.lc-menu__item--reason]="hasReason(member)"
+                    [class.lc-menu__item--emphasis]="member.emphasis"
+                    [lcTooltip]="tooltipOf(member)"
                     (click)="onItemClick(member, $event)"
                   >
+                    @if (member.swatch; as swatch) {
+                      <span class="lc-menu__item-swatch" aria-hidden="true" [style.background]="swatchBackground(swatch)"></span>
+                    }
                     @if (member.icon) {
                       <lc-icon [name]="member.icon" [size]="member.iconSize || 'sm'" [decorative]="true" />
                     }
@@ -78,9 +112,13 @@
                     [attr.aria-checked]="member.checked ? 'true' : 'false'"
                     class="lc-menu__item lc-menu__item--toggle"
                     [class.lc-menu__item--danger]="member.variant === 'danger'"
-                    [class.lc-menu__item--disabled]="member.disabled"
+                    [class.lc-menu__item--disabled]="member.disabled && !hasReason(member)"
                     [attr.tabindex]="tabindexFor(indexOf(member), member)"
-                    [disabled]="member.disabled"
+                    [disabled]="nativeDisabled(member)"
+                    [attr.aria-disabled]="hasReason(member) ? 'true' : null"
+                    [class.lc-menu__item--reason]="hasReason(member)"
+                    [class.lc-menu__item--emphasis]="member.emphasis"
+                    [lcTooltip]="tooltipOf(member)"
                     (click)="onToggleClick(member, $event)"
                   >
                     <span class="lc-menu__item-indicator" aria-hidden="true">
@@ -92,6 +130,9 @@
                         }
                       }
                     </span>
+                    @if (member.swatch; as swatch) {
+                      <span class="lc-menu__item-swatch" aria-hidden="true" [style.background]="swatchBackground(swatch)"></span>
+                    }
                     @if (member.icon) {
                       <lc-icon [name]="member.icon" [size]="member.iconSize || 'sm'" [decorative]="true" />
                     }
@@ -112,11 +153,18 @@
                     role="menuitem"
                     class="lc-menu__item"
                     [class.lc-menu__item--danger]="member.variant === 'danger'"
-                    [class.lc-menu__item--disabled]="member.disabled"
+                    [class.lc-menu__item--disabled]="member.disabled && !hasReason(member)"
                     [attr.tabindex]="tabindexFor(indexOf(member), member)"
-                    [disabled]="member.disabled"
+                    [disabled]="nativeDisabled(member)"
+                    [attr.aria-disabled]="hasReason(member) ? 'true' : null"
+                    [class.lc-menu__item--reason]="hasReason(member)"
+                    [class.lc-menu__item--emphasis]="member.emphasis"
+                    [lcTooltip]="tooltipOf(member)"
                     (click)="onItemClick(member, $event)"
                   >
+                    @if (member.swatch; as swatch) {
+                      <span class="lc-menu__item-swatch" aria-hidden="true" [style.background]="swatchBackground(swatch)"></span>
+                    }
                     @if (member.icon) {
                       <lc-icon [name]="member.icon" [size]="member.iconSize || 'sm'" [decorative]="true" />
                     }
@@ -130,6 +178,10 @@
                       <span class="lc-menu__item-badge">{{ badge }}</span>
                     }
                   </button>
+                }
+                <!-- 3.48 (usm-x row 57): a divider between members of one section -->
+                @if (member.dividerAfter && !$last) {
+                  <hr class="lc-menu__divider" />
                 }
               }
             </div>
@@ -145,9 +197,15 @@
               [attr.aria-disabled]="item.disabled ? 'true' : null"
               class="lc-menu__item"
               [class.lc-menu__item--danger]="item.variant === 'danger'"
-              [class.lc-menu__item--disabled]="item.disabled"
+              [class.lc-menu__item--disabled]="item.disabled && !hasReason(item)"
+              [class.lc-menu__item--reason]="hasReason(item)"
+              [class.lc-menu__item--emphasis]="item.emphasis"
+              [lcTooltip]="tooltipOf(item)"
               (click)="onItemClick(item, $event)"
             >
+              @if (item.swatch; as swatch) {
+                <span class="lc-menu__item-swatch" aria-hidden="true" [style.background]="swatchBackground(swatch)"></span>
+              }
               @if (item.icon) {
                 <lc-icon [name]="item.icon" [size]="item.iconSize || 'sm'" [decorative]="true" />
               }
@@ -170,9 +228,13 @@
               [attr.aria-checked]="item.checked ? 'true' : 'false'"
               class="lc-menu__item lc-menu__item--toggle"
               [class.lc-menu__item--danger]="item.variant === 'danger'"
-              [class.lc-menu__item--disabled]="item.disabled"
+              [class.lc-menu__item--disabled]="item.disabled && !hasReason(item)"
               [attr.tabindex]="tabindexFor(indexOf(item), item)"
-              [disabled]="item.disabled"
+              [disabled]="nativeDisabled(item)"
+              [attr.aria-disabled]="hasReason(item) ? 'true' : null"
+              [class.lc-menu__item--reason]="hasReason(item)"
+              [class.lc-menu__item--emphasis]="item.emphasis"
+              [lcTooltip]="tooltipOf(item)"
               (click)="onToggleClick(item, $event)"
             >
               <span class="lc-menu__item-indicator" aria-hidden="true">
@@ -184,6 +246,9 @@
                   }
                 }
               </span>
+              @if (item.swatch; as swatch) {
+                <span class="lc-menu__item-swatch" aria-hidden="true" [style.background]="swatchBackground(swatch)"></span>
+              }
               @if (item.icon) {
                 <lc-icon [name]="item.icon" [size]="item.iconSize || 'sm'" [decorative]="true" />
               }
@@ -205,11 +270,18 @@
               role="menuitem"
               class="lc-menu__item"
               [class.lc-menu__item--danger]="item.variant === 'danger'"
-              [class.lc-menu__item--disabled]="item.disabled"
+              [class.lc-menu__item--disabled]="item.disabled && !hasReason(item)"
               [attr.tabindex]="tabindexFor(indexOf(item), item)"
-              [disabled]="item.disabled"
+              [disabled]="nativeDisabled(item)"
+              [attr.aria-disabled]="hasReason(item) ? 'true' : null"
+              [class.lc-menu__item--reason]="hasReason(item)"
+              [class.lc-menu__item--emphasis]="item.emphasis"
+              [lcTooltip]="tooltipOf(item)"
               (click)="onItemClick(item, $event)"
             >
+              @if (item.swatch; as swatch) {
+                <span class="lc-menu__item-swatch" aria-hidden="true" [style.background]="swatchBackground(swatch)"></span>
+              }
               @if (item.icon) {
                 <lc-icon [name]="item.icon" [size]="item.iconSize || 'sm'" [decorative]="true" />
               }
@@ -231,8 +303,17 @@
         }
       </div>
 
+      <!-- 3.48 (usm-x row 55): the busy row, outside role="menu"; its status
+           text arrives one frame after the row, so it is announced -->
+      @if (loading()) {
+        <div class="lc-menu__loading">
+          <span class="lc-menu__loading-spinner" aria-hidden="true"><lc-spinner size="xs" /></span>
+          <span class="lc-menu__loading-text" role="status">{{ statusText() }}</span>
+        </div>
+      }
+
       <!-- Optional footer slot -->
       <ng-content select="[footer]" />
     </div>
-  }
+  </ng-template>
 </div>

@@ -3,19 +3,29 @@
 // fill and 2 px border-strong rule sit on the cell here.
 @use 'sortable-head';
 
+// 3.48 (request 068, usm-x row 60): the padding and the rule read hooks over
+// the same values (`--lc-sortable-head-padding-block`, `-padding-inline`,
+// `--lc-sortable-head-border-bottom`); the sortable 32 px arrow reserve stays.
+// The shared mixins are untouched, so lc-table's compiled head is unchanged.
 :host {
   @include sortable-head.head-cell;
+  padding-block: var(--lc-sortable-head-padding-block, var(--lc-density-padding-sm, var(--spacing-3)));
+  padding-inline: var(--lc-sortable-head-padding-inline, var(--lc-density-padding-md, var(--spacing-4)));
   background-color: var(--color-surface-2);
-  border-bottom: 2px solid var(--color-border-strong);
+  border-bottom: var(--lc-sortable-head-border-bottom, 2px solid var(--color-border-strong));
 }
 
 :host(.lc-sortable-head--sm) {
   @include sortable-head.size-sm;
+  padding-block: var(--lc-sortable-head-padding-block, var(--lc-density-padding-xs, var(--spacing-2)));
+  padding-inline: var(--lc-sortable-head-padding-inline, var(--lc-density-padding-sm, var(--spacing-3)));
   font-size: var(--typography-font-size-xs);
 }
 
 :host(.lc-sortable-head--lg) {
   @include sortable-head.size-lg;
+  padding-block: var(--lc-sortable-head-padding-block, var(--lc-density-padding-md, var(--spacing-4)));
+  padding-inline: var(--lc-sortable-head-padding-inline, var(--spacing-5));
   font-size: var(--typography-font-size-base);
 }
 
@@ -80,5 +90,63 @@
 @media (forced-colors: active) {
   :host(.lc-sortable-head--sortable:focus-visible) {
     outline-color: Highlight;
+  }
+}
+
+// 3.48 (usm-x row 60): the inline-end padding of a sortable end header (its
+// own padding; the reserve is on the start side) reads the inline hook too.
+:host(.lc-sortable-head--end.lc-sortable-head--sortable) {
+  padding-inline-end: var(--lc-sortable-head-padding-inline, var(--lc-density-padding-md, var(--spacing-4)));
+}
+
+:host(.lc-sortable-head--end.lc-sortable-head--sortable.lc-sortable-head--sm) {
+  padding-inline-end: var(--lc-sortable-head-padding-inline, var(--lc-density-padding-sm, var(--spacing-3)));
+}
+
+:host(.lc-sortable-head--end.lc-sortable-head--sortable.lc-sortable-head--lg) {
+  padding-inline-end: var(--lc-sortable-head-padding-inline, var(--spacing-5));
+}
+
+// `busy`: a 12 px ring (2 px, a 3/4 arc, primary ink: 4.18:1 light, 7.58:1
+// dark on the head) in the arrow's slot, 12 px from the end; static under
+// reduced motion. Forced colours: a full CanvasText ring.
+:host(.lc-sortable-head--busy) {
+  cursor: progress;
+}
+
+.lc-sortable-head__busy {
+  position: absolute;
+  top: 50%;
+  right: var(--spacing-3);
+  box-sizing: border-box;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-top: -0.375rem;
+  border: 2px solid var(--color-primary);
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: lc-sortable-head-spin 0.8s linear infinite;
+}
+
+:host(.lc-sortable-head--end) .lc-sortable-head__busy {
+  right: auto;
+  inset-inline-start: var(--spacing-3);
+}
+
+@keyframes lc-sortable-head-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lc-sortable-head__busy {
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .lc-sortable-head__busy {
+    border-color: CanvasText;
   }
 }

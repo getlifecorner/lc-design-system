@@ -48,6 +48,13 @@ const meta: Meta<AvatarComponent> = {
         "3.15: what shows without an image and without a `name`. `'initials'`: \"?\" (as before). `'person'`: a person glyph (60 % of the circle, `--color-neutral-700` on `--color-neutral-300`; 7.00:1 light, 6.10:1 dark), neutral whatever the `color`. A `name` still shows its initials; a failed image falls back to the person",
       table: { defaultValue: { summary: "'initials'" } },
     },
+    shape: {
+      control: 'inline-radio',
+      options: ['circle', 'square'],
+      description:
+        "3.48 (usm-x row 65): `'square'` draws a rounded square (`--lc-avatar-square-radius`, default 25 %: 6/8/10/12/16 px at xs…xl) for a thing (a ticket, a CI) beside round people; image, ring and person glyph follow it, colours are unchanged",
+      table: { defaultValue: { summary: "'circle'" } },
+    },
   },
 
   parameters: {
@@ -366,6 +373,35 @@ export const InitialsRule: Story = {
           </li>
         }
       </ul>`,
+  }),
+};
+
+/** 3.48 (request 068, usm-x row 65): things wear a rounded square beside round people. */
+export const SquareShape: Story = {
+  name: 'Square Shape',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.48 (usm-x row 65): `shape="square"` at every size with an image, initials (a ticket „T4“, a member colour) and the person fallback; the round person avatar on the left of each row for comparison. The radius is 25 % of the box (6/8/10/12/16 px at xs…xl, `--lc-avatar-square-radius`); the ring follows it; colours and the initials\' contrast are unchanged.',
+      },
+    },
+    controls: { include: [] },
+  },
+  render: () => ({
+    props: { sizes: ['xs', 'sm', 'md', 'lg', 'xl'] },
+    template: `
+      <div lang="de" style="display: grid; gap: 16px;">
+        @for (size of sizes; track size) {
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+            <lc-avatar [size]="size" name="Lena Brandt" color="member-1" />
+            <lc-avatar [size]="size" shape="square" src="/assets/lifecorner-emblem.svg" alt="Server LC-01" />
+            <lc-avatar [size]="size" shape="square" name="T4" alt="Ticket 4711" />
+            <lc-avatar [size]="size" shape="square" name="Change Request" color="member-4" [ring]="true" />
+            <lc-avatar [size]="size" shape="square" fallback="person" />
+          </div>
+        }
+      </div>`,
   }),
 };
 

@@ -89,9 +89,15 @@
             scope="col"
             class="lc-table__actions-cell"
             [class]="'lc-table__actions-cell--' + actionsAlign()"
+            [class.lc-table__actions-cell--label-hidden]="!showActionsLabel()"
             [style.width]="actionsWidth()"
           >
-            {{ actionsLabel() }}
+            @if (showActionsLabel()) {
+              {{ actionsLabel() }}
+            } @else {
+              <!-- 3.48 (F7): the head's name stays, for screen readers only -->
+              <span class="lc-table__sr-only">{{ actionsLabel() }}</span>
+            }
           </th>
         }
       </tr>

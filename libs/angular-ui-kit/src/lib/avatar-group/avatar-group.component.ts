@@ -15,6 +15,15 @@ export interface AvatarGroupItem {
   name?: string;
   /** Background of the initials: `default` or a member colour `member-1` … `member-6` (see `lc-avatar`). */
   color?: AvatarColor;
+  /**
+   * 3.48 (usm-x row 66): the item's identity colour (any CSS colour or
+   * `var()`), set as `--lc-avatar-bg` on that avatar, so presence wears the
+   * tone of the person's chip. Wins over `color`'s disc (as in `lc-avatar`
+   * 3.45). Pick a pair with `fg` at 4.5:1 or more.
+   */
+  bg?: string;
+  /** 3.48 (usm-x row 66): the initials' colour, set as `--lc-avatar-color` on that avatar. */
+  fg?: string;
 }
 
 @Component({

@@ -81,7 +81,7 @@ same variants and sizes and works without JavaScript (see **Components / Button 
       control: 'select',
       options: [null, true, false, 'mixed'],
       description:
-        '3.42 (usm-x row 3): `aria-pressed` on the inner `<button>` for a toggle (`false` renders `"false"`); `null` renders none. The pressed look is yours (`lc-button .btn[aria-pressed="true"]` or a bound `variant`)',
+        '3.42 (usm-x row 3): `aria-pressed` on the inner `<button>` for a toggle (`false` renders `"false"`); `null` renders none. 3.48 (usm-x row 70): `true` on `outline` or `ghost` draws a pressed look (the selected tint, primary ink, a 2 px primary border; Highlight in forced colours); hooks `--lc-button-pressed-bg`, `-fg`, `-border`, `--lc-button-pressed-hover-bg`. Other variants: bind `variant`',
       table: { defaultValue: { summary: 'null' } },
     },
     ariaExpanded: {
@@ -975,4 +975,43 @@ export const ToggleAndMenuTrigger: Story = {
     await expect(columns.getAttribute('aria-controls')).toBe('toggle-story-columns');
     columns.blur();
   },
+};
+
+/** 3.48 (request 068, usm-x row 70): a toggle that is on can be told at a glance. */
+export const PressedLook: Story = {
+  name: 'Pressed Look',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.48 (usm-x row 70): `[ariaPressed]="true"` on an `outline` or `ghost` button draws the pressed look: the selected tint behind a 2 px primary border (1 px + an inset 1 px) and primary ink (7.85:1 light, 10.57:1 dark; border 6.21 / 11.78 against the page); hover deepens the tint (`--color-primary-200`). Each row: off, on, on and disabled. `false`, `mixed`, no `ariaPressed` and the filled variants look as before. In forced colours the pressed button is Highlight with HighlightText. The last row overrides the hooks (`--lc-button-pressed-bg`, `-fg`, `-border`, `--lc-button-pressed-hover-bg`), e.g. for an app that tints itself.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [IconComponent] },
+    template: `
+      <div lang="de" style="display: grid; gap: 16px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+          <lc-button variant="outline" [ariaPressed]="false">Master/Detail</lc-button>
+          <lc-button variant="outline" [ariaPressed]="true">Master/Detail</lc-button>
+          <lc-button variant="outline" [ariaPressed]="true" [disabled]="true">Master/Detail</lc-button>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+          <lc-button variant="outline" tone="primary" [ariaPressed]="false">Gruppiert</lc-button>
+          <lc-button variant="outline" tone="primary" [ariaPressed]="true">Gruppiert</lc-button>
+          <lc-button variant="outline" tone="primary" [ariaPressed]="true" [disabled]="true">Gruppiert</lc-button>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+          <lc-button variant="ghost" [iconOnly]="true" ariaLabel="Favorit" [ariaPressed]="false"><lc-icon slot="icon-before" name="star" size="sm" [decorative]="true" /></lc-button>
+          <lc-button variant="ghost" [iconOnly]="true" ariaLabel="Favorit" [ariaPressed]="true"><lc-icon slot="icon-before" name="star" size="sm" [decorative]="true" /></lc-button>
+          <lc-button variant="ghost" [iconOnly]="true" ariaLabel="Favorit" [ariaPressed]="true" [disabled]="true"><lc-icon slot="icon-before" name="star" size="sm" [decorative]="true" /></lc-button>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; --lc-button-pressed-bg: var(--color-surface-2); --lc-button-pressed-fg: var(--color-text-primary); --lc-button-pressed-border: var(--color-text-secondary); --lc-button-pressed-hover-bg: var(--color-surface-hover);">
+          <lc-button variant="outline" [ariaPressed]="false">Eigene Farben</lc-button>
+          <lc-button variant="outline" [ariaPressed]="true">Eigene Farben</lc-button>
+        </div>
+      </div>`,
+  }),
 };

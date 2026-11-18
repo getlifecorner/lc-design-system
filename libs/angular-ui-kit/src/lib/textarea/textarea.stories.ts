@@ -472,3 +472,26 @@ export const OneLineChatDe: Story = {
       </div>`,
   }),
 };
+
+export const OneLineBesideAButton: Story = {
+  name: 'One Line Beside A Button',
+  decorators: [moduleMetadata({ imports: [ButtonComponent, IconComponent] })],
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.48 (request 068, usm-x row 61): the assistant\'s one-row field matches a 36 px button beside it. `--lc-textarea-padding: 5px 12px` on a one-line md field gives 24 (one line at `--line-height-base`, now defined: 1.5) + 2 × 5 + 2 border = 36 px, the height of the icon-only md button; the bottoms align. `--lc-textarea-padding` and `--lc-textarea-min-height` are read at each size rule (defaults: xs 8/12 … lg 14/20 px; 4–7 rem, one-line 0) and never declared, so they can be set on the field or an ancestor.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div lang="de" style="display: flex; align-items: flex-end; gap: 8px; max-width: 480px; --lc-textarea-padding: 5px 12px;">
+        <div style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column;">
+          <lc-textarea label="Frage an den Assistenten" placeholder="Nachricht …" size="md" [rows]="1" [autoResize]="true" [maxRows]="5"></lc-textarea>
+        </div>
+        <lc-button variant="primary" size="md" [iconOnly]="true" ariaLabel="Senden"><lc-icon slot="icon-before" name="send" size="sm" [decorative]="true"></lc-icon></lc-button>
+      </div>`,
+  }),
+};

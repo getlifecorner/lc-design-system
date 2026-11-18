@@ -12,12 +12,14 @@
       [ngClass]="tabListClasses()"
       role="tablist"
       [attr.aria-orientation]="orientation()"
+      [attr.aria-label]="ariaLabel() || null"
       (keydown)="onLinkKeyDown($event)"
       (focusin)="onLinkFocusIn($event)"
       (focusout)="onLinkFocusOut($event)"
     >
       @for (tab of tabList(); track tab.id; let i = $index) {
         @if (tab.disabled()) {
+          <!-- 3.48 (usm-x row 50): with a disabledReason it is in the roving order (tabindex -1) -->
           <a
             class="lc-tabs__tab lc-tabs__tab--link lc-tabs__tab--disabled"
             [class.lc-tabs__tab--selected]="isCurrent(i)"
@@ -26,6 +28,9 @@
             [attr.aria-selected]="isCurrent(i)"
             [attr.aria-controls]="panelId() || null"
             aria-disabled="true"
+            [attr.tabindex]="linkTabIndex(i)"
+            [class.lc-tabs__tab--muted]="tab.muted()"
+            [lcTooltip]="tab.tooltipText()"
             ><ng-container [ngTemplateOutlet]="linkContent" [ngTemplateOutletContext]="{ $implicit: tab }"
           /></a>
         } @else if (tab.route() !== null) {
@@ -40,6 +45,9 @@
             [routerLink]="tab.route()"
             [queryParams]="tab.queryParams()"
             [queryParamsHandling]="tab.queryParamsHandling()"
+            [replaceUrl]="replaceUrl()"
+            [class.lc-tabs__tab--muted]="tab.muted()"
+            [lcTooltip]="tab.tooltipText()"
             ><ng-container [ngTemplateOutlet]="linkContent" [ngTemplateOutletContext]="{ $implicit: tab }"
           /></a>
         } @else {
@@ -52,6 +60,8 @@
             [attr.aria-controls]="panelId() || null"
             [attr.tabindex]="linkTabIndex(i)"
             [attr.href]="tab.href() || null"
+            [class.lc-tabs__tab--muted]="tab.muted()"
+            [lcTooltip]="tab.tooltipText()"
             ><ng-container [ngTemplateOutlet]="linkContent" [ngTemplateOutletContext]="{ $implicit: tab }"
           /></a>
         }
@@ -70,9 +80,12 @@
       [ngClass]="tabListClasses()"
       role="tablist"
       [attr.aria-orientation]="orientation()"
+      [attr.aria-label]="ariaLabel() || null"
       (keydown)="handleKeyDown($event)"
     >
       @for (tab of tabList(); track tab.id; let i = $index) {
+        <!-- 3.48 (usm-x row 50): a disabled tab with a disabledReason is not
+             natively disabled, so it takes the focus for its tooltip -->
         <button
           #tabButton
           type="button"
@@ -85,13 +98,18 @@
           [attr.aria-controls]="tab.panelId"
           [attr.aria-disabled]="tab.disabled() || null"
           [tabindex]="getTabIndex(i)"
-          [disabled]="tab.disabled()"
+          [disabled]="tab.disabled() && !tab.reachable()"
+          [class.lc-tabs__tab--muted]="tab.muted()"
+          [lcTooltip]="tab.tooltipText()"
           (click)="selectTab(i)"
         >
           @if (showIcons() && tab.icon()) {
             <lc-icon class="lc-tabs__icon" [name]="tab.icon()!" size="xs" [decorative]="true" />
           }
           {{ tab.label() }}
+          @if (tab.hint()) {
+            &ngsp;<span class="lc-tabs__hint">{{ tab.hint() }}</span>&ngsp;
+          }
           @if (tab.hasBadge()) {
             <lc-badge
               class="lc-tabs__badge"
@@ -129,6 +147,9 @@
     <lc-icon class="lc-tabs__icon" [name]="tab.icon()" size="xs" [decorative]="true" />
   }
   {{ tab.label() }}
+  @if (tab.hint()) {
+    &ngsp;<span class="lc-tabs__hint">{{ tab.hint() }}</span>&ngsp;
+  }
   @if (tab.hasBadge()) {
     <lc-badge class="lc-tabs__badge" [variant]="tab.badgeVariant()" size="xs" [rounded]="true">{{ tab.badge() }}</lc-badge>
   }

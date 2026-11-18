@@ -122,7 +122,7 @@ export const FiveCauses: Story = {
     docs: {
       description: {
         story:
-          '3.47 (request 067, AC-W4): five causes in a fluid chart. At 360 px (328 px wide) „Periodi-/sierung“ and „Nicht/erklärt“ wrap and „Nicht/eingetr…“ is cut with its `<title>`; from 1024 px every label fits on one line and the chart keeps its 250 px.',
+          '3.47 (request 067, AC-W4): five causes in a fluid chart. At 360 px (328 px wide) „Periodi-/sierung“ and „Nicht/erklärt“ wrap and „Nicht/eingetr…“ is cut with its `<title>`; from 1024 px every label fits on one line and the chart keeps its 250 px. 3.48 (backlog 067-n2): this is the supported narrow case: below about 480 px show at most five bars. With nine bars at 360 px each column is about 30 px, so value labels overlap and categories keep 2–3 letters; group the small causes into one bar, or show a table there.',
       },
     },
   },

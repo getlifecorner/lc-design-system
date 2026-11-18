@@ -156,13 +156,19 @@ const meta: Meta<CommandPaletteComponent> = {
       description: 'Element that gets the focus after closing (set the trigger: WebKit doesn’t focus tapped buttons).',
       table: { defaultValue: { summary: 'null' } },
     },
+    activeId: {
+      control: 'text',
+      description:
+        '3.48 (usm-x row 47): id of the item under the cursor (two-way). Setting it moves the cursor to the first enabled option with that id (`aria-activedescendant`, scrolled into view); an unknown or disabled id falls back to the first enabled option and writes its id back. The palette writes it on every cursor move. `CommandPaletteItem.badge` (3.48, usm-x row 48): a count at the line’s end („56/60“, `lc-badge` xs, `badgeVariant`), never shrinks, part of the name.',
+      table: { defaultValue: { summary: 'null' } },
+    },
     itemSelect: { action: 'itemSelect', description: '`{ item, group }` on Enter or click. Closes unless the item has `keepOpen`.' },
     groupRetry: { action: 'groupRetry', description: 'The group whose „Try again“ option was chosen.' },
     searchChange: { action: 'searchChange', description: 'The query after `debounceMs` (server search).' },
   },
   parameters: {
     layout: 'fullscreen',
-    controls: { include: ['open', 'groups', 'query', 'debounceMs', 'shortcut', 'labels', 'highlightMatches', 'itemSelect', 'groupRetry', 'searchChange'] },
+    controls: { include: ['open', 'groups', 'query', 'debounceMs', 'shortcut', 'labels', 'highlightMatches', 'activeId', 'itemSelect', 'groupRetry', 'searchChange'] },
     docs: {
       description: {
         component: `
@@ -187,6 +193,7 @@ A command palette (3.45, usm-x row 34): a search field over grouped results in a
         [shortcut]="shortcut"
         [labels]="labels"
         [highlightMatches]="highlightMatches"
+        [activeId]="activeId"
         (itemSelect)="itemSelect($event)"
         (groupRetry)="groupRetry($event)"
         (searchChange)="searchChange($event)"
@@ -326,4 +333,73 @@ export const ShortcutAndTrigger: Story = {
     },
   },
   render: () => ({ template: `<lc-command-palette-trigger-demo />` }),
+};
+
+/** 3.48 (request 068, usm-x rows 47, 48): the rail's counts and a line that replaces itself. */
+const NAV_COUNTS: CommandPaletteGroup = {
+  id: 'nav',
+  heading: 'Navigation',
+  items: [
+    { id: 'offene-tickets', label: 'Offene Tickets', icon: 'mail', hint: 'Stammdaten', badge: '56/60' },
+    { id: 'meine-tickets', label: 'Meine Tickets', icon: 'user', badge: '12', badgeVariant: 'primary' },
+    { id: 'eskalationen', label: 'Eskalationen', icon: 'alert-triangle', hint: 'Servicemanagement', badge: '3', badgeVariant: 'warning' },
+    { id: 'archiv', label: 'Archiv', disabled: true, disabledReason: 'Keine Berechtigung', badge: '0' },
+  ],
+};
+
+@Component({
+  selector: 'lc-command-palette-active-id-demo',
+  standalone: true,
+  imports: [CommandPaletteComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div lang="de">
+      <lc-command-palette
+        [open]="true"
+        [groups]="groups()"
+        [labels]="labels"
+        [(activeId)]="activeId"
+        (itemSelect)="onSelect($event.item.id)"
+      />
+    </div>
+  `,
+})
+class CommandPaletteActiveIdDemoComponent {
+  protected readonly labels = COMMAND_PALETTE_LABELS_DE;
+  protected readonly pinned = signal(false);
+  protected readonly activeId = signal<string | null>(null);
+  protected readonly groups = computed<CommandPaletteGroup[]>(() => [
+    NAV_COUNTS,
+    {
+      id: 'aktionen',
+      heading: 'Aktionen',
+      items: [
+        this.pinned()
+          ? { id: 'loesen', label: 'Ansicht lösen', keepOpen: true }
+          : { id: 'anheften', label: 'Ansicht anheften', keepOpen: true },
+        { id: 'neu', label: 'Neues Ticket', shortcut: '⌘N' },
+      ],
+    },
+  ]);
+
+  /** A `keepOpen` item replaces its own line: the new line takes the cursor in the same change. */
+  protected onSelect(id: string): void {
+    if (id !== 'anheften' && id !== 'loesen') return;
+    this.pinned.set(id === 'anheften');
+    this.activeId.set(id === 'anheften' ? 'loesen' : 'anheften');
+  }
+}
+
+export const ActiveIdAndCounts: Story = {
+  name: 'Active Id And Counts',
+  decorators: [moduleMetadata({ imports: [CommandPaletteActiveIdDemoComponent] })],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.48 (request 068, usm-x rows 47, 48). Each navigation line ends with its count, as the rail shows it: `badge: \'56/60\'` (an `lc-badge` xs after the hint, before the shortcut; it never shrinks, the hint ellipsises first, and it is part of the option’s name: „Offene Tickets Stammdaten 56/60“). „Ansicht anheften“ is `keepOpen`: choosing it replaces the line with „Ansicht lösen“, and the app sets `[(activeId)]` to the new line’s id in the same change, so the cursor stays on it. An unknown id falls back to the first enabled line.',
+      },
+    },
+  },
+  render: () => ({ template: `<lc-command-palette-active-id-demo />` }),
 };

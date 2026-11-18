@@ -39,6 +39,8 @@ import type { SortEvent, TableColumnAlign, TableSize, TableSortDirection } from 
     '[class.lc-sortable-head--lg]': "size() === 'lg'",
     '[attr.aria-sort]': 'sorted() ? ariaSort() : null',
     '[attr.tabindex]': 'sortable() ? 0 : null',
+    '[class.lc-sortable-head--busy]': 'isBusy()',
+    '[attr.aria-busy]': "isBusy() ? 'true' : null",
     '(click)': 'onActivate()',
     '(keydown)': 'onKeydown($event)',
   },
@@ -86,8 +88,25 @@ export class SortableHeadComponent {
    */
   readonly sortedDescendingLabel = input<string>('sorted descending');
 
+  /**
+   * 3.48 (usm-x row 60): a sort is asking the server. `aria-busy="true"`, a
+   * quiet 12 px ring in the arrow's slot (static under reduced motion) and
+   * `cursor: progress`; the arrow hides meanwhile. Clicks, Enter and Space
+   * still emit `sortChange`. Only on a `sortable` head. CSS hooks (3.48):
+   * `--lc-sortable-head-padding-block` and `--lc-sortable-head-padding-inline`
+   * (default: the size's padding, md 12 / 16 px; the 32 px arrow reserve
+   * stays) and `--lc-sortable-head-border-bottom` (default
+   * `2px solid var(--color-border-strong)`; `none` drops the rule, e.g. for a
+   * table that draws its own sticky head shadow).
+   * @default false
+   */
+  readonly busy = input<boolean>(false);
+
   /** The column key and the next direction, on click, Enter or Space. */
   readonly sortChange = output<SortEvent>();
+
+  /** 3.48: the busy state shows on a sortable head only. */
+  protected readonly isBusy = computed(() => this.sortable() && this.busy());
 
   /** Whether the arrow and the state show. */
   protected readonly sorted = computed(() => this.sortable() && this.sortDirection() !== null);

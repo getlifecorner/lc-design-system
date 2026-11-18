@@ -14,7 +14,13 @@ import {
   Injector,
   afterNextRender,
 } from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import {
+  ControlValueAccessor,
+  NG_VALIDATORS,
+  NG_VALUE_ACCESSOR,
+  type ValidationErrors,
+  type Validator,
+} from '@angular/forms';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { openPanelLang } from '@lifecorner/angular-ui-kit/internal/a11y';
 
@@ -22,6 +28,77 @@ export type DateValue = Date | string | null;
 
 /** What `lc-datepicker` picks: a day (`'day'`) or a month (`'month'`). */
 export type DatepickerGranularity = 'day' | 'month';
+
+/**
+ * What `lc-datepicker` edits (3.48, usm-x row 67): a date (as before), a time
+ * of day (24 h), or a date and a time in one value.
+ */
+export type DatepickerMode = 'date' | 'time' | 'datetime';
+
+/**
+ * The form value of `lc-datepicker` (3.48, usm-x row 67): a `Date` (as
+ * before) or ISO 8601 local text without a zone (`YYYY-MM-DD`, `HH:mm`,
+ * `YYYY-MM-DDTHH:mm`), the text a backend validates.
+ */
+export type DatepickerValueType = 'date' | 'string';
+
+/** One option of the time list (3.48). */
+interface TimeOption {
+  /** `HH:mm`. */
+  value: string;
+  id: string;
+  disabled: boolean;
+}
+
+/** `HH:mm` of minutes after midnight. */
+function timeOf(minutes: number): string {
+  return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+}
+
+/**
+ * A typed time as `HH:mm` (3.48): `9`, `09`, `930`, `0930`, `9:30`, `9.30`
+ * and `09:30` give `09:30` / `09:00`; anything else (`24:00`, `12:61`,
+ * letters) is `null`.
+ */
+export function parseDatepickerTime(text: string): string | null {
+  const t = text.trim();
+  let hours: string;
+  let minutes: string;
+  const separated = /^(\d{1,2})[:.](\d{2})$/.exec(t);
+  if (separated) {
+    hours = separated[1];
+    minutes = separated[2];
+  } else if (/^\d{1,2}$/.test(t)) {
+    hours = t;
+    minutes = '00';
+  } else if (/^\d{3,4}$/.test(t)) {
+    hours = t.slice(0, -2);
+    minutes = t.slice(-2);
+  } else {
+    return null;
+  }
+  const h = Number(hours);
+  const m = Number(minutes);
+  return h <= 23 && m <= 59 ? timeOf(h * 60 + m) : null;
+}
+
+/** `YYYY-MM-DD` of a local date. */
+function isoDateOf(date: Date): string {
+  return `${String(date.getFullYear()).padStart(4, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+/** A local date from `YYYY-MM-DD`, or `null` (no rollover: `2026-02-31` is `null`). */
+function parseIsoDate(text: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text.trim());
+  if (!match) return null;
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return isoDateOf(date) === text.trim() ? date : null;
+}
+
+/** `HH:mm` of a strict `HH:mm` text, or `null`. */
+function parseIsoTime(text: string): string | null {
+  return /^\d{2}:\d{2}$/.test(text.trim()) ? parseDatepickerTime(text) : null;
+}
 
 /** One cell of the month grid (`granularity="month"`). */
 interface MonthCell {
@@ -71,16 +148,30 @@ interface MonthCell {
       useExisting: forwardRef(() => DatepickerComponent),
       multi: true,
     },
+    // 3.48 (usm-x row 67): validation in the string value mode; always `null` otherwise
+    {
+      provide: NG_VALIDATORS,
+      useExisting: forwardRef(() => DatepickerComponent),
+      multi: true,
+    },
   ],
 })
-export class DatepickerComponent implements ControlValueAccessor {
+export class DatepickerComponent implements ControlValueAccessor, Validator {
   private static nextId = 0;
 
   /** Per-instance id for the input; helper/error text ids derive from it. */
   readonly inputId = `lc-datepicker-${++DatepickerComponent.nextId}`;
 
+  /** 3.48: id of the time field (`mode` `time` / `datetime`). */
+  readonly timeInputId = `${this.inputId}-time`;
+
+  /** 3.48: id of the visible label (`mode` `time` / `datetime`). */
+  protected readonly labelId = `${this.inputId}-label`;
+
   private readonly datepickerInput = viewChild<ElementRef<HTMLInputElement>>('datepickerInput');
   private readonly calendarPanel = viewChild<ElementRef<HTMLElement>>('calendarPanel');
+  private readonly timeInput = viewChild<ElementRef<HTMLInputElement>>('timeInput');
+  private readonly timeList = viewChild<ElementRef<HTMLElement>>('timeList');
 
   /**
    * Visual variant of the datepicker
@@ -252,8 +343,165 @@ export class DatepickerComponent implements ControlValueAccessor {
    */
   readonly closed = output<void>();
 
+  /**
+   * 3.48 (usm-x row 67): what the field edits. `'time'`: one time field (24 h,
+   * a list of `timeStep` options, typed times like `930` or `9.30`).
+   * `'datetime'`: a date field and a time field in one host and one value (a
+   * `role="group"` named by the label; each field is named „<label> Datum“ /
+   * „<label> Uhrzeit“ from `dateAriaLabel` / `timeAriaLabel`). `'date'`: as
+   * before (`granularity` applies).
+   * @default 'date'
+   */
+  readonly mode = input<DatepickerMode>('date');
+
+  /**
+   * 3.48 (usm-x row 67): `'string'`: the form value and `stringValueChange`
+   * are ISO 8601 local text without a zone (`YYYY-MM-DD`, `HH:mm`,
+   * `YYYY-MM-DDTHH:mm`), no `Date`; `dateChange` does not emit, and the field
+   * validates: `lcDatepickerParse` (text that is not a complete valid value,
+   * kept in the field), `lcDatepickerMin` / `lcDatepickerMax` (out of
+   * `minDate` / `maxDate` / `minTime` / `maxTime`), `lcDatepickerIncomplete`
+   * (datetime with one part). `mode="time"` always uses strings. The shown
+   * date still follows `format`. `'date'`: as before (no validation).
+   * @default 'date'
+   */
+  readonly valueType = input<DatepickerValueType>('date');
+
+  /**
+   * 3.48: minutes between the options of the time list. Typed times need not
+   * match it.
+   * @default 15
+   */
+  readonly timeStep = input(15);
+
+  /**
+   * 3.48: earliest time (`HH:mm`, inclusive). In `datetime` it bounds the time
+   * of every day; earlier options are disabled. Empty: none.
+   * @default ''
+   */
+  readonly minTime = input('');
+
+  /**
+   * 3.48: latest time (`HH:mm`, inclusive). Empty: none.
+   * @default ''
+   */
+  readonly maxTime = input('');
+
+  /**
+   * 3.48: placeholder of the time field.
+   * @default 'HH:MM'
+   */
+  readonly timePlaceholder = input('HH:MM');
+
+  /**
+   * 3.48: the date part's name in `datetime` (German „Datum“), after the label.
+   * @default 'Date'
+   */
+  readonly dateAriaLabel = input('Date');
+
+  /**
+   * 3.48: the time part's name in `datetime` (German „Uhrzeit“), after the
+   * label; the time field's name without a label.
+   * @default 'Time'
+   */
+  readonly timeAriaLabel = input('Time');
+
+  /**
+   * 3.48: accessible name of the time list (German „Uhrzeit wählen“).
+   * @default 'Choose time'
+   */
+  readonly timeListAriaLabel = input('Choose time');
+
+  /**
+   * 3.48: accessible name of the time field's clear button (German „Uhrzeit
+   * löschen“).
+   * @default 'Clear time'
+   */
+  readonly clearTimeAriaLabel = input('Clear time');
+
+  /**
+   * 3.48 (usm-x row 67): every model change in the string value mode
+   * (`valueType="string"` or `mode="time"`): the ISO text, or `null`.
+   */
+  readonly stringValueChange = output<string | null>();
+
   // Internal state
   readonly selectedDate = signal<Date | null>(null);
+
+  /** 3.48: the time part (`HH:mm`), or `null`. */
+  readonly selectedTime = signal<string | null>(null);
+
+  /** 3.48: the time field's text; typed text is committed on Enter or blur. */
+  protected readonly timeText = linkedSignal(() => this.selectedTime() ?? '');
+
+  /** 3.48: whether the time list is open. */
+  readonly timeOpen = signal<boolean>(false);
+
+  /** 3.48: the option under the keyboard cursor of the time list. */
+  protected readonly activeTime = signal<string | null>(null);
+
+  /** 3.48: width of the time list: the field's, 8–16 rem. */
+  protected readonly timePanelWidth = signal(128);
+
+  /** 3.48: typed text that is not a valid date / time (string mode), else `''`. */
+  private readonly dateParseText = signal('');
+  private readonly timeParseText = signal('');
+
+  /** 3.48: the form value is text (`valueType="string"`, or always in `mode="time"`). */
+  protected readonly stringMode = computed(() => this.valueType() === 'string' || this.mode() === 'time');
+
+  /** 3.48: the time list's options (`timeStep` apart; out of `minTime`/`maxTime` disabled). */
+  protected readonly timeOptions = computed<TimeOption[]>(() => {
+    const step = Math.max(1, Math.round(Number(this.timeStep())) || 15);
+    const min = this.minTime();
+    const max = this.maxTime();
+    const options: TimeOption[] = [];
+    for (let minutes = 0; minutes < 24 * 60; minutes += step) {
+      const value = timeOf(minutes);
+      options.push({ value, id: `${this.timeInputId}-option-${minutes}`, disabled: (!!min && value < min) || (!!max && value > max) });
+    }
+    return options;
+  });
+
+  /** 3.48: id of the active option (`aria-activedescendant`). */
+  protected readonly activeTimeId = computed(() => {
+    const active = this.activeTime();
+    return this.timeOpen() && active ? (this.timeOptions().find((o) => o.value === active)?.id ?? null) : null;
+  });
+
+  /** 3.48: `aria-labelledby` of the date field in `datetime` (label + „Datum“). */
+  protected readonly dateLabelledBy = computed(() =>
+    this.mode() === 'datetime' && this.label() ? `${this.labelId} ${this.inputId}-part` : null,
+  );
+
+  /** 3.48: `aria-label` of the date field: as before; in `datetime` without a label, „<ariaLabel> Datum“. */
+  protected readonly dateAriaLabelAttr = computed(() => {
+    if (this.label()) return null;
+    if (this.mode() !== 'datetime') return this.ariaLabel() || null;
+    return [this.ariaLabel(), this.dateAriaLabel()].filter(Boolean).join(' ');
+  });
+
+  /** 3.48: `aria-labelledby` of the time field in `datetime` (label + „Uhrzeit“). */
+  protected readonly timeLabelledBy = computed(() =>
+    this.mode() === 'datetime' && this.label() ? `${this.labelId} ${this.timeInputId}-part` : null,
+  );
+
+  /** 3.48: `aria-label` of the time field without a label. */
+  protected readonly timeAriaLabelAttr = computed(() => {
+    if (this.label()) return null;
+    if (this.mode() !== 'datetime') return this.ariaLabel() || this.timeAriaLabel();
+    return [this.ariaLabel(), this.timeAriaLabel()].filter(Boolean).join(' ');
+  });
+
+  /** 3.48: classes of the time field (the date field's look). */
+  protected readonly timeClasses = computed(() => {
+    const classes = ['lc-datepicker', `lc-datepicker--${this.variant()}`, `lc-datepicker--${this.size()}`, 'lc-datepicker--time'];
+    if (this.isDisabled()) classes.push('lc-datepicker--disabled');
+    if (this.error()) classes.push('lc-datepicker--error');
+    if (this.readonly()) classes.push('lc-datepicker--readonly');
+    if (this.timeOpen()) classes.push('lc-datepicker--open');
+    return classes.join(' ');
+  });
   readonly isOpen = signal<boolean>(false);
   readonly currentMonth = signal<number>(new Date().getMonth());
   readonly currentYear = signal<number>(new Date().getFullYear());
@@ -277,6 +525,14 @@ export class DatepickerComponent implements ControlValueAccessor {
    * the panel is open; `null` while closed, so the server never reads the DOM.
    */
   protected readonly panelLang = computed(() => (this.isOpen() ? (this.hostLang() ?? (this.locale() || null)) : null));
+
+  /** 3.48: the host's closest `[lang]` while the time list is open. */
+  private readonly timeHostLang = openPanelLang(this.timeOpen);
+
+  /** 3.48: `lang` of the time list, as `panelLang`. */
+  protected readonly timePanelLang = computed(() =>
+    this.timeOpen() ? (this.timeHostLang() ?? (this.locale() || null)) : null,
+  );
 
   // Computed values
   readonly formattedDate = computed(() => {
@@ -413,9 +669,14 @@ export class DatepickerComponent implements ControlValueAccessor {
   private readonly injector = inject(Injector);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  private onChange: (value: Date | null) => void = () => {};
+  private onChange: (value: Date | string | null) => void = () => {};
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   private onTouched: () => void = () => {};
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  private onValidatorChange: () => void = () => {};
+
+  /** 3.48: the value is a `Date` of a date-only field (the behaviour before 3.48). */
+  private readonly plainDate = computed(() => this.mode() === 'date' && this.valueType() === 'date');
 
   // Public methods
   /**
@@ -487,8 +748,14 @@ export class DatepickerComponent implements ControlValueAccessor {
   clear(): void {
     this.selectedDate.set(null);
     this.inputValue.set('');
-    this.onChange(null);
-    this.dateChange.emit(null);
+    if (this.plainDate()) {
+      this.onChange(null);
+      this.dateChange.emit(null);
+      return;
+    }
+    // 3.48: the other modes emit their combined value (the time part stays)
+    this.dateParseText.set('');
+    this.emitValue();
   }
 
   /**
@@ -823,6 +1090,26 @@ export class DatepickerComponent implements ControlValueAccessor {
    */
   onBlur(): void {
     this.onTouched();
+    // 3.48 (string mode): text that never became a date stays, the model is
+    // `null` and the field reports `lcDatepickerParse`
+    if (this.stringMode()) {
+      const text = this.inputValue().trim();
+      if (text && text !== this.formattedDate()) {
+        this.dateParseText.set(text);
+        if (this.selectedDate()) {
+          this.selectedDate.set(null);
+          this.inputValue.set(text);
+          this.emitValue();
+        } else {
+          this.onValidatorChange();
+        }
+        return;
+      }
+      if (this.dateParseText()) {
+        this.dateParseText.set('');
+        this.onValidatorChange();
+      }
+    }
     this.inputValue.set(this.formattedDate());
   }
 
@@ -835,6 +1122,10 @@ export class DatepickerComponent implements ControlValueAccessor {
 
   // ControlValueAccessor implementation
   writeValue(value: DateValue): void {
+    if (!this.plainDate()) {
+      this.writeModeValue(value);
+      return;
+    }
     let date: Date | null = null;
     if (value instanceof Date) {
       date = isNaN(value.getTime()) ? null : value;
@@ -845,8 +1136,274 @@ export class DatepickerComponent implements ControlValueAccessor {
     this.inputValue.set(this.formattedDate());
   }
 
-  registerOnChange(fn: (value: Date | null) => void): void {
+  registerOnChange(fn: (value: Date | string | null) => void): void {
     this.onChange = fn;
+  }
+
+  /**
+   * 3.48 (usm-x row 67): the errors of the string value mode (see
+   * `valueType`); always `null` for a date field with a `Date` value, so
+   * existing forms are unchanged.
+   */
+  validate(): ValidationErrors | null {
+    if (!this.stringMode()) return null;
+    const errors: ValidationErrors = {};
+    const parse = this.dateParseText() || this.timeParseText();
+    if (parse) errors['lcDatepickerParse'] = { text: parse };
+    const date = this.mode() === 'time' ? null : this.selectedDate();
+    const time = this.mode() === 'date' ? null : this.selectedTime();
+    if (this.mode() === 'datetime' && !parse && !!date !== !!time) errors['lcDatepickerIncomplete'] = true;
+    const minDate = this.minDate();
+    const maxDate = this.maxDate();
+    if (date && minDate && this.startOfDay(date) < this.startOfDay(minDate)) {
+      errors['lcDatepickerMin'] = { min: isoDateOf(minDate), actual: isoDateOf(date) };
+    } else if (time && this.minTime() && time < this.minTime()) {
+      errors['lcDatepickerMin'] = { min: this.minTime(), actual: time };
+    }
+    if (date && maxDate && this.startOfDay(date) > this.startOfDay(maxDate)) {
+      errors['lcDatepickerMax'] = { max: isoDateOf(maxDate), actual: isoDateOf(date) };
+    } else if (time && this.maxTime() && time > this.maxTime()) {
+      errors['lcDatepickerMax'] = { max: this.maxTime(), actual: time };
+    }
+    return Object.keys(errors).length ? errors : null;
+  }
+
+  registerOnValidatorChange(fn: () => void): void {
+    this.onValidatorChange = fn;
+  }
+
+  // ── 3.48 (usm-x row 67): the time field ──────────────────────────────
+
+  /** Opens or closes the time list (a click on the time field). */
+  protected toggleTimeList(): void {
+    if (this.timeOpen()) this.closeTimeList();
+    else this.openTimeList();
+  }
+
+  /** Opens the time list, scrolled to the selected time, else the next step from now (or `minTime`). */
+  openTimeList(): void {
+    if (this.isDisabled() || this.readonly() || this.timeOpen()) return;
+    const width = this.timeInput()?.nativeElement.offsetWidth ?? 0;
+    this.timePanelWidth.set(Math.min(256, Math.max(128, width)));
+    this.activeTime.set(this.initialActiveTime());
+    this.timeOpen.set(true);
+    afterNextRender(() => this.revealActiveTime(), { injector: this.injector });
+  }
+
+  /** Closes the time list (idempotent: the overlay's `detach` re-enters). */
+  closeTimeList(): void {
+    if (!this.timeOpen()) return;
+    this.timeOpen.set(false);
+    this.activeTime.set(null);
+  }
+
+  protected onTimeInput(value: string): void {
+    this.timeText.set(value);
+    if (value.trim() === '' && this.selectedTime() !== null) {
+      this.selectedTime.set(null);
+      this.timeParseText.set('');
+      this.emitValue();
+    }
+  }
+
+  protected onTimeBlur(): void {
+    this.onTouched();
+    this.closeTimeList();
+    this.commitTimeText();
+  }
+
+  protected onTimeKeydown(event: KeyboardEvent): void {
+    if (this.isDisabled() || this.readonly()) return;
+    const open = this.timeOpen();
+    switch (event.key) {
+      case 'ArrowDown':
+      case 'ArrowUp':
+        event.preventDefault();
+        if (!open) this.openTimeList();
+        else if (!event.altKey) this.moveActiveTime(event.key === 'ArrowDown' ? 1 : -1);
+        return;
+      case 'PageDown':
+      case 'PageUp': {
+        if (!open) return;
+        event.preventDefault();
+        const step = Math.max(1, Math.round(Number(this.timeStep())) || 15);
+        this.moveActiveTime((event.key === 'PageDown' ? 1 : -1) * Math.max(1, Math.round(60 / step)));
+        return;
+      }
+      case 'Home':
+      case 'End': {
+        if (!open) return;
+        event.preventDefault();
+        const enabled = this.timeOptions().filter((o) => !o.disabled);
+        const edge = event.key === 'Home' ? enabled[0] : enabled[enabled.length - 1];
+        if (edge) this.setActiveTime(edge.value);
+        return;
+      }
+      case 'Enter': {
+        const active = this.activeTime();
+        if (open && active) {
+          event.preventDefault();
+          this.selectTime(active);
+        } else if (this.timeText() !== (this.selectedTime() ?? '')) {
+          event.preventDefault();
+          this.commitTimeText();
+        }
+        return;
+      }
+      case 'Escape':
+        if (!open) return;
+        event.preventDefault();
+        // Only this list closes; enclosing overlays stay open (as the day panel).
+        event.stopPropagation();
+        this.closeTimeList();
+        return;
+    }
+  }
+
+  protected onTimeOptionClick(option: TimeOption): void {
+    if (option.disabled) return;
+    this.selectTime(option.value);
+  }
+
+  /** Clears the time part (the time field's ×) and keeps the focus in the field. */
+  protected onClearTimeClick(event: Event): void {
+    event.stopPropagation();
+    this.timeParseText.set('');
+    this.selectedTime.set(null);
+    this.timeText.set('');
+    this.emitValue();
+    this.timeInput()?.nativeElement.focus();
+  }
+
+  private selectTime(value: string): void {
+    this.timeParseText.set('');
+    this.closeTimeList();
+    this.timeText.set(value);
+    if (value !== this.selectedTime()) {
+      this.selectedTime.set(value);
+      this.emitValue();
+    } else {
+      this.onValidatorChange();
+    }
+  }
+
+  /** Typed text becomes the time (`930` → `09:30`) or, if invalid, a parse error with the text kept. */
+  private commitTimeText(): void {
+    const text = this.timeText().trim();
+    if (!text) {
+      this.timeParseText.set('');
+      if (this.selectedTime() !== null) {
+        this.selectedTime.set(null);
+        this.emitValue();
+      } else {
+        this.onValidatorChange();
+      }
+      return;
+    }
+    const time = parseDatepickerTime(text);
+    if (time) {
+      this.timeParseText.set('');
+      this.timeText.set(time);
+      if (time !== this.selectedTime()) {
+        this.selectedTime.set(time);
+        this.emitValue();
+      } else {
+        this.onValidatorChange();
+      }
+      return;
+    }
+    this.timeParseText.set(text);
+    if (this.selectedTime() !== null) {
+      this.selectedTime.set(null);
+      this.timeText.set(text);
+      this.emitValue();
+    } else {
+      this.onValidatorChange();
+    }
+  }
+
+  private initialActiveTime(): string | null {
+    const enabled = this.timeOptions().filter((o) => !o.disabled);
+    const now = new Date();
+    const fromNow = timeOf(now.getHours() * 60 + now.getMinutes());
+    const from = this.selectedTime() ?? (this.minTime() > fromNow ? this.minTime() : fromNow);
+    return (enabled.find((o) => o.value >= from) ?? enabled[enabled.length - 1])?.value ?? null;
+  }
+
+  private moveActiveTime(delta: number): void {
+    const enabled = this.timeOptions().filter((o) => !o.disabled);
+    if (!enabled.length) return;
+    const at = enabled.findIndex((o) => o.value === this.activeTime());
+    const next = at < 0 ? (delta > 0 ? 0 : enabled.length - 1) : Math.min(enabled.length - 1, Math.max(0, at + delta));
+    this.setActiveTime(enabled[next].value);
+  }
+
+  private setActiveTime(value: string): void {
+    this.activeTime.set(value);
+    afterNextRender(() => this.revealActiveTime(), { injector: this.injector });
+  }
+
+  /** Scrolls the list (its own scroller) so the active option shows; never the page. */
+  private revealActiveTime(): void {
+    const list = this.timeList()?.nativeElement;
+    const id = this.activeTimeId();
+    const option = id ? list?.querySelector<HTMLElement>(`#${id}`) : null;
+    if (!list || !option) return;
+    const box = list.getBoundingClientRect();
+    const rect = option.getBoundingClientRect();
+    if (rect.top < box.top) list.scrollTop -= box.top - rect.top;
+    else if (rect.bottom > box.bottom) list.scrollTop += rect.bottom - box.bottom;
+  }
+
+  /** The value of the modes beside a plain date field, as the form and the outputs get it. */
+  private currentValue(): Date | string | null {
+    const mode = this.mode();
+    const date = this.selectedDate();
+    const time = this.selectedTime();
+    if (mode === 'time') return time;
+    if (mode === 'date') return date ? (this.stringMode() ? isoDateOf(date) : date) : null;
+    if (!date || !time) return null;
+    if (this.stringMode()) return `${isoDateOf(date)}T${time}`;
+    const [hours, minutes] = time.split(':').map(Number);
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hours, minutes);
+  }
+
+  /** Emits the value of the modes beside a plain date field and revalidates. */
+  private emitValue(): void {
+    const value = this.currentValue();
+    this.onChange(value);
+    if (this.stringMode()) {
+      this.stringValueChange.emit(typeof value === 'string' ? value : null);
+    } else {
+      this.dateChange.emit(value instanceof Date ? value : null);
+    }
+    this.onValidatorChange();
+  }
+
+  /** `writeValue` of the modes beside a plain date field (ISO text, or a `Date` in datetime). */
+  private writeModeValue(value: DateValue): void {
+    const mode = this.mode();
+    let date: Date | null = null;
+    let time: string | null = null;
+    if (value instanceof Date && !isNaN(value.getTime())) {
+      if (mode !== 'time') date = new Date(value.getFullYear(), value.getMonth(), value.getDate());
+      if (mode !== 'date') time = timeOf(value.getHours() * 60 + value.getMinutes());
+    } else if (typeof value === 'string') {
+      if (mode === 'time') time = parseIsoTime(value);
+      else if (mode === 'date') date = parseIsoDate(value) ?? (this.stringMode() ? null : this.parseDate(value, this.format()));
+      else {
+        const [day, clock] = value.split('T');
+        date = parseIsoDate(day ?? '');
+        time = clock ? parseIsoTime(clock) : null;
+      }
+    }
+    this.dateParseText.set('');
+    this.timeParseText.set('');
+    this.selectedDate.set(date);
+    this.inputValue.set(this.formattedDate());
+    this.selectedTime.set(time);
+    this.timeText.set(time ?? '');
+    this.onValidatorChange();
   }
 
   registerOnTouched(fn: () => void): void {
@@ -983,8 +1540,14 @@ export class DatepickerComponent implements ControlValueAccessor {
   private commitDate(date: Date): void {
     this.selectedDate.set(date);
     this.inputValue.set(this.formatDate(date, this.format()));
-    this.onChange(date);
-    this.dateChange.emit(date);
+    if (this.plainDate()) {
+      this.onChange(date);
+      this.dateChange.emit(date);
+      return;
+    }
+    // 3.48: the other modes emit their combined value
+    this.dateParseText.set('');
+    this.emitValue();
   }
 
   private showMonthOf(date: Date): void {

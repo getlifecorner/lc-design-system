@@ -234,6 +234,14 @@
 }
 
 @media (forced-colors: active) {
+  // 3.48 (request 068, 067-n3): the focus halo is a box-shadow, which forced
+  // colours drop, so a focused field showed no focus: a 2 px Highlight
+  // outline, as the error state's.
+  .number-input__control:focus-within {
+    outline: 2px solid Highlight;
+    outline-offset: 0;
+  }
+
   .number-input--error .number-input__control:focus-within,
   .number-input__button:focus-visible {
     outline-color: Highlight;

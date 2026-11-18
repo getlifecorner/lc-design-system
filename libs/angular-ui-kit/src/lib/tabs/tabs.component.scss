@@ -4,7 +4,8 @@
 
   &__container {
     display: flex;
-    gap: var(--lc-density-gap-md, var(--spacing-4));
+    // 3.48 (usm-x row 52): `--lc-tabs-gap` (list to panel), read here, never declared
+    gap: var(--lc-tabs-gap, var(--lc-density-gap-md, var(--spacing-4)));
 
     &--horizontal {
       flex-direction: column;
@@ -118,7 +119,8 @@
 
   &__panel {
     display: none;
-    padding: var(--lc-density-padding-md, var(--spacing-4));
+    // 3.48 (usm-x row 52): `--lc-tabs-panel-padding` (`0` for a pane that is a card)
+    padding: var(--lc-tabs-panel-padding, var(--lc-density-padding-md, var(--spacing-4)));
     animation: fadeIn var(--animation-duration-base) var(--animation-timing-ease);
 
     &--active {
@@ -268,4 +270,25 @@ a.lc-tabs__tab {
       border-inline-start-color: CanvasText;
     }
   }
+}
+
+// 3.48 (request 068, usm-x rows 50 and 69): a muted tab names a place edited
+// elsewhere: tertiary ink, weight 400 (5.84:1 light, 7.31:1 dark on the page;
+// hover keeps the primary ink). The selected look wins. A hint is a quiet 12 px
+// second text after the label.
+.lc-tabs__tab--muted:not(.lc-tabs__tab--selected) {
+  color: var(--color-text-tertiary);
+  font-weight: var(--font-weight-normal);
+}
+
+.lc-tabs__hint {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-tertiary);
+}
+
+// A disabled tab with a reason takes the focus: its ring is drawn at full
+// opacity (the dimmed ink stays dimmed).
+.lc-tabs__tab--disabled:focus-visible {
+  opacity: 1;
 }

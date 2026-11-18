@@ -392,6 +392,16 @@ export class SidenavComponent implements OnDestroy {
   readonly items = input<NavigationItem[]>([]);
 
   /**
+   * 3.48 (backlog 067-n4): id of the item whose action popup is open. Its
+   * action button gets `aria-expanded="true"` (and stays visible); the other
+   * buttons with `action.hasPopup` get `"false"`, also in prerendered HTML.
+   * The `itemAction` event and its `button` (to anchor an `lc-menu`) are
+   * unchanged. `null`: none open.
+   * @default null
+   */
+  readonly expandedActionId = input<string | null>(null);
+
+  /**
    * Ids of the folded sections (3.45, backlog 064-n2; two-way). Only sections
    * with `collapsible: true` fold: their heading holds a disclosure button
    * (`aria-expanded`, `aria-controls`) and their list is hidden while folded.
@@ -1008,6 +1018,11 @@ export class SidenavComponent implements OnDestroy {
    * The row tooltip (3.44): `disabledReason` while disabled, else `tooltip`,
    * then the badge's `tooltip` after " · ". Empty: no tooltip.
    */
+  /** 3.48 (backlog 067-n4): `aria-expanded` of an action button with `hasPopup`; `null` without. */
+  protected actionExpanded(item: NavigationItem): string | null {
+    return item.action?.hasPopup ? String(this.expandedActionId() === item.id) : null;
+  }
+
   protected rowTooltip(item: NavigationItem): string {
     const main = item.disabled ? (item.disabledReason ?? '') : (item.tooltip ?? '');
     return [main, item.badge?.tooltip ?? ''].filter(Boolean).join(' · ');

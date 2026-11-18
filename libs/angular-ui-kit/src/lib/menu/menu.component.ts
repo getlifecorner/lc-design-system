@@ -8,6 +8,7 @@ import {
   untracked,
   afterNextRender,
   afterRenderEffect,
+  viewChild,
   viewChildren,
   ChangeDetectionStrategy,
   HostListener,
@@ -17,9 +18,14 @@ import {
   OnDestroy,
   inject,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { OverlayModule, type ConnectedPosition } from '@angular/cdk/overlay';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
 import { ICON_CHECK } from '@lifecorner/angular-ui-kit/icons';
 import { OverlayStackService } from '@lifecorner/angular-ui-kit/internal/overlay';
+import { openPanelLang } from '@lifecorner/angular-ui-kit/internal/a11y';
+import { SpinnerComponent } from '@lifecorner/angular-ui-kit/spinner';
+import { TooltipDirective } from '@lifecorner/angular-ui-kit/tooltip';
 
 /**
  * Kind of a menu item (3.45, usm-x row 31): an action (`item`), or a
@@ -92,10 +98,79 @@ export interface MenuItem {
    * keep it open.
    */
   closeOnSelect?: boolean;
+  /**
+   * 3.48 (usm-x row 56): a kit tooltip on hover and keyboard focus of the item
+   * (`aria-describedby` while it shows). A disabled item with a
+   * `disabledReason` shows the reason instead.
+   */
+  tooltip?: string;
+  /**
+   * 3.48 (usm-x row 56): why a `disabled` item can't be used ("Öffnet … im
+   * Rich Client"). The item then stays in the arrow-key order
+   * (`aria-disabled="true"` instead of native `disabled`, activation is
+   * ignored) and shows the reason as its tooltip on hover and focus. Without
+   * it a disabled item is skipped as before.
+   */
+  disabledReason?: string;
+  /**
+   * 3.48 (usm-x row 57): a bold label, for the default member of a group.
+   * Visual only: screen readers get no state for it, so put any meaning into
+   * the label.
+   */
+  emphasis?: boolean;
+  /**
+   * 3.48 (usm-x row 68): a 20 px colour sample before the label (sm 16, lg 24
+   * px), e.g. a theme in an appearance choice. Any CSS colour (or `var()`);
+   * two colours draw the left and right halves. Decorative (`aria-hidden`):
+   * the label carries the meaning.
+   */
+  swatch?: string | readonly [string, string];
 }
+
+/** 3.48 (usm-x row 53): a viewport point (`clientX` / `clientY`) the menu opens at. */
+export interface MenuPoint {
+  x: number;
+  y: number;
+}
+
+/** 3.48 (usm-x row 53): where an overlay menu opens: at an element or at a viewport point. */
+export type MenuAnchor = HTMLElement | MenuPoint;
 
 /** Natively focusable elements a projected trigger may be or contain. */
 const INTERACTIVE_SELECTOR = 'button, a[href], input, select, textarea, [tabindex]';
+
+/** Whether an anchor is an element (checked without `HTMLElement`, which the server lacks). */
+function isAnchorElement(anchor: MenuAnchor): anchor is HTMLElement {
+  return typeof (anchor as HTMLElement).nodeType === 'number';
+}
+
+type Horizontal = 'start' | 'end';
+type Vertical = 'top' | 'bottom';
+
+/** A panel below (`bottom`) or above (`top`) an element, aligned at its `h` edge. */
+function besideElement(h: Horizontal, v: Vertical): ConnectedPosition {
+  return { originX: h, originY: v, overlayX: h, overlayY: v === 'bottom' ? 'top' : 'bottom' };
+}
+
+/**
+ * 3.48 (design §3A): the overlay positions of an element anchor per
+ * `position`: the preferred pair, its vertical flip, then the other
+ * horizontal alignment.
+ */
+const ELEMENT_POSITIONS: Record<'bottom-left' | 'bottom-right' | 'top-left' | 'top-right', ConnectedPosition[]> = {
+  'bottom-left': [besideElement('start', 'bottom'), besideElement('start', 'top'), besideElement('end', 'bottom'), besideElement('end', 'top')],
+  'bottom-right': [besideElement('end', 'bottom'), besideElement('end', 'top'), besideElement('start', 'bottom'), besideElement('start', 'top')],
+  'top-left': [besideElement('start', 'top'), besideElement('start', 'bottom'), besideElement('end', 'top'), besideElement('end', 'bottom')],
+  'top-right': [besideElement('end', 'top'), besideElement('end', 'bottom'), besideElement('start', 'top'), besideElement('start', 'bottom')],
+};
+
+/** 3.48: at a point the panel opens below and after it, else flips like a native context menu. */
+const POINT_POSITIONS: ConnectedPosition[] = [
+  { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'top' },
+  { originX: 'start', originY: 'top', overlayX: 'end', overlayY: 'top' },
+  { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom' },
+  { originX: 'start', originY: 'top', overlayX: 'end', overlayY: 'bottom' },
+];
 
 /**
  * Menu Component - Dropdown menu for navigation and actions
@@ -115,6 +190,11 @@ const INTERACTIVE_SELECTOR = 'button, a[href], input, select, textarea, [tabinde
  * - ARIA menu semantics (`aria-haspopup` / `aria-expanded` / `aria-controls`
  *   on the projected trigger, `role="menu"` / `role="menuitem"` on the panel)
  * - OnPush change detection for performance
+ * - 3.48 (usm-x rows 53–59, 68): `anchor` opens the panel in an overlay at an
+ *   element or a point (a context menu), `maxHeight` caps it, `loading` shows
+ *   a busy row, `ariaLabel` names it; items take `tooltip`, `disabledReason`,
+ *   `emphasis` and `swatch`; every handled key is `preventDefault`ed and
+ *   stopped
  *
  * @example
  * ```html
@@ -132,7 +212,7 @@ const INTERACTIVE_SELECTOR = 'button, a[href], input, select, textarea, [tabinde
 @Component({
   selector: 'lc-menu',
   standalone: true,
-  imports: [IconComponent],
+  imports: [IconComponent, NgTemplateOutlet, OverlayModule, SpinnerComponent, TooltipDirective],
   viewProviders: [ɵprovideKitIcons([ICON_CHECK])],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss',
@@ -153,6 +233,56 @@ export class MenuComponent implements OnDestroy {
    * Empty leaves it unbounded. Long item labels and header lines wrap within it.
    */
   readonly maxWidth = input('');
+
+  /**
+   * 3.48 (usm-x row 53): opens the panel in an overlay (rendered under
+   * `<body>`, so a scrolling or `overflow: hidden` container can't clip it) at
+   * an element (below or above it as `position` says, 8 px apart) or at a
+   * viewport point (`{ x: clientX, y: clientY }`, a context menu). The panel
+   * flips and shifts to stay 8 px inside the viewport, and closes on Escape,
+   * Tab, a click outside the panel and the anchor element, and any scroll
+   * outside the panel (the app's `closed` handler sets `isOpen` false). Focus
+   * returns to the projected trigger, else the anchor element, else the
+   * element focused before; Tab moves on from there (Shift+Tab before it).
+   * The kit writes no ARIA onto an anchor element.
+   * `isOpen` stays the app's. Limits: the overlay follows the page theme, not
+   * a theme scope around the menu, and it sits below `lc-drawer` and a modal
+   * sidenav drawer (use the default mode in those).
+   * `null`: the panel opens at the projected trigger, as before.
+   * @default null
+   */
+  readonly anchor = input<MenuAnchor | null>(null);
+
+  /**
+   * 3.48 (usm-x row 54): caps the panel's height (any CSS length, e.g.
+   * `min(56vh, 420px)`, border-box); the items scroll inside, the header and
+   * footer stay, and the item focused by keyboard is scrolled into view.
+   * Empty: no cap (with `anchor`: the viewport height less 16 px).
+   * @default ''
+   */
+  readonly maxHeight = input('');
+
+  /**
+   * 3.48 (usm-x row 55): a busy row after the items (spinner and
+   * `loadingLabel`, announced politely) and `aria-busy="true"` on the menu.
+   * Items that arrive while the menu is open take the focus (the first
+   * enabled one) unless the focus is already inside the panel.
+   * @default false
+   */
+  readonly loading = input(false);
+
+  /**
+   * 3.48: text of the busy row (`loading`). German: „Wird geladen …“.
+   * @default 'Loading…'
+   */
+  readonly loadingLabel = input('Loading…');
+
+  /**
+   * 3.48 (usm-x row 58): accessible name of the `role="menu"` element ("Was
+   * diese Liste anbietet"). Empty renders no `aria-label`.
+   * @default ''
+   */
+  readonly ariaLabel = input('');
 
   readonly itemClick = output<MenuItem>();
   readonly closed = output<void>();
@@ -183,32 +313,125 @@ export class MenuComponent implements OnDestroy {
   /** Index (into `actions()`) of the item that currently owns the roving tabindex. */
   protected readonly activeIndex = signal(-1);
 
+  /** 3.48: the overlay origin while `anchor` is set (an element, or a point of size 0). */
+  protected readonly overlayOrigin = computed(() => {
+    const anchor = this.anchor();
+    if (!anchor) return null;
+    return isAnchorElement(anchor) ? anchor : { x: anchor.x, y: anchor.y };
+  });
+
+  /** 3.48: whether the panel opens at a point (no gap to the anchor). */
+  protected readonly atPoint = computed(() => {
+    const anchor = this.anchor();
+    return !!anchor && !isAnchorElement(anchor);
+  });
+
+  /** 3.48: overlay positions, preferred first (design §3A). */
+  protected readonly overlayPositions = computed(() =>
+    this.atPoint() ? POINT_POSITIONS : ELEMENT_POSITIONS[this.position()] ?? ELEMENT_POSITIONS['bottom-right']
+  );
+
+  /** 3.48: the panel is a column whose items scroll (capped or in the overlay). */
+  protected readonly scrolls = computed(() => !!this.maxHeight() || !!this.anchor());
+
+  /** 3.48: `lang` of the overlay panel (the host's closest `[lang]`; WCAG 3.1.2). */
+  protected readonly panelLang = openPanelLang(computed(() => this.isOpen() && !!this.anchor()));
+
+  /** 3.48: text of the polite status, set one frame after the busy row renders (so it is announced). */
+  protected readonly statusText = signal('');
+
   private readonly itemElements = viewChildren<ElementRef<HTMLElement>>('menuItem');
+  private readonly panelElement = viewChild<ElementRef<HTMLElement>>('dropdown');
+  private readonly listElement = viewChild<ElementRef<HTMLElement>>('list');
   private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly renderer = inject(Renderer2);
   private readonly injector = inject(Injector);
   private readonly overlayStack = inject(OverlayStackService);
 
+  /** 3.48: the element focused when the menu opened (the last focus-return target). */
+  private openedFrom: HTMLElement | null = null;
+  /**
+   * 3.48 (review r1, F-2): the element anchor given at open. An app that
+   * clears `anchor` in its `closed` handler still gets the focus back on it.
+   */
+  private openedAnchor: HTMLElement | null = null;
+  /** 3.48: the document listeners added while the menu is open. */
+  private listening = false;
+
+  /**
+   * 3.48 (usm-x row 59): Escape is taken in the capture phase on `document`,
+   * so the menu sees it before any handler of the page, and is consumed with
+   * `preventDefault()` and `stopPropagation()`.
+   */
+  private readonly escapeListener = (event: KeyboardEvent): void => {
+    if (event.key === 'Escape') this.onEscapeKey(event);
+  };
+
+  /** 3.48: in overlay mode any scroll outside the panel closes the menu (the anchor moved). */
+  private readonly scrollListener = (event: Event): void => {
+    if (!this.isOpen() || !this.anchor()) return;
+    const target = event.target;
+    if (target instanceof Node && this.panelElement()?.nativeElement.contains(target)) return;
+    this.close();
+  };
+
   constructor() {
     // Whether the menu has been through its first open-state evaluation; a menu
     // that is already open when it renders (demo pages) must not steal focus.
     let initialized = false;
+    let wasOpen = false;
+    let hadItems = false;
     effect(() => {
       const open = this.isOpen();
+      // 3.48 (usm-x row 55): tracked so items that arrive while open take the focus
+      const hasItems = this.firstEnabledIndex() >= 0;
       untracked(() => {
-        if (open) {
+        if (open && !wasOpen) {
           this.overlayStack.push(this.menuId);
+          this.openedFrom = this.currentFocus();
+          this.openedAnchor = this.anchorElement();
+          this.listen(true);
           this.activeIndex.set(this.firstEnabledIndex());
           // Move focus into the menu once the panel has rendered
           if (initialized) {
             afterNextRender(() => this.focusActiveItem(), { injector: this.injector });
           }
-        } else {
+        } else if (!open && (wasOpen || !initialized)) {
           this.overlayStack.remove(this.menuId);
+          this.listen(false);
           this.restoreFocus();
+          this.openedAnchor = null;
           this.activeIndex.set(-1);
+        } else if (open && hasItems && !hadItems) {
+          // 3.48: the first items arrived while open (after `loading`)
+          this.activeIndex.set(this.firstEnabledIndex());
+          if (!this.focusInPanel()) {
+            afterNextRender(() => this.focusActiveItem(), { injector: this.injector });
+          }
         }
+        wasOpen = open;
+        hadItems = hasItems;
         initialized = true;
+      });
+    });
+
+    // 3.48: the polite status gets its text one frame after the busy row has
+    // rendered (a region that arrives with its text is often not announced)
+    effect((onCleanup) => {
+      const busy = this.loading() && this.isOpen();
+      const label = this.loadingLabel();
+      untracked(() => this.statusText.set(''));
+      if (!busy) return;
+      let frame: ReturnType<typeof setTimeout> | undefined;
+      const ref = afterNextRender(
+        () => {
+          frame = setTimeout(() => this.statusText.set(label), 16);
+        },
+        { injector: this.injector },
+      );
+      onCleanup(() => {
+        ref.destroy();
+        clearTimeout(frame);
       });
     });
 
@@ -231,6 +454,7 @@ export class MenuComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.overlayStack.remove(this.menuId);
+    this.listen(false);
   }
 
   /**
@@ -293,8 +517,13 @@ export class MenuComponent implements OnDestroy {
     }
 
     const target = event.target;
-    if (target instanceof Node && this.elementRef.nativeElement.contains(target)) {
-      return;
+    if (target instanceof Node) {
+      if (this.elementRef.nativeElement.contains(target)) return;
+      // 3.48: the overlay panel is outside the host; the opening click on an
+      // anchor element is not "outside" either
+      if (this.panelElement()?.nativeElement.contains(target)) return;
+      const anchor = this.anchor();
+      if (anchor && isAnchorElement(anchor) && anchor.contains(target)) return;
     }
     if (!this.overlayStack.claim(this.menuId, event)) return;
     this.close();
@@ -302,47 +531,60 @@ export class MenuComponent implements OnDestroy {
 
   /**
    * Escape closes the menu (top-most overlay only) and returns focus to the
-   * trigger; the event is consumed so overlays underneath stay open.
+   * trigger; the event is consumed so overlays underneath stay open. 3.48
+   * (usm-x row 59): called from a capture-phase listener on `document`, and
+   * the key is also `preventDefault`ed, so a page listener can tell it was
+   * used.
    */
-  @HostListener('document:keydown.escape', ['$event'])
   onEscapeKey(event: Event): void {
     if (!this.isOpen()) return;
     if (!this.overlayStack.claim(this.menuId, event)) return;
+    event.preventDefault();
     event.stopPropagation();
-    this.triggerElement()?.focus();
+    this.returnFocus();
     this.close();
   }
 
-  /** Keyboard navigation inside the `role="menu"` panel. */
+  /**
+   * Keyboard navigation inside the `role="menu"` panel. 3.48 (usm-x row 59):
+   * every handled key is `preventDefault`ed and stopped; Tab is not prevented
+   * (in overlay mode the focus returns to the anchor first, so Tab moves on
+   * from there).
+   */
   protected onPanelKeydown(event: KeyboardEvent): void {
     switch (event.key) {
       case 'ArrowDown':
-        event.preventDefault();
+        this.consume(event);
         this.focusIndex(this.nextEnabledIndex(this.activeIndex(), 1));
         break;
       case 'ArrowUp':
-        event.preventDefault();
+        this.consume(event);
         this.focusIndex(this.nextEnabledIndex(this.activeIndex(), -1));
         break;
       case 'Home':
-        event.preventDefault();
-        this.focusIndex(this.firstEnabledIndex());
+        this.consume(event);
+        this.focusIndex(this.nextEnabledIndex(-1, 1));
         break;
       case 'End':
-        event.preventDefault();
+        this.consume(event);
         this.focusIndex(this.nextEnabledIndex(0, -1));
         break;
       case ' ': {
         // Buttons activate on Space natively, links only on Enter
         const target = event.target as HTMLElement | null;
         if (target?.matches('a[role="menuitem"]')) {
-          event.preventDefault();
+          this.consume(event);
           target.click();
         }
         break;
       }
       case 'Tab':
-        // Focus leaves the menu — let it move on naturally, but close the menu
+        // Focus leaves the menu — let it move on naturally, but close the menu.
+        // 3.48 (review r2, F-4): the overlay panel is the last node of <body>,
+        // so the browser's Tab would leave the document (CD runs after it).
+        // Return the focus first, without preventDefault: Tab then moves on
+        // from the anchor (Shift+Tab before it).
+        if (this.anchor()) this.returnFocus();
         this.close();
         break;
     }
@@ -350,7 +592,36 @@ export class MenuComponent implements OnDestroy {
 
   /** Roving tabindex: only the active item is in the tab sequence. */
   protected tabindexFor(index: number, item: MenuItem): number {
-    return !item.disabled && index === this.activeIndex() ? 0 : -1;
+    return this.isReachable(item) && index === this.activeIndex() ? 0 : -1;
+  }
+
+  /**
+   * 3.48 (usm-x row 56): a disabled item with a reason keeps its focus
+   * (`aria-disabled`) so the reason can be read; one without stays natively
+   * `disabled`, as before.
+   */
+  protected hasReason(item: MenuItem): boolean {
+    return !!item.disabled && !!item.disabledReason;
+  }
+
+  /** Native `disabled` of a button item: only without a reason (3.48). */
+  protected nativeDisabled(item: MenuItem): boolean | undefined {
+    return this.hasReason(item) ? false : item.disabled;
+  }
+
+  /** The item's tooltip (3.48): the reason while disabled, else `tooltip`. */
+  protected tooltipOf(item: MenuItem): string {
+    return (item.disabled ? item.disabledReason : item.tooltip) ?? '';
+  }
+
+  /** Background of a swatch (3.48): one colour, or two halves. */
+  protected swatchBackground(swatch: string | readonly [string, string]): string {
+    return typeof swatch === 'string' ? swatch : `linear-gradient(90deg, ${swatch[0]} 50%, ${swatch[1]} 50%)`;
+  }
+
+  /** 3.48 (design §3A): the overlay detached on its own (navigation): tell the app. */
+  protected onOverlayDetach(): void {
+    if (this.isOpen()) this.close();
   }
 
   /** Index of an acting item in {@link actions} (its index in `items()` in a flat menu). */
@@ -370,21 +641,102 @@ export class MenuComponent implements OnDestroy {
   }
 
   private focusActiveItem(): void {
-    this.itemElements()[this.activeIndex()]?.nativeElement.focus();
+    const item = this.itemElements()[this.activeIndex()]?.nativeElement;
+    if (!item) return;
+    // 3.48: in the overlay the page must not scroll (a scroll closes the menu)
+    if (this.anchor()) item.focus({ preventScroll: true });
+    else item.focus();
+    if (this.scrolls()) this.revealItem(item);
+  }
+
+  /**
+   * 3.48 (usm-x row 54): scrolls the capped item list so the focused item is
+   * fully visible (`focus()` leaves a partly visible one where it is), without
+   * scrolling the page.
+   */
+  private revealItem(item: HTMLElement): void {
+    const list = this.listElement()?.nativeElement;
+    if (!list || list.scrollHeight <= list.clientHeight) return;
+    const box = list.getBoundingClientRect();
+    const rect = item.getBoundingClientRect();
+    if (rect.top < box.top) list.scrollTop -= box.top - rect.top;
+    else if (rect.bottom > box.bottom) list.scrollTop += rect.bottom - box.bottom;
   }
 
   private firstEnabledIndex(): number {
     return this.actions().findIndex((item) => !item.disabled);
   }
 
-  /** Index of the next enabled item in `direction`, wrapping around; -1 if none. */
+  /** 3.48: an item the arrow keys reach: enabled, or disabled with a reason. */
+  private isReachable(item: MenuItem): boolean {
+    return !item.disabled || !!item.disabledReason;
+  }
+
+  /** Index of the next reachable item in `direction`, wrapping around; -1 if none. */
   private nextEnabledIndex(from: number, direction: 1 | -1): number {
     const items = this.actions();
     for (let step = 1; step <= items.length; step++) {
       const index = (from + direction * step + items.length) % items.length;
-      if (!items[index]?.disabled) return index;
+      const item = items[index];
+      if (item && this.isReachable(item)) return index;
     }
     return -1;
+  }
+
+  /** `preventDefault()` and `stopPropagation()` for a key the menu handles (3.48, usm-x row 59). */
+  private consume(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  /** 3.48: adds (or removes) the Escape and scroll listeners on `document` while open. */
+  private listen(on: boolean): void {
+    if (typeof document === 'undefined' || on === this.listening) return;
+    this.listening = on;
+    if (on) {
+      document.addEventListener('keydown', this.escapeListener, true);
+      document.addEventListener('scroll', this.scrollListener, true);
+    } else {
+      document.removeEventListener('keydown', this.escapeListener, true);
+      document.removeEventListener('scroll', this.scrollListener, true);
+    }
+  }
+
+  private currentFocus(): HTMLElement | null {
+    if (typeof document === 'undefined') return null;
+    const active = document.activeElement;
+    return active instanceof HTMLElement && active !== document.body ? active : null;
+  }
+
+  private focusInPanel(): boolean {
+    const panel = this.panelElement()?.nativeElement;
+    return typeof document !== 'undefined' && !!panel?.contains(document.activeElement);
+  }
+
+  /**
+   * Where the focus goes when the menu closes from inside (3.48, design §3A):
+   * the projected trigger, else an anchor element that takes focus (the
+   * current one, else the one given at open: review r1, F-2), else the
+   * element focused when the menu opened.
+   */
+  private returnFocus(): void {
+    const trigger = this.triggerElement();
+    if (trigger) {
+      trigger.focus();
+      return;
+    }
+    const anchor = this.anchorElement() ?? this.openedAnchor;
+    if (anchor) {
+      anchor.focus();
+      if (anchor.ownerDocument.activeElement === anchor) return;
+    }
+    if (this.openedFrom?.isConnected) this.openedFrom.focus();
+  }
+
+  /** 3.48: the `anchor` input when it is an element (not a point), else `null`. */
+  private anchorElement(): HTMLElement | null {
+    const anchor = this.anchor();
+    return anchor && isAnchorElement(anchor) ? anchor : null;
   }
 
   /**
@@ -407,10 +759,6 @@ export class MenuComponent implements OnDestroy {
    * to the trigger.
    */
   private restoreFocus(): void {
-    if (typeof document === 'undefined') return;
-    const panel = this.elementRef.nativeElement.querySelector<HTMLElement>('.lc-menu__dropdown');
-    if (panel?.contains(document.activeElement)) {
-      this.triggerElement()?.focus();
-    }
+    if (this.focusInPanel()) this.returnFocus();
   }
 }

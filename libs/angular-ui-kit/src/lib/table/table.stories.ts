@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { moduleMetadata } from '@storybook/angular';
 import { fn } from 'storybook/test';
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
-import { TableComponent, type RowToggleEvent, type SortEvent, type TableColumn } from './table.component';
+import { ChangeDetectionStrategy, Component, computed, input, signal, type OnDestroy } from '@angular/core';
+import { TableComponent, type RowToggleEvent, type SortEvent, type TableAction, type TableColumn } from './table.component';
 import { TableCellDirective } from './table-cell.directive';
 import { SortableHeadComponent } from './sortable-head.component';
 import { BadgeComponent } from '../badge/badge.component';
@@ -205,6 +205,12 @@ The Table component displays structured data in rows and columns with advanced d
     showCaption: {
       control: 'boolean',
       description: 'false keeps the caption for screen readers only (3.16)',
+      table: { defaultValue: { summary: 'true' } },
+    },
+    showActionsLabel: {
+      control: 'boolean',
+      description:
+        '3.48 (finance-intelligence kosten-prove row 7): `false` keeps `actionsLabel` as the actions head\'s name in visually hidden text and shows none; the column keeps `actionsWidth`. `th[lcSortableHead]` (3.48, usm-x row 60): `busy` (aria-busy, a 12 px ring instead of the arrow, clicks still emit) and the hooks `--lc-sortable-head-padding-block`, `--lc-sortable-head-padding-inline`, `--lc-sortable-head-border-bottom`',
       table: { defaultValue: { summary: 'true' } },
     },
     footerRow: {
@@ -1487,4 +1493,158 @@ export const TreeLazyRowsDe: Story = {
   render: () => ({
     template: `<lc-table-lazy-tree-demo lang="de" size="sm" />`,
   }),
+};
+
+/** 3.48 (request 068, finance-intelligence kosten-prove row 7): open rows whose buttons say what they do. */
+const HIDDEN_HEAD_FIXTURE = {
+  caption: 'Offene Positionen',
+  columns: [
+    { key: 'position', label: 'Position', sortable: true },
+    { key: 'kostenstelle', label: 'Kostenstelle' },
+    { key: 'betrag', label: 'Betrag', align: 'end', sortable: true },
+  ] as TableColumn[],
+  data: [
+    { id: 1, position: 'Lizenzverlängerung', kostenstelle: '4711 IT-Betrieb', betrag: '1.200,00 €' },
+    { id: 2, position: 'Wartungsvertrag Drucker', kostenstelle: '4712 Büro', betrag: '480,00 €' },
+    { id: 3, position: 'Einmalige Beratung', kostenstelle: '4720 Projekte', betrag: '2.960,00 €' },
+  ],
+  actions: [
+    { key: 'explain', label: 'Erklären', variant: 'ghost' },
+    { key: 'once', label: 'Als einmalig kennzeichnen', variant: 'ghost' },
+    { key: 'withdraw', label: 'Zurückziehen', variant: 'ghost' },
+  ] as TableAction[],
+};
+
+export const HiddenActionsHead: Story = {
+  name: 'Hidden Actions Head',
+  args: {
+    actionsLabel: 'Aktionen',
+    showActionsLabel: false,
+    actionsWidth: '420px',
+    actionsAlign: 'end',
+  },
+  parameters: {
+    controls: { include: ['showActionsLabel', 'actionsLabel', 'actionsWidth', 'actionsAlign', 'size'] },
+    docs: {
+      description: {
+        story:
+          '3.48 (finance-intelligence kosten-prove row 7): each row carries buttons that say what they do („Erklären“, „Als einmalig kennzeichnen“, „Zurückziehen“), so a visible „Aktionen“ repeats them. `actionsLabel="Aktionen"` with `[showActionsLabel]="false"`: the head shows no text, keeps the name „Aktionen“ as visually hidden text in the `th` (axe `empty-table-header` passes) and keeps its width from `actionsWidth`. Sorting, the other heads and the row actions are unchanged.',
+      },
+    },
+  },
+  // Args outside `controls.include` arrive undefined in a custom render: the
+  // fixed rows come as props of their own.
+  render: (args) => ({
+    props: {
+      ...args,
+      fixedCaption: HIDDEN_HEAD_FIXTURE.caption,
+      fixedColumns: HIDDEN_HEAD_FIXTURE.columns,
+      fixedData: HIDDEN_HEAD_FIXTURE.data,
+      fixedActions: HIDDEN_HEAD_FIXTURE.actions,
+    },
+    template: `
+      <div lang="de">
+        <lc-table
+          [caption]="fixedCaption"
+          [columns]="fixedColumns"
+          [data]="fixedData"
+          [actions]="fixedActions"
+          [actionsLabel]="actionsLabel"
+          [showActionsLabel]="showActionsLabel"
+          [actionsWidth]="actionsWidth"
+          [actionsAlign]="actionsAlign"
+          [size]="size || 'md'"
+          sortedAscendingLabel="aufsteigend sortiert"
+          sortedDescendingLabel="absteigend sortiert"
+        ></lc-table>
+      </div>`,
+  }),
+};
+
+/** 3.48 (request 068, usm-x row 60): an app table with its own sticky head shadow and a sort that asks the server. */
+@Component({
+  selector: 'lc-table-sortable-head-busy-demo',
+  standalone: true,
+  imports: [SortableHeadComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div lang="de" style="max-height: 260px; overflow: auto; border: 1px solid var(--color-border); border-radius: var(--border-radius-lg);">
+      <table style="width: 100%; border-collapse: separate; border-spacing: 0; background: var(--color-surface); color: var(--color-text-primary); font-family: var(--typography-font-family);">
+        <caption style="text-align: start; padding: 12px 16px; font-weight: 600;">Tickets (Sortierung auf dem Server)</caption>
+        <thead style="position: sticky; top: 0; z-index: 1; box-shadow: var(--elevation-2);">
+          <tr style="--lc-sortable-head-border-bottom: none; --lc-sortable-head-padding-block: 8px;">
+            @for (column of columns; track column.key) {
+              <th
+                scope="col"
+                [lcSortableHead]="column.key"
+                [align]="column.align"
+                [busy]="pending() === column.key"
+                [sortDirection]="sort().column === column.key ? sort().direction : null"
+                sortedAscendingLabel="aufsteigend sortiert"
+                sortedDescendingLabel="absteigend sortiert"
+                (sortChange)="onSort($event)"
+              >
+                {{ column.label }}
+              </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows; track row.id) {
+            <tr>
+              <td style="padding: 12px 16px; border-bottom: 1px solid var(--color-divider); font-size: var(--typography-font-size-sm);">{{ row.titel }}</td>
+              <td style="padding: 12px 16px; border-bottom: 1px solid var(--color-divider); font-size: var(--typography-font-size-sm);">{{ row.status }}</td>
+              <td style="padding: 12px 16px; border-bottom: 1px solid var(--color-divider); font-size: var(--typography-font-size-sm); text-align: end; font-variant-numeric: tabular-nums;">{{ row.alter }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  `,
+})
+class TableSortableHeadBusyDemoComponent implements OnDestroy {
+  protected readonly columns: { key: string; label: string; align: 'start' | 'end' }[] = [
+    { key: 'titel', label: 'Titel', align: 'start' },
+    { key: 'status', label: 'Status', align: 'start' },
+    { key: 'alter', label: 'Alter (Tage)', align: 'end' },
+  ];
+  protected readonly rows = [
+    { id: 1, titel: 'Drucker im 3. OG', status: 'Offen', alter: 4 },
+    { id: 2, titel: 'VPN-Zugang für Lieferanten', status: 'In Arbeit', alter: 12 },
+    { id: 3, titel: 'Lizenz verlängern', status: 'Offen', alter: 1 },
+    { id: 4, titel: 'Neuer Arbeitsplatz', status: 'Wartet', alter: 7 },
+    { id: 5, titel: 'Passwort zurücksetzen', status: 'Erledigt', alter: 0 },
+  ];
+  protected readonly sort = signal<SortEvent>({ column: 'titel', direction: 'asc' });
+  /** The column whose sort the server is answering (the shot: „Status“). */
+  protected readonly pending = signal<string | null>('status');
+  private timer?: ReturnType<typeof setTimeout>;
+
+  ngOnDestroy(): void {
+    clearTimeout(this.timer);
+  }
+
+  protected onSort(event: SortEvent): void {
+    clearTimeout(this.timer);
+    this.pending.set(event.column);
+    this.timer = setTimeout(() => {
+      this.sort.set(event);
+      this.pending.set(null);
+    }, 1500);
+  }
+}
+
+export const SortableHeadHooksAndBusy: Story = {
+  name: 'Sortable Head Hooks And Busy',
+  decorators: [moduleMetadata({ imports: [TableSortableHeadBusyDemoComponent] })],
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.48 (request 068, usm-x row 60): the app draws its head rule as a sticky shadow, so `--lc-sortable-head-border-bottom: none` drops the head\'s own 2 px rule, and `--lc-sortable-head-padding-block: 8px` makes the head lower (the 32 px arrow reserve stays). „Status“ is `[busy]`: the server is answering its sort, so the head is `aria-busy="true"`, shows a quiet 12 px ring in the arrow\'s slot (static under reduced motion) and the progress cursor. A click still emits `sortChange`; here the page answers after 1.5 s.',
+      },
+    },
+  },
+  render: () => ({ template: `<lc-table-sortable-head-busy-demo />` }),
 };

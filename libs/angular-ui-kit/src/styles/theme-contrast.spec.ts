@@ -2324,3 +2324,78 @@ describe('Component pairings of 3.44 (request 064)', () => {
     for (const key of ['tileIconOnSubtlePage', 'tileIconOnSubtleSurface'] as const) expect(got[key]).toBeGreaterThanOrEqual(3);
   });
 });
+
+/**
+ * 3.48 (request 068, design §5): the muted tab and the tab hint (usm-x rows 50,
+ * 69), the pressed button (row 70), the sortable head's busy ring (row 60) and
+ * the menu swatch rim (row 68). Translucent fills composite over their ground.
+ * Floored; design §5 quotes rounded values. [light, dark].
+ */
+describe('Component pairings of 3.48 (request 068)', () => {
+  const floor = (n: number) => Math.floor(n * 100) / 100;
+
+  it('the pressed look, the busy ring and the swatch rim read tokens only', () => {
+    const button = compile(resolve(__dirname, '../lib/button/button.component.scss')).css.replace(/\s+/g, ' ');
+    expect(button).toContain(
+      '.btn-outline[aria-pressed=true], .btn-ghost[aria-pressed=true] { background-color: var(--lc-button-pressed-bg, var(--color-surface-selected)); border-color: var(--lc-button-pressed-border, var(--color-primary-600)); box-shadow: inset 0 0 0 1px var(--lc-button-pressed-border, var(--color-primary-600)); color: var(--lc-button-pressed-fg, var(--color-primary-700)); }',
+    );
+    const head = compile(resolve(__dirname, '../lib/table/sortable-head.component.scss')).css;
+    expect(head).toMatch(/\.lc-sortable-head__busy \{[^}]*border: 2px solid var\(--color-primary\);/);
+    const menu = compile(resolve(__dirname, '../lib/menu/menu.component.scss')).css;
+    expect(menu).toMatch(/\.lc-menu__item-swatch \{[^}]*border: 1px solid var\(--color-field-border\);/);
+  });
+
+  const EXPECTED = {
+    mutedOnPage: [5.83, 7.31],
+    mutedOnSurface: [5.83, 6.7],
+    mutedOnSurface2: [5.58, 5.56],
+    mutedOnHoverPage: [5.3, 6.64],
+    pressedInkOnFillPage: [7.85, 10.56],
+    pressedInkOnFillSurface2: [7.85, 8.02],
+    pressedBorderOnPage: [6.21, 11.78],
+    pressedBorderOnSurface2: [5.94, 8.96],
+    pressedBorderOnFill: [5.33, 8.99],
+    pressedHoverInk: [6.71, 6.71],
+    ringOnPressedFill: [3.75, 7.6],
+    ringOnPressedHover: [3.2, 4.82],
+    busyRingOnSurface2: [4.17, 7.57],
+    busyRingOnHover: [3.96, 9.04],
+    swatchRimOnSurface: [4.83, 6.7],
+    swatchRimOnSurface2: [4.62, 5.56],
+  };
+
+  it.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('%s palette', (_palette, tokens, i) => {
+    const c = (name: string) => color(tokens, name);
+    const page = c('--color-background');
+    const surface2 = c('--color-surface-2');
+    const fill = over(c('--color-surface-selected'), page);
+    const fill2 = over(c('--color-surface-selected'), surface2);
+    const pressedHover = over(c('--color-primary-200'), page);
+    const got = {
+      mutedOnPage: floor(ratio(c('--color-text-tertiary'), page)),
+      mutedOnSurface: floor(ratio(c('--color-text-tertiary'), over(c('--color-surface'), page))),
+      mutedOnSurface2: floor(ratio(c('--color-text-tertiary'), surface2)),
+      mutedOnHoverPage: floor(ratio(c('--color-text-tertiary'), over(c('--color-surface-hover'), page))),
+      pressedInkOnFillPage: floor(ratio(c('--color-primary-700'), fill)),
+      pressedInkOnFillSurface2: floor(ratio(c('--color-primary-700'), fill2)),
+      pressedBorderOnPage: floor(ratio(c('--color-primary-600'), page)),
+      pressedBorderOnSurface2: floor(ratio(c('--color-primary-600'), surface2)),
+      pressedBorderOnFill: floor(ratio(c('--color-primary-600'), fill)),
+      pressedHoverInk: floor(ratio(c('--color-primary-700'), pressedHover)),
+      ringOnPressedFill: floor(ratio(c('--color-primary-500'), fill)),
+      ringOnPressedHover: floor(ratio(c('--color-primary-500'), pressedHover)),
+      busyRingOnSurface2: floor(ratio(c('--color-primary'), surface2)),
+      // the hovered head's fill replaces surface-2 and composites over the page
+      busyRingOnHover: floor(ratio(c('--color-primary'), over(c('--color-surface-hover'), page))),
+      swatchRimOnSurface: floor(ratio(c('--color-field-border'), over(c('--color-surface'), page))),
+      swatchRimOnSurface2: floor(ratio(c('--color-field-border'), surface2)),
+    };
+    expect(got).toEqual(Object.fromEntries(Object.entries(EXPECTED).map(([key, pair]) => [key, pair[i]])));
+    for (const key of ['mutedOnPage', 'mutedOnSurface', 'mutedOnSurface2', 'mutedOnHoverPage', 'pressedInkOnFillPage', 'pressedInkOnFillSurface2', 'pressedHoverInk'] as const) {
+      expect(got[key]).toBeGreaterThanOrEqual(4.5);
+    }
+    for (const key of ['pressedBorderOnPage', 'pressedBorderOnSurface2', 'pressedBorderOnFill', 'ringOnPressedFill', 'ringOnPressedHover', 'busyRingOnSurface2', 'busyRingOnHover', 'swatchRimOnSurface', 'swatchRimOnSurface2'] as const) {
+      expect(got[key]).toBeGreaterThanOrEqual(3);
+    }
+  });
+});

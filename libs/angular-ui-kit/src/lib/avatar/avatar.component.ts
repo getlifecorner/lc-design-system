@@ -38,6 +38,9 @@ export type AvatarColor =
  */
 export type AvatarFallback = 'initials' | 'person';
 
+/** 3.48 (usm-x row 65): a round avatar (a person) or a rounded square (a thing). */
+export type AvatarShape = 'circle' | 'square';
+
 /** The six member colours in their order (`AvatarColor` without `default`). */
 export const AVATAR_MEMBER_COLORS: readonly AvatarColor[] = [
   'member-1',
@@ -186,6 +189,15 @@ export class AvatarComponent {
   fallback = input<AvatarFallback>('initials');
 
   /**
+   * 3.48 (usm-x row 65): `'square'` draws a rounded square (radius
+   * `--lc-avatar-square-radius`, default `25%`: 6/8/10/12/16 px at xs…xl),
+   * for a thing (a ticket, a CI) beside round person avatars; the image, the
+   * ring and the person glyph's box follow it. Colours are unchanged.
+   * @default 'circle'
+   */
+  shape = input<AvatarShape>('circle');
+
+  /**
    * Computed initials from name
    */
   initials = computed(() => avatarInitials(this.name()));
@@ -215,6 +227,10 @@ export class AvatarComponent {
 
     if (this.ring()) {
       classes.push('lc-avatar--ring');
+    }
+
+    if (this.shape() === 'square') {
+      classes.push('lc-avatar--square');
     }
 
     return classes.join(' ');

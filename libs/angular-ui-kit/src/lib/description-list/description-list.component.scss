@@ -275,6 +275,44 @@ lc-badge.lc-dl__badge {
   font-weight: var(--font-weight-semibold);
 }
 
+// 3.48 (request 068, backlog 066-n1): a clickable total row has rounded
+// corners (its hover fill and ring), and its border rules bent at them. The
+// rules are pseudo-elements instead, straight from the row's start to its end
+// at the same place: margins keep the borders' room (1 px above, 3 px below;
+// with a row separator 0 / 3 px, the rule above on the previous row's line).
+// Borders, so forced colours draw them. Before the narrow-row rules, which
+// stay last.
+.lc-dl .lc-dl__row--total.lc-dl__row--clickable {
+  border-block: 0;
+  margin-block: 1px 3px;
+}
+
+.lc-dl--rows.lc-dl--sep-line .lc-dl__row.lc-dl__row--total.lc-dl__row--clickable,
+.lc-dl--rows.lc-dl--sep-divider .lc-dl__row.lc-dl__row--total.lc-dl__row--clickable {
+  border-block: 0;
+  margin-block: 0 3px;
+}
+
+.lc-dl__row--total.lc-dl__row--clickable::before,
+.lc-dl__row--total.lc-dl__row--clickable::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.lc-dl__row--total.lc-dl__row--clickable::before {
+  top: -1px;
+  border-top: 1px solid var(--color-field-border);
+}
+
+.lc-dl__row--total.lc-dl__row--clickable::after {
+  bottom: -3px;
+  height: 3px;
+  border-block: 1px solid var(--color-field-border);
+}
+
 // `totalAriaLabel`: read, not shown.
 .lc-dl__sr-only {
   position: absolute;

@@ -174,6 +174,12 @@ const meta: Meta<SidenavComponent> = {
         '3.47 (usm-x row 41): ids of the open groups at any depth (two-way). A value seeds and replaces the open set; every change (a toggle, the current item\'s groups opening, a write to `expandedItems`) is reported as the full list. Unknown ids stay and apply when the group arrives; opening by input emits no `expandRequested`. The first render (also prerendered) opens these ids and the current item\'s groups; later those open only when the current item changes, not on an `items` update',
       table: { defaultValue: { summary: '[]' } },
     },
+    expandedActionId: {
+      control: 'text',
+      description:
+        '3.48 (backlog 067-n4): id of the item whose action popup is open: its action button (with `action.hasPopup: \'menu\' | \'dialog\'`, which renders `aria-haspopup` and `aria-expanded`, also prerendered) gets `aria-expanded="true"` and stays visible. `itemActionClick` is unchanged. Row actions always show on touch screens (`hover: none`, 067-s1)',
+      table: { defaultValue: { summary: 'null' } },
+    },
     highlight: {
       control: 'text',
       description:
@@ -373,11 +379,11 @@ export const FullApplication: Story = {
   render: (args) => ({
     props: args,
     template: `
-      <div style="display: flex; height: 400px; border: 1px solid #eee; border-radius: 8px; overflow: hidden;">
+      <div style="display: flex; height: 400px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
         <lc-sidenav [isOpen]="isOpen" [mode]="mode" [items]="items" [activeRoute]="activeRoute"></lc-sidenav>
         <div style="flex: 1; padding: 24px;">
           <h3 style="margin: 0 0 8px; font-weight: 600;">Tasks</h3>
-          <p style="color: #666; font-size: 14px;">Main content area next to the sidenav.</p>
+          <p style="color: var(--color-text-secondary); font-size: 14px;">Main content area next to the sidenav.</p>
         </div>
       </div>`,
   }),
@@ -398,11 +404,11 @@ export const CollapsedIconRail: Story = {
   render: (args) => ({
     props: args,
     template: `
-      <div style="display: flex; height: 400px; border: 1px solid #eee; border-radius: 8px; overflow: hidden;">
+      <div style="display: flex; height: 400px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
         <lc-sidenav [isOpen]="isOpen" [mode]="mode" [collapsed]="collapsed" [items]="items" [activeRoute]="activeRoute"></lc-sidenav>
         <div style="flex: 1; padding: 24px;">
           <h3 style="margin: 0 0 8px; font-weight: 600;">Dashboard</h3>
-          <p style="color: #666; font-size: 14px;">The sidenav is collapsed to a narrow icon rail. Hover icons for labels.</p>
+          <p style="color: var(--color-text-secondary); font-size: 14px;">The sidenav is collapsed to a narrow icon rail. Hover icons for labels.</p>
         </div>
       </div>`,
   }),
@@ -416,7 +422,7 @@ export const CollapsedVsExpanded: Story = {
   render: () => ({
     template: `
       <div style="display: flex; gap: 24px;">
-        <div style="display: flex; height: 400px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; flex: 0 0 auto;">
+        <div style="display: flex; height: 400px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden; flex: 0 0 auto;">
           <lc-sidenav [isOpen]="true" mode="docked" [collapsed]="true"
             [items]="[
               { id: '1', icon: 'home', label: 'Dashboard', route: '/dashboard', displayOrder: 1 },
@@ -427,9 +433,9 @@ export const CollapsedVsExpanded: Story = {
             ]"
             activeRoute="/dashboard">
           </lc-sidenav>
-          <div style="padding: 16px; font-size: 13px; color: #999;">Collapsed</div>
+          <div style="padding: 16px; font-size: 13px; color: var(--color-text-secondary);">Collapsed</div>
         </div>
-        <div style="display: flex; height: 400px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; flex: 1;">
+        <div style="display: flex; height: 400px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden; flex: 1;">
           <lc-sidenav [isOpen]="true" mode="docked" [collapsed]="false" width="240px"
             [items]="[
               { id: '1', icon: 'home', label: 'Dashboard', route: '/dashboard', displayOrder: 1 },
@@ -440,7 +446,7 @@ export const CollapsedVsExpanded: Story = {
             ]"
             activeRoute="/dashboard">
           </lc-sidenav>
-          <div style="padding: 16px; font-size: 13px; color: #999; flex: 1;">Expanded</div>
+          <div style="padding: 16px; font-size: 13px; color: var(--color-text-secondary); flex: 1;">Expanded</div>
         </div>
       </div>`,
   }),
@@ -461,11 +467,11 @@ export const DarkTheme: Story = {
   render: (args) => ({
     props: args,
     template: `
-      <div style="display: flex; height: 400px; border: 1px solid #333; border-radius: 8px; overflow: hidden;">
+      <div style="display: flex; height: 400px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
         <lc-sidenav [isOpen]="isOpen" [mode]="mode" [theme]="theme" [items]="items" [activeRoute]="activeRoute"></lc-sidenav>
-        <div style="flex: 1; padding: 24px; background: #f9fafb;">
+        <div style="flex: 1; padding: 24px; background: var(--color-surface-2);">
           <h3 style="margin: 0 0 8px; font-weight: 600;">Content Area</h3>
-          <p style="color: #666; font-size: 14px;">The sidenav uses its own dark tokens, independent of the page theme.</p>
+          <p style="color: var(--color-text-secondary); font-size: 14px;">The sidenav uses its own dark tokens, independent of the page theme.</p>
         </div>
       </div>`,
   }),
@@ -522,11 +528,11 @@ export const WithGroupsAndActions: Story = {
   render: (args) => ({
     props: args,
     template: `
-      <div style="display: flex; height: 500px; border: 1px solid #333; border-radius: 8px; overflow: hidden;">
+      <div style="display: flex; height: 500px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
         <lc-sidenav [isOpen]="isOpen" [mode]="mode" [theme]="theme" [items]="items" [activeRoute]="activeRoute" (itemAction)="itemAction($event)"></lc-sidenav>
-        <div style="flex: 1; padding: 24px; background: #f9fafb;">
+        <div style="flex: 1; padding: 24px; background: var(--color-surface-2);">
           <h3 style="margin: 0 0 8px; font-weight: 600;">Specs &amp; Epics</h3>
-          <p style="color: #666; font-size: 14px;">Hover over section headers or items to see action buttons.</p>
+          <p style="color: var(--color-text-secondary); font-size: 14px;">Hover over section headers or items to see action buttons.</p>
         </div>
       </div>`,
   }),
@@ -561,11 +567,11 @@ export const WithBadges: Story = {
   render: (args) => ({
     props: args,
     template: `
-      <div style="display: flex; height: 400px; border: 1px solid #eee; border-radius: 8px; overflow: hidden;">
+      <div style="display: flex; height: 400px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
         <lc-sidenav [isOpen]="isOpen" [mode]="mode" [items]="items" [activeRoute]="activeRoute"></lc-sidenav>
         <div style="flex: 1; padding: 24px;">
           <h3 style="margin: 0 0 8px; font-weight: 600;">Tasks</h3>
-          <p style="color: #666; font-size: 14px;">Items can show badges for counts, status, or labels.</p>
+          <p style="color: var(--color-text-secondary); font-size: 14px;">Items can show badges for counts, status, or labels.</p>
         </div>
       </div>`,
   }),
@@ -601,11 +607,11 @@ export const CollapsedWithGroups: Story = {
   render: (args) => ({
     props: args,
     template: `
-      <div style="display: flex; height: 400px; border: 1px solid #333; border-radius: 8px; overflow: hidden;">
+      <div style="display: flex; height: 400px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
         <lc-sidenav [isOpen]="isOpen" [mode]="mode" [collapsed]="collapsed" [theme]="theme" [items]="items" [activeRoute]="activeRoute" (itemAction)="itemAction($event)"></lc-sidenav>
-        <div style="flex: 1; padding: 24px; background: #f9fafb;">
+        <div style="flex: 1; padding: 24px; background: var(--color-surface-2);">
           <h3 style="margin: 0 0 8px; font-weight: 600;">Project Alpha</h3>
-          <p style="color: #666; font-size: 14px;">Collapsed sidenav with section groups. Hover icons for labels.</p>
+          <p style="color: var(--color-text-secondary); font-size: 14px;">Collapsed sidenav with section groups. Hover icons for labels.</p>
         </div>
       </div>`,
   }),
@@ -764,7 +770,7 @@ export const SidebarFirstLayout: Story = {
   render: () => ({
     moduleMetadata: { imports: [HeaderComponent] },
     template: `
-      <div style="display: flex; height: 500px; border: 1px solid #333; border-radius: 8px; overflow: hidden;">
+      <div style="display: flex; height: 500px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
         <lc-sidenav
           [isOpen]="true"
           mode="docked"
@@ -808,9 +814,9 @@ export const SidebarFirstLayout: Story = {
             [showThemeButton]="true"
             [showLogo]="false"
           ></lc-header>
-          <main style="flex: 1; padding: 24px; overflow-y: auto; background: #f9fafb;">
+          <main style="flex: 1; padding: 24px; overflow-y: auto; background: var(--color-surface-2);">
             <h2 style="margin: 0 0 12px; font-weight: 600; font-size: 1.25rem;">Specs & Epics</h2>
-            <p style="color: #666; font-size: 14px;">Content area with header above. The sidenav owns the full height and logo. Use the logo or the chevron in the brand row to toggle collapsed state.</p>
+            <p style="color: var(--color-text-secondary); font-size: 14px;">Content area with header above. The sidenav owns the full height and logo. Use the logo or the chevron in the brand row to toggle collapsed state.</p>
           </main>
         </div>
       </div>`,
@@ -826,7 +832,7 @@ export const SidebarFirstCollapsed: Story = {
   render: () => ({
     moduleMetadata: { imports: [HeaderComponent] },
     template: `
-      <div style="display: flex; height: 500px; border: 1px solid #333; border-radius: 8px; overflow: hidden;">
+      <div style="display: flex; height: 500px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
         <lc-sidenav
           [isOpen]="true"
           mode="docked"
@@ -859,9 +865,9 @@ export const SidebarFirstCollapsed: Story = {
             [showThemeButton]="true"
             [showLogo]="false"
           ></lc-header>
-          <main style="flex: 1; padding: 24px; overflow-y: auto; background: #f9fafb;">
+          <main style="flex: 1; padding: 24px; overflow-y: auto; background: var(--color-surface-2);">
             <h2 style="margin: 0 0 12px; font-weight: 600; font-size: 1.25rem;">Project Alpha</h2>
-            <p style="color: #666; font-size: 14px;">Collapsed sidebar with emblem logo. Click the emblem to expand. Header sits beside the sidenav.</p>
+            <p style="color: var(--color-text-secondary); font-size: 14px;">Collapsed sidebar with emblem logo. Click the emblem to expand. Header sits beside the sidenav.</p>
           </main>
         </div>
       </div>`,
@@ -917,9 +923,9 @@ export const ResponsiveMobile: Story = {
             [showLogo]="false"
             (hamburgerClick)="toggleSidebar()"
           ></lc-header>
-          <main style="flex: 1; padding: 16px; overflow-y: auto; background: #f9fafb;">
+          <main style="flex: 1; padding: 16px; overflow-y: auto; background: var(--color-surface-2);">
             <h2 style="margin: 0 0 12px; font-weight: 600; font-size: 1.25rem;">Dashboard</h2>
-            <p style="color: #666; font-size: 14px;">On mobile, the sidenav becomes a drawer overlay. Use the hamburger menu to open it. Resize to desktop to see it dock.</p>
+            <p style="color: var(--color-text-secondary); font-size: 14px;">On mobile, the sidenav becomes a drawer overlay. Use the hamburger menu to open it. Resize to desktop to see it dock.</p>
           </main>
         </div>
       </div>`,
@@ -940,7 +946,7 @@ export const SidebarFirstProminentBrand: Story = {
   render: () => ({
     moduleMetadata: { imports: [HeaderComponent] },
     template: `
-      <div style="display: flex; height: 520px; border: 1px solid #333; border-radius: 8px; overflow: hidden;">
+      <div style="display: flex; height: 520px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
         <lc-sidenav
           [isOpen]="true"
           mode="docked"
@@ -974,9 +980,9 @@ export const SidebarFirstProminentBrand: Story = {
             [showHamburger]="true"
             [showLogo]="false"
           ></lc-header>
-          <main style="flex: 1; padding: 24px; overflow-y: auto; background: #f9fafb;">
+          <main style="flex: 1; padding: 24px; overflow-y: auto; background: var(--color-surface-2);">
             <h2 style="margin: 0 0 8px; font-weight: 700; font-size: 1.5rem;">Dashboard</h2>
-            <p style="color: #666; font-size: 14px;">Overview of project activity, agent runs, and key metrics.</p>
+            <p style="color: var(--color-text-secondary); font-size: 14px;">Overview of project activity, agent runs, and key metrics.</p>
           </main>
         </div>
       </div>`,
@@ -1679,27 +1685,28 @@ export const BrandAndHooks: Story = {
   imports: [SidenavComponent, MenuComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div lang="de" style="display: flex; flex-wrap: wrap; height: 560px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
-      <lc-sidenav [isOpen]="true" mode="docked" width="280px" [mobileBreakpoint]="0" [items]="items()" activeRoute="/rechnungsfreigabe-4711"
-                  ariaLabel="Arbeitsbereich" childrenLoadingLabel="Wird geladen …" [(expandedGroups)]="open"
-                  (expandRequested)="load($event)" (itemActionClick)="openMenu($event)" />
-      <p role="status" style="flex: 1; min-width: 12rem; margin: 0; padding: 24px; color: var(--color-text-secondary);">
+    <div lang="de">
+      <!-- 3.48 (067-n1): the status line sits above the frame, so it shows at 360 px too -->
+      <p role="status" style="margin: 0 0 12px; color: var(--color-text-secondary);">
         Offene Gruppen: {{ open().join(', ') }}<br />Letzte Aktion: {{ last() }}
       </p>
-    </div>
-    <!-- A box as high as the action button, at its right edge: the menu opens 8 px below the button, right-aligned
-         (no trigger of its own: the button is the sidenav's). -->
-    <div style="position: fixed; z-index: 1100; display: flex;" [style.top.px]="anchor().top" [style.left.px]="anchor().right" [style.height.px]="anchor().height">
-      <lc-menu style="display: flex;" [items]="menuItems" [isOpen]="menuOpen()" position="bottom-right" (itemClick)="pick($event)" (closed)="closeMenu()" />
+      <div style="display: flex; height: 560px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
+        <lc-sidenav [isOpen]="true" mode="docked" width="280px" [mobileBreakpoint]="0" [items]="items()" activeRoute="/rechnungsfreigabe-4711"
+                    ariaLabel="Arbeitsbereich" childrenLoadingLabel="Wird geladen …" [(expandedGroups)]="open"
+                    [expandedActionId]="target()?.id ?? null"
+                    (expandRequested)="load($event)" (itemActionClick)="openMenu($event)" />
+      </div>
+      <!-- 3.48 (usm-x row 53, 067-n4): the menu opens in an overlay at the action button (\`anchor\`); the button's
+           popup state comes from \`action.hasPopup\` and \`expandedActionId\`, the focus returns to it on close. -->
+      <lc-menu [items]="menuItems" [isOpen]="!!target()" [anchor]="target()?.element ?? null" position="bottom-right"
+               [ariaLabel]="'Aktionen für ' + (target()?.label ?? '')" (itemClick)="pick($event)" (closed)="closeMenu()" />
     </div>
   `,
 })
 class SidenavDeepTreeDemoComponent {
   protected readonly open = signal<readonly string[]>(['outgoing']);
   protected readonly last = signal('–');
-  protected readonly menuOpen = signal(false);
-  protected readonly anchor = signal({ top: 0, right: 0, height: 0 });
-  private target: NavigationActionTarget | null = null;
+  protected readonly target = signal<NavigationActionTarget | null>(null);
   protected readonly menuItems: MenuItem[] = [
     { id: 'rename', label: 'Umbenennen', icon: 'pencil' },
     { id: 'move', label: 'Verschieben', icon: 'arrow-right' },
@@ -1708,26 +1715,17 @@ class SidenavDeepTreeDemoComponent {
   protected readonly items = signal<NavigationItem[]>(deepTreeItems());
 
   protected openMenu(event: NavigationItemActionEvent): void {
-    const rect = event.element.getBoundingClientRect();
-    this.anchor.set({ top: rect.top, right: rect.right, height: rect.height });
-    if (this.target && this.target.element !== event.element) this.target.element.setAttribute('aria-expanded', 'false');
-    this.target = { label: event.item.label, element: event.element };
-    // The popup state on the sidenav's button: it stays visible while its menu is open.
-    event.element.setAttribute('aria-haspopup', 'menu');
-    event.element.setAttribute('aria-expanded', 'true');
-    this.menuOpen.set(true);
+    this.target.set({ id: event.item.id, label: event.item.label, element: event.element });
   }
 
   protected pick(item: MenuItem): void {
-    this.last.set(`${item.label}: ${this.target?.label ?? ''}`);
+    this.last.set(`${item.label}: ${this.target()?.label ?? ''}`);
     this.closeMenu();
   }
 
-  /** Closes the menu, marks the action button collapsed and returns the focus to it. */
+  /** Closes the menu; the button's `aria-expanded` follows `expandedActionId`. */
   protected closeMenu(): void {
-    this.menuOpen.set(false);
-    this.target?.element.setAttribute('aria-expanded', 'false');
-    this.target?.element.focus();
+    this.target.set(null);
   }
 
   protected load(item: NavigationItem): void {
@@ -1744,6 +1742,7 @@ class SidenavDeepTreeDemoComponent {
 }
 
 interface NavigationActionTarget {
+  id: string;
   label: string;
   element: HTMLButtonElement;
 }
@@ -1759,12 +1758,12 @@ function deepTreeItems(archive: Partial<NavigationItem> = {}): NavigationItem[] 
           id: 'incoming', icon: 'folder', label: 'Eingangsrechnungen', route: '', displayOrder: 1,
           children: [
             {
-              id: 'review', icon: 'folder', label: 'Prüfung', route: '', displayOrder: 1, action: { icon: 'dots', ariaLabel: 'Aktionen für Prüfung' },
+              id: 'review', icon: 'folder', label: 'Prüfung', route: '', displayOrder: 1, action: { icon: 'dots', ariaLabel: 'Aktionen für Prüfung', hasPopup: 'menu' },
               children: [
                 {
                   id: 'approval', icon: 'folder', label: 'Freigabe', route: '', displayOrder: 1,
                   children: [
-                    { id: 'approval-4711', icon: 'file', label: 'Rechnungsfreigabe Kostenstelle 4711', route: '/rechnungsfreigabe-4711', displayOrder: 1, action: { icon: 'dots', ariaLabel: 'Aktionen für Rechnungsfreigabe Kostenstelle 4711' } },
+                    { id: 'approval-4711', icon: 'file', label: 'Rechnungsfreigabe Kostenstelle 4711', route: '/rechnungsfreigabe-4711', displayOrder: 1, action: { icon: 'dots', ariaLabel: 'Aktionen für Rechnungsfreigabe Kostenstelle 4711', hasPopup: 'menu' } },
                     { id: 'collective', icon: 'file', label: 'Freigabe Sammelrechnung', route: '/sammelrechnung', displayOrder: 2 },
                   ],
                 },
@@ -1792,7 +1791,7 @@ export const DeepTree: Story = {
     docs: {
       description: {
         story:
-          '3.47 (usm-x rows 40–42): `children` nest to any depth, drawn by one recursive template: Workflows › Eingangsrechnungen › Prüfung › Freigabe › „Rechnungsfreigabe Kostenstelle 4711“ (level 5, current; every group above it is open and marked). Each level indents 12 px more (the first 16); each group folds on its own with the same disclosure button (`aria-expanded`). „Archiv“ (level 4) loads its children on demand: open it, „Wird geladen …“ shows, its three years arrive after 600 ms. „Ausgangsrechnungen“ starts open through `[(expandedGroups)]` (the backend’s open folders); the line on the right shows the open ids as the sidenav reports them. Folding „Prüfung“ keeps it folded when the archive loads (an `items` update). The `action` button („…“) now renders at every level, 44 × 44 px to hit: `itemActionClick` gives `{ item, event, element }`, and the story anchors an `lc-menu` (Umbenennen, Verschieben, Löschen) at `element`, sets `aria-haspopup="menu"` and `aria-expanded="true"` on it while the menu is open (the button stays visible; `"false"` on close) and returns the focus to it when the menu closes. A row action shows on hover, on keyboard focus and while `aria-expanded="true"`.',
+          '3.47 (usm-x rows 40–42): `children` nest to any depth, drawn by one recursive template: Workflows › Eingangsrechnungen › Prüfung › Freigabe › „Rechnungsfreigabe Kostenstelle 4711“ (level 5, current; every group above it is open and marked). Each level indents 12 px more (the first 16); each group folds on its own with the same disclosure button (`aria-expanded`). „Archiv“ (level 4) loads its children on demand: open it, „Wird geladen …“ shows, its three years arrive after 600 ms. „Ausgangsrechnungen“ starts open through `[(expandedGroups)]` (the backend’s open folders); the line on the right shows the open ids as the sidenav reports them. Folding „Prüfung“ keeps it folded when the archive loads (an `items` update). The `action` button („…“) now renders at every level, 44 × 44 px to hit: `itemActionClick` gives `{ item, event, element }`. 3.48: the story opens an `lc-menu` (Umbenennen, Verschieben, Löschen) in an overlay at `element` (`[anchor]`, usm-x row 53); `action.hasPopup: \'menu\'` renders `aria-haspopup="menu"` and `aria-expanded` on the button (also prerendered), and `[expandedActionId]` marks the open one `"true"` (it stays visible); the menu returns the focus to the button when it closes. A row action shows on hover, on keyboard focus, while `aria-expanded="true"` and always on touch screens (`hover: none`, 067-s1). The status line sits above the frame, so it shows at 360 px (067-n1).',
       },
     },
   },

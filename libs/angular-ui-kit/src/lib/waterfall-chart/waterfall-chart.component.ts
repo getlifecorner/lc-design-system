@@ -79,6 +79,11 @@ interface WaterfallLabelView {
  * - 3.47: category labels wider than their room wrap onto two lines or end
  *   in „…“ with the full text as `<title>` (`wrapLabels`), also prerendered
  *
+ * Narrow screens (3.48, backlog 067-n2): below about 480 px show at most five
+ * bars (the *Five Causes* story): with nine bars at 360 px each column is
+ * about 30 px, so value labels overlap and categories keep 2–3 letters.
+ * Group the small causes into one bar, or show a table there.
+ *
  * @example
  * ```html
  * <lc-waterfall-chart [data]="items" [showConnectors]="true" />

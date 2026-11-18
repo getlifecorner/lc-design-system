@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, ViewEncapsulation, computed, input, output, signal } from '@angular/core';
-import { ButtonComponent } from '@lifecorner/angular-ui-kit/button';
+import { ButtonComponent, type ButtonTone } from '@lifecorner/angular-ui-kit/button';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
 import { ICON_CHEVRON_DOWN } from '@lifecorner/angular-ui-kit/icons';
 import { MenuComponent, type MenuItem } from '@lifecorner/angular-ui-kit/menu';
@@ -98,6 +98,47 @@ export class SplitButtonComponent {
    * @default 'bottom-right'
    */
   readonly menuPosition = input<SplitButtonMenuPosition>('bottom-right');
+
+  /**
+   * 3.48 (usm-x row 63): colour tone of the `outline` look, passed to the face
+   * and the caret (`'primary'`: primary text and border, as `lc-button`
+   * `tone`). Other variants ignore it.
+   * @default 'neutral'
+   */
+  readonly tone = input<ButtonTone>('neutral');
+
+  /**
+   * 3.48 (usm-x row 63): the face's `accesskey` (as `lc-button`
+   * `accessKey`); pair it with `ariaKeyShortcuts`. Empty renders none.
+   * @default ''
+   */
+  readonly accessKey = input('');
+
+  /**
+   * 3.48 (usm-x row 63): the face's `aria-keyshortcuts` (e.g. `Alt+O`).
+   * Empty renders none.
+   * @default ''
+   */
+  readonly ariaKeyShortcuts = input('');
+
+  /**
+   * 3.48 (usm-x row 63): `lc-menu` `size` of the menu (sm beside sm menus).
+   * @default 'md'
+   */
+  readonly menuSize = input<SplitButtonSize>('md');
+
+  /**
+   * 3.48 (usm-x row 63): `lc-menu` `minWidth` of the menu.
+   * @default '220px'
+   */
+  readonly menuMinWidth = input('220px');
+
+  /**
+   * 3.48 (usm-x row 63): `lc-menu` `maxWidth` of the menu; empty leaves it
+   * unbounded.
+   * @default ''
+   */
+  readonly menuMaxWidth = input('');
 
   /** The face was activated (click, Enter, Space); not while disabled or loading. */
   readonly clicked = output<void>();

@@ -34,6 +34,11 @@ let nextUniqueId = 0;
  *   prerendered into the native `<textarea>`
  * - `focus()` (3.35): moves the focus into the native `<textarea>` when a
  *   form opens or after a rejected save (WCAG 2.4.3)
+ * - 3.48 (usm-x row 61): CSS hooks `--lc-textarea-padding` (default per
+ *   size: xs 8/12, sm 10/14, md 12/16, lg 14/20 px) and
+ *   `--lc-textarea-min-height` (4/5/6/7 rem; one line 0). A one-line md field
+ *   at 36 px beside a button: `--lc-textarea-padding: 5px 12px`. The line is
+ *   `--line-height-base` (1.5, defined by the theme since 3.48)
  *
  * @example
  * ```html
