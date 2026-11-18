@@ -74,3 +74,23 @@ Storybook build 22:53 is current. Runs: `r2-rev` (at rest, `--compare=build-new2
 Limit: real key presses aren't available in story-shots, so the Tab step is emulated. The sequence is keydown → default focus step → zoneless CD (a macrotask).
 
 **Verdict:** changes requested (F-4 only).
+
+## Round 3 — 2026-11-18, F-4 only, gate commit 6d25ea4 (= HEAD 650467a for `libs tools`)
+
+Storybook build current (story-shots accepted it). Runs: `r3-rev` (at rest, `--compare=r2`, `--axe`), `r3-rev-tab` (the developer's `/zz-068/r3-tab.mjs` awaited, plus case E inline), 360/1280 L/D. No shot opened: nothing differs.
+
+| AC | Result | Evidence |
+|---|---|---|
+| 8 (Tab, F-4) | pass | Zoneless (`typeof Zone` undefined). A: Tab from „Öffnen“ → after the keydown „Aktionen für Rechnungen 2026“, `defaultPrevented` false, step and end row „Verträge“, menu closed. B (opened from `<body>`): Shift+Tab → „⋯“ after the keydown, ends on row „Rechnungen 2026“. C (Shift+F10 at row „Archiv“): row after the keydown → „Aktionen für Archiv“. D (point anchor from the focused row): same as C. `scrollWidth` 360/1280. Same at all 4 shots, equal to `build.md` → Gates „Round 3“ |
+| 8 (at rest) | pass | 4/4 identical to `r2`, axe 0 violations (incomplete only `bypass`, `color-contrast`, `label-content-name-mismatch`, as r2) |
+| API | pass | `onPanelKeydown` `'Tab'`: `if (this.anchor()) this.returnFocus()` before `close()`, no `preventDefault`; in-place path untouched. JSDoc of `anchor` (l. 243–246) and `onPanelKeydown` (l. 550–551) name the Tab step; story description: „Tab closes it too and moves on from the „⋯“ button (or the row); Shift+Tab goes before it.“ Spec: 4 cases (element anchor Tab/Shift+Tab, point anchor, in-place unchanged) as F-4 asked |
+| others | pass (r1, r2) | `git diff 6d25ea4 -- libs tools` empty; r3 changes only `menu.component.ts`, its spec and the story text |
+
+### Findings
+
+| # | Severity | Where | Expected | Actual |
+|---|---|---|---|---|
+| N-4 | nit | `lc-menu` `anchor` JSDoc, point anchor | A focus target after Tab or Escape also when the menu was opened at a point with nothing focused, or a JSDoc line that the context-menu target must take focus (`tabindex`; Shift+F10 needs that anyway) | Case E (blur, `contextmenu` on row „Archiv“ without focusing it): focus enters „Öffnen“, Tab → no return target, the step leaves the document, end `<body>`. Not a WCAG failure here: F85 needs a trigger in the focus order, and in the story a real right-click focuses the row (`tabindex="0"`), which is case D |
+| N-1…N-3 | nit | r1 | N-3 fixed (draft reads 5.84) | N-1, N-2 backlog |
+
+**Verdict:** approved. Open for the release: N-1, N-2, N-4 (nits, backlog).

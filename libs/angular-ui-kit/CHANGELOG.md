@@ -2,6 +2,44 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.48.0] - 2026-11-18
+
+USM X's menu, tabs, palette and form gaps, a screen-reader-only actions head for lc-table, the 067 follow-ups and the backlog. Gap IDs: usm-x 2026-11-17 rows 47–70, finance-intelligence kosten-prove-2026-11-18 row 7, 067-s1…s3, backlog 066-n1, 067-n1…n5. No API breaks.
+
+### Added
+
+- **`lc-menu`** (usm-x rows 53–58, 68): `anchor` (an element or `{ x, y }`) opens the panel in an overlay under `<body>`: it escapes scrolling and `overflow: hidden` containers, flips and shifts to stay 8 px inside the viewport (a context menu at the pointer), and closes on Escape, Tab, a click outside or any scroll outside it; focus returns to the trigger, else the anchor element given at open (also when the app clears `anchor` in `closed`), else where it was, and Tab moves on from there (Shift+Tab before it) instead of leaving the page. `maxHeight` caps the panel (26 items at 360 × 640 with `min(56vh, 420px)`: 358.4 px), the items scroll inside and the keyboard-focused item is scrolled fully in. `loading` + `loadingLabel` („Wird geladen …“): a busy row, `aria-busy`, a polite status; items that arrive take the focus. `ariaLabel` names `role="menu"`. `MenuItem`: `tooltip`, `disabledReason` (the item stays in the arrow order as `aria-disabled` and shows the reason on hover and focus), `emphasis` (bold, visual only), `swatch` (a 20 px colour sample or two halves, rim 4.62:1+). `dividerAfter` now also draws between members of a section. New types `MenuAnchor`, `MenuPoint`.
+- **`lc-tabs`** (rows 49, 51, 52): `ariaLabel` (the tablist's name), `replaceUrl` (links mode: Back leaves the tool; modified and middle clicks stay the browser's), CSS hooks `--lc-tabs-gap` and `--lc-tabs-panel-padding` (16 px each by default). **`lc-tab`** (rows 50, 69): `tooltip`, `disabledReason` (arrow-reachable, never selected), `muted` (tertiary ink, 5.84:1 light / 7.31:1 dark), `hint` (12 px quiet text before the badge: „Ticket 12 Status 3 Treffer“).
+- **`lc-command-palette`** (rows 47, 48): `[(activeId)]` (set the cursor, e.g. on the line that replaced a `keepOpen` item; unknown ids fall back to the first enabled line); `CommandPaletteItem.badge` / `badgeVariant` („56/60“ at the line's end, never shrinks, in the option's name).
+- **`lc-table` `showActionsLabel`** (finance-intelligence kosten-prove row 7): `false` keeps „Aktionen“ as the actions head's name for screen readers only, with its `actionsWidth`; the hidden text stays inside the scrolling table (no page overflow at 360 px). **`th[lcSortableHead]`** (row 60): `busy` (`aria-busy`, a static-under-reduced-motion 12 px ring instead of the arrow, clicks still emit) and hooks `--lc-sortable-head-padding-block`, `--lc-sortable-head-padding-inline`, `--lc-sortable-head-border-bottom` (`none` for an own sticky head shadow).
+- **`lc-datepicker`** (row 67): `mode="time"` (24 h combobox with a list of `timeStep` options, typed `930` / `9.30` → 09:30, `minTime` / `maxTime`) and `mode="datetime"` (a date and a time field in one value and one `role="group"`, wrapping below 19.5 rem); `valueType="string"` with ISO 8601 local text (`YYYY-MM-DD`, `HH:mm`, `YYYY-MM-DDTHH:mm`), `stringValueChange` and validators `lcDatepickerParse`, `lcDatepickerMin`, `lcDatepickerMax`, `lcDatepickerIncomplete`; `parseDatepickerTime`. Texts: `timePlaceholder`, `dateAriaLabel`, `timeAriaLabel`, `timeListAriaLabel`, `clearTimeAriaLabel`.
+- **`lc-button` pressed look** (row 70): `ariaPressed` `true` on `outline` / `ghost` draws the selected tint, a 2 px primary border and primary ink (7.85:1 light, 10.56:1 dark; border 6.21 / 11.78 on the page; Highlight in forced colours); hooks `--lc-button-pressed-bg`, `-fg`, `-border`, `--lc-button-pressed-hover-bg`.
+- `lc-split-button` `tone`, `accessKey`, `ariaKeyShortcuts`, `menuSize`, `menuMinWidth`, `menuMaxWidth` (row 63); `lc-popover` `panelRole="tooltip"` for a long press that only shows a card (row 64); `lc-avatar` `shape="square"` (25 %: 6–16 px, row 65); `AvatarGroupItem.bg` / `fg` (row 66); `lc-textarea` hooks `--lc-textarea-padding`, `--lc-textarea-min-height` (one line at 36 px: `5px 12px`, row 61); `NavigationItem.action.hasPopup` and `lc-sidenav` `expandedActionId` (`aria-haspopup` / `aria-expanded`, prerendered; 067-n4).
+
+### Changed
+
+- `--line-height-base` is defined in both themes as `var(--line-height-normal)` (1.5): the value lc-textarea and lc-list inherited from `body` (row 61; 12/18 … 18/27 px unchanged).
+- `lc-menu`: every key it handles is `preventDefault`ed as well as stopped; Escape is taken in the capture phase while the menu is open (row 59, as `lc-modal` in row 22).
+- `lc-number-input` with `de-DE` / `en-US`: the typed separators stay as typed until blur and are read as a whole: „2.960,00“ → 2960, „1.234“ → 1234, „7.5“ → 7.5; blur shows the canonical text (067-s2).
+
+### Fixed
+
+- `lc-search-input`: Escape or × inside the 300 ms debounce after Enter emits `''` again and no stale value follows (row 62).
+- `lc-sidenav` row actions are visible on touch screens (`hover: none`), at every level (067-s1). Sidenav stories use theme tokens (dark *With Groups And Actions* heading now ≥ 4.5:1; 067-s3); *Deep Tree*'s status line shows at 360 px (067-n1).
+- `lc-number-input`: a focused field shows a 2 px Highlight outline in forced colours (067-n3). `lc-description-list`: a clickable total row's rules stay straight at its rounded corners (066-n1). `lc-waterfall-chart` docs: at most five bars below about 480 px (067-n2).
+
+### Compatibility
+
+- No API breaks; every input defaults to the 3.47 rendering (default DOM of the changed templates identical apart from comment anchors).
+- A consumer's own pressed rule `lc-button .btn[aria-pressed="true"]` (0,2,1) still wins over the kit's (0,2,0) at rest; drop it or set the hooks.
+- `--line-height-base` makes lc-textarea and lc-list 1.5 also where an ancestor sets another line height (e.g. 1.6 → 1.5).
+- `lc-menu` Escape: a document listener now sees `defaultPrevented` and no longer receives an Escape the menu used.
+
+### Known
+
+- `lc-menu` opened at a point (`anchor` `{ x, y }`) with nothing focused has no focus target to return to after Tab or Escape; let the context-menu target take focus (`tabindex`, as Shift+F10 needs anyway) (068-n3).
+- The sortable head's busy ring sits at the physical right in RTL (068-n1); clickable `lc-description-list` rows that are not totals keep slightly bent separators at their rounded ends, as before (068-n2).
+
 ## [3.47.0] - 2026-11-18
 
 A typed amount without steppers, waterfall labels that wrap instead of overlapping, and the USM X fifth batch for `lc-sidenav`. Gap IDs: finance-intelligence kosten-2026-11-18 rows 5 and 6, usm-x 2026-11-18 rows 38–46. No API breaks.
