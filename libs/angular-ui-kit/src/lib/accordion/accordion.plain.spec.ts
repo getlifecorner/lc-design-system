@@ -39,6 +39,24 @@ function media(query: string): string {
   return css.slice(start, end + 2);
 }
 
+/**
+ * 3.46 (request 066, kosten row 4): a modifier reaches its own parts through a
+ * child chain (intermediate parts in `:where()`), so a nested accordion keeps
+ * its own state. These build the compiled selector of a part under `m`.
+ */
+const headerOf = (m: string) => `${m} > :where(.lc-accordion__heading) > .lc-accordion__header`;
+const inHeaderOf = (m: string, part: 'icon' | 'title') =>
+  `${m} > :where(.lc-accordion__heading) > :where(.lc-accordion__header) > .lc-accordion__${part}`;
+const panelOf = (m: string) => `${m} > .lc-accordion__panel`;
+const bodyOf = (m: string) => `${m} > :where(.lc-accordion__panel) > .lc-accordion__body`;
+/** The 3.45 stylesheet text: every child chain back to the descendant selector it replaced. */
+const undoChains = (text: string) =>
+  text
+    .replace(/ > :where\(\.lc-accordion__heading\) > :where\(\.lc-accordion__header\) > /g, ' ')
+    .replace(/ > :where\(\.lc-accordion__heading\) > /g, ' ')
+    .replace(/ > :where\(\.lc-accordion__panel\) > /g, ' ')
+    .replace(/ > \.lc-accordion__panel/g, ' .lc-accordion__panel');
+
 const sizes = ['sm', 'md', 'lg'] as const;
 
 @Component({
@@ -161,10 +179,16 @@ describe('lc-accordion variant="plain" (3.23, BA-9)', () => {
     it('AC-8: everything before the plain block is the 3.22.4 stylesheet, and every later rule targets plain only', () => {
       const cut = css.indexOf(PLAIN_BLOCK);
       expect(cut).toBeGreaterThan(-1);
-      // Compiled CSS of accordion.component.scss at 3.22.4 (af12033): 3873 characters.
+      // 3.46 (request 066, kosten row 4): the size, chevron and open-state
+      // rules reach their parts through child chains (4279 characters). With
+      // the chains undone, it is the compiled CSS of accordion.component.scss
+      // at 3.22.4 (af12033), 3873 characters: only those selectors changed.
       const before = css.slice(0, cut).trimEnd();
-      expect(before.length).toBe(3873);
-      expect(createHash('sha1').update(before).digest('hex')).toBe('ad615247dbf5a56f1b282a860f7d1ce27fcad2c9');
+      expect(before.length).toBe(4279);
+      expect(createHash('sha1').update(before).digest('hex')).toBe('d5516c43e39c8be7d4cb33b74a86d6af1d717d58');
+      const before345 = undoChains(before);
+      expect(before345.length).toBe(3873);
+      expect(createHash('sha1').update(before345).digest('hex')).toBe('ad615247dbf5a56f1b282a860f7d1ce27fcad2c9');
       expect(before).not.toContain('plain');
       // Every selector after the cut (media blocks included) starts with .lc-accordion--plain.
       // The one exception is the private registered property of request 038, pinned below.
@@ -187,38 +211,38 @@ describe('lc-accordion variant="plain" (3.23, BA-9)', () => {
       ['md', '0.875rem 0'],
       ['lg', '1.125rem 0'],
     ] as const)('AC-1: the %s header has block padding only, and the padding hook still wins', (size, padding) => {
-      const selector = `.lc-accordion--plain.lc-accordion--${size} .lc-accordion__header`;
+      const selector = headerOf(`.lc-accordion--plain.lc-accordion--${size}`);
       expect(rule(selector)).toBe(`padding: var(--lc-accordion-header-padding, ${padding});`);
       // One class more than the size rule, and after it.
-      expect(at(selector)).toBeGreaterThan(at(`.lc-accordion--${size} .lc-accordion__header`));
+      expect(at(selector)).toBeGreaterThan(at(headerOf(`.lc-accordion--${size}`)));
     });
 
     it('AC-1, AC-6: the collapsed body has no padding at any size, so its inline start never moves', () => {
-      expect(rule('.lc-accordion--plain .lc-accordion__body')).toBe('padding: 0;\n  overflow-x: visible;\n  overflow-y: clip;');
+      expect(rule(bodyOf('.lc-accordion--plain'))).toBe('padding: 0;\n  overflow-x: visible;\n  overflow-y: clip;');
       // Same weight as the collapsed size rules (0,2,0) and after them.
-      expect(at('.lc-accordion--plain .lc-accordion__body')).toBeGreaterThan(at('.lc-accordion--sm .lc-accordion__body'));
-      expect(at('.lc-accordion--plain .lc-accordion__body')).toBeGreaterThan(at('.lc-accordion--lg .lc-accordion__body'));
+      expect(at(bodyOf('.lc-accordion--plain'))).toBeGreaterThan(at(bodyOf('.lc-accordion--sm')));
+      expect(at(bodyOf('.lc-accordion--plain'))).toBeGreaterThan(at(bodyOf('.lc-accordion--lg')));
     });
 
     it.each([
-      ['sm', '0.625rem 0 0.75rem', '.lc-accordion--sm.lc-accordion--expanded .lc-accordion__body'],
-      ['md', '0.875rem 0 1rem', '.lc-accordion--expanded .lc-accordion__body'],
-      ['lg', '1rem 0 1.25rem', '.lc-accordion--lg.lc-accordion--expanded .lc-accordion__body'],
+      ['sm', '0.625rem 0 0.75rem', bodyOf('.lc-accordion--sm.lc-accordion--expanded')],
+      ['md', '0.875rem 0 1rem', bodyOf('.lc-accordion--expanded')],
+      ['lg', '1rem 0 1.25rem', bodyOf('.lc-accordion--lg.lc-accordion--expanded')],
     ] as const)('AC-1, AC-6: the expanded %s body has block padding only, and the body hook still wins', (size, padding, sizeRule) => {
-      const selector = `.lc-accordion--plain.lc-accordion--${size}.lc-accordion--expanded .lc-accordion__body`;
+      const selector = bodyOf(`.lc-accordion--plain.lc-accordion--${size}.lc-accordion--expanded`);
       expect(rule(selector)).toBe(`padding: var(--lc-accordion-body-padding, ${padding});`);
       expect(at(selector)).toBeGreaterThan(at(sizeRule));
     });
 
     it('AC-3: the header keeps 44 px at every size; the hooks paint the bleed box, not the button', () => {
-      expect(rule('.lc-accordion--plain .lc-accordion__header')).toBe(
+      expect(rule(headerOf('.lc-accordion--plain'))).toBe(
         'position: relative;\n  isolation: isolate;\n  min-height: var(--size-min-touch-height, 2.75rem);\n  background: transparent;\n  border: none;',
       );
     });
 
     it('AC-4: the chevron gap and order are the shared ones (12 px), no plain rule moves the chevron', () => {
       expect(rule('.lc-accordion__header')).toContain('gap: 0.75rem;');
-      expect(rule('.lc-accordion--chevron-leading .lc-accordion__icon')).toBe('order: -1;');
+      expect(rule(inHeaderOf('.lc-accordion--chevron-leading', 'icon'))).toBe('order: -1;');
       expect(css.slice(css.indexOf(PLAIN_BLOCK)).match(/^\.lc-accordion--plain[^{\n]*__icon[^{\n]*\{/gm)).toBeNull();
     });
 
@@ -226,7 +250,7 @@ describe('lc-accordion variant="plain" (3.23, BA-9)', () => {
       // 038 AC-1: the hook goes through the registered private property, so a
       // unitless 0 computes to 0px instead of making inset-inline invalid.
       // The declared value (hook, token fallback) is the one 3.23.0 read in place.
-      expect(rule('.lc-accordion--plain .lc-accordion__header::before')).toBe(
+      expect(rule(`${headerOf('.lc-accordion--plain')}::before`)).toBe(
         [
           '--_lc-accordion-header-bleed: var(--lc-accordion-header-bleed, var(--spacing-2));',
           'content: "";',
@@ -258,15 +282,15 @@ describe('lc-accordion variant="plain" (3.23, BA-9)', () => {
     });
 
     it('AC-7: hover fills the bleed box; the button itself stays transparent', () => {
-      expect(rule('.lc-accordion--plain .lc-accordion__header:hover::before')).toBe(
+      expect(rule(`${headerOf('.lc-accordion--plain')}:hover::before`)).toBe(
         'background-color: var(--lc-accordion-header-hover-bg, var(--color-surface-hover));',
       );
-      expect(rule('.lc-accordion--plain .lc-accordion__header:hover')).toBe('background-color: transparent;');
+      expect(rule(`${headerOf('.lc-accordion--plain')}:hover`)).toBe('background-color: transparent;');
     });
 
     it('AC-5: the 2 px ring is drawn on the bleed box, not on the button; Highlight in forced colours', () => {
-      expect(rule('.lc-accordion--plain .lc-accordion__header:focus-visible')).toBe('outline: none;');
-      expect(rule('.lc-accordion--plain .lc-accordion__header:focus-visible::before')).toBe(
+      expect(rule(`${headerOf('.lc-accordion--plain')}:focus-visible`)).toBe('outline: none;');
+      expect(rule(`${headerOf('.lc-accordion--plain')}:focus-visible::before`)).toBe(
         'outline: 2px solid var(--color-primary);\n  outline-offset: -2px;',
       );
       // The other variants keep today's ring on the button.
@@ -274,7 +298,7 @@ describe('lc-accordion variant="plain" (3.23, BA-9)', () => {
         'outline: 2px solid var(--color-primary);\n  outline-offset: -2px;\n  border-radius: var(--border-radius-md);',
       );
       expect(media('(forced-colors: active)')).toMatch(
-        /\n {2}\.lc-accordion--plain \.lc-accordion__header:focus-visible::before \{\n {4}outline-color: Highlight;\n {2}\}/,
+        /\n {2}\.lc-accordion--plain > :where\(\.lc-accordion__heading\) > \.lc-accordion__header:focus-visible::before \{\n {4}outline-color: Highlight;\n {2}\}/,
       );
     });
 
@@ -282,21 +306,21 @@ describe('lc-accordion variant="plain" (3.23, BA-9)', () => {
       const block = media('(prefers-reduced-motion: reduce)');
       const list = block.slice(block.indexOf('{') + 1, block.indexOf('{', block.indexOf('{') + 1));
       expect(list.split(',').map((s) => s.trim())).toEqual([
-        '.lc-accordion--plain .lc-accordion__header',
-        '.lc-accordion--plain .lc-accordion__header::before',
-        '.lc-accordion--plain .lc-accordion__icon',
-        '.lc-accordion--plain .lc-accordion__panel',
-        '.lc-accordion--plain .lc-accordion__body',
+        headerOf('.lc-accordion--plain'),
+        `${headerOf('.lc-accordion--plain')}::before`,
+        inHeaderOf('.lc-accordion--plain', 'icon'),
+        panelOf('.lc-accordion--plain'),
+        bodyOf('.lc-accordion--plain'),
       ]);
       expect(block).toMatch(/\{\n {4}transition: none;\n {2}\}/);
     });
 
     it('AC-5, AC-6: the panel still clips the collapse vertically but not the rings at the inline edges', () => {
-      expect(rule('.lc-accordion--plain .lc-accordion__panel')).toBe('overflow-x: visible;\n  overflow-y: clip;');
+      expect(rule(panelOf('.lc-accordion--plain'))).toBe('overflow-x: visible;\n  overflow-y: clip;');
     });
 
     it('AC-10: a long German title wraps inside the header and hyphenates long compounds', () => {
-      expect(rule('.lc-accordion--plain .lc-accordion__title')).toBe(
+      expect(rule(inHeaderOf('.lc-accordion--plain', 'title'))).toBe(
         'min-width: 0;\n  overflow-wrap: break-word;\n  hyphens: auto;\n  hyphenate-limit-chars: 12 4 3;\n  text-align: start;',
       );
     });

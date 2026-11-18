@@ -399,6 +399,19 @@ const EXPECT_IN_HTML = [
       && /^<th(?=[^>]*\saria-sort="ascending")(?=[^>]*\stabindex="0")/.test(heads[0]) && /aufsteigend sortiert/.test(heads[0])
       && /^<th(?![^>]*\saria-sort=)(?=[^>]*\stabindex="0")(?=[^>]*\blc-sortable-head--end\b)/.test(heads[1]);
   }],
+  // 3.46 (request 066, probe-336.ts and probe-346.ts): before JS
+  ['description list: item icon in the value row, decorative, its row rule in the page CSS (kosten row 3, AC-5)', (html) => {
+    const dl = html.match(/<lc-description-list[^>]*\sid="compat-dl-336"[^]*?<\/lc-description-list>/)?.[0] ?? '';
+    return /<dd[^>]*>(?:<!--[^]*?-->|\s)*<span[^>]*\sclass="lc-dl__icon-row"[^>]*>(?:<!--[^]*?-->|\s)*<lc-icon(?=[^>]*\sclass="lc-dl__icon")(?=[^>]*\saria-hidden="true")[^>]*>[^]*?<\/lc-icon>(?:<!--[^]*?-->|\s)*<span[^>]*\sclass="lc-dl__icon-text"[^>]*>(?:<!--[^]*?-->|\s)*6,7 % über Budget/.test(dl)
+      && /\.lc-dl__icon-row\[_ngcontent-[^\]]*\]\s*\{\s*display:\s*inline-flex/.test(html);
+  }],
+  ['timeline horizontal: no tab stop, name or scroll class on the server; titles centred (065-s1, 065-n1, AC-13, AC-14)', (html) => {
+    const tl = html.match(/<lc-timeline(?=[^>]*\sid="compat-timeline-346")[^>]*>([^]*?)<\/lc-timeline>/)?.[1] ?? '';
+    const ol = tl.match(/<ol[^>]*>/)?.[0] ?? '';
+    return /\sclass="timeline timeline--horizontal"/.test(ol) && !/\s(?:tabindex|aria-label|role)=/.test(ol)
+      && (tl.match(/<li[^>]*\sclass="timeline__item/g) ?? []).length === 4
+      && /\.timeline--horizontal\[_ngcontent-[^\]]*\]\s+\.timeline__header\[_ngcontent-[^\]]*\]\s*\{\s*justify-content:\s*center;?\s*\}/.test(html);
+  }],
   // (minified or not: spaces optional, the container longhands or their shorthand)
   ['vertical tabs stack in a narrow container, pure CSS (backlog 064-n8)', (html) => /\.lc-tabs:has\(\s*>\s*\.lc-tabs__container--vertical\s*\)\s*\{\s*(?:container-name:\s*lc-tabs;\s*container-type:\s*inline-size|container:\s*lc-tabs\s*\/\s*inline-size);?\s*\}/.test(html)
     && /@container\s+lc-tabs\s*\(\s*(?:width\s*<\s*31rem|max-width:\s*30\.\d+rem)\s*\)\s*\{\s*\.lc-tabs__container--vertical\s*\{\s*flex-direction:\s*column;?\s*\}/.test(html)],

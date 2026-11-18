@@ -6,6 +6,7 @@ import {
   computed,
 } from '@angular/core';
 import { BadgeComponent, type BadgeVariant } from '@lifecorner/angular-ui-kit/badge';
+import { IconComponent } from '@lifecorner/angular-ui-kit/icon';
 
 /**
  * Emphasis treatment applied to a row's value.
@@ -50,6 +51,16 @@ export interface DescriptionListItem {
   badge?: string;
   /** Variant of the `badge`, as `lc-badge`. @default 'default' */
   badgeVariant?: BadgeVariant;
+  /**
+   * Kit icon name (`lc-icon`'s `name`), drawn before the value on its first
+   * line, in the value's colour and at the size of its text (1em) (3.46,
+   * finance-intelligence kosten row 3). Always decorative (`aria-hidden`), so
+   * the value's text must say what the icon shows („6,7 % über Budget“ with
+   * `arrow-up`). It is not part of a link and comes before a badge. Register
+   * it as for any `lc-icon`.
+   * @default undefined
+   */
+  icon?: string;
   /**
    * The sum item (3.36, app-shell row 2): a rule above and a double rule
    * below (`--color-field-border`), term and value semibold with tabular
@@ -99,6 +110,8 @@ let nextUniqueId = 0;
  *   reaches, and the `dl` keeps its term and value pairs.
  * - 3.36: an item's value as a badge (`badge`, `badgeVariant`), and a sum
  *   item (`total`) with ledger rules, announced with `totalAriaLabel`.
+ * - 3.46: a decorative kit icon before an item's value (`icon`), in the
+ *   value's colour and size.
  *
  * @example
  * ```html
@@ -114,7 +127,7 @@ let nextUniqueId = 0;
 @Component({
   selector: 'lc-description-list',
   standalone: true,
-  imports: [BadgeComponent],
+  imports: [BadgeComponent, IconComponent],
   templateUrl: './description-list.component.html',
   styleUrls: ['./description-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -221,8 +234,10 @@ export class DescriptionListComponent {
   );
 
   protected valueClass(item: DescriptionListItem): string {
-    // A total is always strong (3.36): its `emphasis` is ignored.
-    return `lc-dl__value lc-dl__value--${item.total ? 'strong' : (item.emphasis ?? 'default')}`;
+    // A total is always strong (3.36): its `emphasis` is ignored. 3.46 (D-7):
+    // an icon widens the value's `rows` basis; without one the string is as before.
+    const base = `lc-dl__value lc-dl__value--${item.total ? 'strong' : (item.emphasis ?? 'default')}`;
+    return item.icon ? `${base} lc-dl__value--icon` : base;
   }
 
   /**

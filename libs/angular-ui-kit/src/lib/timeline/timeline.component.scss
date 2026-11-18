@@ -1,3 +1,5 @@
+@use '../../styles/mixins' as mix;
+
 // Marker colours are runtime tokens (not compiled Sass constants) so they
 // follow the active theme. 3.45: success and warning use the text inks
 // (light 5.30 / 6.03 on the page, 4.55 / 5.18 on the selected fill; the
@@ -141,6 +143,27 @@ $timeline-colors: (
 
   .timeline__content {
     margin-top: 0.5rem;
+  }
+
+  // 3.46 (backlog 065-n1): the title (and its badge) centred over the marker.
+  // A header with meta keeps the title at the start and the meta at the end.
+  .timeline__header {
+    justify-content: center;
+  }
+}
+
+// 3.46 (request 066, 065-s1, WCAG 2.1.1): a horizontal list that overflows
+// without selectable items is a named tab stop (the arrow keys scroll it
+// natively). The ring sits outside: the list has no padding and its markers
+// touch its top edge, so an inset ring would cover them. Highlight in forced
+// colours.
+.timeline--scroll {
+  @include mix.focus-ring;
+}
+
+@media (forced-colors: active) {
+  .timeline--scroll:focus-visible {
+    outline-color: Highlight;
   }
 }
 

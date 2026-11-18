@@ -76,6 +76,7 @@ Accordion component for collapsible content sections.
 - Configurable chevron side (\`chevronPosition\`) so right-aligned header elements stay pinned
 - Plain: \`variant="plain"\` drops the border, background and inline inset, so title, chevron and body line up with the content edge of a sheet or card; the hover background and focus ring reach 8 px into the gutter (\`--lc-accordion-header-bleed\`, a length; \`0px\` puts them on the edge), so keep 8 px of room before a clipping or scrolling edge (an \`overflow: hidden\` or \`overflow-x: auto\` box without inline padding)
 - Accessible: real \`<button>\` header with \`aria-expanded\` / \`aria-controls\`, keyboard support and focus ring
+- 3.46 (066): an accordion in the body of another one keeps its own variant, size, chevron and open state (see *Verschachtelt*, *Nested Variants*)
 
 **Rich header + lazy body**
 
@@ -370,6 +371,99 @@ export const PlainInCard: Story = {
             <p style="margin: 0;">Die Bank hat diese Buchung beim täglichen Abruf geliefert.</p>
           </lc-accordion>
         </lc-card>
+      </div>`,
+  }),
+};
+
+/** 3.46 (request 066, finance-intelligence kosten row 4): budgets inside their cost centre. */
+export const Nested: Story = {
+  name: 'Verschachtelt',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.46 (request 066, finance-intelligence kosten row 4): budgets as accordions in the body of their cost centre, all `plain`, `lg`, `chevronPosition="leading"`, in German. Before 3.46 a closed child in an open parent took the parent\'s open state: a 36 px body, a chevron pointing up, and a body that stayed after closing. Now each accordion reads only its own state: a closed child is as high as its head with its chevron pointing down, the open child („Budget Cloud-Dienste“) shows its own body, and the closed parent „Kostenstelle 4712“ hides its open child. The children are indented 32 px, so their chevrons line up with the parent\'s title. Each head is a tab stop in DOM order while its parent is open, and its `aria-expanded` follows its own state.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div lang="de" style="max-width: 560px;">
+        <lc-accordion title="Kostenstelle 4711 · IT-Betrieb" variant="plain" size="lg" chevronPosition="leading" [expanded]="true">
+          <p style="margin: 0;">3 Budgets, eines über Plan.</p>
+          <div style="padding-inline-start: 32px;">
+            <lc-accordion title="Budget Software-Lizenzen" variant="plain" size="lg" chevronPosition="leading">
+              <p style="margin: 0;">Plan 48.000,00 € · Ist 45.210,00 €</p>
+            </lc-accordion>
+            <lc-accordion title="Budget Cloud-Dienste" variant="plain" size="lg" chevronPosition="leading" [expanded]="true">
+              <p style="margin: 0;">Plan 120.000,00 € · Ist 128.040,00 €</p>
+            </lc-accordion>
+            <lc-accordion title="Budget Hardware" variant="plain" size="lg" chevronPosition="leading">
+              <p style="margin: 0;">Plan 40.000,00 € · Ist 39.900,00 €</p>
+            </lc-accordion>
+          </div>
+        </lc-accordion>
+        <lc-accordion title="Kostenstelle 4712 · Netze" variant="plain" size="lg" chevronPosition="leading">
+          <p style="margin: 0;">1 Budget, im Plan.</p>
+          <div style="padding-inline-start: 32px;">
+            <lc-accordion title="Budget Leitungen" variant="plain" size="lg" chevronPosition="leading" [expanded]="true">
+              <p style="margin: 0;">Plan 64.000,00 € · Ist 61.300,00 €</p>
+            </lc-accordion>
+          </div>
+        </lc-accordion>
+      </div>`,
+  }),
+};
+
+/** 3.46 (request 066, AC-7): a nested accordion with another variant, size and chevron side than its parent. */
+export const NestedVariants: Story = {
+  name: 'Nested Variants',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.46 (request 066, AC-7): three open parents, each holding children of another variant, size and chevron side. Every title names its configuration. A closed child keeps its own head padding (sm 10, md 14, lg 18 px), its own chevron side and a chevron pointing down, and no body; the open `outlined · sm` child shows its own body padding. Nothing of the parent reaches into the child.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div style="max-width: 560px; display: flex; flex-direction: column; gap: 16px;">
+        <lc-accordion title="outlined · lg · trailing (open)" variant="outlined" size="lg" [expanded]="true">
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <lc-accordion title="flat · sm · leading (closed)" variant="flat" size="sm" chevronPosition="leading">
+              <p style="margin: 0;">Body of the flat child.</p>
+            </lc-accordion>
+            <lc-accordion title="plain · md · trailing (closed)" variant="plain" size="md">
+              <p style="margin: 0;">Body of the plain child.</p>
+            </lc-accordion>
+            <lc-accordion title="outlined · sm · trailing (open)" variant="outlined" size="sm" [expanded]="true">
+              <p style="margin: 0;">Body of the open outlined child.</p>
+            </lc-accordion>
+          </div>
+        </lc-accordion>
+        <lc-accordion title="flat · sm · leading (open)" variant="flat" size="sm" chevronPosition="leading" [expanded]="true">
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <lc-accordion title="outlined · lg · trailing (closed)" variant="outlined" size="lg">
+              <p style="margin: 0;">Body of the outlined child.</p>
+            </lc-accordion>
+            <lc-accordion title="plain · lg · leading (closed)" variant="plain" size="lg" chevronPosition="leading">
+              <p style="margin: 0;">Body of the plain child.</p>
+            </lc-accordion>
+          </div>
+        </lc-accordion>
+        <lc-accordion title="plain · md · leading (open)" variant="plain" size="md" chevronPosition="leading" [expanded]="true">
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <lc-accordion title="outlined · md · trailing (closed)" variant="outlined" size="md">
+              <p style="margin: 0;">Body of the outlined child.</p>
+            </lc-accordion>
+            <lc-accordion title="flat · lg · trailing (closed)" variant="flat" size="lg">
+              <p style="margin: 0;">Body of the flat child.</p>
+            </lc-accordion>
+          </div>
+        </lc-accordion>
       </div>`,
   }),
 };

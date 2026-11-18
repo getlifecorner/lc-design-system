@@ -1,5 +1,11 @@
 <!-- An ordered list (3.3, G-11): the events have an order and a count. -->
-<ol [class]="timelineClasses()">
+<!-- 3.46 (065-s1, D-4): while a horizontal, non-selectable list overflows, it keeps its list role and becomes a named tab stop. -->
+<ol
+  #list
+  [class]="timelineClasses()"
+  [attr.tabindex]="scrollable() ? 0 : null"
+  [attr.aria-label]="scrollable() ? (scrollLabel() || null) : null"
+>
   @for (item of items(); track item.id ?? $index; let last = $last; let i = $index) {
     <li class="timeline__item" [class.timeline__item--last]="last" [class.timeline__item--selected]="isSelected(item)">
       <div [class]="markerClasses(item)">

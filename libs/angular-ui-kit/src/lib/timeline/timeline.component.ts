@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  afterRenderEffect,
   contentChild,
   inject,
   input,
@@ -9,6 +10,8 @@ import {
   model,
   output,
   computed,
+  signal,
+  viewChild,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { IconComponent } from '@lifecorner/angular-ui-kit/icon';
@@ -106,6 +109,8 @@ const STATE_COLORS: Record<TimelineItemState, string> = {
  * - Date and description display per item
  * - Icon support for timeline markers
  * - Dark mode support
+ * - 3.46: a horizontal timeline that overflows becomes a named tab stop
+ *   (`scrollLabel`) that the arrow keys scroll; titles centre over their markers
  *
  * @example
  * ```html
@@ -163,11 +168,52 @@ export class TimelineComponent {
    */
   readonly selectedId = model<string | null>(null);
 
+  /**
+   * Accessible name of the list while a horizontal timeline without
+   * `selectable` is wider than its box (3.46, 065-s1, WCAG 2.1.1). The list
+   * then becomes a tab stop with this name, the arrow keys scroll it, and it
+   * shows the kit's focus ring. Set a short, localised name that is unique on
+   * the page („Zeitleiste“). `''` omits the name. Not used otherwise.
+   * @default 'Timeline'
+   */
+  readonly scrollLabel = input<string>('Timeline');
+
   /** An item of a `selectable` timeline was activated (click, Enter, Space). */
   readonly itemClick = output<TimelineItemClickEvent>();
 
   private readonly baseId = `lc-timeline-${++nextTimelineId}`;
   private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly list = viewChild<ElementRef<HTMLOListElement>>('list');
+
+  /** Whether the list's content is wider than its box (measured in the browser only). */
+  private readonly overflowing = signal(false);
+
+  /**
+   * A horizontal, non-selectable timeline that overflows (3.46, 065-s1): the
+   * list becomes a named tab stop that the arrow keys scroll. A selectable
+   * one has its buttons as tab stops, a vertical one doesn't scroll.
+   */
+  protected readonly scrollable = computed(
+    () => this.orientation() === 'horizontal' && !this.selectable() && this.overflowing(),
+  );
+
+  constructor() {
+    // One observer on the list and its items: the list's box (container
+    // resize) and the items' widths (fonts, content) decide the overflow. No
+    // ResizeObserver on the server: nothing is added to prerendered HTML.
+    afterRenderEffect((onCleanup) => {
+      this.items();
+      const list = this.list()?.nativeElement;
+      if (this.orientation() !== 'horizontal' || this.selectable() || !list || typeof ResizeObserver === 'undefined') {
+        this.overflowing.set(false);
+        return;
+      }
+      const observer = new ResizeObserver(() => this.overflowing.set(list.scrollWidth > list.clientWidth));
+      observer.observe(list);
+      for (const item of Array.from(list.children)) observer.observe(item);
+      onCleanup(() => observer.disconnect());
+    });
+  }
 
   /** Index of the item that owns the tab stop: the selected one, else the first. */
   protected readonly focusIndex = linkedSignal(() => {
@@ -188,6 +234,7 @@ export class TimelineComponent {
       `timeline--${this.orientation()}`,
       this.compact() ? 'timeline--compact' : '',
       this.selectable() ? 'timeline--selectable' : '',
+      this.scrollable() ? 'timeline--scroll' : '',
     ]
       .filter(Boolean)
       .join(' ');

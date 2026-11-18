@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { moduleMetadata } from '@storybook/angular';
-import { DescriptionListComponent } from './description-list.component';
+import { DescriptionListComponent, type DescriptionListItem } from './description-list.component';
 import { CardComponent } from '../card/card.component';
 import { AccordionComponent } from '../accordion/accordion.component';
 
@@ -37,6 +37,9 @@ Description list for key/value metadata (a styled \`<dl>\`).
 - 3.39 (059): one space per word break (the total row read „Summe,  Gesamtkosten Ist“ with two). \`rows\`: when
   term and value can't each keep \`min(100%, 6em)\` side by side, the value moves onto its own line, right-aligned,
   so an amount doesn't break inside; terms hyphenate long compounds (see *Narrow Column*)
+- 3.46 (066): an item's \`icon\` before its value, decorative, in the value's colour and at its text size, 4 px before
+  the first line, never alone on a line: \`rows\` keeps the lines right-aligned and counts the icon toward the value's
+  share, \`stacked\` hangs them after it (see *Item Icons*)
 `,
       },
     },
@@ -44,7 +47,7 @@ Description list for key/value metadata (a styled \`<dl>\`).
   argTypes: {
     items: {
       description:
-        '`DescriptionListItem[]`: `term`, `value`, `valueSuffix`, `href`, `emphasis`, `id`; 3.3: `datetime` (ISO 8601) renders the value inside `<time datetime>` (ignored with `href`). 3.36: `badge` and `badgeVariant` show the value as an `lc-badge`; `total` marks the sum item (ledger rules, semibold).',
+        '`DescriptionListItem[]`: `term`, `value`, `valueSuffix`, `href`, `emphasis`, `id`; 3.3: `datetime` (ISO 8601) renders the value inside `<time datetime>` (ignored with `href`). 3.36: `badge` and `badgeVariant` show the value as an `lc-badge`; `total` marks the sum item (ledger rules, semibold). 3.46: `icon` draws a decorative kit icon before the value, in its colour and at its text size (`aria-hidden`; the value text says what it shows).',
       table: { defaultValue: { summary: 'required' } },
     },
     totalAriaLabel: {
@@ -539,6 +542,67 @@ export const NarrowColumn: Story = {
           <lc-card title="Distribution" variant="outlined" [headingLevel]="2">
             <lc-description-list [items]="en" />
           </lc-card>
+        </div>
+      </div>
+    `,
+  }),
+};
+
+/** 3.46 (request 066, kosten row 3): the facts of a forecast receipt on the budget page, with icons. */
+const iconItems: DescriptionListItem[] = [
+  { term: 'Abweichung zum Budget', value: '6,7 % über Budget', icon: 'arrow-up', emphasis: 'strong' },
+  { term: 'Prognose', value: '2,1 % unter Plan', icon: 'arrow-down' },
+  { term: 'Fassung', value: '1', badge: 'Freigegeben', badgeVariant: 'success', icon: 'check' },
+  { term: 'Beleg', value: 'FC-2026-0412', href: '#beleg', emphasis: 'primary', icon: 'file-text' },
+  { term: 'Letzter Abgleich', value: 'heute 06:00', datetime: '2026-11-18T06:00:00+01:00', valueSuffix: 'automatisch', emphasis: 'muted', icon: 'clock' },
+  { term: 'Überschreitung gesamt', value: '+12.400,00 €', total: true, icon: 'arrow-up' },
+];
+
+/** 3.46 (request 066, finance-intelligence kosten row 3): a decorative icon before an item's value. */
+export const ItemIcons: Story = {
+  name: 'Item Icons',
+  decorators: [moduleMetadata({ imports: [CardComponent] })],
+  args: { items: iconItems },
+  parameters: {
+    controls: { include: ['items'] },
+    docs: {
+      description: {
+        story:
+          '3.46 (request 066, finance-intelligence kosten row 3): `icon` on an item draws a kit icon before the value, so a fact carries the arrow beside a variance like `lc-hero` and the tiles („6,7 % über Budget“ with `arrow-up`). The icon is 1em square (14 px in an `md` list, 12 px in `sm`), 4 px before the value, centred on its first line and in its colour (`strong`, `primary` link, `muted`, the total); forced colours draw it in the text colour. It is decorative (`aria-hidden`), outside the link, and adds no text: a screen reader and the clickable row\'s name read the same as without it. The icon never ends a line alone. In `rows` it stands 4 px before the value\'s first line, and a wrapped value stays right-aligned like any `rows` value; in `stacked` the left-aligned lines hang after it (both 156 px cards). In `rows` the icon and its gap count toward the value\'s share (7em + 4 px instead of 6em), so „+12.400,00 €“ stays on one line; a value longer than its share wraps as any value does. With a badge, a time and a suffix, and in a total row. `rows` and `stacked`, `md` and `sm`, clickable (rows 1, 2 and the total; a link inside a clickable row would nest controls).',
+      },
+    },
+  },
+  render: (args) => ({
+    props: {
+      ...args,
+      clickableItems: [iconItems[0], iconItems[1], iconItems[5]],
+      narrowItems: [iconItems[0], iconItems[1]],
+    },
+    template: `
+      <div lang="de" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+        <lc-card variant="outlined" borderRadius="xl" padding="lg" title="rows · md">
+          <lc-description-list [items]="items" layout="rows" size="md" />
+        </lc-card>
+        <lc-card variant="outlined" borderRadius="xl" padding="lg" title="stacked · md">
+          <lc-description-list [items]="items" layout="stacked" size="md" />
+        </lc-card>
+        <lc-card variant="outlined" borderRadius="xl" padding="lg" title="rows · sm">
+          <lc-description-list [items]="items" layout="rows" size="sm" />
+        </lc-card>
+        <lc-card variant="outlined" borderRadius="xl" padding="lg" title="rows · md · clickable">
+          <lc-description-list [items]="clickableItems" layout="rows" size="md" [clickable]="true" />
+        </lc-card>
+        <div style="grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 16px;">
+          <div style="width: 156px;">
+            <lc-card variant="outlined" borderRadius="xl" title="156 px · rows">
+              <lc-description-list [items]="narrowItems" />
+            </lc-card>
+          </div>
+          <div style="width: 156px;">
+            <lc-card variant="outlined" borderRadius="xl" title="156 px · stacked">
+              <lc-description-list [items]="narrowItems" layout="stacked" />
+            </lc-card>
+          </div>
         </div>
       </div>
     `,

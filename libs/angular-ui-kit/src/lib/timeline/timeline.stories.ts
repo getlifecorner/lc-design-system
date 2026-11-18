@@ -33,6 +33,9 @@ Chronological event display for activity feeds, changelogs, and process tracking
   (code blocks, prose, collapsible text, diffs)
 - Optional description and timestamp
 - Compact mode for dense layouts
+- 3.46 (066): a horizontal timeline that is wider than its box (and not \`selectable\`) becomes a tab stop
+  named \`scrollLabel\` that the arrow keys scroll, with the kit's focus ring; titles centre over their
+  markers (see *Horizontal, German*)
         `,
       },
     },
@@ -61,6 +64,12 @@ Chronological event display for activity feeds, changelogs, and process tracking
       action: 'itemClick',
       description: '3.45: `{ item, index }` when an item of a `selectable` timeline is activated.',
       table: { defaultValue: { summary: '—' } },
+    },
+    scrollLabel: {
+      control: 'text',
+      description:
+        '3.46 (065-s1, WCAG 2.1.1): accessible name of the list while a horizontal timeline without `selectable` is wider than its box. The list then becomes a tab stop with this name, the arrow keys scroll it, and it shows the kit\'s focus ring. Set a short, localised name that is unique on the page („Zeitleiste“). `\'\'` omits the name. Not used otherwise.',
+      table: { defaultValue: { summary: "'Timeline'" } },
     },
   },
 };
@@ -230,5 +239,54 @@ export const SelectableCompact: Story = {
 export const SelectableHorizontal: Story = {
   name: 'Selectable Horizontal',
   args: { selectable: true, selectedId: 's-2', orientation: 'horizontal', compact: false, items: selectableItemsEn },
+};
+
+/**
+ * 3.46 (request 066, 065-s1, WCAG 2.1.1): a German horizontal timeline. At
+ * 360 px it overflows and is a named tab stop (focused here); from 1024 px it
+ * fits and adds nothing.
+ */
+export const HorizontalGerman: Story = {
+  name: 'Horizontal, German',
+  args: {
+    orientation: 'horizontal',
+    scrollLabel: 'Zeitleiste',
+    items: [
+      { title: 'Antrag', description: 'Eingereicht', color: 'success' as const },
+      { title: 'Prüfung', description: 'Fachbereich', color: 'success' as const },
+      { title: 'Freigabe', description: 'Controlling', color: 'primary' as const },
+      { title: 'Auszahlung', description: 'Buchhaltung', color: 'neutral' as const },
+    ],
+  },
+  parameters: {
+    // Only what the render binds (review 066 F-5).
+    controls: { include: ['items', 'orientation', 'scrollLabel'] },
+    docs: {
+      description: {
+        story:
+          '3.46 (request 066, follow-up 065-s1, WCAG 2.1.1): four items of at least 128 px need 512 px. At 360 px the list is 328 px wide, so it scrolls: it becomes a tab stop named „Zeitleiste“ (`scrollLabel`), keeps its list role („Zeitleiste, Liste, 4 Einträge“), the arrow keys scroll it, and it shows a 2 px focus ring 2 px outside (Highlight in forced colours). The story focuses it. From 1024 px the items fit: no tab stop, no name, no ring. A ResizeObserver keeps this live when the box or the items change size; prerendered HTML has neither. Titles centre over their markers (backlog 065-n1).',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div lang="de">
+        <lc-timeline [items]="items" [orientation]="orientation" [scrollLabel]="scrollLabel" />
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    // The overflow is measured after the first render: wait up to 1 s for the tab stop.
+    for (let waited = 0; waited < 1000; waited += 50) {
+      const list = canvasElement.querySelector<HTMLElement>('ol[tabindex="0"]');
+      if (list) {
+        list.focus({ preventScroll: true });
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+  },
 };
 

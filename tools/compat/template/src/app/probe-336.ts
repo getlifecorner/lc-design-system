@@ -70,6 +70,8 @@ export class Probe336 {
   protected trigger: HTMLElement | null = null;
   protected readonly facts: DescriptionListItem[] = [
     { term: 'Zustand', value: 'Freigegeben', badge: 'Freigegeben', badgeVariant: 'success' },
+    // 3.46 (request 066, kosten row 3, AC-5): a decorative icon before the value.
+    { term: 'Abweichung zum Budget', value: '6,7 % über Budget', icon: 'arrow-up' },
     { term: 'Gesamtkosten Ist', value: '522.530,00 €', total: true },
   ];
   protected readonly sources: ListItem[] = [{ id: 'sap', label: 'SAP-Ist' }];

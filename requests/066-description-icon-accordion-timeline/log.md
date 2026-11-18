@@ -1,0 +1,16 @@
+# Log 066: lc-description-list item icon, lc-accordion nested open state, lc-timeline horizontal overflow at 360 px
+
+## Owner decisions
+
+## Handoffs
+
+Times come from `date '+%Y-%m-%d %H:%M'` when the row is written, never estimated.
+
+| Time | From → to | Status | Reason | Task |
+|---|---|---|---|---|
+| 2026-11-18 11:58 | dispatcher → spec-writer | new | Bundle of 3 items started by the owner (headless) | Write the spec for this request |
+| 2026-11-18 11:59 | spec-writer → ui-ux-designer | done | The spec is ready and all three items need kit changes, so the designer comes next. | Design the API and visuals for AC-1…16 in requests/066-description-icon-accordion-timeline/spec.md. That means the icon placement and spacing in description-list, the child-combinator scoping and the "Verschachtelt" story for the accordion, and the timeline scroller (a focusable, named region only when it overflows, plus its label input and focus ring) with the title centring. |
+| 2026-11-18 12:26 | ui-ux-designer → web-developer | done | The design is complete, and all three parts were prototyped in the browser with measured values, so building comes next. | Implement design.md for request 066 (3.46.0): the description-list `icon` field, the accordion selector scoping and the timeline `scrollLabel` overflow tab stop with centred titles. Implement the four new stories from §8, update the `accordion.plain.spec.ts` pins listed in §9, and check AC-1…16 as described in §9 against `tmp/story-shots/066/baseline`. |
+| 2026-11-18 12:53 | web-developer → ui-ux-designer | done | The build is complete with all gates green; the stories need the design review, and the wrapped-value icon position needs a design decision instead of an improvised rule. | Review request 066 (stories components-description-list--item-icons, components-accordion--nested, components-accordion--nested-variants, data-display-timeline--horizontal-german, plus the 10 expected horizontal-timeline diffs in tmp/story-shots/066/build-b) and decide build.md Deviations 1 and 2: the icon stands 13.6–69.8 px from the first line of a wrapped, right-aligned rows value (keep it, or specify a rule), and near-limit values now wrap because of the icon (e.g. "+12.400,00 / €" at 1280 px). |
+| 2026-11-18 13:06 | ui-ux-designer → web-developer | changes-requested | Two must-fix dl icon defects come from a design error that is now corrected and prototyped; accordion and timeline pass and need no rework. | Fix review.md round 1 F-1 and F-2 as design.md r1 specifies (D-6: in rows, `.lc-dl__icon-row` inline + nowrap, the text normal, the icon `vertical-align: top` + `margin-inline-end: var(--spacing-1)`; D-7: `valueClass` adds `lc-dl__value--icon`, basis `min(100%, calc(7em + var(--spacing-1)))`), plus F-3 (story wording, a 156 px stacked card, changelog draft) and nits F-4/F-5, then re-shoot *Item Icons* against the §9 AC-2 r1 values. |
+| 2026-11-18 13:14 | web-developer → ui-ux-designer | done | F-1…F-5 are built as design r1 specifies and the re-shot story matches §9 AC-2 r1, so the review round 2 comes next. | Review request 066 round 2: story components-description-list--item-icons (`tmp/story-shots/066/r2-build/`, measures `r2-build.log`, full page `r2-build-full/`) against §9 AC-2 r1, and the F-3 wording and changelog draft in build.md. |

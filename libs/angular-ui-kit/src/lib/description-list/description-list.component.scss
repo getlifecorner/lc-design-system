@@ -288,6 +288,58 @@ lc-badge.lc-dl__badge {
   border: 0;
 }
 
+// ── item icon (3.46, request 066, kosten row 3) ─────────────────────────────
+// The icon is 1em square (md 14, sm 12 px) in the value's ink, centred on the
+// first line box, 4 px before the value, and never alone on a line. `stacked`
+// (D-1): icon and value share one inline-flex row, so the left-aligned lines
+// hang after the icon. The text sets the baseline, so term and value keep one
+// baseline and the row its height. Before the 3.37 separator, which stays
+// right before the narrow-row rules.
+.lc-dl__icon-row {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--spacing-1);
+  max-width: 100%;
+  vertical-align: top;
+}
+
+lc-icon.lc-dl__icon {
+  --lc-icon-size: 1em;
+  align-self: flex-start;
+  height: 1lh;
+  flex-shrink: 0;
+}
+
+.lc-dl__icon-text {
+  min-width: 0;
+}
+
+// `rows` (D-6): the value's lines stay right-aligned, so a flex row would
+// leave the icon at the start of a box that fills the row, far from line 1.
+// An inline `nowrap` row glues the icon 4 px before line 1's first glyph; the
+// text inside wraps (and breaks long words) as before.
+.lc-dl--rows .lc-dl__icon-row {
+  display: inline;
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+
+.lc-dl--rows .lc-dl__icon-text {
+  white-space: normal;
+}
+
+.lc-dl--rows lc-icon.lc-dl__icon {
+  vertical-align: top;
+  margin-inline-end: var(--spacing-1);
+}
+
+// `rows` (D-7): the icon and its gap count toward the value's share, so the
+// text keeps the 3.39 6em: min(100%, 6em) + 1em + 4 px. (0,4,0) beats the
+// basis below without moving after it.
+.lc-dl--rows > .lc-dl__row > .lc-dl__value.lc-dl__value--icon {
+  flex-basis: min(100%, calc(7em + var(--spacing-1)));
+}
+
 // ── word breaks (3.37, request 057, regeln row 1, D-4) ──────────────────────
 // A space between a link or a time and its suffix, for the text only: 0 px
 // wide, so the suffix keeps its 6 px margin as its only gap.
