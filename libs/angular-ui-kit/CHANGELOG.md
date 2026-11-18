@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.47.0] - 2026-11-18
+
+A typed amount without steppers, waterfall labels that wrap instead of overlapping, and the USM X fifth batch for `lc-sidenav`. Gap IDs: finance-intelligence kosten-2026-11-18 rows 5 and 6, usm-x 2026-11-18 rows 38–46. No API breaks.
+
+### Added
+
+- **`lc-number-input` `showSteppers`** (`true`; kosten row 5, variance sheet): `false` draws only the value box and the unit, as high as with steppers (xs 24 · sm 32 · md 40 · lg 44 px inside the border); ArrowUp/ArrowDown still step. „2960,00 €“ in `lg` with `--lc-number-input-value-width: calc(7ch + 0.5rem)`: 112.6 × 46 px, no clipping.
+- **`lc-waterfall-chart` `wrapLabels`** (`true`; kosten row 6, nine causes at 564 px): a label that would run into a neighbour wraps at a space, after „-“ or at a soft hyphen (U+00AD, drawn „-“); a line still too wide ends in „…“ with the full label as SVG `<title>`. The chart grows by one line (250 → 264 px) only when a label wraps; at 564 px the closest labels stay 9.9 px apart. Widths are estimated on the server (no hydration change) and measured in the browser. Labels that fit draw as before; `false` restores the one-line drawing.
+- **`lc-sidenav`** (usm-x rows 38–46): a `[sidenav-top]` slot between the brand and the items (docked and in the drawer, hidden on the rail, no box when empty); `brandRoute`, `brandLink` (`false`: a plain block, no tab stop), `brandLogoSrc` (24 px in the tile); groups nested to any depth (12 px more indent per level; a level-5 label keeps 131 px with an action in a 280 px rail); `[(expandedGroups)]` (open groups seeded by the backend, toggles reported, also prerendered); the `action` button at every level, 44 × 44 px to hit, and `itemActionClick` `{ item, event, element }` (`NavigationItemActionEvent`) to anchor a menu (set `aria-haspopup="menu"` and `aria-expanded` on `element` while it is open: the button stays visible); `lcSidenavLabel` (`SidenavLabelDirective`, context `{ $implicit, level, highlight }`) and `highlight` (bold, underlined `<mark>`, every match); a label cut by its ellipsis shows its full text as `title`. CSS hooks, read on any ancestor, defaults = 3.46: `--lc-sidenav-focus-ring` (all 9 rings), `--lc-sidenav-muted-fg`, `--lc-sidenav-icon-size` (20px), `--lc-sidenav-backdrop` (`rgba(0, 0, 0, 0.5)`), `--lc-sidenav-brand-height` (56 · 56 · 64 · 80 · 112 px by `logoSize`), `--lc-sidenav-brand-logo-filter` (`none`).
+
+### Changed
+
+- `lc-sidenav`: the current item's groups re-open only when the current item changes, not on every `items` update, so a group the user folded stays folded while children load (row 41). Every group above the current item is marked, at any depth.
+- `lc-sidenav` drawer: Escape is ignored when another handler prevented it or when a modal, `lc-command-palette`, menu, popover or tooltip stands above the drawer; with nothing above, it closes as before and now prevents the default (row 44).
+
+### Fixed
+
+- `lc-sidenav`: an item row's action button is visible on keyboard focus (WCAG 2.4.7) and while it carries `aria-expanded="true"`; since 3.0 the hidden-at-rest rule outweighed its `:focus-visible`, so a focused action stayed at opacity 0 with its ring unseen. Rest (0) and hover (1) unchanged.
+
+### Compatibility
+
+- No API breaks. New exports: `SidenavLabelDirective`, `SidenavLabelContext` (`/sidenav`), `NavigationItemActionEvent` (`/models`).
+- The sidenav panel gains an empty `div.lc-sidenav__top` (no box) between the close button and the nav. A level-3 item with `children` was drawn as a link (its children ignored) and is now a group. Default DOM of all 56 existing number-input, waterfall, sidenav and placeholder stories otherwise identical (112/112 DOM hashes).
+
 ## [3.46.0] - 2026-11-18
 
 An icon before a description-list value, a nested `lc-accordion` that keeps its own state, and a horizontal `lc-timeline` that can be scrolled by keyboard at 360 px. Gap IDs: finance-intelligence kosten-2026-11-17 rows 3 and 4, follow-ups 065-s1 and 065-n1. No API breaks.

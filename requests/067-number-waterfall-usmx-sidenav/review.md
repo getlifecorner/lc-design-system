@@ -45,3 +45,26 @@ Deviations 1–3 accepted. 4: the hover-bg in the petrol recipe and the trigger-
 | 8 | nit | `notification-center.icons.spec.ts` | stable | failed once under load (build.md gates) |
 
 **Verdict:** changes requested (F-1). Round 2 checks: *Deep Tree* and *With Groups And Actions* 1280 L — focused action opacity 1 and a visible ring, `aria-expanded="true"` without hover → 1, rest 0; the sidenav stories at rest identical to `r1-ca`/`r1-cb`.
+
+## Round 2 — 2026-11-18, commit 0a2b020 (code = gate commit f5756e3, `git diff --quiet` holds)
+
+Developer's Storybook build (16:02, not stale). Runs `tmp/story-shots/067/r2-rev-{a,b,fc,h3}` + `.log`: **a** replays the developer's sequence module (`/zz-067/r2.mjs`, logic read) at 360/1280 L/D with `--axe`; **b** is my own measure (ring contrast against the background walked up from `elementFromPoint` 3 px beside the button, then one shot with action A focused and B `aria-expanded="true"`, or *Deep Tree*'s menu open on B) at 1280 L/D `--axe`; **fc** the same with `--forced-colors`. 4 shots opened.
+
+| AC | Result | Evidence |
+|---|---|---|
+| S7 | pass | rest `0 0` / `0 0 0` on all 8 configs; focused → 1, `:focus-visible`, ring 2 px at 2 px offset; blurred → 0; *Deep Tree* click → `aria-haspopup="menu"`, `aria-expanded="true"`, focus in the menu, button 1, the other row 0; Escape → `"false"`, focus back, `:focus-visible`, 1; blur → 0. *With Groups And Actions*: `aria-expanded="true"` by hand → 1 without ring while A keeps focus + ring, the third row 0; removed → 0. Shots b 1280 L: both states drawn, the section „+" unchanged (1) |
+| S12 | pass | ring contrast: *Deep Tree* 4.18 L (on 249,250,251) / 10.25 D (on 7,14,21); *With Groups And Actions* 4.44 L (dark sidenav in the light page) / 10.25 D (≥ 3:1). FC: ring `Highlight` (emulated rgba(5,0,73,.8) L / rgba(0,230,255,.8) D), glyph `CanvasText`, both states drawn. axe 0 on *Deep Tree* 6 configs incl. the open menu; *With Groups And Actions* dark: 1 violation, pre-existing story content (F-9) |
+| N1–N4, W1–W5, S1–S6, S8–S11 | pass | unchanged since round 1 (r2 touched only the sidenav rule, JSDoc, docs table and *Deep Tree*) |
+
+At rest: the two touched stories, all 12 shots of the developer's `r2-ca`/`r2-cb2`, are byte-identical to `r1-new` (*Deep Tree*) and to `baseline` (*With Groups And Actions*). The other 40 sidenav stories: the developer's 239/252 identical, with every difference explained (`ca`/`cb1`/`cb2`/`new` summaries checked). The rule can't match at rest: the template puts neither `aria-expanded` nor a focus on action buttons. API: `itemActionClick` JSDoc, argType and docs table name `aria-haspopup="menu"` / `aria-expanded` (design §2 r1); CSS pin in `sidenav.usm-x-rows-38-46.spec.ts`; changelog *Fixed* entry present.
+
+### Findings
+
+| # | Severity | Where | Expected | Actual |
+|---|---|---|---|---|
+| 1 | — | — | — | **resolved** (S7, S12 above) |
+| 2, 3 | should-fix | as round 1 | — | open, out of round-2 scope → queue |
+| 4–8 | nit | as round 1 | — | open → backlog |
+| 9 | should-fix | sidenav stories with a hard-coded content box (`background: #f9fafb`, `#666`, `#333`; `sidenav.stories.ts` l. 466, 527, 606, 811, 862, 920, 977), dark theme | story text ≥ 4.5:1 in both themes (theme tokens, e.g. `--color-surface-secondary`, `--color-text-secondary`, `--color-border`) | *With Groups And Actions* dark: h3 „Specs & Epics" rgb(241,246,248) on rgb(249,250,251) = **1.04**, axe `color-contrast` (360 and 1280, at rest too, `r2-rev-h3`); light 16.98. Pre-existing before 067 (unchanged lines), docs surface only, no library change |
+
+**Verdict:** approved. F-1 is fixed as design §4 change note r1 says. Open: F-2, F-3, F-9 (should-fix → queue), F-4–F-8 (nit → backlog).
