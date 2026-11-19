@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.49.1] - 2026-11-19
+
+Image grounds of `lc-file-upload` in forced colours (069-s1, found in the review of request 069). No API breaks.
+
+### Fixed
+
+- **`lc-file-upload variant="image"` in forced colours** (Windows high contrast; 069-s1, usm-x row 71, the logo in the settings): a tile with the `light`, `dark` or `checkered` ground keeps that ground once it shows an image, so a logo can still be judged on it. Before, all three were painted Canvas and a white logo on `dark` measured 1.00:1 in a light palette; now it measures 19.4:1 against #070e15. The tile's edge stays CanvasText and its drag ring Highlight; `surface` tiles and empty tiles (the hint is CanvasText, 21:1) keep the system colours. The buttons and lines beside the tile are not affected.
+
+### Compatibility
+
+- No API breaks, no new input, class or token. Only forced colours change: the 72 shots of the 12 existing file-upload stories (360/1024/1280, light/dark) are hash-identical to 3.49.0 outside forced colours. New story *Image Grounds White Logo*.
+
 ## [3.49.0] - 2026-11-19
 
 External links in `lc-description-list`, a single-image field for `lc-file-upload`, spaces and truncation in `lc-badge`, and a menu height that follows the room on screen. Gap IDs: finance-intelligence vertraege-2026-11-18 row 1, usm-x 2026-11-17 rows 71–73, backlog 068-n2. No API breaks; badges have one more inner element (see Compatibility).
@@ -20,10 +32,6 @@ External links in `lc-description-list`, a single-image field for `lc-file-uploa
 ### Fixed
 
 - `lc-description-list`: the separators of clickable rows stay straight at their rounded corners (068-n2).
-
-### Known
-
-- `lc-file-upload variant="image"` in forced colours: the `light`, `dark` and `checkered` grounds render as Canvas, so a white silhouette on `dark` is invisible there. Planned for the next patch.
 
 ### Compatibility
 
