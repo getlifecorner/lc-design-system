@@ -540,3 +540,76 @@ export const ImageRejectedGerman: Story = {
     dropOnTile(canvasElement, [fileOf('logo-gross.png', 204800, 'image/png')]);
   },
 };
+
+/** 3.49.1: LOGO's three shapes in white, without the L (a white-on-transparent silhouette). */
+const WHITE_LOGO =
+  'data:image/svg+xml,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40"><rect x="2" y="6" width="28" height="28" rx="7" fill="#ffffff"/><rect x="38" y="11" width="78" height="8" rx="4" fill="#ffffff"/><rect x="38" y="24" width="54" height="6" rx="3" fill="#ffffff"/></svg>',
+  );
+
+const GROUP_LABEL = 'margin: 0 0 12px; font-size: 0.875rem; font-weight: 600; color: var(--color-text-primary);';
+const CAPTION = 'margin: 0 0 8px; font-size: 0.75rem; color: var(--color-text-secondary);';
+const GRID = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); gap: 24px;';
+
+/** 3.49.1 (request 070, 069-s1): a white logo on the light, dark and checkered grounds, EN and DE, plus an empty dark field. */
+export const ImageGroundsWhiteLogo: Story = {
+  name: 'Image Grounds White Logo',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.49.1 (request 070, 069-s1): a white logo on the `light`, `dark` and `checkered` grounds, EN and DE, plus an empty `dark` field. On `light` the white logo vanishes by design: the ground shows where it won\'t work. In forced colours (Windows high contrast; DevTools → Rendering → `forced-colors: active`) these grounds keep their colours once an image is shown: white on `dark` 19.4:1 against #070e15. The edge stays CanvasText and the drag ring Highlight; empty tiles and `surface` follow the system colours.',
+      },
+    },
+  },
+  render: () => ({
+    props: { logo: WHITE_LOGO },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 32px;">
+        <div lang="en">
+          <p style="${GROUP_LABEL}">English</p>
+          <div style="${GRID}">
+            <div>
+              <p style="${CAPTION}">light</p>
+              <lc-file-upload variant="image" [imageSrc]="logo" imageAlt="Company logo (white)" imageBackground="light" />
+            </div>
+            <div>
+              <p style="${CAPTION}">dark</p>
+              <lc-file-upload variant="image" [imageSrc]="logo" imageAlt="Company logo (white)" imageBackground="dark" />
+            </div>
+            <div>
+              <p style="${CAPTION}">checkered</p>
+              <lc-file-upload variant="image" [imageSrc]="logo" imageAlt="Company logo (white)" imageBackground="checkered" />
+            </div>
+            <div>
+              <p style="${CAPTION}">dark, empty</p>
+              <lc-file-upload variant="image" imageBackground="dark" />
+            </div>
+          </div>
+        </div>
+        <div lang="de">
+          <p style="${GROUP_LABEL}">Deutsch</p>
+          <div style="${GRID}">
+            <div>
+              <p style="${CAPTION}">light</p>
+              <lc-file-upload variant="image" [imageSrc]="logo" imageAlt="Firmenlogo (weiß)" imageBackground="light" ${IMAGE_DE} />
+            </div>
+            <div>
+              <p style="${CAPTION}">dark</p>
+              <lc-file-upload variant="image" [imageSrc]="logo" imageAlt="Firmenlogo (weiß)" imageBackground="dark" ${IMAGE_DE} />
+            </div>
+            <div>
+              <p style="${CAPTION}">checkered</p>
+              <lc-file-upload variant="image" [imageSrc]="logo" imageAlt="Firmenlogo (weiß)" imageBackground="checkered" ${IMAGE_DE} />
+            </div>
+            <div>
+              <p style="${CAPTION}">dark, leer</p>
+              <lc-file-upload variant="image" imageBackground="dark" ${IMAGE_DE} />
+            </div>
+          </div>
+        </div>
+      </div>`,
+  }),
+};

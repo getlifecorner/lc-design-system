@@ -245,7 +245,9 @@
 
 // Forced colours: the ring is Highlight (request 042). 3.49 (request 069):
 // the image tile's edge is the text colour, its drag ring the system
-// highlight; the image is drawn as it is. One block, the file's last.
+// highlight; the image is drawn as it is. 3.49.1 (request 070): a chosen
+// light, dark or checkered ground is kept once there is an image. One block,
+// the file's last.
 @media (forced-colors: active) {
   .file-upload__file-remove:focus-visible {
     outline-color: Highlight;
@@ -253,6 +255,16 @@
 
   .file-upload-image__tile {
     border-color: CanvasText;
+  }
+
+  // 3.49.1 (request 070, 069-s1): a chosen ground is what the tile shows, so
+  // light, dark and checkered keep it once there is an image. The edge above
+  // stays CanvasText and the drag ring Highlight; surface and empty tiles keep
+  // the system colours.
+  .file-upload-image__tile--light:not(.file-upload-image__tile--empty),
+  .file-upload-image__tile--dark:not(.file-upload-image__tile--empty),
+  .file-upload-image__tile--checkered:not(.file-upload-image__tile--empty) {
+    forced-color-adjust: none;
   }
 
   .file-upload-image__tile--drag-over {
