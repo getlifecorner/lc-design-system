@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.49.0] - 2026-11-19
+
+External links in `lc-description-list`, a single-image field for `lc-file-upload`, spaces and truncation in `lc-badge`, and a menu height that follows the room on screen. Gap IDs: finance-intelligence vertraege-2026-11-18 row 1, usm-x 2026-11-17 rows 71–73, backlog 068-n2. No API breaks; badges have one more inner element (see Compatibility).
+
+### Added
+
+- **`lc-description-list` external links** (finance-intelligence vertraege row 1, the contract „Details“ dialog): `DescriptionListItem.external` opens `href` in a new tab (`target="_blank"`, `rel="noopener noreferrer"`), draws a decorative `external-link` icon 4 px after the value's last word (1em, the link's colour, LinkText in forced colours, registered by the kit, never alone on a line) and reads `externalLinkHint` after the value (default „(opens in a new tab)“, as `lc-footer`; German „(öffnet in neuem Tab)“). Ignored without `href`; in `rows` the icon counts toward the value's share.
+- **`lc-file-upload variant="image"`** (usm-x row 71, the logo in the settings): one image field with the current image (`imageSrc`, `imageAlt`) in a 160 × 96 tile (`--lc-file-upload-image-width`, `-height`, `-radius`, `-filter`) on a ground to judge it on (`imageBackground`: `surface`, `light`, `dark` = the dark rail, `checkered`), „Choose/Replace image“ and „Remove image“ buttons (48.5 px high, `imageRemoved`, focus returns to choose) and an announced in-place rejection (`typeRejectedLabel`, `sizeRejectedLabel` + the maximum). An empty `accept` means `image/*`; one file, `filesSelected` emits `[file]`. Every text is an input; German fits at 360 px.
+- **`lc-badge maxWidth`** (usm-x row 72, the recording bar): cuts the label on one line with an ellipsis (dot and icon stay), sets the whole text as `title` and keeps it in the DOM; `wrap` wins.
+- **`lc-menu maxHeight="room"`** (usm-x row 73, the catalog row menu): the panel's height follows the room between its origin and the viewport edge on the side it opens to (8 px gap, 8 px margin, 16 px below an overlay), at least 3 items plus header and footer. That room picks the side: the `position` side wins while it holds min(240 px, the whole panel). 26 entries on a 1150 px screen: 20 visible instead of 10 (702 px; 535 px at 900 px high).
+
+### Changed
+
+- `lc-badge`: the projected content sits in one inline `.lc-badge__label`, so mixed content keeps its spaces („Aufnahme läuft in **USM-1209**“: 3.7 px between „in“ and „USM“ instead of 0). Badge boxes and glyphs measure the same (0.01 px); a projected `lc-icon` keeps its slot before the label, also inside an `@if`.
+
+### Fixed
+
+- `lc-description-list`: the separators of clickable rows stay straight at their rounded corners (068-n2).
+
+### Known
+
+- `lc-file-upload variant="image"` in forced colours: the `light`, `dark` and `checkered` grounds render as Canvas, so a white silhouette on `dark` is invisible there. Planned for the next patch.
+
+### Compatibility
+
+- No API breaks; every new input defaults to the 3.48 rendering. Selectors that expect a badge's text as the direct child of the badge span need `.lc-badge__label`.
+
 ## [3.48.0] - 2026-11-18
 
 USM X's menu, tabs, palette and form gaps, a screen-reader-only actions head for lc-table, the 067 follow-ups and the backlog. Gap IDs: usm-x 2026-11-17 rows 47–70, finance-intelligence kosten-prove-2026-11-18 row 7, 067-s1…s3, backlog 066-n1, 067-n1…n5. No API breaks.

@@ -42,7 +42,7 @@ Risks to keep (design memory): an `@if` inside `<a>` adds one comment anchor (AC
 | type | `FileUploadVariant` / `FileUploadImageBackground` | `'dropzone' \| 'image'` / `'surface' \| 'light' \| 'dark' \| 'checkered'` | — | Exported from `@lifecorner/angular-ui-kit/file-upload`. |
 | input | `lc-badge` `maxWidth` | `string` | `''` | Caps the badge (any CSS length, `16rem`, `22ch`): the label is cut on one line with an ellipsis, dot and icon stay, and the badge's `title` is the label's whole text (not when the host has its own `title`); the text stays in the DOM. Ignored with `wrap`. A percentage needs a container of definite width. |
 | slot | `lc-badge` `lc-icon` | — | — | A projected `lc-icon` (also as the single root of an `@if`) sits before the label, outside the cut, laid out as today; prefer `icon`. A trailing projected `lc-icon` moves before the label (none in usm-x or finance-intelligence; CHANGELOG *Changed*). |
-| input | `lc-menu` `maxHeight` | `string` | `''` | Adds the keyword `'room'`: the panel's height is the room between its origin and the viewport edge on the side it opens to (8 px gap, 8 px margin), at least 3 items plus header/footer; the preferred side is kept while its room ≥ min(240 px, content), else the side with more room. CSS lengths as before. |
+| input | `lc-menu` `maxHeight` | `string` | `''` | Adds the keyword `'room'`: the panel's height is the room between its origin and the viewport edge on the side it opens to (8 px gap, 8 px margin; 16 px at the bottom of an overlay), at least 3 items plus header/footer; the preferred side is kept while its room ≥ min(240 px, content), else the side with more room. CSS lengths as before. |
 
 Default rendering unchanged: dl anchors without `external` keep text, attributes and classes (one comment anchor more inside `<a>`); file-upload default branch is the 3.48 DOM; badges without `maxWidth` render at identical boxes (prototype) with one extra element (§9 AC-12); menus without `'room'` are untouched.
 
@@ -115,28 +115,28 @@ y 379.5 ┌ Weitere ▾ ┐ trigger 44 high (top at 33vh)
 y 423.5 └───────────┘
         8 gap
 y 431.5 ┌──────────────────────┐  pad 8 + 1 border
-        │ Bearbeiten        36 │
-        │ … 19 of 26 rows       │  items scroll (overscroll contain), header/footer stay
-y 1142  └──────────────────────┘  max-height 710 = 1150 − 423.5 − 8 − 8
-        8 viewport margin
+        │ Bearbeiten      33.5 │
+        │ … 20 of 26 rows       │  items scroll (overscroll contain), header/footer stay
+y 1133.5└──────────────────────┘  max-height 702 = 1150 − 423.5 − 8 − 16 (r1 change note)
+        16 viewport margin (CDK fit band, see below)
 ```
 
 | Origin | gap g | room below | room above |
 |---|---|---|---|
-| element anchor (overlay) | 8 | vh − r.bottom − g − 8 | r.top − g − 8 |
-| point anchor | 0 | vh − y − 8 | y − 8 |
+| element anchor (overlay) | 8 | vh − r.bottom − g − 16 | r.top − g − 8 |
+| point anchor | 0 | vh − y − 16 | y − 8 |
 | projected trigger (no anchor) | 8 | vh − m.bottom − g − 8 (m = `.lc-menu` box) | m.top − g − 8 |
 
-vh = `ViewportRuler.getViewportSize().height`. In room mode the overlay panel keeps its 8 px margin on the anchor side only (`margin-block: var(--spacing-2) 0` below, `0 var(--spacing-2)` above; class per effective side), so the pane fits CDK's 8 px viewport margin exactly; other overlay menus keep 3.48's both-sided margin. Per open: `chrome` = panel.offsetHeight − list.clientHeight; `H` = chrome + list.scrollHeight; `pitch` = first item's offsetHeight; **MIN** = min(H, chrome + 3·pitch); **T** = min(H, max(240, MIN)). Side = preferred (`position`) if room_pref ≥ T, else the larger room (tie: preferred). `max-height` = max(MIN, ⌊room_side⌋) px; below MIN on a short window CDK's push lets the panel overlap the trigger and the list scrolls. Overlay: `overlayPositions` = the chosen side's list (`ELEMENT_POSITIONS[effective]`, point list reordered above-first). Projected trigger: the position class follows the effective side. Computed before first paint (after render, in the open tick); recomputed on window resize and when `items`/`loading` change while open; on scroll (projected trigger only; the overlay closes on scroll as in 3.48) the height follows, the side stays.
+vh = `ViewportRuler.getViewportSize().height`. In room mode the overlay panel keeps its 8 px margin on the anchor side only (`margin-block: var(--spacing-2) 0` below, `0 var(--spacing-2)` above; class per effective side), so the pane is exactly gap + panel tall; CDK's fit test checks the pane against the band [0, vh − 16] (both margins at the bottom), so below an overlay origin the room keeps 16 px (r1 change note); other overlay menus keep 3.48's both-sided margin. Per open: `chrome` = panel.offsetHeight − list.clientHeight; `H` = chrome + list.scrollHeight; `pitch` = first item's offsetHeight; **MIN** = min(H, chrome + 3·pitch); **T** = min(H, max(240, MIN)). Side = preferred (`position`) if room_pref ≥ T, else the larger room (tie: preferred). `max-height` = max(MIN, ⌊room_side⌋) px; below MIN on a short window CDK's push lets the panel overlap the trigger and the list scrolls. Overlay: `overlayPositions` = the chosen side's list (`ELEMENT_POSITIONS[effective]`, point list reordered above-first). Projected trigger: the position class follows the effective side. Computed before first paint (after render, in the open tick); recomputed on window resize and when `items`/`loading` change while open; on scroll (projected trigger only; the overlay closes on scroll as in 3.48) the height follows, the side stays.
 
 ## 4. States
 
 | Item | default | hover | focus-visible | active/disabled | empty / loading | error | overflow |
 |---|---|---|---|---|---|---|---|
-| A | icon after value | link hover colour + underline (icon follows colour) | existing link ring 2 px primary-500, +2 px, wraps the icon | — | `external` without `href`: nothing | — | long German value / URL wraps, icon glued (proto) |
+| A | icon after value | link hover colour + underline (icon follows colour) | existing link ring (measured r1: 3 px solid, offset 0), wraps the icon | — | `external` without `href`: nothing | — | long German value / URL wraps, icon glued (proto) |
 | B | tile + Replace + Remove | buttons' own; tile none | buttons' ring | `disabled`: both buttons disabled, drop ignored, tile not dimmed (image stays judgeable) | no `imageSrc`: dashed tile, `emptyImageLabel`, Choose only; no loading state (the app may set `disabled` while saving) | rejection text in place (`role="alert"`), cleared on an accepted file or remove; a repeat is cleared and set one frame later (re-announced). Value kept; no `filesSelected` | drag-over on the tile: `outline: 2px dashed var(--color-primary-500); outline-offset: 2px`. A URL that fails to load shows the empty ground (alt ""). Long DE labels wrap under the tile |
 | C | label in its element | — | — | — | empty label hidden | — | `maxWidth`: ellipsis, `title`; `wrap` wins over `maxWidth` |
-| D | room height | as 3.48 | item ring inside list; arrow keys scroll the item into view (3.48 `revealItem`) | — | `loading` row stays outside the scroll | — | 26 items: 19 visible (sm) at 1280 × 1150 |
+| D | room height | as 3.48 | item ring inside list; arrow keys scroll the item into view (3.48 `revealItem`) | — | `loading` row stays outside the scroll | — | 26 items: 20 visible (sm, pitch 33.5) at 1280 × 1150 |
 
 ## 5. Theming
 
@@ -153,7 +153,7 @@ vh = `ViewportRuler.getViewportSize().height`. In room mode the overlay panel ke
 | B hint / lines | existing secondary / tertiary | — | 7.56 / 5.84 · 11.16 / 6.71 |
 | C, D | unchanged tokens | — | `badge-contrast.spec.ts` unchanged |
 
-No new token. Forced colours: A icon is `currentColor` (LinkText); B tile border CanvasText, drag outline `Highlight` (explicit FC rule), image unforced; C label CanvasText.
+No new token. Forced colours: A icon is `currentColor` (LinkText); B tile border CanvasText, drag outline `Highlight` (explicit FC rule), image unforced; the `light`, `dark` and `checkered` grounds keep their colours (`forced-color-adjust: none` on those tiles, border still CanvasText; r1 change note, follow-up); C label CanvasText.
 
 ## 6. Accessibility
 
@@ -213,9 +213,17 @@ Baselines (unchanged stories, main 4115f51, 360/1280 L/D `--full`): `tmp/story-s
 | 15 | `badge-contrast.spec.ts`; *Max Width* `--forced-colors` | green; label visible |
 | 16 | hash compare `baseline` + `baseline-b`; stated pin updates: `badge.icon.spec` children (l. 33/36/41), `badge.wrap.spec` (l. 66/103), `description-list.icon.spec` l. 81, compat `EXPECT_IN_HTML` 'badge wrap class' (allow the label tag) | only the AC-5 stories differ |
 | 17 | unit, mocked rects, all 3 origins | §3D formulas |
-| 18 | unit: below < T and above larger → top; ≥ T → preferred; tie → preferred; *Flips Up* 1280 × 1150 | panel above, bottom = trigger top − 8, max-height 846, 23 of 26 visible |
-| 19 | unit: vh 300, element 130–166, sm, no header (below 118, above 114) → below, 126 px = 18 + 3 × 36; *Long Menu Room* `--height=1150` at 1280: items fully inside the list | max-height 710, ≥ 19 visible (> 15) |
+| 18 | unit: below < T and above larger → top; ≥ T → preferred; tie → preferred; *Flips Up* 1280 × 1150 | panel above, bottom = trigger top − 8, max-height 846, 24 of 26 visible |
+| 19 | unit: vh 300, element 126–162, sm, no header (below 114, above 110) → below, 126 px = 18 + 3 × 36; *Long Menu Room* `--height=1150` at 1280: items fully inside the list | max-height 702, 20 visible (> 15) |
 | 20 | unit: ArrowDown to item 26 scrolls it into view; header/footer outside the scroller; story 360 L/D | as 3.48 |
 | 21 | full suite; compat; prerender of the compat app | only the stated changes |
 | 22 | lint; argTypes with `description` + `table.defaultValue`; the stories above | — |
+
+## Change notes (review r1, 2026-11-19)
+
+| § | Was | Now | Why |
+|---|---|---|---|
+| 2, 3D, 4, 9 | room below an overlay origin less 8 px margin: 710 px, 19 rows (pitch 36), flips-up 23 rows, unit case 130–166 | less 16 px: 702 px, 20 rows (sm pitch measured 33.5), flips-up 24 rows, unit case 126–162 | CDK 22.2 `_getOverlayFit` / `_pushOverlayOnScreen` compare the viewport y with vh − top − bottom margin, so a pane reaching vh − 8 was pushed 7.5 px into the gap (build.md deviation 1, accepted) |
+| 4 A | link ring 2 px, +2 px | the existing ring as measured (3 px solid, offset 0); unchanged by 069 | design read the wrong rule |
+| 5 | FC grounds unspecified | `light`/`dark`/`checkered` keep their colours in forced colours | FC turns all four grounds into Canvas and drops the checks, so the requester's white silhouette on `dark` measures 1.00 against its ground (review r1 F-1, queued) |
 | 23 | review of CHANGELOG | vertraege row 1 (Verträge dialog „Details“), usm-x 71 (settings logo), 72 (recording bar), 73 (catalog row menu) |
