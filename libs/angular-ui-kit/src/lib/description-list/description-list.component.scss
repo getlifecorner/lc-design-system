@@ -313,6 +313,31 @@ lc-badge.lc-dl__badge {
   border-block: 1px solid var(--color-field-border);
 }
 
+// 3.49 (request 069, AC-5, backlog 068-n2, design D-4): the separator of a
+// clickable row bent at its rounded corners too. A non-total row that is not
+// the last draws it as a pseudo-element border, straight across the row at
+// the old place; the 1 px margin keeps its room. (0,5,0) beats the separator
+// rule; totals keep their 3.48 rules.
+.lc-dl--rows.lc-dl--sep-line .lc-dl__row.lc-dl__row--clickable:not(.lc-dl__row--total, :last-child),
+.lc-dl--rows.lc-dl--sep-divider .lc-dl__row.lc-dl__row--clickable:not(.lc-dl__row--total, :last-child) {
+  border-bottom: 0;
+  margin-bottom: 1px;
+}
+
+.lc-dl--rows.lc-dl--sep-line .lc-dl__row.lc-dl__row--clickable:not(.lc-dl__row--total, :last-child)::after,
+.lc-dl--rows.lc-dl--sep-divider .lc-dl__row.lc-dl__row--clickable:not(.lc-dl__row--total, :last-child)::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  border-bottom: 1px solid var(--color-divider);
+  pointer-events: none;
+}
+
+.lc-dl--rows.lc-dl--sep-divider .lc-dl__row.lc-dl__row--clickable:not(.lc-dl__row--total, :last-child)::after {
+  border-bottom-style: dashed;
+}
+
 // `totalAriaLabel`: read, not shown.
 .lc-dl__sr-only {
   position: absolute;
@@ -376,6 +401,32 @@ lc-icon.lc-dl__icon {
 // basis below without moving after it.
 .lc-dl--rows > .lc-dl__row > .lc-dl__value.lc-dl__value--icon {
   flex-basis: min(100%, calc(7em + var(--spacing-1)));
+}
+
+// ── external link (3.49, request 069, vertraege row 1, D-2/D-3) ─────────────
+// After the value's last glyph, with no break before it: a nowrap glue holds
+// the 0 px space, the hidden hint (its containing block stays in the dd) and
+// the 1em icon in the link's ink, 4 px after the word, on its line box. The
+// value itself still wraps. `rows`: the icon and its gap count toward the
+// value's share, as for the item icon (+1em + 4 px; with both icons +2).
+.lc-dl__external {
+  position: relative;
+  white-space: nowrap;
+}
+
+lc-icon.lc-dl__external-icon {
+  --lc-icon-size: 1em;
+  height: 1lh;
+  vertical-align: top;
+  margin-inline-start: var(--spacing-1);
+}
+
+.lc-dl--rows > .lc-dl__row > .lc-dl__value.lc-dl__value--external {
+  flex-basis: min(100%, calc(7em + var(--spacing-1)));
+}
+
+.lc-dl--rows > .lc-dl__row > .lc-dl__value.lc-dl__value--icon.lc-dl__value--external {
+  flex-basis: min(100%, calc(8em + 2 * var(--spacing-1)));
 }
 
 // ── word breaks (3.37, request 057, regeln row 1, D-4) ──────────────────────

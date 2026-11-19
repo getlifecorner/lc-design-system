@@ -63,7 +63,8 @@ describe('lc-badge wrap (3.11, SI-15)', () => {
     it('keeps the class list and the DOM of a badge without `wrap`', () => {
       const { span } = render();
       expect(classes(span)).toEqual(['lc-badge', 'lc-badge--info', 'lc-badge--md', 'lc-badge--rounded']);
-      expect(span.children).toHaveLength(0);
+      // 3.49 (request 069, D-7): the label element holds the text (was 0 children).
+      expect([...span.children].map((c) => c.className)).toEqual(['lc-badge__label']);
       expect(span.textContent?.trim()).toBe('Geschlossene Beta, nur mit Einladung');
     });
 
@@ -100,7 +101,8 @@ describe('lc-badge wrap (3.11, SI-15)', () => {
         'lc-badge--wrap',
       ]);
       expect(span.tagName).toBe('SPAN');
-      expect(span.children).toHaveLength(0);
+      // 3.49 (request 069, D-7): the label element holds the text (was 0 children).
+      expect([...span.children].map((c) => c.className)).toEqual(['lc-badge__label']);
       expect(span.textContent?.trim()).toBe('Geschlossene Beta, nur mit Einladung');
     });
 

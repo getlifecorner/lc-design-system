@@ -153,9 +153,113 @@
   }
 }
 
-// Forced colours: the ring is Highlight (request 042).
+// ── single image (3.49, request 069, usm-x row 71, design §3B) ──────────────
+// A preview tile (160 × 96 by default) and the buttons beside it; they wrap
+// under the tile when both don't fit (360: 160 + 16 + 175.7 > 328). The lines
+// below reuse the drop zone's hint and accepted/max classes.
+.file-upload-image {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--spacing-4);
+  }
+
+  // A drop target, not a control. Its ground comes from the tile's own theme
+  // scope (`light`, `dark`), so the 1 px border is that scope's.
+  &__tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: var(--lc-file-upload-image-width, 10rem);
+    height: var(--lc-file-upload-image-height, 6rem);
+    max-width: 100%;
+    padding: var(--spacing-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--lc-file-upload-image-radius, var(--border-radius-md));
+    background-color: var(--color-surface);
+  }
+
+  &__tile--empty {
+    border-style: dashed;
+  }
+
+  // The dark rail (#070e15 in both page themes).
+  &__tile--dark {
+    background-color: var(--color-sidebar);
+  }
+
+  // Transparency checks, with an image only (the empty tile shows the surface).
+  &__tile--checkered:not(.file-upload-image__tile--empty) {
+    background: repeating-conic-gradient(var(--color-neutral-300) 0 25%, var(--color-surface) 0 50%) 0 0 / 16px 16px;
+  }
+
+  &__tile--drag-over {
+    outline: 2px dashed var(--color-primary-500);
+    outline-offset: 2px;
+  }
+
+  // The children let the drag events through to the tile (no dragleave while
+  // crossing them), as in the drop zone.
+  &__img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: var(--lc-file-upload-image-filter, none);
+    pointer-events: none;
+  }
+
+  // A URL that fails to load shows the tile's ground.
+  &__img--failed {
+    visibility: hidden;
+  }
+
+  &__empty {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+    text-align: center;
+    pointer-events: none;
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-2);
+  }
+
+  // Always rendered (a live region that exists before its text); empty
+  // when there is no rejection.
+  &__error {
+    margin: 0;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-error);
+  }
+}
+
+// Forced colours: the ring is Highlight (request 042). 3.49 (request 069):
+// the image tile's edge is the text colour, its drag ring the system
+// highlight; the image is drawn as it is. One block, the file's last.
 @media (forced-colors: active) {
   .file-upload__file-remove:focus-visible {
     outline-color: Highlight;
+  }
+
+  .file-upload-image__tile {
+    border-color: CanvasText;
+  }
+
+  .file-upload-image__tile--drag-over {
+    outline-color: Highlight;
+  }
+
+  .file-upload-image__img {
+    forced-color-adjust: none;
   }
 }

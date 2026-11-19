@@ -5,54 +5,94 @@
   #fileInput
   type="file"
   class="file-upload__input"
-  [accept]="accept()"
-  [multiple]="multiple()"
+  [accept]="effectiveAccept()"
+  [multiple]="multiple() && variant() !== 'image'"
   [disabled]="disabled()"
   (change)="onFileChange($event)"
 />
-<div
-  [class]="dropzoneClasses()"
-  (dragover)="onDragOver($event)"
-  (dragleave)="onDragLeave($event)"
-  (drop)="onDrop($event)"
-  (click)="openFilePicker()"
-  role="button"
-  [attr.tabindex]="disabled() ? null : 0"
-  (keydown.enter)="onKeyActivate($event)"
-  (keydown.space)="onKeyActivate($event)"
-  [attr.aria-label]="dropzoneAriaLabel()"
-  [attr.aria-disabled]="disabled()"
->
-  <div class="file-upload__content">
-    <lc-icon name="cloud-arrow-up" class="file-upload__icon" [decorative]="true"></lc-icon>
-    <!-- Real spaces between the lines, so the visible text reads as words
-         that the drop zone's name contains (WCAG 2.5.3). -->
-    <p class="file-upload__hint">{{ hint() }}</p>
+@if (variant() === 'image') {
+  <!-- 3.49 (request 069, usm-x row 71, D-5): one image field. The tile is a
+       drop target only (no role, no tab stop); the buttons open the picker. -->
+  <div class="file-upload-image">
+    <div class="file-upload-image__row">
+      <div [class]="tileClasses()" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+        @if (imageSrc()) {
+          <img
+            class="file-upload-image__img"
+            [class.file-upload-image__img--failed]="imageFailed()"
+            [src]="imageSrc()"
+            [alt]="imageAlt()"
+            (error)="imageFailed.set(true)"
+          />
+        } @else {
+          <span class="file-upload-image__empty">{{ emptyImageLabel() }}</span>
+        }
+      </div>
+      <div class="file-upload-image__actions">
+        <lc-button #choose variant="outline" size="lg" [disabled]="disabled()" [ariaDescribedBy]="chooseDescribedBy()" (clicked)="openFilePicker()">{{
+          imageSrc() ? replaceImageLabel() : chooseImageLabel()
+        }}</lc-button>
+        @if (imageSrc()) {
+          <lc-button variant="ghost" size="lg" [disabled]="disabled()" (clicked)="removeImage()">{{ removeImageLabel() }}</lc-button>
+        }
+      </div>
+    </div>
+    @if (imageHint()) {
+      <p class="file-upload__hint" [id]="ids.hint">{{ imageHint() }}</p>
+    }
     @if (accept()) {
-      &ngsp;<p class="file-upload__accept">{{ acceptedLabel() }} {{ accept() }}</p>
+      <p class="file-upload__accept" [id]="ids.accept">{{ acceptedLabel() }} {{ accept() }}</p>
     }
     @if (maxSizeBytes() > 0) {
-      &ngsp;<p class="file-upload__accept">{{ maxSizeLabel() }} {{ formatSize(maxSizeBytes()) }}</p>
+      <p class="file-upload__accept" [id]="ids.max">{{ maxSizeLabel() }} {{ formatSize(maxSizeBytes()) }}</p>
     }
+    <p class="file-upload-image__error" role="alert" [id]="ids.error">{{ imageErrorText() }}</p>
   </div>
-</div>
+} @else {
+  <div
+    [class]="dropzoneClasses()"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+    (click)="openFilePicker()"
+    role="button"
+    [attr.tabindex]="disabled() ? null : 0"
+    (keydown.enter)="onKeyActivate($event)"
+    (keydown.space)="onKeyActivate($event)"
+    [attr.aria-label]="dropzoneAriaLabel()"
+    [attr.aria-disabled]="disabled()"
+  >
+    <div class="file-upload__content">
+      <lc-icon name="cloud-arrow-up" class="file-upload__icon" [decorative]="true"></lc-icon>
+      <!-- Real spaces between the lines, so the visible text reads as words
+           that the drop zone's name contains (WCAG 2.5.3). -->
+      <p class="file-upload__hint">{{ hint() }}</p>
+      @if (accept()) {
+        &ngsp;<p class="file-upload__accept">{{ acceptedLabel() }} {{ accept() }}</p>
+      }
+      @if (maxSizeBytes() > 0) {
+        &ngsp;<p class="file-upload__accept">{{ maxSizeLabel() }} {{ formatSize(maxSizeBytes()) }}</p>
+      }
+    </div>
+  </div>
 
-@if (selectedFiles().length > 0) {
-  <ul class="file-upload__list">
-    @for (f of selectedFiles(); track f.name; let i = $index) {
-      <li class="file-upload__file">
-        <lc-icon name="document" class="file-upload__file-icon" [decorative]="true"></lc-icon>
-        <span class="file-upload__file-name">{{ f.name }}</span>
-        <span class="file-upload__file-size">{{ formatSize(f.size) }}</span>
-        <button
-          type="button"
-          class="file-upload__file-remove"
-          (click)="removeFile(i); $event.stopPropagation()"
-          [attr.aria-label]="removeFileAriaLabel() + ' ' + f.name"
-        >
-          <lc-icon name="x-mark" [decorative]="true"></lc-icon>
-        </button>
-      </li>
-    }
-  </ul>
+  @if (selectedFiles().length > 0) {
+    <ul class="file-upload__list">
+      @for (f of selectedFiles(); track f.name; let i = $index) {
+        <li class="file-upload__file">
+          <lc-icon name="document" class="file-upload__file-icon" [decorative]="true"></lc-icon>
+          <span class="file-upload__file-name">{{ f.name }}</span>
+          <span class="file-upload__file-size">{{ formatSize(f.size) }}</span>
+          <button
+            type="button"
+            class="file-upload__file-remove"
+            (click)="removeFile(i); $event.stopPropagation()"
+            [attr.aria-label]="removeFileAriaLabel() + ' ' + f.name"
+          >
+            <lc-icon name="x-mark" [decorative]="true"></lc-icon>
+          </button>
+        </li>
+      }
+    </ul>
+  }
 }

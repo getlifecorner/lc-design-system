@@ -28,20 +28,23 @@
     <div
       #dropdown
       class="lc-menu__dropdown"
-      [class.lc-menu__dropdown--bottom-left]="position() === 'bottom-left'"
-      [class.lc-menu__dropdown--bottom-right]="position() === 'bottom-right'"
-      [class.lc-menu__dropdown--top-left]="position() === 'top-left'"
-      [class.lc-menu__dropdown--top-right]="position() === 'top-right'"
+      [class.lc-menu__dropdown--bottom-left]="effectivePosition() === 'bottom-left'"
+      [class.lc-menu__dropdown--bottom-right]="effectivePosition() === 'bottom-right'"
+      [class.lc-menu__dropdown--top-left]="effectivePosition() === 'top-left'"
+      [class.lc-menu__dropdown--top-right]="effectivePosition() === 'top-right'"
       [class.lc-menu__dropdown--sm]="size() === 'sm'"
       [class.lc-menu__dropdown--lg]="size() === 'lg'"
       [style.min-width]="minWidth()"
       [style.max-width]="maxWidth() || null"
       [class.lc-menu__dropdown--capped]="!!maxWidth()"
       [class.lc-menu__dropdown--has-toggles]="hasToggles()"
-      [style.max-height]="maxHeight() || null"
+      [style.max-height]="panelMaxHeight()"
       [class.lc-menu__dropdown--scroll]="scrolls()"
       [class.lc-menu__dropdown--overlay]="!!anchor()"
       [class.lc-menu__dropdown--at-point]="atPoint()"
+      [class.lc-menu__dropdown--room]="roomMode()"
+      [class.lc-menu__dropdown--room-below]="roomEdge() === 'below'"
+      [class.lc-menu__dropdown--room-above]="roomEdge() === 'above'"
       [attr.lang]="panelLang()"
     >
       <!-- Optional header slot (outside the menu role: it is not an item) -->

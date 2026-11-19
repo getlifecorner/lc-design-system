@@ -51,9 +51,11 @@ describe('DescriptionListComponent — item icon (3.46, request 066)', () => {
   describe('AC-1: without icon, the 3.45 DOM', () => {
     const anchors = (n: number) => '<!--container-->'.repeat(n);
     // Captured from the 3.45 template (main d6cdc79) with the same items.
+    // 3.49 (request 069, design §9 AC-4): the link holds the `external` @if,
+    // so one comment anchor follows its text; attributes and text are 3.45's.
     it.each([
       ['plain', { term: 'Plain', value: 'Wert' }, `<dd class="lc-dl__value lc-dl__value--default">${anchors(3)}Wert${anchors(3)}</dd>`],
-      ['href', { term: 'Link', value: 'SAP-Ist', href: '#sap' }, `<dd class="lc-dl__value lc-dl__value--default">${anchors(1)}<a class="lc-dl__link" href="#sap">SAP-Ist</a>${anchors(5)}</dd>`],
+      ['href', { term: 'Link', value: 'SAP-Ist', href: '#sap' }, `<dd class="lc-dl__value lc-dl__value--default">${anchors(1)}<a class="lc-dl__link" href="#sap">SAP-Ist${anchors(1)}</a>${anchors(5)}</dd>`],
       [
         'datetime',
         { term: 'Time', value: 'heute 06:00', datetime: '2026-11-07T06:00:00+01:00' },
@@ -77,8 +79,9 @@ describe('DescriptionListComponent — item icon (3.46, request 066)', () => {
 
     it('a badge item: the 3.45 dd apart from comment anchors', () => {
       render([{ term: 'Fassung', value: '1', badge: 'Freigegeben', badgeVariant: 'success' }]);
+      // 3.49 (request 069, badge D-7): the badge's text sits in its label element.
       expect(ddHtml(dds()[0], false)).toBe(
-        '<dd class="lc-dl__value lc-dl__value--default"><span class="lc-dl__badge-value">1</span><lc-badge class="lc-dl__badge lc-dl__badge--after-value"><span class="lc-badge lc-badge--rounded lc-badge--sm lc-badge--success"> Freigegeben</span></lc-badge></dd>',
+        '<dd class="lc-dl__value lc-dl__value--default"><span class="lc-dl__badge-value">1</span><lc-badge class="lc-dl__badge lc-dl__badge--after-value"><span class="lc-badge lc-badge--rounded lc-badge--sm lc-badge--success"><span class="lc-badge__label"> Freigegeben</span></span></lc-badge></dd>',
       );
     });
 

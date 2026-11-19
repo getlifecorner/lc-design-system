@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/angular';
+import { moduleMetadata } from '@storybook/angular';
 import { BadgeComponent } from './badge.component';
+import { IconComponent } from '../icon/icon.component';
 
 const meta: Meta<BadgeComponent> = {
   title: 'Data Display/Badge',
@@ -16,7 +18,9 @@ Use it for statuses, categories, notifications, and metadata.
 - 4 sizes (xs, sm, md, lg)
 - Rounded pill mode
 - Optional wrapping for long, sentence-like labels (\`wrap\`, 3.11)
-- Content projection for custom content
+- Content projection for custom content: since 3.49 it sits in one inline label (\`.lc-badge__label\`),
+  so mixed content keeps its spaces; a projected \`lc-icon\` stays before the label (see *Mixed Label*)
+- A width cap with an ellipsis and a \`title\` (\`maxWidth\`, 3.49, see *Max Width*)
 
 **Contrast:** the ink of every variant reaches 4.5:1 on its own fill in both palettes, on the
 page and on a card (\`badge-contrast.spec.ts\`). The tinted variants take their ink from
@@ -53,6 +57,12 @@ lighter so they pass (HS-5). Apps can still restyle a badge through \`--lc-badge
       description:
         '3.44: a leading decorative `lc-icon` (1em square, label ink) after the dot. The gap is `--lc-badge-gap` (default `0.4em` with an icon, `0` without), settable on the badge or any ancestor.',
       table: { defaultValue: { summary: 'undefined' } },
+    },
+    maxWidth: {
+      control: 'text',
+      description:
+        '3.49 (usm-x row 72): caps the badge (any CSS length, `16rem`, `22ch`): the label is cut on one line with an ellipsis, dot and icon stay, and the badge\'s `title` is the whole label text (not when the host has its own `title`); the text stays in the DOM. Ignored with `wrap`. Empty: no cap.',
+      table: { defaultValue: { summary: "''" } },
     },
   },
 };
@@ -360,5 +370,72 @@ export const WrapLargeText: LargeTextStory = {
         ${wrapColumn('en', 'Closed beta, invitation only', 'Beta', 'Waiting for the household to approve')}
       </div>
       <style>::ng-deep html:has(#storybook-root [data-lc-story-text="200%"]) { font-size: 200%; }</style>`,
+  }),
+};
+
+/** 3.49 (request 069, usm-x row 72): mixed content keeps its spaces; a projected icon keeps its slot. */
+export const MixedLabel: Story = {
+  name: 'Mixed Label',
+  decorators: [moduleMetadata({ imports: [IconComponent] })],
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.49 (request 069, usm-x row 72, the recording bar): the projected content sits in one inline label (`.lc-badge__label`), so „Aufnahme läuft in **USM-1209 Zeitbuchung**“ keeps the space between its runs (before, each run was a flex item with no gap: „inUSM-1209“). Second row: an `lc-icon` projected before a word (also as the single root of an `@if`, as finance-intelligence\'s state badge does) keeps its own flex slot before the label, so its layout and width stay as before; prefer `icon`. Badges with text only, `icon`, `dot`, `wrap` or counts render at the same size.',
+      },
+    },
+  },
+  render: () => ({
+    props: { seal: 'check' },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; align-items: flex-start; gap: 16px;">
+        <lc-badge variant="info" size="md" [rounded]="true" [dot]="true">Aufnahme läuft in <strong>USM-1209 Zeitbuchung</strong></lc-badge>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+          <lc-badge variant="success" size="sm" [rounded]="true">
+            @if (seal) {
+              <lc-icon [name]="seal" size="xs" [decorative]="true" style="margin-inline-end: var(--spacing-1);" />
+            }
+            <span>Geladen</span>
+          </lc-badge>
+          <lc-badge variant="warning" size="sm" [rounded]="true"><lc-icon name="clock" size="xs" [decorative]="true" style="margin-inline-end: var(--spacing-1);" /><span>Entwurf</span></lc-badge>
+        </div>
+      </div>`,
+  }),
+};
+
+/** The 60-character change set name of usm-x row 72. */
+const CHANGE_SET = 'USM-1209 Zeitbuchung: Quartalsabschluss Kostenstellenplanung';
+
+/** 3.49 (request 069, usm-x row 72): a long, user-typed name cut with an ellipsis. */
+export const MaxWidth: Story = {
+  name: 'Max Width',
+  args: { maxWidth: '16rem' },
+  parameters: {
+    controls: { include: ['maxWidth'] },
+    docs: {
+      description: {
+        story:
+          '3.49 (request 069, usm-x row 72): `maxWidth="16rem"` caps the badge at 256 px, so a user-typed change set name (60 characters) no longer widens it until the row breaks. The label is cut on one line with an ellipsis; dot and icon stay; the badge\'s `title` holds the whole text, which also stays in the DOM for screen readers. Rows: with `dot` and „Aufnahme läuft in“, with `icon`; the four sizes at `12rem`; a short label that fits (no cut, same look); `wrap` with `maxWidth`: `wrap` wins, no ellipsis.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: { ...args, name: CHANGE_SET },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; align-items: flex-start; gap: 16px;">
+        <lc-badge variant="info" size="md" [rounded]="true" [dot]="true" [maxWidth]="maxWidth">Aufnahme läuft in <strong>{{ name }}</strong></lc-badge>
+        <lc-badge variant="primary" size="md" [rounded]="true" icon="clock" [maxWidth]="maxWidth">{{ name }}</lc-badge>
+        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px;">
+          <lc-badge variant="default" size="xs" maxWidth="12rem">{{ name }}</lc-badge>
+          <lc-badge variant="default" size="sm" maxWidth="12rem">{{ name }}</lc-badge>
+          <lc-badge variant="default" size="md" maxWidth="12rem">{{ name }}</lc-badge>
+          <lc-badge variant="default" size="lg" maxWidth="12rem">{{ name }}</lc-badge>
+        </div>
+        <lc-badge variant="success" size="md" [maxWidth]="maxWidth">Entwurf</lc-badge>
+        <div style="width: 16rem; max-width: 100%;">
+          <lc-badge variant="warning" size="md" [wrap]="true" maxWidth="12rem">{{ name }}</lc-badge>
+        </div>
+      </div>`,
   }),
 };

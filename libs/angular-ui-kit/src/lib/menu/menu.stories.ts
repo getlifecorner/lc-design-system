@@ -5,6 +5,7 @@ import {
   Component,
   ElementRef,
   afterNextRender,
+  input,
   signal,
   viewChild,
   type OnDestroy,
@@ -65,7 +66,7 @@ const meta: Meta<MenuComponent> = {
     maxHeight: {
       control: 'text',
       description:
-        '3.48 (usm-x row 54): caps the panel height (CSS length, e.g. `min(56vh, 420px)`); the items scroll inside, header and footer stay, the keyboard-focused item is scrolled into view. Empty: no cap (overlay: the viewport less 16 px)',
+        '3.48 (usm-x row 54): caps the panel height (CSS length, e.g. `min(56vh, 420px)`); the items scroll inside, header and footer stay, the keyboard-focused item is scrolled into view. Empty: no cap (overlay: the viewport less 16 px). 3.49 (usm-x row 73): `room` sizes the panel to the room between its origin and the viewport edge on the side it opens to (8 px gap, 8 px margin), at least 3 items plus header and footer; `position`\'s side is kept while its room holds min(240 px, the whole panel), else the side with more room opens',
       table: { defaultValue: { summary: "''" } },
     },
     loading: {
@@ -556,6 +557,74 @@ export const LongMenuCapped: Story = {
           <button trigger type="button" style="${TOKEN_TRIGGER}">Weitere ▾</button>
         </lc-menu>
       </div>`,
+  }),
+};
+
+/**
+ * 3.49 (request 069, usm-x row 73): the 26 entries at an anchor button whose
+ * top sits at `top` of the viewport height (less the 16 px canvas padding).
+ * The menu opens once the canvas has its padding (the room is measured on
+ * open, as when a user clicks „Weitere“); the button toggles it.
+ */
+@Component({
+  selector: 'lc-menu-room-demo',
+  standalone: true,
+  imports: [MenuComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div lang="de" [style.padding-top]="'calc(' + top() + ' - 16px)'">
+      <button #t type="button" aria-haspopup="menu" [attr.aria-expanded]="open()" style="${TOKEN_TRIGGER}" (click)="open.set(!open())">Weitere ▾</button>
+      <lc-menu [items]="items" [isOpen]="open()" [anchor]="t" [position]="position()" size="sm" [maxHeight]="maxHeight()" (itemClick)="open.set(false)" (closed)="open.set(false)" />
+    </div>
+  `,
+})
+class MenuRoomDemoComponent {
+  readonly top = input('33vh');
+  readonly position = input<'bottom-left' | 'bottom-right' | 'top-left' | 'top-right'>('bottom-left');
+  readonly maxHeight = input('room');
+  protected readonly items = LONG_MENU;
+  protected readonly open = signal(false);
+
+  constructor() {
+    afterNextRender(() => setTimeout(() => this.open.set(true), 100));
+  }
+}
+
+export const LongMenuRoom: Story = {
+  name: 'Long Menu Room',
+  args: { position: 'bottom-left', maxHeight: 'room' },
+  parameters: {
+    controls: { include: ['position', 'maxHeight'] },
+    docs: {
+      description: {
+        story:
+          '3.49 (request 069, usm-x row 73, the catalog row menu): `maxHeight="room"` sizes the panel to the room between the anchor and the viewport edge on the side it opens to, less the 8 px gap and the viewport margin (16 px at the bottom of an overlay, 8 px elsewhere). The „Weitere“ button sits at a third of the viewport; at 1280 × 1150 the 26 entries (`size="sm"`) get 702 px, 20 visible instead of 10 behind a 420 px cap, and the rest scroll inside (`overscroll-behavior: contain`, the focused item is scrolled into view). At least 3 items plus header and footer, so a short window scrolls. Measured on open, on resize and when the items change. The button toggles the menu.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    moduleMetadata: { imports: [MenuRoomDemoComponent] },
+    template: `<lc-menu-room-demo top="33vh" [position]="position" [maxHeight]="maxHeight" />`,
+  }),
+};
+
+export const LongMenuRoomFlipsUp: Story = {
+  name: 'Long Menu Room Flips Up',
+  args: { position: 'bottom-left', maxHeight: 'room' },
+  parameters: {
+    controls: { include: ['position', 'maxHeight'] },
+    docs: {
+      description: {
+        story:
+          '3.49 (request 069, usm-x row 73): the room also picks the side. `position="bottom-left"` asks for below; the button sits at three quarters of the viewport, so at 1280 × 1150 the room below is 219.5 px, under min(240 px, the whole panel), and the panel opens above with the larger room (846 px, 24 of 26 entries visible), its bottom 8 px over the button. While the preferred side holds 240 px (or the whole panel) it is kept.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    moduleMetadata: { imports: [MenuRoomDemoComponent] },
+    template: `<lc-menu-room-demo top="75vh" [position]="position" [maxHeight]="maxHeight" />`,
   }),
 };
 

@@ -284,6 +284,25 @@
   max-height: calc(100dvh - 16px);
 }
 
+// 3.49 (request 069, usm-x row 73, design §3D): with `maxHeight="room"` an
+// overlay panel at an element keeps its 8 px gap on the anchor's side only,
+// so the pane (gap + panel) is exactly as tall as the room allows. The height
+// itself is inline (the measured room). A room panel never transitions: under
+// reduced motion the global 0.01 ms duration (with the initial
+// `transition-property: all`) would let CDK read the old height and margin
+// right after they change, and place the pane for those.
+.lc-menu__dropdown--room {
+  transition-property: none;
+}
+
+.lc-menu__dropdown.lc-menu__dropdown--overlay.lc-menu__dropdown--room-below {
+  margin-block: var(--spacing-2) 0;
+}
+
+.lc-menu__dropdown.lc-menu__dropdown--overlay.lc-menu__dropdown--room-above {
+  margin-block: 0 var(--spacing-2);
+}
+
 // A disabled item with a reason keeps its focus and hover (for the tooltip):
 // its content is dimmed, not the item, so the focus ring stays full.
 .lc-menu__item--reason {

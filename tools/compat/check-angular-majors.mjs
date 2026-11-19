@@ -254,8 +254,9 @@ const EXPECT_IN_HTML = [
   ['shell clearance fallback before JS (AS-31)', /--_clearance:\s*var\(\s*--lc-app-shell-bottom-clearance,\s*max\(\s*calc\(112px \+ env\(safe-area-inset-bottom,\s*0px\)\)\s*,\s*calc\(var\(--_lc-app-shell-bar,\s*72px\) \+ 40px/, 'tt/index.html'],
   ['no bar height written on the server (AS-31)', (html) => html.includes('lc-bottom-nav--floating') && !/style="[^"]*--_lc-app-shell-bar/.test(html), 'tt/index.html'],
   // 3.11 (request 010): the badge's wrap class is in the server HTML, so the
-  // label wraps before JS (SI-15); the rules themselves are plain CSS
-  ['badge wrap class before JS (SI-15)', /<span(?=[^>]*class="[^"]*\blc-badge--wrap\b)[^>]*>(?:<!--[^]*?-->|\s)*Geschlossene Beta, nur mit Einladung/],
+  // label wraps before JS (SI-15); the rules themselves are plain CSS. 3.49
+  // (request 069, D-7): the text sits in the badge's label element.
+  ['badge wrap class before JS (SI-15)', /<span(?=[^>]*class="[^"]*\blc-badge--wrap\b)[^>]*>(?:<!--[^]*?-->|\s)*<span[^>]*class="lc-badge__label"[^>]*>(?:<!--[^]*?-->|\s)*Geschlossene Beta, nur mit Einladung/],
   // 3.11.1 (request 011): lc-icon writes no style attribute for the default
   // colour (G-37); the size is the icon-<size> class, the svg keeps width/height
   ['lc-icon: no style attribute, the registered glyph and the plain icon (G-37)', (html) => iconsWithoutStyle(html, 3, ['id="compat-registered"', 'name="check"'])],

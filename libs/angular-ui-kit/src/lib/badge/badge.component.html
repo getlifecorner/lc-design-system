@@ -1,4 +1,4 @@
-<span [class]="badgeClasses()">
+<span [class]="badgeClasses()" [style.max-width]="truncate() ? maxWidth() : null" [attr.title]="autoTitle()">
   <!-- 3.44 (usm-x row 28): one outer @if, so a badge without dot and icon keeps its single anchor. -->
   @if (dot() || icon()) {
     @if (dot()) {
@@ -8,5 +8,7 @@
       <lc-icon class="lc-badge__icon" [name]="icon()!" size="xs" [decorative]="true" />
     }
   }
-  <ng-content></ng-content>
+  <!-- 3.49 (request 069, usm-x row 72, D-7): a projected lc-icon keeps its own flex slot before the label; the rest sits in one inline label, so spaces between runs stay and `maxWidth` cuts the label only. -->
+  <ng-content select="lc-icon" />
+  <span #label class="lc-badge__label"><ng-content></ng-content></span>
 </span>

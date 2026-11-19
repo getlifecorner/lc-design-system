@@ -32,6 +32,13 @@ show your own, translated from \`code\`.
 **One file (\`multiple=false\`):** a new pick or drop replaces the selection with its
 first accepted file. If all its files are rejected (size or type), the selection is
 cleared and \`filesSelected\` emits \`[]\`.
+
+**One image (\`variant="image"\`, 3.49, usm-x row 71):** a preview tile with the current image
+(\`imageSrc\`) on a ground to judge it on (\`imageBackground\`: \`surface\`, \`light\`, \`dark\`,
+\`checkered\`), a choose button („Replace image“ once there is one) and a remove button
+(\`imageRemoved\`). A picked or dropped file is checked as above and emitted as \`[file]\`; the app
+shows it by setting \`imageSrc\`. A rejected file is shown under the field and announced. See
+*Image*, *Image Backgrounds*, *Image German*, *Image Rejected German*.
         `,
       },
     },
@@ -40,14 +47,78 @@ cleared and \`filesSelected\` emits \`[]\`.
     accept: {
       control: 'text',
       description:
-        'Accepted types, comma-separated, case-insensitive: extensions (`.csv`), MIME types (`text/csv`), wildcards (`image/*`). Since 3.24 checked for picked and dropped files alike; a file matching no token is rejected with `code: \'type\'`. Prefer extensions: systems report MIME types differently.',
+        'Accepted types, comma-separated, case-insensitive: extensions (`.csv`), MIME types (`text/csv`), wildcards (`image/*`). Since 3.24 checked for picked and dropped files alike; a file matching no token is rejected with `code: \'type\'`. Prefer extensions: systems report MIME types differently. 3.49: empty means `image/*` in `variant="image"`.',
       table: { defaultValue: { summary: "''" } },
     },
     multiple: {
       control: 'boolean',
       description:
-        'Allow multiple files. `false`: a new pick or drop replaces the selection with its first accepted file; if all its files are rejected, the selection is cleared.',
+        'Allow multiple files. `false`: a new pick or drop replaces the selection with its first accepted file; if all its files are rejected, the selection is cleared. 3.49: ignored in `variant="image"` (one file).',
       table: { defaultValue: { summary: 'false' } },
+    },
+    variant: {
+      control: 'inline-radio',
+      options: ['dropzone', 'image'],
+      description:
+        '3.49 (usm-x row 71): `image` shows one image field (preview tile, choose/replace, remove) instead of the drop zone and its list. A file is checked as in the drop zone and emitted as `[file]`; a rejected one is shown under the field and announced.',
+      table: { defaultValue: { summary: "'dropzone'" } },
+    },
+    imageSrc: {
+      control: 'text',
+      description: '3.49: the current image (URL, object URL, data URI) in `variant="image"`. Empty: the empty tile and „Choose image“. The kit never stores or uploads.',
+      table: { defaultValue: { summary: "''" } },
+    },
+    imageAlt: {
+      control: 'text',
+      description: '3.49: alt text of the preview; empty = decorative (`alt=""`).',
+      table: { defaultValue: { summary: "''" } },
+    },
+    imageBackground: {
+      control: 'inline-radio',
+      options: ['surface', 'light', 'dark', 'checkered'],
+      description:
+        '3.49: ground of the preview: `surface` (page theme), `light`, `dark` (the dark rail, `--color-sidebar`, in both themes), `checkered` (transparency, with an image only).',
+      table: { defaultValue: { summary: "'surface'" } },
+    },
+    imageHint: {
+      control: 'text',
+      description: '3.49: line under the image field (the drop zone keeps `hint`); with the accepted and max lines it describes the choose button.',
+      table: { defaultValue: { summary: "''" } },
+    },
+    chooseImageLabel: {
+      control: 'text',
+      description: '3.49: choose button without an image. German: „Bild auswählen“.',
+      table: { defaultValue: { summary: "'Choose image'" } },
+    },
+    replaceImageLabel: {
+      control: 'text',
+      description: '3.49: choose button with an image. German: „Bild ersetzen“.',
+      table: { defaultValue: { summary: "'Replace image'" } },
+    },
+    removeImageLabel: {
+      control: 'text',
+      description: '3.49: remove button (with an image). German: „Bild entfernen“.',
+      table: { defaultValue: { summary: "'Remove image'" } },
+    },
+    emptyImageLabel: {
+      control: 'text',
+      description: '3.49: text of the empty tile. German: „Kein Bild“.',
+      table: { defaultValue: { summary: "'No image'" } },
+    },
+    typeRejectedLabel: {
+      control: 'text',
+      description: '3.49: shown and announced under the image field for a file of another type. German: „Dieser Dateityp wird nicht akzeptiert.“',
+      table: { defaultValue: { summary: "'This file type is not accepted.'" } },
+    },
+    sizeRejectedLabel: {
+      control: 'text',
+      description: '3.49: shown and announced for a file that is too large, followed by `maxSizeLabel` and the size. German: „Diese Datei ist zu groß.“',
+      table: { defaultValue: { summary: "'This file is too large.'" } },
+    },
+    imageRemoved: {
+      action: 'imageRemoved',
+      description: '3.49: the remove button was pressed; the app clears `imageSrc`. The focus moves to the choose button.',
+      table: { defaultValue: { summary: '—' } },
     },
     maxSizeBytes: {
       control: 'number',
@@ -288,5 +359,184 @@ export const RemoveTargets: Story = {
     if (viewMode !== 'story') return;
     await new Promise((resolve) => setTimeout(resolve, 50));
     canvasElement.querySelectorAll<HTMLElement>('.file-upload__file-remove')[1]?.focus({ preventScroll: true });
+  },
+};
+
+/** 3.49: a stand-in logo (3:1, transparent around the shapes), as an inline SVG data URI. */
+const LOGO =
+  'data:image/svg+xml,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40"><rect x="2" y="6" width="28" height="28" rx="7" fill="#3b6588"/><path d="M10 13v14h12" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="38" y="11" width="78" height="8" rx="4" fill="#1f2a37"/><rect x="38" y="24" width="54" height="6" rx="3" fill="#8a96a3"/></svg>',
+  );
+
+/** 3.49: the story's stand-in for the app: an object URL of the chosen file, shown as `imageSrc`. */
+function urlOf(files: { file: File }[]): string {
+  return files[0] ? URL.createObjectURL(files[0].file) : '';
+}
+
+/** 3.49: drops `files` on the image field's tile, as a browser does. */
+function dropOnTile(canvasElement: HTMLElement, files: File[]): void {
+  const tile = canvasElement.querySelector('.file-upload-image__tile');
+  const event = new Event('drop', { bubbles: true, cancelable: true });
+  Object.defineProperty(event, 'dataTransfer', { value: { files } });
+  tile?.dispatchEvent(event);
+}
+
+/** 3.49 (request 069, usm-x row 71): one image field, every new input on the controls. */
+export const Image: Story = {
+  args: {
+    variant: 'image',
+    imageSrc: LOGO,
+    imageAlt: 'Company logo',
+    imageBackground: 'surface',
+    imageHint: 'SVG or PNG, at most 85 kB.',
+    chooseImageLabel: 'Choose image',
+    replaceImageLabel: 'Replace image',
+    removeImageLabel: 'Remove image',
+    emptyImageLabel: 'No image',
+    typeRejectedLabel: 'This file type is not accepted.',
+    sizeRejectedLabel: 'This file is too large.',
+    accept: '',
+    maxSizeBytes: 87040,
+    disabled: false,
+    locale: '',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.49 (request 069, usm-x row 71, the logo in the settings): `variant="image"` shows the current image (`imageSrc`) in a 160 × 96 tile (`--lc-file-upload-image-width` / `-height`, `--lc-file-upload-image-radius`), `object-fit: contain` on the chosen ground, with „Replace image“ (outline, 48.5 px) and „Remove image“ (ghost) beside it; at 360 px they wrap under the tile. Choose opens the hidden native input (`accept` empty = `image/*`); a drop on the tile works too. The story plays the app: a chosen file is shown as an object URL, remove clears it (the focus moves to the choose button). The hint, accepted and max lines and the rejection describe the choose button. The kit never stores or uploads.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: { ...args, urlOf },
+    template: `
+      <div style="max-width: 480px;">
+        <lc-file-upload
+          [variant]="variant"
+          [imageSrc]="imageSrc"
+          [imageAlt]="imageAlt"
+          [imageBackground]="imageBackground"
+          [imageHint]="imageHint"
+          [chooseImageLabel]="chooseImageLabel"
+          [replaceImageLabel]="replaceImageLabel"
+          [removeImageLabel]="removeImageLabel"
+          [emptyImageLabel]="emptyImageLabel"
+          [typeRejectedLabel]="typeRejectedLabel"
+          [sizeRejectedLabel]="sizeRejectedLabel"
+          [accept]="accept"
+          [maxSizeBytes]="maxSizeBytes"
+          [disabled]="disabled"
+          [locale]="locale"
+          (filesSelected)="imageSrc = urlOf($event)"
+          (imageRemoved)="imageSrc = ''"
+        />
+      </div>`,
+  }),
+};
+
+/** 3.49: the four grounds, and the dark rail's white silhouette through the filter hook. */
+export const ImageBackgrounds: Story = {
+  name: 'Image Backgrounds',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.49 (request 069, usm-x row 71): `imageBackground` sets the ground to judge the logo on, with tokens only: `surface` (the page theme\'s surface), `light` (white in both themes, a `.lc-theme-light` scope), `dark` (the dark rail, `--color-sidebar` #070e15 in both themes, a `.lc-theme-dark` scope whose border marks the edge on a dark page) and `checkered` (transparency checks in `--color-neutral-300` and the surface; the empty tile shows the surface). The last field shows the rail\'s white silhouette with `--lc-file-upload-image-filter: brightness(0) invert(1)`.',
+      },
+    },
+  },
+  render: () => ({
+    props: { logo: LOGO },
+    template: `
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); gap: 24px;">
+        <div>
+          <p style="margin: 0 0 8px; font-size: 0.75rem; color: var(--color-text-secondary);">surface</p>
+          <lc-file-upload variant="image" [imageSrc]="logo" imageBackground="surface" />
+        </div>
+        <div>
+          <p style="margin: 0 0 8px; font-size: 0.75rem; color: var(--color-text-secondary);">light</p>
+          <lc-file-upload variant="image" [imageSrc]="logo" imageBackground="light" />
+        </div>
+        <div>
+          <p style="margin: 0 0 8px; font-size: 0.75rem; color: var(--color-text-secondary);">dark</p>
+          <lc-file-upload variant="image" [imageSrc]="logo" imageBackground="dark" />
+        </div>
+        <div>
+          <p style="margin: 0 0 8px; font-size: 0.75rem; color: var(--color-text-secondary);">checkered</p>
+          <lc-file-upload variant="image" [imageSrc]="logo" imageBackground="checkered" />
+        </div>
+        <div>
+          <p style="margin: 0 0 8px; font-size: 0.75rem; color: var(--color-text-secondary);">dark + --lc-file-upload-image-filter: brightness(0) invert(1)</p>
+          <lc-file-upload variant="image" [imageSrc]="logo" imageBackground="dark" style="--lc-file-upload-image-filter: brightness(0) invert(1);" />
+        </div>
+      </div>`,
+  }),
+};
+
+/** The German labels of the image field (design §7). */
+const IMAGE_DE = `
+  imageHint="SVG oder PNG, höchstens 85 kB."
+  accept=".svg,.png"
+  [maxSizeBytes]="87040"
+  locale="de-DE"
+  acceptedLabel="Erlaubt:"
+  maxSizeLabel="Höchstens:"
+  chooseImageLabel="Bild auswählen"
+  replaceImageLabel="Bild ersetzen"
+  removeImageLabel="Bild entfernen"
+  emptyImageLabel="Kein Bild"
+  typeRejectedLabel="Dieser Dateityp wird nicht akzeptiert."
+  sizeRejectedLabel="Diese Datei ist zu groß."`;
+
+/** 3.49: German labels, empty and filled. */
+export const ImageGerman: Story = {
+  name: 'Image German',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.49 (request 069, usm-x row 71): every text is an input; German at 360 px fits without clipping: „Bild auswählen“ (175.7 px), „Bild ersetzen“, „Bild entfernen“, „Kein Bild“. Empty field first (dashed tile, only „Bild auswählen“), then a filled one (`imageAlt="Firmenlogo"`). `accept=".svg,.png"`, `maxSizeBytes=87040` and `locale="de-DE"` give „Erlaubt: .svg,.png“ and „Höchstens: 85,0 KB“; with `imageHint` they describe the choose button.',
+      },
+    },
+  },
+  render: () => ({
+    props: { empty: signal(''), filled: signal(LOGO), urlOf },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 32px; max-width: 480px;">
+        <lc-file-upload variant="image" [imageSrc]="empty()" ${IMAGE_DE}
+          (filesSelected)="empty.set(urlOf($event))" (imageRemoved)="empty.set('')" />
+        <lc-file-upload variant="image" [imageSrc]="filled()" imageAlt="Firmenlogo" ${IMAGE_DE}
+          (filesSelected)="filled.set(urlOf($event))" (imageRemoved)="filled.set('')" />
+      </div>`,
+  }),
+};
+
+/** 3.49: a rejected file, shown in place and announced; a disabled field beside. */
+export const ImageRejectedGerman: Story = {
+  name: 'Image Rejected German',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.49 (request 069, usm-x row 71): the story drops `logo-gross.png` (200 KB, `image/png`) on the tile of an 85 KB field. `fileRejected` emits `code: "size"`, the image stays, `filesSelected` is not emitted, and „Diese Datei ist zu groß. Höchstens: 85,0 KB“ appears under the field in `--color-text-error` (`role="alert"`, announced; cleared by an accepted file or remove; the same rejection again is announced again). Beside it a `disabled` field: both buttons disabled, drops ignored, the tile not dimmed so the image stays judgeable.',
+      },
+    },
+  },
+  render: () => ({
+    props: { filled: signal(LOGO), logo: LOGO, urlOf },
+    template: `
+      <div lang="de" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); gap: 32px;">
+        <lc-file-upload variant="image" [imageSrc]="filled()" imageAlt="Firmenlogo" ${IMAGE_DE}
+          (filesSelected)="filled.set(urlOf($event))" (imageRemoved)="filled.set('')" />
+        <lc-file-upload variant="image" [imageSrc]="logo" imageAlt="Firmenlogo" [disabled]="true" ${IMAGE_DE} />
+      </div>`,
+  }),
+  play: async ({ canvasElement }) => {
+    dropOnTile(canvasElement, [fileOf('logo-gross.png', 204800, 'image/png')]);
   },
 };

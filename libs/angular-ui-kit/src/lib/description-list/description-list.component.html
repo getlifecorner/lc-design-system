@@ -10,6 +10,7 @@
     >
       <!-- 3.37 (request 057, regeln row 1, D-4): the &ngsp; spaces put word breaks into the text (textContent, names, copy); in the flex row they render nothing. -->
       <!-- 3.39 (request 059, AC-17, D-7): one space per break: none between the leader and the dd, none at the dd's edges. -->
+      <!-- 3.49 (request 069, D-2): in each of the 4 links an external item adds a nowrap glue after the value (a 0 px space, the hidden hint, the icon), so the icon stays with the last word; without `external` the link keeps its attributes and text (one comment anchor more). -->
       <dt class="lc-dl__term" [attr.id]="clickable() ? termId(i) : null">@if (item.total && totalPrefix()) {<span class="lc-dl__sr-only">{{ totalPrefix() }}</span>&ngsp;}{{ item.term }}</dt>&ngsp;<span class="lc-dl__leader" aria-hidden="true"></span><dd [class]="valueClass(item)" [attr.id]="clickable() ? valueId(i) : null">
         <!-- 3.46 (request 066, kosten row 3, D-2): the icon branch sits inside the first one, so an item with neither icon nor badge keeps its DOM, comment anchors included. -->
         @if (item.badge || item.icon) {
@@ -19,7 +20,7 @@
               @if (item.badge) {
                 @if (badgeShowsValue(item)) {
                   @if (item.href) {
-                    <a class="lc-dl__link" [href]="item.href">{{ item.value }}</a>
+                    <a class="lc-dl__link" [href]="item.href" [attr.target]="item.external ? '_blank' : null" [attr.rel]="item.external ? 'noopener noreferrer' : null">{{ item.value }}@if (item.external) {<span class="lc-dl__external"><span class="lc-dl__sep">&ngsp;</span>@if (externalLinkHint()) {<span class="lc-dl__sr-only">{{ externalLinkHint() }}</span>}<lc-icon class="lc-dl__external-icon" name="external-link" size="xs" [decorative]="true" aria-hidden="true" /></span>}</a>
                   } @else if (item.datetime) {
                     <time [attr.datetime]="item.datetime">{{ item.value }}</time>
                   } @else {
@@ -35,7 +36,7 @@
                   >{{ badgeShowsValue(item) ? ' ' + item.badge : item.badge }}</lc-badge
                 >
               } @else if (item.href) {
-                <a class="lc-dl__link" [href]="item.href">{{ item.value }}</a>
+                <a class="lc-dl__link" [href]="item.href" [attr.target]="item.external ? '_blank' : null" [attr.rel]="item.external ? 'noopener noreferrer' : null">{{ item.value }}@if (item.external) {<span class="lc-dl__external"><span class="lc-dl__sep">&ngsp;</span>@if (externalLinkHint()) {<span class="lc-dl__sr-only">{{ externalLinkHint() }}</span>}<lc-icon class="lc-dl__external-icon" name="external-link" size="xs" [decorative]="true" aria-hidden="true" /></span>}</a>
               } @else if (item.datetime) {
                 <time [attr.datetime]="item.datetime">{{ item.value }}</time>
               } @else {{{ plainValue(item) }}}
@@ -50,7 +51,7 @@
             <!-- 3.36: the value as a badge; another value stays as text before it (D-2). -->
             @if (badgeShowsValue(item)) {
               @if (item.href) {
-                <a class="lc-dl__link" [href]="item.href">{{ item.value }}</a>
+                <a class="lc-dl__link" [href]="item.href" [attr.target]="item.external ? '_blank' : null" [attr.rel]="item.external ? 'noopener noreferrer' : null">{{ item.value }}@if (item.external) {<span class="lc-dl__external"><span class="lc-dl__sep">&ngsp;</span>@if (externalLinkHint()) {<span class="lc-dl__sr-only">{{ externalLinkHint() }}</span>}<lc-icon class="lc-dl__external-icon" name="external-link" size="xs" [decorative]="true" aria-hidden="true" /></span>}</a>
               } @else if (item.datetime) {
                 <time [attr.datetime]="item.datetime">{{ item.value }}</time>
               } @else {
@@ -67,7 +68,7 @@
             >
           }
         } @else if (item.href) {
-          <a class="lc-dl__link" [href]="item.href">{{ item.value }}</a>
+          <a class="lc-dl__link" [href]="item.href" [attr.target]="item.external ? '_blank' : null" [attr.rel]="item.external ? 'noopener noreferrer' : null">{{ item.value }}@if (item.external) {<span class="lc-dl__external"><span class="lc-dl__sep">&ngsp;</span>@if (externalLinkHint()) {<span class="lc-dl__sr-only">{{ externalLinkHint() }}</span>}<lc-icon class="lc-dl__external-icon" name="external-link" size="xs" [decorative]="true" aria-hidden="true" /></span>}</a>
         } @else if (item.datetime) {
           <time [attr.datetime]="item.datetime">{{ item.value }}</time>
         } @else {{{ plainValue(item) }}}

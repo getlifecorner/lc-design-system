@@ -30,15 +30,17 @@ describe('lc-badge icon and gap (3.44)', () => {
     const { fixture, span } = render({});
     expect(fixture.componentInstance.icon()).toBeUndefined();
     expect(span.className).toBe('lc-badge lc-badge--default lc-badge--md');
-    expect(span.children).toHaveLength(0);
+    // 3.49 (request 069, D-7): every badge has its label element (0 → 1, dot 1 → 2).
+    expect([...span.children].map((c) => c.className)).toEqual(['lc-badge__label']);
     fixture.componentRef.setInput('dot', true);
     fixture.detectChanges();
-    expect(span.children).toHaveLength(1);
+    expect([...span.children].map((c) => c.className)).toEqual(['lc-badge__dot', 'lc-badge__label']);
   });
 
   it('renders a decorative lc-icon after the dot and adds lc-badge--has-icon', () => {
     const { fixture, span } = render({ dot: true, icon: 'pencil' });
-    expect([...span.children].map((c) => c.className.split(' ')[0])).toEqual(['lc-badge__dot', 'lc-badge__icon']);
+    // 3.49 (request 069, D-7): the label element follows dot and icon.
+    expect([...span.children].map((c) => c.className.split(' ')[0])).toEqual(['lc-badge__dot', 'lc-badge__icon', 'lc-badge__label']);
     expect(span.classList).toContain('lc-badge--has-icon');
     const icon = fixture.debugElement.query(By.directive(IconComponent)).componentInstance as IconComponent;
     expect(icon.decorative()).toBe(true);

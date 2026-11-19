@@ -19,7 +19,13 @@ import {
   inject,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { OverlayModule, type ConnectedPosition } from '@angular/cdk/overlay';
+import {
+  CdkConnectedOverlay,
+  OverlayModule,
+  type ConnectedPosition,
+  type FlexibleConnectedPositionStrategy,
+} from '@angular/cdk/overlay';
+import { ViewportRuler } from '@angular/cdk/scrolling';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
 import { ICON_CHECK } from '@lifecorner/angular-ui-kit/icons';
 import { OverlayStackService } from '@lifecorner/angular-ui-kit/internal/overlay';
@@ -172,6 +178,26 @@ const POINT_POSITIONS: ConnectedPosition[] = [
   { originX: 'start', originY: 'top', overlayX: 'end', overlayY: 'bottom' },
 ];
 
+/** 3.49 (design §3D): at a point whose room is above, the panel above it first. */
+const POINT_POSITIONS_ABOVE: ConnectedPosition[] = [POINT_POSITIONS[2], POINT_POSITIONS[3], POINT_POSITIONS[0], POINT_POSITIONS[1]];
+
+/** 3.49: the side a `maxHeight="room"` panel opens to. */
+type RoomSide = 'below' | 'above';
+
+/** 3.49: the gap between an element (or the trigger) and the panel, px. */
+const ROOM_GAP = 8;
+/** 3.49: the panel's distance to the viewport edge, px (CDK's viewport margin). */
+const ROOM_MARGIN = 8;
+/**
+ * 3.49: CDK's fit test ends the viewport at its height less both margins (it
+ * compares the pane's viewport y with the narrowed height), so an overlay
+ * pane that reaches lower is pushed up into the gap. Below an overlay origin
+ * the room keeps this much more.
+ */
+const CDK_BOTTOM_EXTRA = ROOM_MARGIN;
+/** 3.49: the preferred side is kept while its room holds this much, px (or the whole panel). */
+const ROOM_KEEP = 240;
+
 /**
  * Menu Component - Dropdown menu for navigation and actions
  *
@@ -195,6 +221,8 @@ const POINT_POSITIONS: ConnectedPosition[] = [
  *   a busy row, `ariaLabel` names it; items take `tooltip`, `disabledReason`,
  *   `emphasis` and `swatch`; every handled key is `preventDefault`ed and
  *   stopped
+ * - 3.49 (usm-x row 73): `maxHeight="room"` sizes the panel to the room on
+ *   the side it opens to, and that room picks the side
  *
  * @example
  * ```html
@@ -258,6 +286,17 @@ export class MenuComponent implements OnDestroy {
    * `min(56vh, 420px)`, border-box); the items scroll inside, the header and
    * footer stay, and the item focused by keyboard is scrolled into view.
    * Empty: no cap (with `anchor`: the viewport height less 16 px).
+   * 3.49 (usm-x row 73): the keyword `'room'` sizes the panel to the room
+   * between its origin (the anchor element, the point, or the projected
+   * trigger) and the viewport edge on the side it opens to, less the 8 px gap
+   * and the 8 px viewport margin (16 px at the bottom with `anchor`, where
+   * CDK's overlay keeps both margins), but at least 3 items plus header and footer
+   * (a shorter window scrolls). The room also picks the side: `position`'s
+   * side is kept while its room holds min(240 px, the whole panel), else the
+   * side with more room opens. Measured on open, on window resize and when
+   * `items` or `loading` change; at the projected trigger the height also
+   * follows a scroll (the side stays). Any other value is a CSS length as
+   * before.
    * @default ''
    */
   readonly maxHeight = input('');
@@ -326,10 +365,39 @@ export class MenuComponent implements OnDestroy {
     return !!anchor && !isAnchorElement(anchor);
   });
 
-  /** 3.48: overlay positions, preferred first (design §3A). */
-  protected readonly overlayPositions = computed(() =>
-    this.atPoint() ? POINT_POSITIONS : ELEMENT_POSITIONS[this.position()] ?? ELEMENT_POSITIONS['bottom-right']
-  );
+  /** 3.49: `maxHeight="room"` (design §3D). */
+  protected readonly roomMode = computed(() => this.maxHeight().trim() === 'room');
+
+  /** 3.49: the side and height the room gives, once measured in an open room panel. */
+  protected readonly room = signal<{ side: RoomSide; height: number } | null>(null);
+
+  /** 3.49: `position` with the vertical side the room chose; `position` itself without `'room'`. */
+  protected readonly effectivePosition = computed(() => {
+    const position = this.position();
+    const room = this.roomMode() ? this.room() : null;
+    if (!room) return position;
+    const vertical = room.side === 'above' ? 'top' : 'bottom';
+    return position.endsWith('-left') ? (`${vertical}-left` as const) : (`${vertical}-right` as const);
+  });
+
+  /** 3.49: the inline max-height: the room's height in room mode, else `maxHeight` as before. */
+  protected readonly panelMaxHeight = computed(() => {
+    if (!this.roomMode()) return this.maxHeight() || null;
+    const room = this.room();
+    return room ? `${room.height}px` : null;
+  });
+
+  /** 3.49: an overlay room panel at an element keeps its 8 px gap on the anchor's side only. */
+  protected readonly roomEdge = computed(() => {
+    const anchor = this.anchor();
+    return this.roomMode() && !!anchor && isAnchorElement(anchor) ? (this.room()?.side ?? null) : null;
+  });
+
+  /** 3.48: overlay positions, preferred first (design §3A); 3.49: the room's side first. */
+  protected readonly overlayPositions = computed(() => {
+    if (this.atPoint()) return this.roomMode() && this.room()?.side === 'above' ? POINT_POSITIONS_ABOVE : POINT_POSITIONS;
+    return ELEMENT_POSITIONS[this.effectivePosition()] ?? ELEMENT_POSITIONS['bottom-right'];
+  });
 
   /** 3.48: the panel is a column whose items scroll (capped or in the overlay). */
   protected readonly scrolls = computed(() => !!this.maxHeight() || !!this.anchor());
@@ -343,6 +411,8 @@ export class MenuComponent implements OnDestroy {
   private readonly itemElements = viewChildren<ElementRef<HTMLElement>>('menuItem');
   private readonly panelElement = viewChild<ElementRef<HTMLElement>>('dropdown');
   private readonly listElement = viewChild<ElementRef<HTMLElement>>('list');
+  private readonly connectedOverlay = viewChild(CdkConnectedOverlay);
+  private readonly viewportRuler = inject(ViewportRuler);
   private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly renderer = inject(Renderer2);
   private readonly injector = inject(Injector);
@@ -367,11 +437,19 @@ export class MenuComponent implements OnDestroy {
     if (event.key === 'Escape') this.onEscapeKey(event);
   };
 
-  /** 3.48: in overlay mode any scroll outside the panel closes the menu (the anchor moved). */
+  /**
+   * 3.48: in overlay mode any scroll outside the panel closes the menu (the
+   * anchor moved). 3.49: a room panel at the projected trigger follows it
+   * instead (its height; the side stays).
+   */
   private readonly scrollListener = (event: Event): void => {
-    if (!this.isOpen() || !this.anchor()) return;
+    if (!this.isOpen()) return;
     const target = event.target;
     if (target instanceof Node && this.panelElement()?.nativeElement.contains(target)) return;
+    if (!this.anchor()) {
+      if (this.roomMode()) this.measureRoom(true);
+      return;
+    }
     this.close();
   };
 
@@ -449,6 +527,27 @@ export class MenuComponent implements OnDestroy {
       } else {
         this.renderer.removeAttribute(trigger, 'aria-controls');
       }
+    });
+
+    // 3.49 (usm-x row 73, design §3D): a room panel is measured once it has
+    // rendered in the open tick (its height and side apply before the first
+    // paint), and again when its items, `loading` or the anchor change.
+    afterRenderEffect(() => {
+      const measure = this.isOpen() && this.roomMode();
+      this.items();
+      this.loading();
+      this.anchor();
+      untracked(() => {
+        if (measure) this.measureRoom(false);
+        else if (this.room()) this.room.set(null);
+      });
+    });
+
+    // 3.49: and on window resize while it is open (CDK's throttled resize).
+    effect((onCleanup) => {
+      if (!this.isOpen() || !this.roomMode()) return;
+      const subscription = this.viewportRuler.change().subscribe(() => this.measureRoom(false));
+      onCleanup(() => subscription.unsubscribe());
     });
   }
 
@@ -661,6 +760,68 @@ export class MenuComponent implements OnDestroy {
     const rect = item.getBoundingClientRect();
     if (rect.top < box.top) list.scrollTop -= box.top - rect.top;
     else if (rect.bottom > box.bottom) list.scrollTop += rect.bottom - box.bottom;
+  }
+
+  /**
+   * 3.49 (design §3D): the panel's height and side from the room around its
+   * origin. `chrome` is everything but the item list (padding, border,
+   * header, footer, busy row); the minimum is 3 items plus the chrome (or the
+   * whole panel). The preferred side stays while its room holds
+   * min(240 px, the whole panel), else the larger room wins (a tie keeps the
+   * preferred side). `keepSide`: a scroll changes the height only.
+   */
+  private measureRoom(keepSide: boolean): void {
+    const panel = this.panelElement()?.nativeElement;
+    const list = this.listElement()?.nativeElement;
+    const rooms = this.rooms(this.viewportRuler.getViewportSize().height);
+    if (!panel || !list || !rooms) return;
+    const chrome = panel.offsetHeight - list.clientHeight;
+    const whole = chrome + list.scrollHeight;
+    const pitch = this.itemElements()[0]?.nativeElement.offsetHeight ?? 0;
+    const min = Math.min(whole, chrome + 3 * pitch);
+    const keep = Math.min(whole, Math.max(ROOM_KEEP, min));
+    const preferred: RoomSide = this.atPoint() || this.position().startsWith('bottom') ? 'below' : 'above';
+    const other: RoomSide = preferred === 'below' ? 'above' : 'below';
+    const previous = this.room();
+    const side =
+      keepSide && previous ? previous.side : rooms[preferred] >= keep || rooms[preferred] >= rooms[other] ? preferred : other;
+    const height = Math.max(min, Math.floor(rooms[side]));
+    if (previous?.side === side && previous.height === height) return;
+    this.room.set({ side, height });
+    // An overlay pane is placed again right away, with the panel at its new
+    // height and margin and the side's positions first: CDK places a pane
+    // only on open and on resize, and the bindings would follow a render
+    // later (the same values; the projected trigger waits for them).
+    const overlayRef = this.anchor() ? this.connectedOverlay()?.overlayRef : undefined;
+    if (!overlayRef) return;
+    this.renderer.setStyle(panel, 'max-height', `${height}px`);
+    const edge = this.roomEdge();
+    for (const s of ['below', 'above'] as const) {
+      if (edge === s) this.renderer.addClass(panel, `lc-menu__dropdown--room-${s}`);
+      else this.renderer.removeClass(panel, `lc-menu__dropdown--room-${s}`);
+    }
+    (overlayRef.getConfig().positionStrategy as FlexibleConnectedPositionStrategy | undefined)?.withPositions?.(this.overlayPositions());
+    overlayRef.updatePosition();
+  }
+
+  /**
+   * 3.49: the room below and above the origin, px: an element anchor or the
+   * projected trigger's `.lc-menu` box less the 8 px gap and the 8 px
+   * viewport margin; a point less the margin only. Below an overlay origin
+   * (anchor element or point) 8 px more, so CDK's fit test accepts the pane
+   * where it is instead of pushing it into the gap.
+   */
+  private rooms(viewportHeight: number): Record<RoomSide, number> | null {
+    const anchor = this.anchor();
+    if (anchor && !isAnchorElement(anchor)) {
+      return { below: viewportHeight - anchor.y - ROOM_MARGIN - CDK_BOTTOM_EXTRA, above: anchor.y - ROOM_MARGIN };
+    }
+    const box = (anchor ?? this.elementRef.nativeElement.querySelector<HTMLElement>('.lc-menu'))?.getBoundingClientRect();
+    if (!box) return null;
+    return {
+      below: viewportHeight - box.bottom - ROOM_GAP - ROOM_MARGIN - (anchor ? CDK_BOTTOM_EXTRA : 0),
+      above: box.top - ROOM_GAP - ROOM_MARGIN,
+    };
   }
 
   private firstEnabledIndex(): number {

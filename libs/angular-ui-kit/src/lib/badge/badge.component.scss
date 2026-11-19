@@ -197,6 +197,26 @@ $_badge-wrap-heights: (
   text-align: start;
 }
 
+// Label (3.49, request 069, usm-x row 72, D-7): one flex item that holds the
+// projected content inline, so the spaces between its runs stay. No rules of
+// its own (it inherits `nowrap`, `line-height` and wrap's `text-align`); an
+// empty one takes no gap, so icon-only and dot-only badges keep their size.
+.lc-badge__label:empty {
+  display: none;
+}
+
+// `maxWidth` (not with `wrap`): the label is cut on one line with an
+// ellipsis; dot and icon keep their size. The block padding (cancelled by the
+// margin) gives the glyphs room inside the clip, as the 1em line box would
+// cut their tops and bottoms by 1–2 px.
+.lc-badge--truncate .lc-badge__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-block: 0.2em;
+  margin-block: -0.2em;
+}
+
 // Responsive behavior
 @media (max-width: 640px) {
   .lc-badge {

@@ -6,7 +6,8 @@ import {
   computed,
 } from '@angular/core';
 import { BadgeComponent, type BadgeVariant } from '@lifecorner/angular-ui-kit/badge';
-import { IconComponent } from '@lifecorner/angular-ui-kit/icon';
+import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
+import { ICON_EXTERNAL_LINK } from '@lifecorner/angular-ui-kit/icons';
 
 /**
  * Emphasis treatment applied to a row's value.
@@ -32,6 +33,17 @@ export interface DescriptionListItem {
   valueSuffix?: string;
   /** Optional link — renders the value as an anchor. */
   href?: string;
+  /**
+   * Opens `href` in a new tab (3.49, finance-intelligence vertraege row 1):
+   * `target="_blank"`, `rel="noopener noreferrer"`, a decorative
+   * `external-link` icon 4 px after the value's last word (1em, the link's
+   * colour, registered by the kit, never alone on a line) and the list's
+   * `externalLinkHint` read after the value. Ignored without `href`. In a
+   * `clickable` row the row button's name (term and value) includes the hint
+   * too.
+   * @default false
+   */
+  external?: boolean;
   /**
    * Machine-readable date or time of the value (ISO 8601, e.g.
    * `2026-10-12T18:05:00+02:00`): renders the value inside
@@ -112,6 +124,8 @@ let nextUniqueId = 0;
  *   item (`total`) with ledger rules, announced with `totalAriaLabel`.
  * - 3.46: a decorative kit icon before an item's value (`icon`), in the
  *   value's colour and size.
+ * - 3.49: links that open in a new tab (`external`), with an icon and the
+ *   hidden `externalLinkHint`.
  *
  * @example
  * ```html
@@ -128,6 +142,8 @@ let nextUniqueId = 0;
   selector: 'lc-description-list',
   standalone: true,
   imports: [BadgeComponent, IconComponent],
+  // 3.49: the external link's glyph renders without the app registering it.
+  viewProviders: [ɵprovideKitIcons([ICON_EXTERNAL_LINK])],
   templateUrl: './description-list.component.html',
   styleUrls: ['./description-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -177,6 +193,14 @@ export class DescriptionListComponent {
    * @default ''
    */
   readonly totalAriaLabel = input<string>('');
+
+  /**
+   * Visually hidden text read after the value of an `external` link (3.49,
+   * as `lc-footer`): „Rahmenvertrag 2026 (öffnet in neuem Tab)“. German:
+   * „(öffnet in neuem Tab)“. Empty adds none.
+   * @default '(opens in a new tab)'
+   */
+  readonly externalLinkHint = input<string>('(opens in a new tab)');
 
   /** Emitted when a row is clicked (or activated via keyboard when `clickable`). */
   readonly itemClick = output<DescriptionListItem>();
@@ -235,9 +259,16 @@ export class DescriptionListComponent {
 
   protected valueClass(item: DescriptionListItem): string {
     // A total is always strong (3.36): its `emphasis` is ignored. 3.46 (D-7):
-    // an icon widens the value's `rows` basis; without one the string is as before.
+    // an icon widens the value's `rows` basis; without one the string is as
+    // before. 3.49 (D-3): so does an external link's icon.
     const base = `lc-dl__value lc-dl__value--${item.total ? 'strong' : (item.emphasis ?? 'default')}`;
-    return item.icon ? `${base} lc-dl__value--icon` : base;
+    const icon = item.icon ? `${base} lc-dl__value--icon` : base;
+    return this.isExternal(item) ? `${icon} lc-dl__value--external` : icon;
+  }
+
+  /** 3.49: an `external` item with an `href` (without one, `external` is ignored). */
+  protected isExternal(item: DescriptionListItem): boolean {
+    return !!item.external && !!item.href;
   }
 
   /**

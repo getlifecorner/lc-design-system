@@ -40,6 +40,8 @@ Description list for key/value metadata (a styled \`<dl>\`).
 - 3.46 (066): an item's \`icon\` before its value, decorative, in the value's colour and at its text size, 4 px before
   the first line, never alone on a line: \`rows\` keeps the lines right-aligned and counts the icon toward the value's
   share, \`stacked\` hangs them after it (see *Item Icons*)
+- 3.49 (069): \`external\` links open in a new tab, with an \`external-link\` icon glued to the last word and the hidden
+  \`externalLinkHint\` (see *External Links*)
 `,
       },
     },
@@ -47,8 +49,14 @@ Description list for key/value metadata (a styled \`<dl>\`).
   argTypes: {
     items: {
       description:
-        '`DescriptionListItem[]`: `term`, `value`, `valueSuffix`, `href`, `emphasis`, `id`; 3.3: `datetime` (ISO 8601) renders the value inside `<time datetime>` (ignored with `href`). 3.36: `badge` and `badgeVariant` show the value as an `lc-badge`; `total` marks the sum item (ledger rules, semibold). 3.46: `icon` draws a decorative kit icon before the value, in its colour and at its text size (`aria-hidden`; the value text says what it shows).',
+        '`DescriptionListItem[]`: `term`, `value`, `valueSuffix`, `href`, `emphasis`, `id`; 3.3: `datetime` (ISO 8601) renders the value inside `<time datetime>` (ignored with `href`). 3.36: `badge` and `badgeVariant` show the value as an `lc-badge`; `total` marks the sum item (ledger rules, semibold). 3.46: `icon` draws a decorative kit icon before the value, in its colour and at its text size (`aria-hidden`; the value text says what it shows). 3.49: `external` opens `href` in a new tab (`target="_blank"`, `rel="noopener noreferrer"`), with a decorative `external-link` icon after the last word and `externalLinkHint` read after the value; ignored without `href`.',
       table: { defaultValue: { summary: 'required' } },
+    },
+    externalLinkHint: {
+      control: 'text',
+      description:
+        '3.49 (vertraege row 1): visually hidden text read after the value of an `external` link, as `lc-footer`. German: „(öffnet in neuem Tab)“. Empty adds none.',
+      table: { defaultValue: { summary: "'(opens in a new tab)'" } },
     },
     totalAriaLabel: {
       control: 'text',
@@ -604,6 +612,53 @@ export const ItemIcons: Story = {
             </lc-card>
           </div>
         </div>
+      </div>
+    `,
+  }),
+};
+
+/** 3.49 (request 069, finance-intelligence vertraege row 1): the contract „Details“ dialog's facts. */
+const externalItems: DescriptionListItem[] = [
+  { term: 'Vertragsdokument', value: 'Rahmenvertrag Rechenzentrumsbetrieb 2026', href: 'https://dms.example.de/vertraege/2026-0412', external: true },
+  {
+    term: 'Kundenportal',
+    value: 'vertraege.example.de/rahmenvertrag-2026-0412-anlage-3.pdf',
+    href: 'https://vertraege.example.de/rahmenvertrag-2026-0412-anlage-3.pdf',
+    external: true,
+  },
+  { term: 'Leistungsschein', value: 'Rechenzentrumsdienstleistungsvereinbarung', href: 'https://dms.example.de/vertraege/2026-0412/leistungsschein', external: true },
+  { term: 'Vertragspartner', value: 'Muster Rechenzentrum GmbH', href: '#vertragspartner' },
+  { term: 'Fassung', value: '3', badge: 'Unterschrieben', badgeVariant: 'success', href: 'https://dms.example.de/vertraege/2026-0412/fassung-3', external: true },
+  { term: 'Rechnung', value: 'RE-2026-0412', href: 'https://rechnungen.example.de/RE-2026-0412', external: true, icon: 'file-text' },
+];
+
+/** 3.49 (request 069, finance-intelligence vertraege row 1): links that open in a new tab. */
+export const ExternalLinks: Story = {
+  name: 'External Links',
+  decorators: [moduleMetadata({ imports: [CardComponent] })],
+  args: { items: externalItems, externalLinkHint: '(öffnet in neuem Tab)' },
+  parameters: {
+    controls: { include: ['items', 'externalLinkHint'] },
+    docs: {
+      description: {
+        story:
+          '3.49 (request 069, finance-intelligence vertraege row 1, the contract „Details“ dialog): `external: true` on an item with `href` opens the document in a new tab: `target="_blank"`, `rel="noopener noreferrer"`, a decorative `external-link` icon 4 px after the last word (1em, the link\'s colour in both themes and `LinkText` in forced colours; the kit registers it) and the hidden `externalLinkHint` after the value, so a screen reader reads „Rahmenvertrag Rechenzentrumsbetrieb 2026 (öffnet in neuem Tab)“; the visible value stays in the name (no `aria-label`). The icon never ends a line alone: long values and URLs wrap or break as before and the icon stays with the last word. In `rows` the icon counts toward the value\'s share. „Vertragspartner“ is an internal link (no icon); with a badge and with an item icon. `rows` md, `stacked` md, `rows` sm. No other visual change.',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div lang="de" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+        <lc-card variant="outlined" borderRadius="xl" padding="lg" title="rows · md">
+          <lc-description-list [items]="items" [externalLinkHint]="externalLinkHint" layout="rows" size="md" />
+        </lc-card>
+        <lc-card variant="outlined" borderRadius="xl" padding="lg" title="stacked · md">
+          <lc-description-list [items]="items" [externalLinkHint]="externalLinkHint" layout="stacked" size="md" />
+        </lc-card>
+        <lc-card variant="outlined" borderRadius="xl" padding="lg" title="rows · sm">
+          <lc-description-list [items]="items" [externalLinkHint]="externalLinkHint" layout="rows" size="sm" />
+        </lc-card>
       </div>
     `,
   }),

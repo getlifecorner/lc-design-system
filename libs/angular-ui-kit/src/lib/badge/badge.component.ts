@@ -1,4 +1,15 @@
-import { Component, ChangeDetectionStrategy, ViewEncapsulation, input, computed } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  ViewEncapsulation,
+  ElementRef,
+  afterRenderEffect,
+  computed,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { IconComponent } from '@lifecorner/angular-ui-kit/icon';
 
 export type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
@@ -12,7 +23,11 @@ export type BadgeSize = 'xs' | 'sm' | 'md' | 'lg';
  * - Multiple size options (xs, sm, md, lg)
  * - Pill-shaped rounded mode
  * - Optional wrapping for long, sentence-like labels (`wrap`)
- * - Content projection for labels or count values
+ * - Content projection for labels or count values: 3.49 puts it in one
+ *   inline label (`.lc-badge__label`), so mixed content keeps its spaces
+ *   („Aufnahme läuft in <strong>USM-1209</strong>“); a projected `lc-icon`
+ *   sits before the label, outside it (prefer `icon`)
+ * - 3.49: `maxWidth` cuts a long label with an ellipsis and a `title`
  *
  * @example
  * ```html
@@ -68,6 +83,45 @@ export class BadgeComponent {
   icon = input<string | undefined>(undefined);
 
   /**
+   * Caps the badge's width (3.49, usm-x row 72): any CSS length (`16rem`,
+   * `22ch`). The label is cut on one line with an ellipsis, the dot and the
+   * icon stay visible, and the badge's `title` is the label's whole text (not
+   * when the `lc-badge` host has its own `title`); the text stays in the DOM
+   * for assistive tech. Ignored with `wrap` (`wrap` wins: no ellipsis). A
+   * percentage needs a container of definite width. Empty: no cap.
+   * @default ''
+   */
+  readonly maxWidth = input<string>('');
+
+  /** 3.49: `maxWidth` applies (set, and no `wrap`). */
+  protected readonly truncate = computed(() => !!this.maxWidth().trim() && !this.wrap());
+
+  /** 3.49: the label's whole text as the `title` of a cut badge; null otherwise. */
+  protected readonly autoTitle = signal<string | null>(null);
+
+  private readonly label = viewChild<ElementRef<HTMLElement>>('label');
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  constructor() {
+    // 3.49 (design §3C): the label's text, whitespace collapsed, read after
+    // render and on every change of the projected content while the badge is
+    // cut. Not on the server: prerendered HTML gets no `title`.
+    afterRenderEffect((onCleanup) => {
+      const label = this.label()?.nativeElement;
+      if (!this.truncate() || !label || this.host.nativeElement.hasAttribute('title')) {
+        this.autoTitle.set(null);
+        return;
+      }
+      const read = () => this.autoTitle.set((label.textContent ?? '').replace(/\s+/g, ' ').trim() || null);
+      read();
+      if (typeof MutationObserver === 'undefined') return;
+      const observer = new MutationObserver(read);
+      observer.observe(label, { childList: true, characterData: true, subtree: true });
+      onCleanup(() => observer.disconnect());
+    });
+  }
+
+  /**
    * Computed CSS classes for the badge
    */
   badgeClasses = computed(() => {
@@ -90,6 +144,10 @@ export class BadgeComponent {
 
     if (this.icon()) {
       classes.push('lc-badge--has-icon');
+    }
+
+    if (this.truncate()) {
+      classes.push('lc-badge--truncate');
     }
 
     return classes.join(' ');

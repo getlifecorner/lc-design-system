@@ -87,9 +87,10 @@ describe('DescriptionListComponent shared row width (3.26, request 041)', () => 
     // description-list.whitespace.spec.ts), and 3.39 (request 059, D-8) the
     // narrow-row rules (description-list.narrow-row.spec.ts); the rules before
     // stay pinned here. 3.46 (request 066) added the item icon rules before
-    // the separator (description-list.icon.spec.ts).
+    // the separator (description-list.icon.spec.ts), 3.49 (request 069) the
+    // external link rules there (description-list.external.spec.ts).
     expect(
-      selectors.every((s) => /lc-dl__badge|lc-dl__row--total|lc-dl__sr-only|lc-dl__icon|lc-dl__sep|^\.lc-dl--rows > \.lc-dl__row/.test(s)),
+      selectors.every((s) => /lc-dl__badge|lc-dl__row--total|lc-dl__sr-only|lc-dl__icon|lc-dl__external|lc-dl__sep|^\.lc-dl--rows > \.lc-dl__row/.test(s)),
     ).toBe(true);
     const rest = css.slice(0, at).replace(SHARE, '').replace(TERM, '').replace(LEADER, '').replace(LINK_RING, '').replace(LINK_FORCED, '');
     expect(rest.length).toBe(3081);
