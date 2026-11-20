@@ -1648,3 +1648,54 @@ export const SortableHeadHooksAndBusy: Story = {
   },
   render: () => ({ template: `<lc-table-sortable-head-busy-demo />` }),
 };
+
+/** The table, label, frame and cells of the 3.50 reserve story (inline, so the story needs no component). */
+const RESERVE_TABLE = 'width: 100%; border-collapse: separate; border-spacing: 0; background: var(--color-surface); color: var(--color-text-primary); font-family: var(--typography-font-family);';
+const RESERVE_FRAME = 'overflow-x: auto; border: 1px solid var(--color-border); border-radius: var(--border-radius-lg);';
+const RESERVE_CAPTION = 'text-align: start; padding: 8px 0; font-weight: 600; font-size: var(--typography-font-size-sm);';
+const RESERVE_CELL = 'padding: 12px 16px; font-size: var(--typography-font-size-sm);';
+
+/** 3.50 (request 071, usm-x row 82; backlog 068-n1): the arrow reserve while unsorted, and RTL. */
+export const SortableHeadReserveAndRtl: Story = {
+  name: 'Sortable Head Reserve And RTL',
+  decorators: [moduleMetadata({ imports: [SortableHeadComponent] })],
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.50 (usm-x row 82): a sortable head keeps 32 px at its inline end for the arrow. `--lc-sortable-head-unsorted-reserve` sets that space while the head is neither sorted nor busy: the second table sets `var(--spacing-4)`, so its unsorted heads are 16 px narrower, while the sorted head („Titel“) and the busy head („Status“) keep 32 px for the arrow and the ring. The first table is the default. Backlog 068-n1: reserve, arrow and busy ring use logical properties, so in the third table (`dir="rtl"`) the ring and the arrow sit over the reserve on the left, 12 px from the inline end; LTR is unchanged. An `align="end"` head keeps its reserve on the start side.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 24px;">
+        @for (variant of ['default', 'hook', 'rtl']; track variant) {
+          <div [attr.dir]="variant === 'rtl' ? 'rtl' : null">
+            <p style="${RESERVE_CAPTION} margin: 0;">{{ variant === 'default' ? 'Standard (32 px)' : variant === 'hook' ? '--lc-sortable-head-unsorted-reserve: var(--spacing-4)' : 'dir=rtl' }}</p>
+            <div style="${RESERVE_FRAME}">
+            <table style="${RESERVE_TABLE}">
+              <thead>
+                <tr [style.--lc-sortable-head-unsorted-reserve]="variant === 'hook' ? 'var(--spacing-4)' : null">
+                  <th scope="col" lcSortableHead="titel" sortDirection="asc">Titel</th>
+                  <th scope="col" lcSortableHead="status" [busy]="true">Status</th>
+                  <th scope="col" lcSortableHead="team">Team</th>
+                  <th scope="col" lcSortableHead="alter" align="end">Alter</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="${RESERVE_CELL}">Drucker im 3. OG</td>
+                  <td style="${RESERVE_CELL}">Offen</td>
+                  <td style="${RESERVE_CELL}">Support</td>
+                  <td style="${RESERVE_CELL} text-align: end; font-variant-numeric: tabular-nums;">4</td>
+                </tr>
+              </tbody>
+            </table>
+            </div>
+          </div>
+        }
+      </div>`,
+  }),
+};

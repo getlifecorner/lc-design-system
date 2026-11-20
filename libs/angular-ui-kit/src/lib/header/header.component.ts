@@ -131,6 +131,9 @@ export interface HeaderContextBadge {
  *   the defaults stay English.
  * - The `ThemeService` (which persists to localStorage) is only created when
  *   the theme button is shown.
+ * - Print (3.50): the header is not printed (`display: none` in
+ *   `@media print`), like `lc-sidenav` and `lc-bottom-nav`; on screen nothing
+ *   changes.
  *
  * @example
  * ```html

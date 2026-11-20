@@ -204,6 +204,7 @@ AppHeaderComponent - Global application header for the LifeCorner shell
 - \`theme\` input (\`auto\` | \`light\` | \`dark\`) with internal CSS tokens
 - Logo auto-adapts color to the header's theme
 - OnPush change detection for performance
+- Print (3.50): the header is not printed (\`display: none\` in \`@media print\`), like \`lc-sidenav\` and \`lc-bottom-nav\`; nothing changes on screen (see *App Shell › Print*)
 
 **Public, prerendered sites** (see the *Public Site* stories):
 - \`homeHref\` — the brand becomes a plain \`<a href>\`; no router and no JavaScript needed.

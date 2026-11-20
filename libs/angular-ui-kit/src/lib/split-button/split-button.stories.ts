@@ -53,7 +53,11 @@ A face that runs the default action and a caret that opens a menu of the other a
       description: 'The face shows the spinner and keeps focus; the caret dims, gets `aria-disabled` and ignores activation',
       table: { defaultValue: { summary: 'false' } },
     },
-    menuAriaLabel: { control: 'text', description: 'Accessible name of the caret', table: { defaultValue: { summary: 'More actions' } } },
+    menuAriaLabel: {
+      control: 'text',
+      description: 'Accessible name of the caret; 3.50 (usm-x row 79): it also names the open menu (`aria-label` on its `role="menu"`)',
+      table: { defaultValue: { summary: 'More actions' } },
+    },
     menuPosition: {
       control: 'select',
       options: ['bottom-left', 'bottom-right', 'top-left', 'top-right'],
@@ -86,6 +90,12 @@ A face that runs the default action and a caret that opens a menu of the other a
     menuMaxWidth: {
       control: 'text',
       description: '3.48: `lc-menu` `maxWidth` of the menu; empty leaves it unbounded',
+      table: { defaultValue: { summary: "''" } },
+    },
+    menuMaxHeight: {
+      control: 'text',
+      description:
+        "3.50 (usm-x row 79): `lc-menu` `maxHeight` of the menu: a CSS length or `'room'` (the room to the viewport edge picks side and height). Empty: the CSS hook `--lc-menu-max-height` on the split button or an ancestor, else no cap",
       table: { defaultValue: { summary: "''" } },
     },
     clicked: { action: 'clicked', description: 'The face was activated' },
@@ -256,5 +266,56 @@ export const ToneAndMenuSize: Story = {
     if (viewMode !== 'story') return;
     const caret = canvasElement.querySelector<HTMLButtonElement>('.lc-split-button__caret');
     if (caret) await userEvent.click(caret);
+  },
+};
+
+const LONG_ITEMS_DE: MenuItem[] = [
+  'Kopieren',
+  'Verschieben',
+  'Umbenennen',
+  'Duplizieren',
+  'Archivieren',
+  'Exportieren',
+  'Drucken',
+  'Teilen',
+  'Sperren',
+  'Freigeben',
+  'Verlauf',
+  'Löschen',
+].map((label, i): MenuItem => ({ id: `a${i}`, label, variant: label === 'Löschen' ? 'danger' : 'default' }));
+
+/** 3.50 (request 071, usm-x row 79): the menu's height, by input or by the CSS hook. */
+export const MenuMaxHeight: Story = {
+  name: 'Menu Max Height',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.50 (usm-x row 79): left, `--lc-menu-max-height: 200px` set on the split button (the menu reads the hook when it opens, also for an overlay): the panel is 200 px high and its items scroll. Right, `menuMaxHeight="room"`: the room between the group and the viewport edge picks the side and the height. Both menus are open for the shot. `menuAriaLabel` („Weitere Aktionen“) names the caret and, since 3.50, the open `role="menu"` too.',
+      },
+    },
+  },
+  render: () => ({
+    props: { items: LONG_ITEMS_DE },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="min-height: 260px;">
+          <lc-split-button class="hook" [items]="items" size="sm" menuMinWidth="150px" menuPosition="bottom-left" menuAriaLabel="Weitere Aktionen" style="--lc-menu-max-height: 200px;">Speichern</lc-split-button>
+        </div>
+        <div style="display: flex; justify-content: flex-end; min-height: 600px;">
+          <lc-split-button class="room" [items]="items" size="sm" menuMinWidth="150px" menuPosition="bottom-right" menuMaxHeight="room" menuAriaLabel="Weitere Aktionen">Öffnen</lc-split-button>
+        </div>
+      </div>`,
+  }),
+  // ArrowDown opens a menu without a click, so the first menu is not closed as clicked outside.
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    for (const group of ['.hook', '.room']) {
+      const caret = canvasElement.querySelector<HTMLButtonElement>(`${group} .lc-split-button__caret`);
+      if (!caret) continue;
+      caret.focus();
+      await userEvent.keyboard('{ArrowDown}');
+    }
   },
 };

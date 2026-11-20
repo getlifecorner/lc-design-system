@@ -301,6 +301,18 @@ export class CardComponent {
   headerSize = input<CardHeaderSize>('md');
 
   /**
+   * Let the built-in head wrap (3.50, usm-x row 86): when the title would get
+   * less than `--lc-card-header-title-min` (default `12rem`) beside
+   * `[card-header-action]`, the action takes a line of its own under the
+   * title at the head's full width (12 px below), so a search on a phone card
+   * never covers the title. On a collapsible card the chevron follows the
+   * action onto that line. Wide cards look as before. CSS only, so it holds
+   * in prerendered HTML.
+   * @default false
+   */
+  headerActionWrap = input<boolean>(false);
+
+  /**
    * Emitted when a `clickable` card is clicked or activated with Enter or
    * Space. Not emitted on a link card (`href`/`route`): the link navigates by
    * itself (one navigation); bind the native `(click)` for analytics.
@@ -430,6 +442,11 @@ export class CardComponent {
     if (this.isCollapsible()) {
       classes.push('card-collapsible');
       if (!this.expanded()) classes.push('card-collapsed');
+    }
+
+    // 3.50: the head may wrap its action onto a line of its own.
+    if (this.headerActionWrap()) {
+      classes.push('card-header-wrap');
     }
 
     return classes.join(' ');

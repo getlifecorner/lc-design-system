@@ -4,8 +4,9 @@ import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { provideRouter, withHashLocation } from '@angular/router';
 import { fn, expect, userEvent, within } from 'storybook/test';
 import { FormsModule } from '@angular/forms';
-import type { NavigationItem, NavigationItemActionEvent } from '@lifecorner/angular-ui-kit/models';
+import type { NavigationItem, NavigationItemActionEvent, NavigationRailItemEvent } from '@lifecorner/angular-ui-kit/models';
 import { SidenavComponent } from './sidenav.component';
+import { IconComponent } from '../icon/icon.component';
 import { SidenavLabelDirective } from './sidenav-label.directive';
 import { HeaderComponent } from '../header/header.component';
 import { MenuComponent, type MenuItem } from '../menu/menu.component';
@@ -167,6 +168,25 @@ const meta: Meta<SidenavComponent> = {
       description:
         '3.47 (usm-x row 39): an image in the brand tile (decorative, `alt=""`, 24 × 24 contained), over `brandIcon` and `brandLetter`. The CSS hook `--lc-sidenav-brand-logo-filter` (default `none`) filters it, e.g. `brightness(0) invert(1)` for a white silhouette; `--lc-sidenav-brand-tile-bg: transparent` drops the tile',
       table: { defaultValue: { summary: "''" } },
+    },
+    brandLogoFit: {
+      control: 'inline-radio',
+      options: ['tile', 'natural'],
+      description:
+        "3.50 (usm-x row 75): `'natural'` draws `brandLogoSrc` at its own aspect ratio, `--lc-sidenav-brand-logo-height` high (default 24 px; a 4:1 wordmark is 96 × 24), without the tile, at most the brand's width; the collapsed rail shows the tile with `brandIcon` or the letter. `'tile'`: 24 px in the 32 px tile, as before",
+      table: { defaultValue: { summary: "'tile'" } },
+    },
+    brandToggle: {
+      control: 'boolean',
+      description:
+        '3.50 (usm-x row 74): docked, the brand is a `<button>` that collapses and expands the rail, whatever it shows; named „{brand}, {what a press does}“ (`collapseAriaLabel` / `expandAriaLabel`), 44 px, the brand\'s focus ring, the focus stays on it. Drawer: as `brandLink` says',
+      table: { defaultValue: { summary: 'false' } },
+    },
+    railItems: {
+      control: 'object',
+      description:
+        '3.50 (usm-x row 74): `NavigationItem[] | null`, what the collapsed docked rail draws instead of `items`: one icon each, by `displayOrder` (`children`, `isSection`, `action` ignored), in the rail\'s look; current: the first with `current`, else by `route` / `matchRoutes`. A press emits `railItemClick` `{ item, event, element }` (and `itemClicked`). A `kind: \'action\'` entry with `hasPopup` gets `aria-haspopup` / `aria-expanded` (from `expandedActionId`). The `[sidenav-rail-top]` slot shows on the same rail only. `null`: the rail draws `items`',
+      table: { defaultValue: { summary: 'null' } },
     },
     expandedGroups: {
       control: 'object',
@@ -1798,5 +1818,205 @@ export const DeepTree: Story = {
   render: () => ({
     moduleMetadata: { imports: [SidenavDeepTreeDemoComponent] },
     template: `<lc-sidenav-deep-tree-demo />`,
+  }),
+};
+
+/** The USM X rail of 3.50 (usm-x row 74): the full tree for the expanded sidenav and the drawer. */
+const USMX_ITEMS: NavigationItem[] = [
+  { id: 'start', icon: 'home', label: 'Übersicht', route: '/start', displayOrder: 1 },
+  {
+    id: 'stamm', icon: 'folder', label: 'Stammdaten', route: '', displayOrder: 2,
+    children: [
+      { id: 'objekttypen', icon: 'file', label: 'Objekttypen', route: '/stamm/objekttypen', displayOrder: 1 },
+      { id: 'felder', icon: 'file', label: 'Felder', route: '/stamm/felder', displayOrder: 2 },
+    ],
+  },
+  {
+    id: 'pruef', icon: 'check-circle', label: 'Prüfungen', route: '', displayOrder: 3,
+    children: [{ id: 'regeln', icon: 'file', label: 'Prüfregeln', route: '/pruef/regeln', displayOrder: 1 }],
+  },
+  { id: 'system', icon: 'settings', label: 'System', route: '/system', displayOrder: 4 },
+];
+
+/** What the collapsed rail draws instead (usm-x row 74): „Übersicht“ and one icon per area group. */
+const USMX_RAIL: NavigationItem[] = [
+  { id: 'rail-start', icon: 'home', label: 'Übersicht', route: '/start', displayOrder: 1 },
+  // An action entry is current only by `current` (as in `items`: routes never make an action current).
+  { id: 'rail-stamm', icon: 'folder', label: 'Stammdaten', route: '', kind: 'action', hasPopup: 'menu', current: true, displayOrder: 2 },
+  { id: 'rail-pruef', icon: 'check-circle', label: 'Prüfungen', route: '', kind: 'action', hasPopup: 'menu', badge: { value: 12, variant: 'warning' }, displayOrder: 3 },
+  { id: 'rail-system', icon: 'settings', label: 'System', route: '/system', displayOrder: 4 },
+];
+
+/** The group menu beside the rail (usm-x rows 74, 78): sections to three levels, current, busy, a badge. */
+const RAIL_GROUPS: MenuItem[] = [
+  {
+    id: 'g-stamm',
+    label: 'Stammdaten',
+    children: [
+      {
+        id: 'g-objekte',
+        label: 'Objekte',
+        children: [
+          { id: 'g-objekttypen', label: 'Objekttypen', current: true },
+          { id: 'g-felder', label: 'Felder', children: [{ id: 'g-feldgruppen', label: 'Feldgruppen' }] },
+        ],
+      },
+      { id: 'g-zaehler', label: 'Zähler', busy: true },
+      { id: 'g-pruefungen', label: 'Prüfungen', badgeVariant: 'warning', metadata: { badge: '12' } },
+    ],
+  },
+];
+
+/** A 44 px icon button for the `[sidenav-rail-top]` slot (the app's area picker). */
+const RAIL_TOP_BUTTON =
+  'display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--color-border); border-radius: var(--border-radius-md); background: transparent; color: inherit; cursor: pointer;';
+
+/** 3.50 (usm-x row 74): the collapsed rail with its own top content, railItems and a group menu beside it. */
+@Component({
+  selector: 'lc-sidenav-rail-top-demo',
+  standalone: true,
+  imports: [SidenavComponent, MenuComponent, IconComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div lang="de">
+      <p role="status" style="margin: 0 0 12px; color: var(--color-text-secondary);">Letzte Auswahl: {{ last() }}</p>
+      <div style="display: flex; height: 520px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
+        <lc-sidenav [isOpen]="true" mode="docked" width="280px" [(collapsed)]="collapsed" [items]="items" [railItems]="rail"
+                    activeRoute="/stamm/objekttypen" ariaLabel="Bereiche" brandName="USM X" brandSubtitle="Customizing" brandLetter="X"
+                    [showCollapseToggle]="true" collapseAriaLabel="Navigation nach links einklappen" expandAriaLabel="Navigation ausklappen"
+                    closeAriaLabel="Navigation schließen" [expandedActionId]="target()?.id ?? null" (railItemClick)="openGroup($event)">
+          <div sidenav-top style="padding: 8px 12px; border: 1px solid var(--color-border); border-radius: var(--border-radius-md);">Bereich: Customizing</div>
+          <button sidenav-rail-top type="button" aria-label="Bereich wählen: Customizing" style="${RAIL_TOP_BUTTON}">
+            <lc-icon name="target" size="sm" [decorative]="true" />
+          </button>
+        </lc-sidenav>
+        <div style="flex: 1; padding: 24px; color: var(--color-text-secondary);">Objekttypen</div>
+      </div>
+      <!-- The group menu at a point 8 px beside the rail, level with the item; the focus returns to the rail item. -->
+      <lc-menu [items]="groups" [isOpen]="!!target()" [anchor]="target()?.point ?? null" [returnFocusTo]="target()?.element ?? null"
+               [ariaLabel]="target()?.label ?? ''" busyLabel="Wird geladen" (itemClick)="pick($event)" (closed)="target.set(null)" />
+    </div>
+  `,
+})
+class SidenavRailTopDemoComponent {
+  protected readonly items = USMX_ITEMS;
+  protected readonly rail = USMX_RAIL;
+  protected readonly groups = RAIL_GROUPS;
+  protected readonly collapsed = signal(true);
+  protected readonly last = signal('–');
+  protected readonly target = signal<{ id: string; label: string; element: HTMLElement; point: { x: number; y: number } } | null>(null);
+
+  protected openGroup(event: NavigationRailItemEvent): void {
+    if (event.item.kind !== 'action') return;
+    // 8 px beside the rail's edge (not the item's), level with the item.
+    const rail = (event.element.closest('.lc-sidenav') ?? event.element).getBoundingClientRect();
+    const rect = event.element.getBoundingClientRect();
+    this.target.set({ id: event.item.id, label: event.item.label, element: event.element, point: { x: rail.right + 8, y: rect.top } });
+  }
+
+  protected pick(item: MenuItem): void {
+    this.last.set(item.label);
+    this.target.set(null);
+  }
+}
+
+export const CollapsedRailWithTopSlot: Story = {
+  name: 'Collapsed Rail With Top Slot',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.50 (usm-x row 74): the collapsed rail keeps content of its own. `[sidenav-rail-top]` (here the area picker as a 44 px icon button) shows only on the docked, collapsed rail, centred between the brand and the items (x 5.5 … 49.5 on the 56 px rail, the brand\'s column); expanded and in the drawer the full `[sidenav-top]` picker shows instead. `railItems` is what the rail draws instead of `items`: „Übersicht“, one icon per area group and „System“, in the rail\'s look (tooltip, badge dot, current bar); „Stammdaten“ is current by `current: true` (an action entry is never current by a route, as in `items`; a link entry would be by `route` / `matchRoutes`). „Stammdaten“ and „Prüfungen“ are `kind: \'action\'` with `hasPopup: \'menu\'` (`aria-haspopup`, `aria-expanded` from `expandedActionId`): a press emits `railItemClick` with the element, and the page opens an `lc-menu` at a point 8 px beside the rail\'s edge, level with the item (`x` = the rail\'s right + 8, not the item\'s; nested sections, a current, a busy item, a warning badge) with `returnFocusTo` = the rail item, so Escape, Tab or a choice give the focus back. Expand the rail with the button at the bottom. At 360 px the open drawer shows `items`.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [SidenavRailTopDemoComponent] },
+    template: `<lc-sidenav-rail-top-demo />`,
+  }),
+};
+
+/** 3.50 (usm-x row 74): the brand toggles the rail. */
+export const BrandToggle: Story = {
+  name: 'Brand Toggle',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.50 (usm-x row 74): `brandToggle`: in docked mode the brand is one `<button>` that collapses and expands the rail, whatever it shows (here the letter „X“). Its name says the brand and what a press does: „USM X Customizing, Navigation nach links einklappen“ expanded, „USM X Customizing, Navigation ausklappen“ collapsed (`collapseAriaLabel` / `expandAriaLabel`). 44 px target, the brand\'s hover fill and focus ring, the name as a tooltip on the rail; the focus stays on the same button across both states. `showCollapseToggle` works beside it. In drawer mode the brand stays as `brandLink` says. Left expanded, right collapsed.',
+      },
+    },
+  },
+  render: () => ({
+    props: { items: USMX_ITEMS, activeRoute: '/stamm/objekttypen' },
+    template: `
+      <div lang="de" style="display: flex; flex-wrap: wrap; gap: 24px;">
+        ${brandRail('brandName="USM X" brandSubtitle="Customizing" brandLetter="X" [brandToggle]="true" [showCollapseToggle]="true" collapseAriaLabel="Navigation nach links einklappen" expandAriaLabel="Navigation ausklappen" ariaLabel="Bereiche"', '240px', 'overflow: visible; position: relative; z-index: 2;')}
+        ${brandRail('[collapsed]="true" brandName="USM X" brandSubtitle="Customizing" brandLetter="X" [brandToggle]="true" [showCollapseToggle]="true" collapseAriaLabel="Navigation nach links einklappen" expandAriaLabel="Navigation ausklappen" ariaLabel="Bereiche"', '240px', 'overflow: visible; position: relative; z-index: 1;')}
+      </div>`,
+  }),
+};
+
+/** A 4:1 wordmark (96 × 24 at the default height). */
+const WORDMARK =
+  'data:image/svg+xml,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 24"><rect x="0" y="2" width="20" height="20" rx="5" fill="#208497"/><rect x="26" y="5" width="66" height="6" rx="3" fill="#208497"/><rect x="26" y="14" width="44" height="5" rx="2.5" fill="#7c5cc4"/></svg>',
+  );
+
+/** A square mark (24 × 24). */
+const SQUARE_MARK =
+  'data:image/svg+xml,' +
+  encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="9" cy="12" r="7" fill="#e4572e"/><rect x="12" y="5" width="10" height="14" rx="2" fill="#2e86ab"/></svg>');
+
+/** 3.50 (usm-x row 75): a wordmark at its own ratio. */
+export const BrandLogoFit: Story = {
+  name: 'Brand Logo Fit',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.50 (usm-x row 75): `brandLogoFit="natural"` draws `brandLogoSrc` at its own aspect ratio, `--lc-sidenav-brand-logo-height` high (default 24 px), without the tile and at most as wide as the brand: the 4:1 wordmark is 96 × 24 px instead of being shrunk into the 24 px square, and a 1:1 mark is 24 × 24. The default `tile` keeps the 32 px tile (third rail). Collapsed (fourth rail), the rail shows the tile with the letter instead of the wordmark. Light and dark rails; `--lc-sidenav-brand-logo-filter` still applies.',
+      },
+    },
+  },
+  render: () => ({
+    props: { items: USMX_ITEMS, activeRoute: '/start', wordmark: WORDMARK, square: SQUARE_MARK },
+    template: `
+      <div lang="de" style="display: flex; flex-wrap: wrap; gap: 24px;">
+        ${brandRail('theme="light" brandName="USM X" [brandLogoSrc]="wordmark" brandLogoFit="natural" brandAriaLabel="USM X – Start" ariaLabel="Bereiche (4:1)"')}
+        ${brandRail('theme="dark" brandName="USM X" [brandLogoSrc]="square" brandLogoFit="natural" brandAriaLabel="USM X – Start" ariaLabel="Bereiche (1:1)"')}
+        ${brandRail('theme="dark" brandName="USM X" [brandLogoSrc]="square" brandAriaLabel="USM X – Start" ariaLabel="Bereiche (tile)"')}
+        ${brandRail('theme="light" [collapsed]="true" brandName="USM X" brandLetter="X" [brandLogoSrc]="wordmark" brandLogoFit="natural" brandAriaLabel="USM X – Start" ariaLabel="Bereiche (eingeklappt)"', '240px', 'overflow: visible; position: relative;')}
+      </div>`,
+  }),
+};
+
+/** 3.50 (usm-x row 76): a cut label with a kit tooltip shows its full text in the tooltip. */
+export const CutLabelWithTooltip: Story = {
+  name: 'Cut Label With Tooltip',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.50 (usm-x row 76): a label cut by its ellipsis shows its full text. On a row with a kit `tooltip` (and a `disabledReason`) the tooltip reads „{label} · {tooltip}“ while the label is cut, checked when the pointer enters the row or the row takes the keyboard focus („Rechnungsfreigabe Kostenstelle 4711 · Wird im Rich Client bearbeitet“); a row without a tooltip keeps the `title` with the full label (3.47); a label that fits shows the tooltip alone. 240 px wide, German labels.',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      status: '',
+      items: [
+        { id: 'fit', icon: 'home', label: 'Übersicht', route: '/start', tooltip: 'Startseite des Bereichs', displayOrder: 1 },
+        { id: 'cut-tip', icon: 'file', label: 'Rechnungsfreigabe Kostenstelle 4711', route: '/rechnungsfreigabe', tooltip: 'Wird im Rich Client bearbeitet', displayOrder: 2 },
+        { id: 'cut-reason', icon: 'file', label: 'Lieferantenstammdatenpflege Nord', route: '/lieferanten', disabled: true, disabledReason: 'Kein Recht für diesen Bereich', displayOrder: 3 },
+        { id: 'cut-plain', icon: 'file', label: 'Rechnungseingangsprüfung Lieferanten', route: '/eingang', displayOrder: 4 },
+      ],
+    },
+    template: `
+      <div lang="de" style="display: flex; height: 400px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
+        <lc-sidenav [isOpen]="true" mode="docked" width="240px" [items]="items" activeRoute="/start" ariaLabel="Bereiche" closeAriaLabel="Navigation schließen" />
+        <div style="flex: 1; padding: 24px; color: var(--color-text-secondary);">Lieferanten</div>
+      </div>`,
   }),
 };

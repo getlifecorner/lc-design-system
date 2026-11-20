@@ -479,3 +479,29 @@ export const FlushPanel: Story = {
       </div>`,
   }),
 };
+
+/** 3.50 (request 071, usm-x row 85): a muted tab keeps its muted ink on hover. */
+export const MutedTabs: Story = {
+  name: 'Muted Tabs',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.50 (usm-x row 85): `muted` tabs („Regeln“, „Workflows“) name places edited elsewhere: tertiary ink at weight 400 (5.84:1 light, 7.31:1 dark on the page). On hover they take the hover fill and keep the tertiary ink (5.30:1 light, 6.65:1 dark on the fill), so they never look like the other tabs; before 3.50 hover switched to the primary ink. Selected and focus look as before: a selected muted tab looks selected. „Ticket“ carries a `hint`.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [TabComponent] },
+    template: `
+      <div lang="de">
+        <lc-tabs ariaLabel="Teile der Facette">
+          <lc-tab label="Ticket" hint="12 Status">Statusmodell der Tickets.</lc-tab>
+          <lc-tab label="Regeln" [muted]="true">Die Regeln werden in der Regelverwaltung gepflegt.</lc-tab>
+          <lc-tab label="Workflows" [muted]="true" hint="Rich Client">Workflows werden im Rich Client bearbeitet.</lc-tab>
+          <lc-tab label="Felder">Felder der Facette.</lc-tab>
+        </lc-tabs>
+      </div>`,
+  }),
+};

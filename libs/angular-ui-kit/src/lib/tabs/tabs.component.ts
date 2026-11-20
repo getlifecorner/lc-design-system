@@ -147,7 +147,8 @@ export class TabComponent {
   /**
    * 3.48 (usm-x row 50): quiet ink (tertiary, weight 400; 5.84:1 light, 7.31:1
    * dark on the page) for a tab that names a place edited elsewhere. It is
-   * still selectable; the selected look wins.
+   * still selectable; the selected look wins. Since 3.50 hover keeps the
+   * muted ink (5.30:1 light, 6.65:1 dark on the hover fill); focus is as before.
    * @default false
    */
   readonly muted = input(false);

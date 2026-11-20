@@ -39,6 +39,12 @@
     text-transform: uppercase;
   }
 
+  // 3.50 (request 071, usm-x row 81): three `letters` (e.g. "CRM") at 0.75 em
+  // fit the disc and the square at every size.
+  &__initials--3 {
+    font-size: 0.75em;
+  }
+
   &__status {
     position: absolute;
     bottom: 0;

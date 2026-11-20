@@ -973,6 +973,52 @@
   text-underline-offset: 0.15em;
 }
 
+// ── USM X seventh batch (3.50, request 071, usm-x rows 74–76) ────────────
+// Row 74: the `[sidenav-rail-top]` slot, on the collapsed rail only (the
+// wrapper renders only there), between the brand and the items: centred on
+// the 56 px rail, its children at most 44 px wide (x 6 … 50). Written on one
+// line, so `:empty` draws no box without content.
+.lc-sidenav__rail-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-2, 0.5rem);
+  flex-shrink: 0;
+  padding: var(--spacing-2, 0.5rem) var(--spacing-1-5, 0.375rem) 0;
+
+  &:empty {
+    display: none;
+  }
+
+  > ::ng-deep * {
+    max-inline-size: var(--size-min-touch-width, 2.75rem);
+  }
+}
+
+// Row 74: `brandToggle`: the brand as a button keeps the link's box, hover
+// fill, focus ring and rail tooltip.
+.lc-sidenav__brand--toggle {
+  position: relative;
+  margin: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+// Row 75: `brandLogoFit="natural"`: the logo at its own ratio, as high as the
+// hook (default 24 px; a 4:1 wordmark is 96 × 24), at most the brand's width.
+.lc-sidenav__brand-logo {
+  display: block;
+  flex: none;
+  block-size: var(--lc-sidenav-brand-logo-height, 24px);
+  inline-size: auto;
+  max-inline-size: 100%;
+  object-fit: contain;
+  filter: var(--lc-sidenav-brand-logo-filter, none);
+}
+
 @media (forced-colors: active) {
   .lc-sidenav__brand-tile {
     border: 1px solid CanvasText;

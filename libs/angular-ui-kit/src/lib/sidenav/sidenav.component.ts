@@ -17,6 +17,7 @@ import {
   WritableSignal,
   contentChild,
   linkedSignal,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgTemplateOutlet, NgStyle } from '@angular/common';
@@ -27,6 +28,7 @@ import {
   NavigationItem,
   NavigationItemActionEvent,
   NavigationItemContextMenuEvent,
+  NavigationRailItemEvent,
 } from '@lifecorner/angular-ui-kit/models';
 import {
   currentItemParents,
@@ -55,6 +57,13 @@ export type SidenavMode = 'drawer' | 'docked';
  * keeps its surface in both.
  */
 export type SidenavVariant = 'default' | 'transparent';
+
+/**
+ * How `brandLogoSrc` is drawn (3.50, usm-x row 75): `tile` (24 px in the
+ * 32 px tile) or `natural` (its own aspect ratio, `--lc-sidenav-brand-logo-height`
+ * high, no tile).
+ */
+export type SidenavBrandLogoFit = 'tile' | 'natural';
 
 let nextSidenavId = 0;
 /** Hold time of a long press (3.45), as iOS and Android. */
@@ -146,6 +155,14 @@ interface LabelPart {
  *   (default `rgba(0, 0, 0, 0.5)`), `--lc-sidenav-brand-height` (default by
  *   `logoSize`: 56, 56, 64, 80, 112 px) and `--lc-sidenav-brand-logo-filter`
  *   (default `none`), read where used (set them on any ancestor)
+ * - 3.50 (usm-x rows 74–76): a `[sidenav-rail-top]` slot on the collapsed
+ *   rail only (between the brand and the items, centred, at most 44 px
+ *   wide, e.g. the area picker as an icon button), `railItems` (what the
+ *   rail draws instead of `items`) with `railItemClick`, `hasPopup` on action
+ *   items, `brandToggle` (the brand collapses and expands the rail),
+ *   `brandLogoFit="natural"` (a wordmark at its own ratio, hook
+ *   `--lc-sidenav-brand-logo-height`, default `24px`), and a cut label's full
+ *   text in the row's kit tooltip („{label} · {tooltip}“)
  *
  * @example
  * ```html
@@ -229,7 +246,8 @@ export class SidenavComponent implements OnDestroy {
    * high as the image logo (`logoSize`: 64 px for `md`, matching
    * `lc-header size="md"`); the name wraps to two lines at most, and the full
    * name stays the link's accessible name. Collapsed, only the tile shows.
-   * The brand never toggles the rail (see `showCollapseToggle`). Under
+   * The brand toggles the rail only with `brandToggle` (3.50; see also
+   * `showCollapseToggle`). Under
    * `@defer`, give the `lc-sidenav-placeholder` `[showLogo]="true"` and the
    * same `logoSize` to reserve the block. Empty: no text brand.
    * @default ''
@@ -299,6 +317,29 @@ export class SidenavComponent implements OnDestroy {
    * @default ''
    */
   readonly brandLogoSrc = input('');
+
+  /**
+   * How `brandLogoSrc` is drawn (3.50, usm-x row 75). `'tile'`: 24 × 24 px
+   * contained in the 32 px tile, as before. `'natural'`: at its own aspect
+   * ratio, `--lc-sidenav-brand-logo-height` high (default `24px`; a 4:1
+   * wordmark is 96 × 24 px), without a tile, at most the brand's width; the
+   * collapsed rail shows the tile with `brandIcon` or the letter instead.
+   * `--lc-sidenav-brand-logo-filter` applies in both.
+   * @default 'tile'
+   */
+  readonly brandLogoFit = input<SidenavBrandLogoFit>('tile');
+
+  /**
+   * Docked mode (3.50, usm-x row 74): the brand is a `<button>` that collapses
+   * and expands the rail, whatever it shows (letter, `brandIcon`,
+   * `brandLogoSrc`); 44 px target, the brand's focus ring, the name as a
+   * tooltip on the rail, and the focus stays on it across both states. Its
+   * name: „{brandAriaLabel or brandName [brandSubtitle]}, {what a press
+   * does}“ (`expandAriaLabel` / `collapseAriaLabel`). In drawer mode the brand
+   * stays as `brandLink` says. Works beside `showCollapseToggle`.
+   * @default false
+   */
+  readonly brandToggle = input(false);
 
   /**
    * Docked mode: a button at the bottom of the rail collapses and expands it
@@ -392,11 +433,27 @@ export class SidenavComponent implements OnDestroy {
   readonly items = input<NavigationItem[]>([]);
 
   /**
+   * What the collapsed rail draws instead of `items` (3.50, usm-x row 74):
+   * one icon per entry, by `displayOrder` (`children`, `isSection` and
+   * `action` are ignored), in the rail's look (tooltip, badge dot, busy
+   * spinner, current bar), e.g. „Übersicht“ plus one icon per area group. The
+   * current entry: the first with `current`, else by `route` / `matchRoutes`
+   * as for `items`; a `kind: 'action'` entry (e.g. a group icon that opens a
+   * menu) is current only by `current`, never by a route. A press emits `railItemClick` with the element (and
+   * `itemClicked`); a `kind: 'action'` entry with `hasPopup` opens the app's
+   * menu beside the rail. Expanded and in the drawer, `items` show as before.
+   * `null`: the rail draws `items`, as before.
+   * @default null
+   */
+  readonly railItems = input<NavigationItem[] | null>(null);
+
+  /**
    * 3.48 (backlog 067-n4): id of the item whose action popup is open. Its
    * action button gets `aria-expanded="true"` (and stays visible); the other
    * buttons with `action.hasPopup` get `"false"`, also in prerendered HTML.
    * The `itemAction` event and its `button` (to anchor an `lc-menu`) are
-   * unchanged. `null`: none open.
+   * unchanged. `null`: none open. 3.50: also the `kind: 'action'` item (in
+   * `items` or `railItems`) with `hasPopup` whose popup is open.
    * @default null
    */
   readonly expandedActionId = input<string | null>(null);
@@ -613,6 +670,36 @@ export class SidenavComponent implements OnDestroy {
    */
   readonly itemContextMenu = output<NavigationItemContextMenuEvent>();
 
+  /**
+   * A `railItems` entry was pressed (3.50, usm-x row 74): `{ item, event,
+   * element }`, right after `itemClicked`. `element` is the rail item's link
+   * or button: open an `lc-menu` at a point 8 px beside the rail's edge, level
+   * with the item (e.g. `{ x: element.closest('.lc-sidenav').getBoundingClientRect().right
+   * + 8, y: element.getBoundingClientRect().top }`; the item itself ends
+   * inside the rail) and pass it as the menu's `returnFocusTo`; set the item's
+   * `id` as `expandedActionId` while open.
+   */
+  readonly railItemClick = output<NavigationRailItemEvent>();
+
+  /** 3.50: `railItems` by `displayOrder`, or `null`. */
+  protected readonly sortedRailItems = computed(() => {
+    const rail = this.railItems();
+    return rail ? sortNavigationItems(rail) : null;
+  });
+
+  /** 3.50: the docked, collapsed rail (where `[sidenav-rail-top]` and `railItems` show). */
+  protected readonly dockedRail = computed(() => this.isRail() && this.effectiveMode() === 'docked');
+
+  /** 3.50: the rail draws `railItems` (collapsed, docked, and set). */
+  protected readonly showRailItems = computed(() => this.dockedRail() && this.sortedRailItems() !== null);
+
+  /** 3.50: the current `railItems` entry: the first with `current`, else by route as for `items`. */
+  private readonly currentRailItem = computed<NavigationItem | null>(() => {
+    const rail = this.sortedRailItems();
+    if (!rail) return null;
+    return currentNavigationItem(rail, this.activeRoute(), this.activeRoute() === '' ? this.routerPath() : '');
+  });
+
   /** Whether the drawer panel is rendered (drawer mode and open). */
   private readonly drawerOpen = computed(() => this.isOpen() && this.effectiveMode() === 'drawer');
   /** Whether the drawer panel was shown without a close after it. */
@@ -707,6 +794,9 @@ export class SidenavComponent implements OnDestroy {
       // 3.47: a truncated label gets its full text as `title` when the
       // pointer enters its item (never in prerendered HTML).
       host.addEventListener('pointerover', this.onItemPointerOver);
+      // 3.50 (usm-x row 76): and when an item takes the focus (capture: before
+      // the item's kit tooltip shows).
+      host.addEventListener('focus', this.onItemPointerOver, true);
     });
   }
 
@@ -725,14 +815,33 @@ export class SidenavComponent implements OnDestroy {
    */
   private readonly truncatedLabel = signal<Element | null>(null);
 
-  /** Pointer over an item (3.47): its label's `title` follows whether the label is cut. */
+  /** 3.50 (usm-x row 76): the item element whose label is cut (`truncatedLabel`'s row). */
+  private readonly truncatedRow = signal<Element | null>(null);
+
+  private readonly changeDetector = inject(ChangeDetectorRef);
+
+  /**
+   * Pointer over an item (3.47), or (3.50) focus on it: its label's `title`
+   * follows whether the label is cut, and so (3.50, usm-x row 76) does the
+   * text of a row's kit tooltip. The tooltip reads its text when it shows (on
+   * the same `mouseenter` / `focus`), so a change is rendered right away: the
+   * pointer events come before the mouse events, and this focus listener
+   * runs in the capture phase, before the item's own.
+   */
   private readonly onItemPointerOver = (event: Event): void => {
-    const item = (event.target as Element | null)?.closest?.('.lc-sidenav__nav-item');
+    const item = (event.target as Element | null)?.closest?.('.lc-sidenav__nav-item') ?? null;
     const label = item?.querySelector('.lc-sidenav__nav-label') ?? null;
     if (!label) return;
     const cut = label.scrollWidth > label.clientWidth;
-    if (cut) this.truncatedLabel.set(label);
-    else if (this.truncatedLabel() === label) this.truncatedLabel.set(null);
+    const row = this.truncatedRow();
+    if (cut) {
+      this.truncatedLabel.set(label);
+      this.truncatedRow.set(item);
+    } else if (this.truncatedLabel() === label) {
+      this.truncatedLabel.set(null);
+      this.truncatedRow.set(null);
+    }
+    if (this.truncatedRow() !== row) this.changeDetector.detectChanges();
   };
 
   /** The running long press (3.45): its timer, start point and pointer. */
@@ -828,6 +937,7 @@ export class SidenavComponent implements OnDestroy {
     host.removeEventListener?.('pointercancel', this.onLongPressEnd);
     host.removeEventListener?.('contextmenu', this.onNativeContextMenu, true);
     host.removeEventListener?.('pointerover', this.onItemPointerOver);
+    host.removeEventListener?.('focus', this.onItemPointerOver, true);
     this.overlayStack.remove(this.drawerStackId);
   }
 
@@ -1023,10 +1133,53 @@ export class SidenavComponent implements OnDestroy {
     return item.action?.hasPopup ? String(this.expandedActionId() === item.id) : null;
   }
 
-  protected rowTooltip(item: NavigationItem): string {
+  protected rowTooltip(item: NavigationItem, row?: Element): string {
     const main = item.disabled ? (item.disabledReason ?? '') : (item.tooltip ?? '');
-    return [main, item.badge?.tooltip ?? ''].filter(Boolean).join(' · ');
+    const text = [main, item.badge?.tooltip ?? ''].filter(Boolean).join(' · ');
+    // 3.50 (usm-x row 76): a cut label shows its full text in the tooltip
+    // („{label} · {tooltip}“; the row has no `title` then). Not on the rail.
+    if (text && row && this.truncatedRow() === row && !this.isRail()) return `${item.label} · ${text}`;
+    return text;
   }
+
+  /** 3.50 (usm-x row 74): `aria-expanded` of a `kind: 'action'` item with `hasPopup`; `null` without. */
+  protected itemExpanded(item: NavigationItem): string | null {
+    return item.kind === 'action' && item.hasPopup ? String(this.expandedActionId() === item.id) : null;
+  }
+
+  /** 3.50: `aria-haspopup` of a `kind: 'action'` item; `null` without. */
+  protected itemHasPopup(item: NavigationItem): string | null {
+    return item.kind === 'action' && item.hasPopup ? item.hasPopup : null;
+  }
+
+  /** 3.50: whether a `railItems` entry is the rail's current one. */
+  protected isRailItemActive(item: NavigationItem): boolean {
+    return this.currentRailItem() === item;
+  }
+
+  /** 3.50 (usm-x row 74): a `railItems` entry was pressed: `itemClicked`, then `railItemClick` with the element. */
+  protected handleRailItemClick(event: MouseEvent, item: NavigationItem): void {
+    if (this.isBlocked(item)) return;
+    this.itemClicked.emit(item);
+    this.railItemClick.emit({ item, event, element: event.currentTarget as HTMLElement });
+  }
+
+  /**
+   * 3.50 (usm-x row 74): the brand toggle's name: the brand (`brandAriaLabel`,
+   * else name and subtitle), then what a press does.
+   */
+  protected readonly brandToggleLabel = computed(() => {
+    const brand = this.brandAriaLabel() || [this.brandName(), this.brandSubtitle()].filter(Boolean).join(' ');
+    return `${brand}, ${this.collapseToggleLabel()}`;
+  });
+
+  /** 3.50: the brand is the rail toggle (`brandToggle`, docked). */
+  protected readonly brandIsToggle = computed(() => this.brandToggle() && this.effectiveMode() === 'docked');
+
+  /** 3.50 (usm-x row 75): `brandLogoSrc` drawn at its own ratio, without the tile (expanded only). */
+  protected readonly naturalLogo = computed(
+    () => this.brandLogoFit() === 'natural' && !!this.brandLogoSrc() && !this.isRail(),
+  );
 
   /** `contextmenu` on an item (3.44): emitted, never prevented; not for disabled items. */
   protected onContextMenu(event: MouseEvent, item: NavigationItem): void {

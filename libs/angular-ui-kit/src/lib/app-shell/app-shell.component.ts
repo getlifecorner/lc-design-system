@@ -98,6 +98,14 @@ export type AppShellNavPlacement = 'below-header' | 'full-height';
  *   `linear-gradient(to bottom, var(--color-land-1), var(--color-land-2), var(--color-land-3))`.
  *   The horizon's land still paints over it.
  *
+ * Print (3.50): the page prints as content only. `lc-header`, `lc-sidenav`
+ * and `lc-bottom-nav` are not printed, and in `@media print` the shell keeps
+ * no bottom clearance (`--lc-app-shell-bottom-clearance` falls back to 0),
+ * no sky image (`--lc-app-shell-bg-image` falls back to none) and no screen
+ * height (`min-height: 0`). From 1024 px it keeps no nav column either (also
+ * with `navPlacement="full-height"`): one column, the page at the full width.
+ * A hook an app sets still wins in print. On screen nothing changes.
+ *
  * Needs `<meta name="viewport" content="width=device-width, initial-scale=1,
  * viewport-fit=cover">` for the safe-area insets. Breakpoints are fixed
  * (1024 px side navigation, 1440 / 1920 px widths), so the layout works

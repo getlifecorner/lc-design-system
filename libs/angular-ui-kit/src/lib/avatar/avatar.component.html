@@ -27,7 +27,7 @@
       />
     </svg>
   } @else {
-    <span class="lc-avatar__initials">{{ initials() }}</span>
+    <span class="lc-avatar__initials" [class.lc-avatar__initials--3]="threeLetters()">{{ shownLetters() }}</span>
   }
 
   @if (status()) {

@@ -11,6 +11,9 @@ import {
   type OnDestroy,
 } from '@angular/core';
 import { MenuComponent, type MenuAnchor, type MenuItem, type MenuItemToggleEvent } from './menu.component';
+import { MenuControlDirective } from './menu-control.directive';
+import { ToggleGroupComponent } from '../toggle-group/toggle-group.component';
+import { SwitchComponent } from '../switch/switch.component';
 
 /**
  * Menus display a list of actions or options in a floating panel.
@@ -54,7 +57,7 @@ const meta: Meta<MenuComponent> = {
     items: {
       control: 'object',
       description:
-        '`MenuItem[]`. 3.43 (usm-x row 12): an item with `children` is a section: its `label` is a heading (not focusable, not an action) and the children are its items, in a `role="group"` named by the heading; one level. `indentChildren: true` indents them one step (md 16, sm 12, lg 20 px); `dividerAfter` on a section follows the whole group. The arrow keys, Home and End run over the items of every section. 3.45 (usm-x row 31): `type: \'checkbox\' | \'radio\'` with `checked` (controlled), `radioGroup` (the exclusive set) and `closeOnSelect` (`true`: the menu emits `closed` after the item acts). 3.48 (usm-x rows 56, 57, 68): `tooltip` (kit tooltip on hover and focus), `disabledReason` (a `disabled` item with a reason stays in the arrow order as `aria-disabled` and shows the reason), `emphasis` (bold label, visual only), `swatch` (a colour sample or two halves before the label, decorative); `dividerAfter` on a member draws between members of a section',
+        '`MenuItem[]`. 3.43 (usm-x row 12): an item with `children` is a section: its `label` is a heading (not focusable, not an action) and the children are its items, in a `role="group"` named by the heading; one level. `indentChildren: true` indents them one step (md 16, sm 12, lg 20 px); `dividerAfter` on a section follows the whole group. The arrow keys, Home and End run over the items of every section. 3.45 (usm-x row 31): `type: \'checkbox\' | \'radio\'` with `checked` (controlled), `radioGroup` (the exclusive set) and `closeOnSelect` (`true`: the menu emits `closed` after the item acts). 3.48 (usm-x rows 56, 57, 68): `tooltip` (kit tooltip on hover and focus), `disabledReason` (a `disabled` item with a reason stays in the arrow order as `aria-disabled` and shows the reason), `emphasis` (bold label, visual only), `swatch` (a colour sample or two halves before the label, decorative); `dividerAfter` on a member draws between members of a section. 3.50 (usm-x rows 77, 78, 80): `current` (`aria-current`, a 3 px bar, semibold), `busy` (spinner, `aria-busy`, not activatable), `badgeVariant` (the badge as an `lc-badge` variant), `attrs` (`id` and `data-*` only), `control` (inline control rows); a member with `children` is a section again, to any depth',
       table: { defaultValue: { summary: '[]' } },
     },
     anchor: {
@@ -84,6 +87,23 @@ const meta: Meta<MenuComponent> = {
       control: 'text',
       description: '3.48 (usm-x row 58): accessible name of the `role="menu"` element; empty renders none',
       table: { defaultValue: { summary: "''" } },
+    },
+    inline: {
+      control: 'boolean',
+      description:
+        '3.50 (usm-x row 77): the menu in the page (an account panel): the panel always renders (also prerendered), no trigger slot, no overlay, no frame, the container\'s width; `isOpen`, `position`, `anchor`, `maxHeight`, `minWidth`, `maxWidth` and `closeOnSelect` are ignored and nothing closes it (`closed` is not emitted). `role="menu"`, roving tabindex and Arrow/Home/End stay. Top-level entries with `control` become control rows (`ng-template[lcMenuControl]`) between the menu parts, one Tab stop per part',
+      table: { defaultValue: { summary: 'false' } },
+    },
+    busyLabel: {
+      control: 'text',
+      description: '3.50: hidden text read after the label of a `busy` item. German: „Wird geladen“',
+      table: { defaultValue: { summary: "'Loading'" } },
+    },
+    returnFocusTo: {
+      control: false,
+      description:
+        '3.50 (backlog 068-n3): `HTMLElement | null`, the element that gets the focus when the menu closes from inside (Escape, Tab, an item), before the trigger, the anchor element and the element focused at open. Use it with a point `anchor` when nothing was focused, or for a menu beside a rail item. `null`: as before',
+      table: { defaultValue: { summary: 'null' } },
     },
   },
 
@@ -823,5 +843,203 @@ export const AccountMenuSwatches: Story = {
   render: () => ({
     moduleMetadata: { imports: [MenuAccountDemoComponent] },
     template: `<lc-menu-account-demo />`,
+  }),
+};
+
+/** A panel box for the inline stories: the page's surface, a hairline, rounded. */
+const PANEL_BOX =
+  'box-sizing: border-box; width: min(100%, 20.5rem); padding: 8px 0; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--border-radius-lg); color: var(--color-text-primary);';
+
+const INLINE_ITEMS: MenuItem[] = [
+  { id: 'profile', label: 'Profile', icon: 'user' },
+  { id: 'settings', label: 'Settings', icon: 'cog-6-tooth', dividerAfter: true },
+  {
+    id: 'workspace',
+    label: 'Workspace',
+    dividerAfter: true,
+    children: [
+      { id: 'members', label: 'Members' },
+      { id: 'billing', label: 'Billing', metadata: { badge: '2' } },
+    ],
+  },
+  { id: 'logout', label: 'Sign out', icon: 'arrow-right-on-rectangle', variant: 'danger' },
+];
+
+/** 3.50 (request 071, usm-x row 77): the menu in the page. */
+export const Inline: Story = {
+  name: 'Inline',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.50 (usm-x row 77): `inline` renders the menu in the page, here in a panel box: no trigger slot, no overlay, no border, shadow or slide-in of its own, the container\'s width. It is always rendered (also in prerendered HTML) and never closes: Tab moves on, Escape is left to the page, outside clicks and scrolling do nothing (`closed` is not emitted). `role="menu"` stays, named by `ariaLabel`; one Tab stop (the first item until the arrows move it), Arrow/Home/End wrap, Enter and Space activate. Items, the section and the divider look as in a popup.',
+      },
+    },
+  },
+  render: () => ({
+    props: { items: INLINE_ITEMS },
+    template: `
+      <div lang="en" style="${PANEL_BOX}">
+        <lc-menu [inline]="true" [items]="items" ariaLabel="Account" />
+      </div>`,
+  }),
+};
+
+/** The account panel's entries (usm-x row 77): two parts around three control rows. */
+const ACCOUNT_PANEL: MenuItem[] = [
+  { id: 'light', label: 'Hell', type: 'radio', radioGroup: 'theme', checked: true, swatch: '#ffffff' },
+  { id: 'dark', label: 'Dunkel', type: 'radio', radioGroup: 'theme', swatch: '#111827' },
+  { id: 'density', label: 'Dichte', control: 'density' },
+  { id: 'sounds', label: 'Töne', control: 'sounds' },
+  { id: 'shortcuts', label: 'Tastenkürzel anzeigen', control: 'shortcuts' },
+  { id: 'profile', label: 'Profil', current: true },
+  { id: 'logout', label: 'Abmelden', variant: 'danger' },
+];
+
+@Component({
+  selector: 'lc-menu-account-panel-demo',
+  standalone: true,
+  imports: [MenuComponent, MenuControlDirective, ToggleGroupComponent, SwitchComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div lang="de" style="${PANEL_BOX}">
+      <lc-menu [inline]="true" [items]="items()" ariaLabel="Darstellung" (itemToggle)="items.set(apply(items(), $event))">
+        <div header style="padding: 4px 16px 12px; border-bottom: 1px solid var(--color-divider); margin-bottom: 8px;">
+          <div style="font-weight: var(--font-weight-semibold); color: var(--color-text-primary);">Erika Mustermann</div>
+          <div style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">erika.mustermann&#64;example.de</div>
+        </div>
+        <ng-template lcMenuControl="density" let-labelId="labelId">
+          <lc-toggle-group [options]="densities" [(selected)]="density" size="sm" [touchTarget]="true" [ariaLabelledBy]="labelId" />
+        </ng-template>
+        <ng-template lcMenuControl="sounds">
+          <lc-switch ariaLabel="Töne" [checked]="sounds()" (checkedChange)="sounds.set($event)" />
+        </ng-template>
+        <ng-template lcMenuControl="shortcuts">
+          <lc-switch ariaLabel="Tastenkürzel anzeigen" [checked]="shortcuts()" (checkedChange)="shortcuts.set($event)" />
+        </ng-template>
+      </lc-menu>
+    </div>
+  `,
+})
+class MenuAccountPanelDemoComponent {
+  protected readonly items = signal<MenuItem[]>(ACCOUNT_PANEL);
+  protected readonly apply = applyToggle;
+  protected readonly densities = [
+    { value: 'compact', label: 'Kompakt' },
+    { value: 'normal', label: 'Normal' },
+    { value: 'wide', label: 'Weit' },
+  ];
+  protected readonly density = signal('normal');
+  protected readonly sounds = signal(true);
+  protected readonly shortcuts = signal(false);
+}
+
+/** 3.50 (request 071, usm-x row 77): an account panel: identity, theme radios, control rows, links. */
+export const AccountPanel: Story = {
+  name: 'Account Panel',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.50 (usm-x row 77): the account panel as one inline menu. The identity is the `[header]`; „Hell“ and „Dunkel“ are radio items with a swatch (a `role="menu"` named „Darstellung“); „Dichte“, „Töne“ and „Tastenkürzel anzeigen“ are control rows (`MenuItem.control` + `ng-template[lcMenuControl]`): an `lc-toggle-group` with `touchTarget` and two `lc-switch`, outside `role="menu"`, at least 44 px high, the label before the control (the toggle group is named by the row label through `labelId`); „Profil“ (`current`: bar and semibold) and „Abmelden“ are the second menu part. Tab: radio part → toggle group → switch → switch → second part (one stop per part); the arrows stay inside a part. At 360 px the toggle group fits beside „Dichte“; a longer label would put it on the next line (8 px below).',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [MenuAccountPanelDemoComponent] },
+    template: `<lc-menu-account-panel-demo />`,
+  }),
+};
+
+/** The item states of 3.50 (usm-x rows 78, 80): current, busy, the six badge variants, attrs. */
+const STATES: MenuItem[] = [
+  { id: 'objekttypen', label: 'Objekttypen', current: true, attrs: { id: 'menu-objekttypen', 'data-testid': 'objekttypen' } },
+  { id: 'zaehler', label: 'Zähler', busy: true, metadata: { badge: '4' } },
+  { id: 'pruefungen', label: 'Prüfungen', badgeVariant: 'warning', metadata: { badge: '12' }, dividerAfter: true },
+  { id: 'default', label: 'Entwürfe', badgeVariant: 'default', metadata: { badge: '3' } },
+  { id: 'primary', label: 'Neu', badgeVariant: 'primary', metadata: { badge: '5' } },
+  { id: 'success', label: 'Freigegeben', badgeVariant: 'success', metadata: { badge: '28' } },
+  { id: 'error', label: 'Fehlerhafte Zuordnungen', badgeVariant: 'error', metadata: { badge: '1' } },
+  { id: 'info', label: 'Hinweise', badgeVariant: 'info', metadata: { badge: '7' } },
+  { id: 'plain', label: 'Ohne Variante', metadata: { badge: '9' } },
+];
+
+/** 3.50 (request 071, usm-x rows 78, 80): current, busy and coloured badges in an open menu. */
+export const CurrentBusyAndBadges: Story = {
+  name: 'Current, Busy And Badges',
+  args: { isOpen: true, position: 'bottom-left', ariaLabel: 'Stammdaten', items: STATES, busyLabel: 'Wird geladen' },
+  parameters: {
+    controls: { include: ['isOpen', 'position', 'ariaLabel', 'size', 'items', 'busyLabel'] },
+    docs: {
+      description: {
+        story:
+          '3.50 (usm-x rows 78, 80): „Objekttypen“ is `current`: `aria-current="true"`, a 3 px primary bar at its start, the selected fill (also on hover) and a semibold label, so the state never rests on colour alone (bar 3.75:1 light, 5.77:1 dark on the fill). „Zähler“ is `busy`: a 16 px spinner in the badge\'s place, `aria-busy`, `aria-disabled` and „Wird geladen“ (`busyLabel`) read after the label; it stays in the arrow order, a click, Enter or Space do nothing. The badges use `badgeVariant` (`lc-badge` xs, rounded, 20 px high: default, primary, success, warning, error, info; text 4.6:1 or more on the panel); „Ohne Variante“ keeps the old badge. `attrs` puts `id="menu-objekttypen"` and `data-testid` on the first item (`id` and `data-*` only).',
+      },
+    },
+  },
+  render: (args) => ({
+    props: args,
+    template: `
+      <div lang="de" style="position: relative; display: inline-block; padding: 16px 0; min-height: 560px;">
+        <lc-menu [items]="items" [isOpen]="isOpen" [position]="position" [size]="size || 'md'" [ariaLabel]="ariaLabel" [busyLabel]="busyLabel" (itemClick)="itemClick($event)" (closed)="closed()">
+          <button trigger type="button" style="${TOKEN_TRIGGER}">Stammdaten ▾</button>
+        </lc-menu>
+      </div>`,
+  }),
+};
+
+/** Sections to any depth (usm-x row 78): three levels. */
+const NESTED: MenuItem[] = [
+  {
+    id: 'stamm',
+    label: 'Stammdaten',
+    dividerAfter: true,
+    children: [
+      {
+        id: 'objekte',
+        label: 'Objekte',
+        children: [
+          { id: 'objekttypen', label: 'Objekttypen', current: true },
+          {
+            id: 'felder',
+            label: 'Felder',
+            children: [
+              { id: 'feldgruppen', label: 'Feldgruppen' },
+              { id: 'feldtypen', label: 'Feldtypen' },
+            ],
+          },
+        ],
+      },
+      { id: 'zaehler', label: 'Zähler' },
+      { id: 'pruefungen', label: 'Prüfungen', badgeVariant: 'warning', metadata: { badge: '12' } },
+    ],
+  },
+  { id: 'export', label: 'Exportieren' },
+];
+
+/** 3.50 (request 071, usm-x row 78): sections nested three levels, in sm, md and lg. */
+export const NestedSections: Story = {
+  name: 'Nested Sections',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.50 (usm-x row 78): a member with `children` is a section again, to any depth: a `role="group"` named by its heading, inside the parent\'s group. „Stammdaten“ is level 1 (12 px semibold capitals, as before); „Objekte“ (level 2) and „Felder“ (level 3) are 12 px semibold without capitals, and heading and items move one step per level: items at 16 / 32 / 48 px in md, 12 / 24 / 36 in sm, 20 / 40 / 60 in lg. The arrow keys run over the items of every level in visual order. Shown as inline menus in panel boxes (sm, md, lg) so they sit side by side; a popup draws the same.',
+      },
+    },
+  },
+  render: () => ({
+    props: { items: NESTED, sizes: ['sm', 'md', 'lg'] },
+    template: `
+      <div lang="de" style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start;">
+        @for (size of sizes; track size) {
+          <div style="${PANEL_BOX}">
+            <lc-menu [inline]="true" [items]="items" [size]="size" [ariaLabel]="'Bereiche (' + size + ')'" />
+          </div>
+        }
+      </div>`,
   }),
 };

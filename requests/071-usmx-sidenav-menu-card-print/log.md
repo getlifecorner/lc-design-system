@@ -1,0 +1,16 @@
+# Log 071: USM X sidenav, menu, card and badge gaps, toggle-group touch target, print rules, backlog
+
+## Owner decisions
+
+2026-11-20 12:43 (bundle item 5): everything in this bundle ships as one version (usm-x rows 74–86, finance-intelligence vertraege-prove-2026-11-19 row 2 and app-shell-2026-11-20 row 1, backlog 054-n2, 068-n1, 068-n3, 069-n1, 069-n2). The about-8-items bundle limit does not apply: do not split the bundle or return anything to the inbox. 054-n2 stays in the backlog if WebKit cannot check it here.
+
+## Handoffs
+
+Times come from `date '+%Y-%m-%d %H:%M'` when the row is written, never estimated.
+
+| Time | From → to | Status | Reason | Task |
+|---|---|---|---|---|
+| 2026-11-20 12:46 | spec-writer → ui-ux-designer | done | The spec is complete and has no open owner questions, so design is the next step. | Design the API and visuals for AC-1…26 in request 071. Fix the minimum scope for rows 74, 77 and 78, and record anything you leave out as a backlog row with a reason. Keep defaults unchanged, adding an opt-in where needed (AC-4, AC-15). Provide stories and baselines for the new states. |
+| 2026-11-20 15:19 | ui-ux-designer → web-developer | done | The design is complete with no open spec or owner questions, and the baselines are captured. | Implement design.md (AC-1 to AC-26) on one branch. Compare the existing stories against tmp/story-shots/071/baseline (360/1280, light/dark, --full); only the five form-file-upload image stories may differ. Check WebKit once for AC-26 and note the result in build.md. |
+| 2026-11-20 17:01 | web-developer → ui-ux-designer | done | Every gate is green on c951f0b, so the design review of the 16 new stories and the 6 deviations comes next. | Review request 071 (stories navigation-sidenav--collapsed-rail-with-top-slot, --brand-toggle, --brand-logo-fit, --cut-label-with-tooltip; navigation-menu--inline, --account-panel, --current-busy-and-badges, --nested-sections; components-split-button--menu-max-height; data-display-avatar--square-letters; data-display-table--sortable-head-reserve-and-rtl; data-display-badge--cut-run; navigation-tabs--muted-tabs; components-card--header-action-wrap; form-toggle-group--touch-target; layout-app-shell--print; shots in tmp/story-shots/071/new). Decide on deviations 1–6 in build.md. |
+| 2026-11-20 17:44 | ui-ux-designer → web-developer | changes-requested | F-1 is a must-fix layout deviation from design §3 in the account panel, which is the composition usm-x row 77 asked for, and consumers cannot correct it. | Fix review.md round 1: F-1 (reserve the inline menu's toggle column per role="menu" part, so „Profil“/„Abmelden“ sit on the „Dichte“ line, 16 px md, with a spec), F-2 (print from 1024 px uses one shell column, body at x 0), F-3 (railItemClick JSDoc and story place the menu at the rail's right edge + 8) and N-3 (railItems JSDoc: action entries are current only by `current`); then re-shoot the menu, app-shell and sidenav stories (new/ and a compare against tmp/story-shots/071/baseline) and update build.md. |

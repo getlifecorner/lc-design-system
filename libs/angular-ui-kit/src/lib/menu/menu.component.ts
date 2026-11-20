@@ -4,12 +4,12 @@ import {
   output,
   signal,
   computed,
+  contentChildren,
   effect,
   untracked,
   afterNextRender,
   afterRenderEffect,
   viewChild,
-  viewChildren,
   ChangeDetectionStrategy,
   HostListener,
   ElementRef,
@@ -26,12 +26,15 @@ import {
   type FlexibleConnectedPositionStrategy,
 } from '@angular/cdk/overlay';
 import { ViewportRuler } from '@angular/cdk/scrolling';
+import { BadgeComponent, type BadgeVariant } from '@lifecorner/angular-ui-kit/badge';
 import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/icon';
 import { ICON_CHECK } from '@lifecorner/angular-ui-kit/icons';
 import { OverlayStackService } from '@lifecorner/angular-ui-kit/internal/overlay';
 import { openPanelLang } from '@lifecorner/angular-ui-kit/internal/a11y';
 import { SpinnerComponent } from '@lifecorner/angular-ui-kit/spinner';
 import { TooltipDirective } from '@lifecorner/angular-ui-kit/tooltip';
+import { MenuControlDirective } from './menu-control.directive';
+import { MenuItemAttrsDirective } from './menu-item-attrs.directive';
 
 /**
  * Kind of a menu item (3.45, usm-x row 31): an action (`item`), or a
@@ -62,10 +65,13 @@ export interface MenuItem {
   /**
    * Makes the item a section (3.43, usm-x row 12). Its `label` is a heading
    * that cannot be focused or activated, and `children` are its items, in a
-   * group named by the heading. One level: `children` of a member are
-   * ignored. On a section, `icon`, `href`, `variant`, `disabled` and
-   * `metadata` are ignored, and `dividerAfter` draws the divider after the
-   * whole group.
+   * group named by the heading. 3.50 (usm-x row 78): a member with
+   * `children` is a section again, to any depth: a `role="group"` named by
+   * its heading (12 px semibold, no capitals), heading and items indented one
+   * step per level (md 16, sm 12, lg 20 px: items at 16 / 32 / 48 px on
+   * levels 1 / 2 / 3). On a section, `icon`, `href`, `variant`, `disabled`
+   * and `metadata` are ignored, and `dividerAfter` draws the divider after
+   * the whole group.
    */
   children?: MenuItem[];
   /**
@@ -131,6 +137,74 @@ export interface MenuItem {
    * the label carries the meaning.
    */
   swatch?: string | readonly [string, string];
+  /**
+   * 3.50 (usm-x row 78): the item is the current place or choice:
+   * `aria-current="true"`, a 3 px bar at its start, the selected fill and a
+   * semibold label (not colour alone). A disabled item keeps
+   * `aria-current` but shows the disabled look only.
+   */
+  current?: boolean;
+  /**
+   * 3.50 (usm-x row 78): the item's action is running: a 16 px spinner at
+   * the end (in the badge's place; the badge hides), `aria-busy="true"` and
+   * `aria-disabled="true"`, and `busyLabel` read after the label. It stays in
+   * the arrow-key order; click, Enter and Space are ignored.
+   */
+  busy?: boolean;
+  /**
+   * 3.50 (usm-x row 78): the badge (`metadata.badge`) as an `lc-badge`
+   * (`xs`, rounded, 20 px high) in this variant (`default`, `primary`,
+   * `success`, `warning`, `error`, `info`; text 4.61:1 or more in both
+   * themes). Unset: the badge as before.
+   */
+  badgeVariant?: BadgeVariant;
+  /**
+   * 3.50 (usm-x row 80): attributes on the item element, for tests and app
+   * hooks: `id` and `data-*` names only (lower case,
+   * `/^(id|data-[a-z0-9][a-z0-9._-]*)$/`); any other name (event handlers,
+   * `class`, `style`, `href`, `aria-*`) is dropped, with a `console.warn` in
+   * dev mode. Not on sections.
+   */
+  attrs?: Readonly<Record<string, string>>;
+  /**
+   * 3.50 (usm-x row 77): in an `inline` menu, on a top-level entry only: the
+   * entry is a control row (outside `role="menu"`, at least 44 px high)
+   * filled by the `ng-template[lcMenuControl]` of this name, e.g. a
+   * `lc-toggle-group` or an `lc-switch`; `label` is drawn before the control
+   * (give the control `aria-labelledby` = the template's `labelId`), `''`
+   * lets the template fill the row. The rows split the menu into several
+   * `role="menu"` parts: Tab moves from a part to the row's controls and on
+   * to the next part (one stop per part). Only a part with a checkbox or
+   * radio item reserves the check-mark slot; the labels of the other parts
+   * start on the rows' label line (md 16 px). Ignored in a popup menu (Tab
+   * would close it before the control is reached).
+   */
+  control?: string;
+}
+
+/** 3.50: one part of a menu between control rows (inline), or the whole menu. */
+interface MenuSegment {
+  /** The top-level entries of a `role="menu"` part (empty for a control row). */
+  readonly items: readonly MenuItem[];
+  /** The control row entry, or `null` for a menu part. */
+  readonly control: MenuItem | null;
+  /** Index of the first entry in `items()` (for heading and label ids). */
+  readonly offset: number;
+  /** Whether this is the first `role="menu"` part (it carries the id and `aria-label`). */
+  readonly first: boolean;
+  /** The range of this part's acting items in `actions()`: [start, end). */
+  readonly start: number;
+  readonly end: number;
+  /** Whether this part has a checkbox or radio item (inline: only such a part reserves the indicator slot). */
+  readonly toggles: boolean;
+}
+
+/** 3.50: the acting items of `items`, in visual order: sections are replaced by their members, to any depth. */
+function flattenActions(items: readonly MenuItem[], skipControls: boolean): MenuItem[] {
+  return items.flatMap((item) => {
+    if (item.children) return flattenActions(item.children, false);
+    return skipControls && item.control ? [] : [item];
+  });
 }
 
 /** 3.48 (usm-x row 53): a viewport point (`clientX` / `clientY`) the menu opens at. */
@@ -223,6 +297,14 @@ const ROOM_KEEP = 240;
  *   stopped
  * - 3.49 (usm-x row 73): `maxHeight="room"` sizes the panel to the room on
  *   the side it opens to, and that room picks the side
+ * - 3.50 (usm-x rows 77, 78, 80, 84): `inline` puts the menu in the page (an
+ *   account panel) with control rows (`MenuItem.control` +
+ *   `ng-template[lcMenuControl]`); items take `current`, `busy`,
+ *   `badgeVariant` and `attrs`; sections nest to any depth; Enter and Space
+ *   on an item are `preventDefault`ed (a form behind the menu is not
+ *   submitted) and activate it once; `returnFocusTo` names the focus target
+ *   after closing (068-n3); the CSS hook `--lc-menu-max-height` caps the
+ *   panel when `maxHeight` is empty
  *
  * @example
  * ```html
@@ -240,11 +322,14 @@ const ROOM_KEEP = 240;
 @Component({
   selector: 'lc-menu',
   standalone: true,
-  imports: [IconComponent, NgTemplateOutlet, OverlayModule, SpinnerComponent, TooltipDirective],
+  imports: [BadgeComponent, IconComponent, MenuItemAttrsDirective, NgTemplateOutlet, OverlayModule, SpinnerComponent, TooltipDirective],
   viewProviders: [ɵprovideKitIcons([ICON_CHECK])],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '[class.lc-menu-host--inline]': 'inline()',
+  },
 })
 export class MenuComponent implements OnDestroy {
   private static nextId = 0;
@@ -296,7 +381,9 @@ export class MenuComponent implements OnDestroy {
    * side with more room opens. Measured on open, on window resize and when
    * `items` or `loading` change; at the projected trigger the height also
    * follows a scroll (the side stays). Any other value is a CSS length as
-   * before.
+   * before. 3.50 (usm-x row 79): empty reads the CSS hook
+   * `--lc-menu-max-height` (a length or `room`) from the menu or an ancestor
+   * when the menu opens, also for an `anchor` overlay; unset: no cap.
    * @default ''
    */
   readonly maxHeight = input('');
@@ -323,6 +410,38 @@ export class MenuComponent implements OnDestroy {
    */
   readonly ariaLabel = input('');
 
+  /**
+   * 3.50 (usm-x row 77): the menu in the page, e.g. an account panel. The
+   * panel always renders (also in prerendered HTML), with no trigger slot, no
+   * overlay, no border and no shadow, at the width of its container; `isOpen`,
+   * `position`, `anchor`, `maxHeight`, `minWidth`, `maxWidth` and
+   * `closeOnSelect` are ignored, and Tab, Escape, outside clicks and scrolling
+   * never close it (`closed` is not emitted). `role="menu"`, the roving
+   * tabindex and Arrow / Home / End stay; the focus is not moved on render.
+   * Top-level entries with `control` become control rows between the menu
+   * parts (each part one Tab stop). Escape is left to the surrounding panel.
+   * @default false
+   */
+  readonly inline = input(false);
+
+  /**
+   * 3.50: hidden text read after the label of a `busy` item. German:
+   * „Wird geladen“.
+   * @default 'Loading'
+   */
+  readonly busyLabel = input('Loading');
+
+  /**
+   * 3.50 (backlog 068-n3): the element that gets the focus when the menu
+   * closes from inside (Escape, Tab, an activated item), before the projected
+   * trigger, the anchor element and the element focused at open (the value
+   * given at open is kept if the app clears it while closing). Use it with a
+   * point `anchor` when nothing was focused (a `contextmenu` on a row), or for
+   * a menu opened beside a rail item; it must be focusable. `null`: as before.
+   * @default null
+   */
+  readonly returnFocusTo = input<HTMLElement | null>(null);
+
   readonly itemClick = output<MenuItem>();
   readonly closed = output<void>();
   /**
@@ -337,36 +456,96 @@ export class MenuComponent implements OnDestroy {
 
   /**
    * The items that act, in visual order (3.43): top-level items, and in place
-   * of a section its members. Section headings are not in it.
+   * of a section its members (3.50: to any depth). Section headings are not
+   * in it, nor (inline) control rows.
    */
-  protected readonly actions = computed(() =>
-    this.items().flatMap((item) => (item.children ? item.children : [item]))
-  );
+  protected readonly actions = computed(() => flattenActions(this.items(), this.inline()));
 
   /** Position of each acting item in {@link actions}. */
   private readonly actionIndex = computed(() => new Map(this.actions().map((item, i) => [item, i])));
 
-  /** Whether any item is a checkbox or radio (3.45): every item then gets the indicator slot. */
+  /**
+   * Whether any item is a checkbox or radio (3.45): every item then gets the
+   * indicator slot. 3.50 (inline): the slot is reserved per `role="menu"`
+   * part instead (`MenuSegment.toggles`).
+   */
   protected readonly hasToggles = computed(() => this.actions().some((item) => this.isToggle(item)));
 
   /** Index (into `actions()`) of the item that currently owns the roving tabindex. */
   protected readonly activeIndex = signal(-1);
 
+  /**
+   * 3.50: the menu parts. One part with every item, unless an inline menu
+   * has control rows: then the parts between them and the rows themselves.
+   */
+  protected readonly segments = computed<MenuSegment[]>(() => {
+    const items = this.items();
+    if (!this.inline() || !items.some((item) => item.control)) {
+      return [{ items, control: null, offset: 0, first: true, start: 0, end: this.actions().length, toggles: this.hasToggles() }];
+    }
+    const segments: MenuSegment[] = [];
+    let part: MenuItem[] = [];
+    let offset = 0;
+    let start = 0;
+    const flush = (next: number) => {
+      if (part.length) {
+        const acting = flattenActions(part, true);
+        const end = start + acting.length;
+        const toggles = acting.some((item) => this.isToggle(item));
+        segments.push({ items: part, control: null, offset, first: !segments.some((s) => !s.control), start, end, toggles });
+        start = end;
+      }
+      part = [];
+      offset = next;
+    };
+    items.forEach((item, i) => {
+      if (item.control) {
+        flush(i + 1);
+        segments.push({ items: [], control: item, offset: i, first: false, start, end: start, toggles: false });
+      } else {
+        part.push(item);
+      }
+    });
+    flush(items.length);
+    return segments;
+  });
+
+  /** 3.50 (inline): the roving tab stop of each menu part (by `start`), once the arrows moved it. */
+  private readonly partStops = signal<ReadonlyMap<number, number>>(new Map());
+
+  /** 3.50: the `lcMenuControl` templates for control rows. */
+  private readonly controlTemplates = contentChildren(MenuControlDirective);
+
+  /** 3.50: `--lc-menu-max-height`, read from the host when the menu opens. */
+  private readonly hookMaxHeight = signal('');
+
+  /** 3.50: `maxHeight`, else the CSS hook; nothing in an inline menu. */
+  protected readonly effectiveMaxHeight = computed(() => {
+    if (this.inline()) return '';
+    return this.maxHeight().trim() ? this.maxHeight() : this.hookMaxHeight();
+  });
+
+  /** 3.50: `anchor`, except in an inline menu (no overlay). */
+  protected readonly activeAnchor = computed(() => (this.inline() ? null : this.anchor()));
+
+  /** 3.50: open as a popup (an inline menu is never "open"). */
+  protected readonly popupOpen = computed(() => this.isOpen() && !this.inline());
+
   /** 3.48: the overlay origin while `anchor` is set (an element, or a point of size 0). */
   protected readonly overlayOrigin = computed(() => {
-    const anchor = this.anchor();
+    const anchor = this.activeAnchor();
     if (!anchor) return null;
     return isAnchorElement(anchor) ? anchor : { x: anchor.x, y: anchor.y };
   });
 
   /** 3.48: whether the panel opens at a point (no gap to the anchor). */
   protected readonly atPoint = computed(() => {
-    const anchor = this.anchor();
+    const anchor = this.activeAnchor();
     return !!anchor && !isAnchorElement(anchor);
   });
 
   /** 3.49: `maxHeight="room"` (design §3D). */
-  protected readonly roomMode = computed(() => this.maxHeight().trim() === 'room');
+  protected readonly roomMode = computed(() => this.effectiveMaxHeight().trim() === 'room');
 
   /** 3.49: the side and height the room gives, once measured in an open room panel. */
   protected readonly room = signal<{ side: RoomSide; height: number } | null>(null);
@@ -382,14 +561,14 @@ export class MenuComponent implements OnDestroy {
 
   /** 3.49: the inline max-height: the room's height in room mode, else `maxHeight` as before. */
   protected readonly panelMaxHeight = computed(() => {
-    if (!this.roomMode()) return this.maxHeight() || null;
+    if (!this.roomMode()) return this.effectiveMaxHeight() || null;
     const room = this.room();
     return room ? `${room.height}px` : null;
   });
 
   /** 3.49: an overlay room panel at an element keeps its 8 px gap on the anchor's side only. */
   protected readonly roomEdge = computed(() => {
-    const anchor = this.anchor();
+    const anchor = this.activeAnchor();
     return this.roomMode() && !!anchor && isAnchorElement(anchor) ? (this.room()?.side ?? null) : null;
   });
 
@@ -400,15 +579,14 @@ export class MenuComponent implements OnDestroy {
   });
 
   /** 3.48: the panel is a column whose items scroll (capped or in the overlay). */
-  protected readonly scrolls = computed(() => !!this.maxHeight() || !!this.anchor());
+  protected readonly scrolls = computed(() => !!this.effectiveMaxHeight() || !!this.activeAnchor());
 
   /** 3.48: `lang` of the overlay panel (the host's closest `[lang]`; WCAG 3.1.2). */
-  protected readonly panelLang = openPanelLang(computed(() => this.isOpen() && !!this.anchor()));
+  protected readonly panelLang = openPanelLang(computed(() => this.popupOpen() && !!this.activeAnchor()));
 
   /** 3.48: text of the polite status, set one frame after the busy row renders (so it is announced). */
   protected readonly statusText = signal('');
 
-  private readonly itemElements = viewChildren<ElementRef<HTMLElement>>('menuItem');
   private readonly panelElement = viewChild<ElementRef<HTMLElement>>('dropdown');
   private readonly listElement = viewChild<ElementRef<HTMLElement>>('list');
   private readonly connectedOverlay = viewChild(CdkConnectedOverlay);
@@ -425,6 +603,8 @@ export class MenuComponent implements OnDestroy {
    * clears `anchor` in its `closed` handler still gets the focus back on it.
    */
   private openedAnchor: HTMLElement | null = null;
+  /** 3.50: `returnFocusTo` given at open (kept if the app clears it while closing). */
+  private openedReturnTo: HTMLElement | null = null;
   /** 3.48: the document listeners added while the menu is open. */
   private listening = false;
 
@@ -443,10 +623,10 @@ export class MenuComponent implements OnDestroy {
    * instead (its height; the side stays).
    */
   private readonly scrollListener = (event: Event): void => {
-    if (!this.isOpen()) return;
+    if (!this.popupOpen()) return;
     const target = event.target;
     if (target instanceof Node && this.panelElement()?.nativeElement.contains(target)) return;
-    if (!this.anchor()) {
+    if (!this.activeAnchor()) {
       if (this.roomMode()) this.measureRoom(true);
       return;
     }
@@ -460,7 +640,8 @@ export class MenuComponent implements OnDestroy {
     let wasOpen = false;
     let hadItems = false;
     effect(() => {
-      const open = this.isOpen();
+      // 3.50: an inline menu is never open (no overlay stack, no listeners, no focus moves)
+      const open = this.popupOpen();
       // 3.48 (usm-x row 55): tracked so items that arrive while open take the focus
       const hasItems = this.firstEnabledIndex() >= 0;
       untracked(() => {
@@ -468,6 +649,8 @@ export class MenuComponent implements OnDestroy {
           this.overlayStack.push(this.menuId);
           this.openedFrom = this.currentFocus();
           this.openedAnchor = this.anchorElement();
+          this.openedReturnTo = this.returnFocusTo();
+          this.hookMaxHeight.set(this.readMaxHeightHook());
           this.listen(true);
           this.activeIndex.set(this.firstEnabledIndex());
           // Move focus into the menu once the panel has rendered
@@ -479,6 +662,7 @@ export class MenuComponent implements OnDestroy {
           this.listen(false);
           this.restoreFocus();
           this.openedAnchor = null;
+          this.openedReturnTo = null;
           this.activeIndex.set(-1);
         } else if (open && hasItems && !hadItems) {
           // 3.48: the first items arrived while open (after `loading`)
@@ -496,7 +680,7 @@ export class MenuComponent implements OnDestroy {
     // 3.48: the polite status gets its text one frame after the busy row has
     // rendered (a region that arrives with its text is often not announced)
     effect((onCleanup) => {
-      const busy = this.loading() && this.isOpen();
+      const busy = this.loading() && (this.isOpen() || this.inline());
       const label = this.loadingLabel();
       untracked(() => this.statusText.set(''));
       if (!busy) return;
@@ -533,10 +717,10 @@ export class MenuComponent implements OnDestroy {
     // rendered in the open tick (its height and side apply before the first
     // paint), and again when its items, `loading` or the anchor change.
     afterRenderEffect(() => {
-      const measure = this.isOpen() && this.roomMode();
+      const measure = this.popupOpen() && this.roomMode();
       this.items();
       this.loading();
-      this.anchor();
+      this.activeAnchor();
       untracked(() => {
         if (measure) this.measureRoom(false);
         else if (this.room()) this.room.set(null);
@@ -545,7 +729,7 @@ export class MenuComponent implements OnDestroy {
 
     // 3.49: and on window resize while it is open (CDK's throttled resize).
     effect((onCleanup) => {
-      if (!this.isOpen() || !this.roomMode()) return;
+      if (!this.popupOpen() || !this.roomMode()) return;
       const subscription = this.viewportRuler.change().subscribe(() => this.measureRoom(false));
       onCleanup(() => subscription.unsubscribe());
     });
@@ -560,7 +744,8 @@ export class MenuComponent implements OnDestroy {
    * Handle menu item click
    */
   onItemClick(item: MenuItem, event: Event): void {
-    if (item.disabled) {
+    // 3.50: a busy item ignores activation, as a disabled one
+    if (item.disabled || item.busy) {
       event.preventDefault();
       return;
     }
@@ -586,9 +771,9 @@ export class MenuComponent implements OnDestroy {
    */
   protected onToggleClick(item: MenuItem, event: Event): void {
     event.preventDefault();
-    if (item.disabled) return;
+    if (item.disabled || item.busy) return;
     const index = this.indexOf(item);
-    if (index >= 0) this.activeIndex.set(index);
+    if (index >= 0) this.setStop(index);
     if (item.type === 'radio') {
       if (!item.checked) this.itemToggle.emit({ item, checked: true });
     } else {
@@ -598,9 +783,10 @@ export class MenuComponent implements OnDestroy {
   }
 
   /**
-   * Close the menu
+   * Close the menu (3.50: an inline menu never closes, so nothing is emitted)
    */
   close(): void {
+    if (this.inline()) return;
     this.closed.emit();
   }
 
@@ -611,7 +797,7 @@ export class MenuComponent implements OnDestroy {
    */
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    if (!this.isOpen()) {
+    if (!this.popupOpen()) {
       return;
     }
 
@@ -621,7 +807,7 @@ export class MenuComponent implements OnDestroy {
       // 3.48: the overlay panel is outside the host; the opening click on an
       // anchor element is not "outside" either
       if (this.panelElement()?.nativeElement.contains(target)) return;
-      const anchor = this.anchor();
+      const anchor = this.activeAnchor();
       if (anchor && isAnchorElement(anchor) && anchor.contains(target)) return;
     }
     if (!this.overlayStack.claim(this.menuId, event)) return;
@@ -636,7 +822,7 @@ export class MenuComponent implements OnDestroy {
    * used.
    */
   onEscapeKey(event: Event): void {
-    if (!this.isOpen()) return;
+    if (!this.popupOpen()) return;
     if (!this.overlayStack.claim(this.menuId, event)) return;
     event.preventDefault();
     event.stopPropagation();
@@ -650,28 +836,36 @@ export class MenuComponent implements OnDestroy {
    * (in overlay mode the focus returns to the anchor first, so Tab moves on
    * from there).
    */
-  protected onPanelKeydown(event: KeyboardEvent): void {
+  protected onPanelKeydown(event: KeyboardEvent, segment?: MenuSegment): void {
+    // 3.50: an inline menu moves within the part that holds the focus
+    const part = segment ?? this.segments()[0];
+    const start = part?.start ?? 0;
+    const end = part?.end ?? this.actions().length;
+    const current = this.inline() ? this.indexOfNode(event.target) : this.activeIndex();
     switch (event.key) {
       case 'ArrowDown':
         this.consume(event);
-        this.focusIndex(this.nextEnabledIndex(this.activeIndex(), 1));
+        this.focusIndex(this.nextEnabledIndex(current, 1, start, end));
         break;
       case 'ArrowUp':
         this.consume(event);
-        this.focusIndex(this.nextEnabledIndex(this.activeIndex(), -1));
+        this.focusIndex(this.nextEnabledIndex(current, -1, start, end));
         break;
       case 'Home':
         this.consume(event);
-        this.focusIndex(this.nextEnabledIndex(-1, 1));
+        this.focusIndex(this.nextEnabledIndex(start - 1, 1, start, end));
         break;
       case 'End':
         this.consume(event);
-        this.focusIndex(this.nextEnabledIndex(0, -1));
+        this.focusIndex(this.nextEnabledIndex(start, -1, start, end));
         break;
+      case 'Enter':
       case ' ': {
-        // Buttons activate on Space natively, links only on Enter
+        // 3.50 (usm-x row 84): Enter and Space on an item are consumed (a form
+        // behind the menu is not submitted, no page handler sees them) and
+        // activate the item once, by click(): buttons and links alike.
         const target = event.target as HTMLElement | null;
-        if (target?.matches('a[role="menuitem"]')) {
+        if (target?.matches('.lc-menu__item')) {
           this.consume(event);
           target.click();
         }
@@ -682,16 +876,55 @@ export class MenuComponent implements OnDestroy {
         // 3.48 (review r2, F-4): the overlay panel is the last node of <body>,
         // so the browser's Tab would leave the document (CD runs after it).
         // Return the focus first, without preventDefault: Tab then moves on
-        // from the anchor (Shift+Tab before it).
-        if (this.anchor()) this.returnFocus();
+        // from the anchor (Shift+Tab before it). 3.50: from `returnFocusTo`
+        // too. An inline menu stays: Tab moves on to the next stop.
+        if (this.inline()) break;
+        if (this.activeAnchor() || this.returnFocusTarget()) this.returnFocus();
         this.close();
         break;
     }
   }
 
-  /** Roving tabindex: only the active item is in the tab sequence. */
+  /**
+   * Roving tabindex: only the active item is in the tab sequence. 3.50: in an
+   * inline menu, one item per part: the first reachable one until the arrows
+   * move the stop.
+   */
   protected tabindexFor(index: number, item: MenuItem): number {
-    return this.isReachable(item) && index === this.activeIndex() ? 0 : -1;
+    if (!this.isReachable(item)) return -1;
+    if (!this.inline()) return index === this.activeIndex() ? 0 : -1;
+    const part = this.segments().find((s) => !s.control && index >= s.start && index < s.end);
+    return part && index === this.stopOf(part) ? 0 : -1;
+  }
+
+  /** 3.50 (inline): the tab stop of a part: the one the arrows set, else its first reachable item. */
+  private stopOf(part: MenuSegment): number {
+    const stop = this.partStops().get(part.start);
+    if (stop !== undefined && stop >= part.start && stop < part.end && this.isReachable(this.actions()[stop])) return stop;
+    return this.nextEnabledIndex(part.start - 1, 1, part.start, part.end);
+  }
+
+  /** 3.50: the item at `index` becomes the roving stop (of its part, inline). */
+  private setStop(index: number): void {
+    this.activeIndex.set(index);
+    if (!this.inline()) return;
+    const part = this.segments().find((s) => !s.control && index >= s.start && index < s.end);
+    if (part) this.partStops.update((stops) => new Map(stops).set(part.start, index));
+  }
+
+  /** 3.50: the template that fills a control row, by `MenuItem.control`. */
+  protected controlTemplate(item: MenuItem): MenuControlDirective['template'] | null {
+    return this.controlTemplates().find((t) => t.lcMenuControl() === item.control)?.template ?? null;
+  }
+
+  /** 3.50: id of a control row's label (`labelId` of its template). */
+  protected controlLabelId(index: number): string {
+    return `${this.panelId}-control-${index}`;
+  }
+
+  /** 3.50: id of the heading of a nested section (level 2 and deeper), by its path. */
+  protected nestedHeadingId(parentId: string, index: number): string {
+    return `${parentId}-${index}`;
   }
 
   /**
@@ -735,17 +968,36 @@ export class MenuComponent implements OnDestroy {
 
   private focusIndex(index: number): void {
     if (index < 0) return;
-    this.activeIndex.set(index);
+    this.setStop(index);
     this.focusActiveItem();
   }
 
   private focusActiveItem(): void {
-    const item = this.itemElements()[this.activeIndex()]?.nativeElement;
+    const item = this.itemNodes()[this.activeIndex()];
     if (!item) return;
     // 3.48: in the overlay the page must not scroll (a scroll closes the menu)
-    if (this.anchor()) item.focus({ preventScroll: true });
+    if (this.activeAnchor()) item.focus({ preventScroll: true });
     else item.focus();
     if (this.scrolls()) this.revealItem(item);
+  }
+
+  /**
+   * 3.50: the panel's item elements in DOM order (= `actions()` order). Read
+   * from the DOM: items render from one template at any section depth, and a
+   * view query lists template instances in creation order, not DOM order.
+   * Items of a menu inside a control row are not this menu's.
+   */
+  private itemNodes(): HTMLElement[] {
+    const panel = this.panelElement()?.nativeElement;
+    if (!panel) return [];
+    return Array.from(panel.querySelectorAll<HTMLElement>('.lc-menu__item')).filter(
+      (node) => node.closest('.lc-menu__dropdown') === panel,
+    );
+  }
+
+  /** 3.50: index (into `actions()`) of an item element; -1 for anything else. */
+  private indexOfNode(target: EventTarget | null): number {
+    return target instanceof HTMLElement ? this.itemNodes().indexOf(target) : -1;
   }
 
   /**
@@ -777,7 +1029,7 @@ export class MenuComponent implements OnDestroy {
     if (!panel || !list || !rooms) return;
     const chrome = panel.offsetHeight - list.clientHeight;
     const whole = chrome + list.scrollHeight;
-    const pitch = this.itemElements()[0]?.nativeElement.offsetHeight ?? 0;
+    const pitch = this.itemNodes()[0]?.offsetHeight ?? 0;
     const min = Math.min(whole, chrome + 3 * pitch);
     const keep = Math.min(whole, Math.max(ROOM_KEEP, min));
     const preferred: RoomSide = this.atPoint() || this.position().startsWith('bottom') ? 'below' : 'above';
@@ -792,7 +1044,7 @@ export class MenuComponent implements OnDestroy {
     // height and margin and the side's positions first: CDK places a pane
     // only on open and on resize, and the bindings would follow a render
     // later (the same values; the projected trigger waits for them).
-    const overlayRef = this.anchor() ? this.connectedOverlay()?.overlayRef : undefined;
+    const overlayRef = this.activeAnchor() ? this.connectedOverlay()?.overlayRef : undefined;
     if (!overlayRef) return;
     this.renderer.setStyle(panel, 'max-height', `${height}px`);
     const edge = this.roomEdge();
@@ -812,7 +1064,7 @@ export class MenuComponent implements OnDestroy {
    * where it is instead of pushing it into the gap.
    */
   private rooms(viewportHeight: number): Record<RoomSide, number> | null {
-    const anchor = this.anchor();
+    const anchor = this.activeAnchor();
     if (anchor && !isAnchorElement(anchor)) {
       return { below: viewportHeight - anchor.y - ROOM_MARGIN - CDK_BOTTOM_EXTRA, above: anchor.y - ROOM_MARGIN };
     }
@@ -833,15 +1085,31 @@ export class MenuComponent implements OnDestroy {
     return !item.disabled || !!item.disabledReason;
   }
 
-  /** Index of the next reachable item in `direction`, wrapping around; -1 if none. */
-  private nextEnabledIndex(from: number, direction: 1 | -1): number {
+  /**
+   * Index of the next reachable item in `direction`, wrapping around; -1 if
+   * none. 3.50: within [start, end) (one part of an inline menu).
+   */
+  private nextEnabledIndex(from: number, direction: 1 | -1, start = 0, end = this.actions().length): number {
     const items = this.actions();
-    for (let step = 1; step <= items.length; step++) {
-      const index = (from + direction * step + items.length) % items.length;
+    const count = end - start;
+    for (let step = 1; step <= count; step++) {
+      const index = start + ((((from - start + direction * step) % count) + count) % count);
       const item = items[index];
       if (item && this.isReachable(item)) return index;
     }
     return -1;
+  }
+
+  /** 3.50: `--lc-menu-max-height` on the host or an ancestor ('' when unset or on the server). */
+  private readMaxHeightHook(): string {
+    if (typeof getComputedStyle !== 'function') return '';
+    return getComputedStyle(this.elementRef.nativeElement).getPropertyValue('--lc-menu-max-height').trim();
+  }
+
+  /** 3.50: `returnFocusTo`, else the one given at open, when it is still in the page. */
+  private returnFocusTarget(): HTMLElement | null {
+    const target = this.returnFocusTo() ?? this.openedReturnTo;
+    return target?.isConnected ? target : null;
   }
 
   /** `preventDefault()` and `stopPropagation()` for a key the menu handles (3.48, usm-x row 59). */
@@ -876,11 +1144,17 @@ export class MenuComponent implements OnDestroy {
 
   /**
    * Where the focus goes when the menu closes from inside (3.48, design §3A):
-   * the projected trigger, else an anchor element that takes focus (the
-   * current one, else the one given at open: review r1, F-2), else the
-   * element focused when the menu opened.
+   * 3.50: `returnFocusTo` when it takes the focus; else the projected
+   * trigger, else an anchor element that takes focus (the current one, else
+   * the one given at open: review r1, F-2), else the element focused when
+   * the menu opened.
    */
   private returnFocus(): void {
+    const target = this.returnFocusTarget();
+    if (target) {
+      target.focus();
+      if (target.ownerDocument.activeElement === target) return;
+    }
     const trigger = this.triggerElement();
     if (trigger) {
       trigger.focus();
@@ -896,7 +1170,7 @@ export class MenuComponent implements OnDestroy {
 
   /** 3.48: the `anchor` input when it is an element (not a point), else `null`. */
   private anchorElement(): HTMLElement | null {
-    const anchor = this.anchor();
+    const anchor = this.activeAnchor();
     return anchor && isAnchorElement(anchor) ? anchor : null;
   }
 

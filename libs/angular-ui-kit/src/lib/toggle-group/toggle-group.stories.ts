@@ -16,6 +16,12 @@ const meta: Meta<ToggleGroupComponent> = {
       description: 'Controls button height and font size',
     },
     ariaLabel: { control: 'text', description: 'Accessible name of the radiogroup' },
+    touchTarget: {
+      control: 'boolean',
+      description:
+        '3.50: each option gets a hit area of at least 44 × 44 px (a transparent extension above and below: lg 2, md 5.5, sm 9 px; options narrower than 44 px grow to 44). The look of sm/md/lg is unchanged; keep the extension clear of other controls.',
+      table: { defaultValue: { summary: 'false' } },
+    },
   },
 
   parameters: {
@@ -180,6 +186,44 @@ export const WithDotIndicator: Story = {
       <div style="display: flex; flex-direction: column; gap: 16px; align-items: flex-start;">
         <lc-toggle-group [options]="options" [selected]="selected" />
         <lc-toggle-group [options]="tones" [selected]="selectedTone" size="sm" />
+      </div>`,
+  }),
+};
+
+/**
+ * 3.50 (request 071, finance-intelligence „Verträge“ row 2): `touchTarget`
+ * gives every option a hit area of at least 44 × 44 px on a phone without
+ * changing the look of `sm`, `md` or `lg`.
+ */
+export const TouchTarget: Story = {
+  name: 'Touch Target',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.50 (request 071, finance-intelligence vertraege row 2): `touchTarget` adds a transparent extension above and below each option until it is 44 px high (lg 40 → 2 px each side in Storybook, md 5.5, sm 9 px) and lets options narrower than 44 px grow to 44 (label centred). Height, padding, type and colours of `lg`, `md` and `sm` stay as they are; the group stops clipping, so the first and last option round their outer corners themselves. Arrow, Home and End and the radiogroup semantics are unchanged. Keep the extension clear of other controls (here 24 px apart). German options.',
+      },
+    },
+  },
+  render: () => ({
+    props: {
+      options: [
+        { value: 'all', label: 'Alle' },
+        { value: 'active', label: 'Aktiv' },
+        { value: 'ended', label: 'Gekündigt' },
+      ],
+      short: [
+        { value: 'd', label: 'T' },
+        { value: 'w', label: 'W' },
+        { value: 'm', label: 'M' },
+      ],
+    },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 24px; align-items: flex-start;">
+        <lc-toggle-group [options]="options" selected="active" size="lg" [touchTarget]="true" ariaLabel="Verträge (lg)" />
+        <lc-toggle-group [options]="options" selected="all" size="md" [touchTarget]="true" ariaLabel="Verträge (md)" />
+        <lc-toggle-group [options]="short" selected="w" size="sm" [touchTarget]="true" ariaLabel="Zeitraum (sm)" />
       </div>`,
   }),
 };

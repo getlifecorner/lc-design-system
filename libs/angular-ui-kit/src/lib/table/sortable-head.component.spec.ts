@@ -125,8 +125,11 @@ describe('th[lcSortableHead] (3.45)', () => {
       // 3.48 (request 068, usm-x row 60): the rule reads `--lc-sortable-head-border-bottom`
       // over the same `2px solid var(--color-border-strong)` (the hook's fallback).
       expect(css).toMatch(/:host \{[^}]*text-transform: uppercase;[^}]*letter-spacing: 0\.04em;[^}]*color: var\(--color-text-secondary\);[^}]*background-color: var\(--color-surface-2\);[^}]*border-bottom: var\(--lc-sortable-head-border-bottom, 2px solid var\(--color-border-strong\)\);/);
-      expect(css).toMatch(/:host\(\.lc-sortable-head--sortable\) \{[^}]*padding-right: var\(--spacing-8\);/);
-      expect(css).toMatch(/\.sort-indicator \{[^}]*right: var\(--spacing-3\);[^}]*font-size: var\(--typography-font-size-xs\);[^}]*color: var\(--color-primary\);/);
+      // 3.50 (request 071, backlog 068-n1, AC-22): the reserve and the arrow
+      // are logical (the same 32 / 12 px in LTR, mirrored in RTL); the unsorted
+      // reserve reads `--lc-sortable-head-unsorted-reserve` over the same 32 px.
+      expect(css).toMatch(/:host\(\.lc-sortable-head--sortable\) \{[^}]*padding-inline-end: var\(--lc-sortable-head-unsorted-reserve, var\(--spacing-8\)\);/);
+      expect(css).toMatch(/\.sort-indicator \{[^}]*inset-inline-end: var\(--spacing-3\);[^}]*font-size: var\(--typography-font-size-xs\);[^}]*color: var\(--color-primary\);/);
     });
 
     it("leaves lc-table's compiled CSS byte-identical (the mixins replace its rules in place)", () => {

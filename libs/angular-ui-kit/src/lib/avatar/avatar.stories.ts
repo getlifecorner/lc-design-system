@@ -55,6 +55,12 @@ const meta: Meta<AvatarComponent> = {
         "3.48 (usm-x row 65): `'square'` draws a rounded square (`--lc-avatar-square-radius`, default 25 %: 6/8/10/12/16 px at xs…xl) for a thing (a ticket, a CI) beside round people; image, ring and person glyph follow it, colours are unchanged",
       table: { defaultValue: { summary: "'circle'" } },
     },
+    letters: {
+      control: 'text',
+      description:
+        "3.50 (usm-x row 81): letters shown instead of the name's initials, e.g. `'IN'` or `'CRM'` (at most 3, three at 0.75 em); the accessible name stays `alt` / `name`. Empty: the initials of `name`",
+      table: { defaultValue: { summary: "''" } },
+    },
   },
 
   parameters: {
@@ -399,6 +405,35 @@ export const SquareShape: Story = {
             <lc-avatar [size]="size" shape="square" name="T4" alt="Ticket 4711" />
             <lc-avatar [size]="size" shape="square" name="Change Request" color="member-4" [ring]="true" />
             <lc-avatar [size]="size" shape="square" fallback="person" />
+          </div>
+        }
+      </div>`,
+  }),
+};
+
+/** 3.50 (request 071, usm-x row 81): a key („IN“, „CI“, „CRM“) instead of the name's initials. */
+export const SquareLetters: Story = {
+  name: 'Square Letters',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.50 (usm-x row 81): `letters` shows a key instead of the initials of `name`: „IN“ (Incident), „CI“ (Configuration Item), „CRM“ (three letters at 0.75 em, so they fit every size). Square and circle, neutral and member colours, every size. The accessible name stays `alt` / `name` („Incident Nord“), not the letters.',
+      },
+    },
+    controls: { include: [] },
+  },
+  render: () => ({
+    props: { sizes: ['xs', 'sm', 'md', 'lg', 'xl'] },
+    template: `
+      <div lang="de" style="display: grid; gap: 16px;">
+        @for (size of sizes; track size) {
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+            <lc-avatar [size]="size" shape="square" letters="IN" name="Incident Nord" />
+            <lc-avatar [size]="size" shape="square" letters="CI" name="Configuration Item" color="member-3" />
+            <lc-avatar [size]="size" shape="square" letters="CRM" name="CRM-System" color="member-6" />
+            <lc-avatar [size]="size" letters="IN" name="Incident Nord" />
+            <lc-avatar [size]="size" letters="CRM" name="CRM-System" color="member-1" />
           </div>
         }
       </div>`,

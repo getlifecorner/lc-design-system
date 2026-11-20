@@ -28,6 +28,8 @@ export type BadgeSize = 'xs' | 'sm' | 'md' | 'lg';
  *   („Aufnahme läuft in <strong>USM-1209</strong>“); a projected `lc-icon`
  *   sits before the label, outside it (prefer `icon`)
  * - 3.49: `maxWidth` cuts a long label with an ellipsis and a `title`
+ * - 3.50: with `maxWidth`, a projected element with the class
+ *   `lc-badge__cut` is the only run that is cut; the rest stays visible
  *
  * @example
  * ```html
@@ -88,7 +90,12 @@ export class BadgeComponent {
    * icon stay visible, and the badge's `title` is the label's whole text (not
    * when the `lc-badge` host has its own `title`); the text stays in the DOM
    * for assistive tech. Ignored with `wrap` (`wrap` wins: no ellipsis). A
-   * percentage needs a container of definite width. Empty: no cap.
+   * percentage needs a container of definite width. 3.50 (usm-x row 83):
+   * give one projected element the class `lc-badge__cut` and only that run
+   * is cut (at least 2em stay); the text before and after it (an end, a
+   * count) stays whole, e.g.
+   * `Recording in <span class="lc-badge__cut">{{ name }}</span> · 3 objects`.
+   * Without `maxWidth` the class has no effect. Empty: no cap.
    * @default ''
    */
   readonly maxWidth = input<string>('');

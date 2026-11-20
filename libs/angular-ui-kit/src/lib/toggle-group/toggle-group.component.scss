@@ -93,6 +93,39 @@
     padding: 0.5rem 1rem;
     font-size: var(--typography-font-size-base, 1rem);
   }
+
+  // touchTarget (071, AC-19): a hit area of at least 44 × 44 px per option
+  // without changing the look. The group stops clipping, so the transparent
+  // extension above and below each option can take presses; the outer
+  // corners of the first and last option are rounded instead (the border's
+  // inner radius), so an active fill and the inset ring keep the group's
+  // shape. Options narrower than 44 px grow to 44 with the label centred.
+  &--touch {
+    overflow: visible;
+  }
+
+  &--touch &__btn {
+    position: relative;
+    min-inline-size: 44px;
+    justify-content: center;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset-block: min(0px, calc((100% - 44px) / 2));
+      inset-inline: 0;
+    }
+
+    &:first-child {
+      border-start-start-radius: calc(var(--border-radius-md) - 1px);
+      border-end-start-radius: calc(var(--border-radius-md) - 1px);
+    }
+
+    &:last-child {
+      border-start-end-radius: calc(var(--border-radius-md) - 1px);
+      border-end-end-radius: calc(var(--border-radius-md) - 1px);
+    }
+  }
 }
 
 // Forced colours drop the box-shadow ring: draw an outline (request 042).

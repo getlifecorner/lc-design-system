@@ -27,7 +27,10 @@ const SECTIONS: MenuItem[] = [
     label: 'Exportieren',
     indentChildren: true,
     children: [
-      { id: 'csv', label: 'Als CSV-Datei', href: '#csv', children: [{ id: 'nested', label: 'Ignored' }] },
+      // 3.50 (request 071, usm-x row 78, AC-9): a member's `children` are no
+      // longer ignored but nest as a section (menu.nested.spec.ts), so this
+      // member lost the `children` that only proved them ignored.
+      { id: 'csv', label: 'Als CSV-Datei', href: '#csv' },
       { id: 'pdf', label: 'Als PDF-Datei', disabled: true },
     ],
   },
@@ -102,13 +105,12 @@ describe('MenuComponent sections (3.43, request 063)', () => {
       expect(labels()).toEqual(['Spalten anpassen', 'Ansicht zurücksetzen', 'Als CSV-Datei', 'Als PDF-Datei', 'Hilfe']);
     });
 
-    it('a section ignores its icon, a member its children; dividerAfter follows the whole group', () => {
+    it('a section ignores its icon; dividerAfter follows the whole group (3.50: member children nest, see menu.nested.spec.ts)', () => {
       open();
       const [view, exportGroup] = Array.from(panel().querySelectorAll<HTMLElement>('.lc-menu__section'));
       expect(view.querySelectorAll('lc-icon')).toHaveLength(2);
       expect(view.nextElementSibling?.tagName).toBe('HR');
       expect(exportGroup.querySelector('a[role="menuitem"]')?.getAttribute('href')).toBe('#csv');
-      expect(el().textContent).not.toContain('Ignored');
     });
 
     it('indentChildren adds the indented class; an empty section is a heading without a group role', () => {

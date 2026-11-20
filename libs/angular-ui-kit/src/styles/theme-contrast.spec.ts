@@ -2399,3 +2399,72 @@ describe('Component pairings of 3.48 (request 068)', () => {
     }
   });
 });
+
+/**
+ * 3.50 (request 071, usm-x row 78, AC-8, AC-10): the lc-menu current item
+ * (text-primary on --color-surface-selected, a --color-primary-500 bar), the
+ * nested section heading (--color-text-secondary) and the item badge as an
+ * lc-badge in each variant (its --_lc-badge-* pair from the stylesheet), on
+ * the panel's grounds (surface and surface-2: the panel gradient). Minimum
+ * over both grounds, floored, [light, dark]. Design 071 §5 quotes rounded.
+ */
+describe('Component pairings of 3.50 (request 071)', () => {
+  const floor = (n: number) => Math.floor(n * 100) / 100;
+  const menuCss = compile(resolve(__dirname, '../lib/menu/menu.component.scss')).css;
+  const badgeScss = readFileSync(resolve(__dirname, '../lib/badge/badge.component.scss'), 'utf-8');
+  const badgePairs = Object.fromEntries(
+    [...badgeScss.matchAll(/&--(\w+)\s*\{([^}]*)\}/g)]
+      .map((m) => [m[1], m[2].match(/--_lc-badge-bg:\s*var\((--[\w-]+)\)/)?.[1], m[2].match(/--_lc-badge-fg:\s*var\((--[\w-]+)\)/)?.[1]] as const)
+      .filter((m): m is readonly [string, string, string] => !!m[1] && !!m[2])
+      .map(([variant, bg, fg]) => [variant, [bg, fg]]),
+  ) as Record<string, [string, string]>;
+
+  it('reads the tokens from the stylesheets', () => {
+    expect(menuCss).toMatch(/\.lc-menu__item--current:not\(\.lc-menu__item--disabled\):not\(\.lc-menu__item--reason\) \{[^}]*background-color: var\(--color-surface-selected\);/);
+    expect(menuCss).toMatch(/\.lc-menu__item--current:not\(\.lc-menu__item--disabled\):not\(\.lc-menu__item--reason\)::before \{[^}]*background-color: var\(--color-primary-500\);/);
+    expect(Object.keys(badgePairs).sort()).toEqual(['default', 'error', 'info', 'primary', 'success', 'warning']);
+  });
+
+  // Floored minimum over surface and surface-2 (design §5 rounds; its light
+  // heading 7.56 is on the surface alone, 7.23 on surface-2).
+  const EXPECTED = {
+    currentLabel: [15.25, 10.02],
+    currentBar: [3.75, 5.77],
+    nestedHeading: [7.23, 9.25],
+    badgeDefault: [6.86, 8.17],
+    badgePrimary: [8.48, 6.34],
+    badgeSuccess: [4.85, 5.17],
+    badgeWarning: [5.52, 4.6],
+    badgeError: [10.97, 7.21],
+    badgeInfo: [9.08, 7.54],
+  };
+
+  it.each(palettes.map(([name, tokens], i) => [name, tokens, i] as const))('%s palette', (_palette, tokens, i) => {
+    const c = (name: string) => color(tokens, name);
+    const page = c('--color-background');
+    const grounds = ['--color-surface', '--color-surface-2'].map((g) => over(c(g), page));
+    const min = (fn: (ground: Rgba) => number) => floor(Math.min(...grounds.map(fn)));
+    const fill = (ground: Rgba) => over(c('--color-surface-selected'), ground);
+    const badge = (variant: string) =>
+      min((ground) => {
+        const [bg, fg] = badgePairs[variant];
+        const tint = over(c(bg), ground);
+        return ratio(over(c(fg), tint), tint);
+      });
+    const got = {
+      currentLabel: min((ground) => ratio(c('--color-text-primary'), fill(ground))),
+      currentBar: min((ground) => ratio(over(c('--color-primary-500'), ground), fill(ground))),
+      nestedHeading: min((ground) => ratio(over(c('--color-text-secondary'), ground), ground)),
+      badgeDefault: badge('default'),
+      badgePrimary: badge('primary'),
+      badgeSuccess: badge('success'),
+      badgeWarning: badge('warning'),
+      badgeError: badge('error'),
+      badgeInfo: badge('info'),
+    };
+    expect(got).toEqual(Object.fromEntries(Object.entries(EXPECTED).map(([key, pair]) => [key, pair[i]])));
+    for (const [key, value] of Object.entries(got)) {
+      expect([key, value >= (key === 'currentBar' ? 3 : 4.5)]).toEqual([key, true]);
+    }
+  });
+});

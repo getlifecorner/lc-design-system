@@ -249,3 +249,37 @@
     background: none;
   }
 }
+
+// Print (071, AC-20): content only. lc-header, lc-sidenav and lc-bottom-nav
+// hide themselves; the shell drops the screen height, the bottom bar's
+// clearance and the sky image. The hooks still win, so an app that sets them
+// for print keeps its values. Nothing here applies on screen.
+@media print {
+  .lc-app-shell {
+    --_clearance: var(--lc-app-shell-bottom-clearance, 0px);
+
+    min-height: 0;
+    background-image: var(--lc-app-shell-bg-image, none);
+  }
+
+  // Review 071 F-2: from 1024 px (A4 landscape ≈ 1046 px) the hidden
+  // lc-sidenav leaves no nav column: one column, the body at x 0 and full
+  // width, also with navPlacement="full-height" (its selector repeated at the
+  // same weight). The nav wrapper is not printed either.
+  .lc-app-shell,
+  .lc-app-shell--nav-full-height:not(:has(> .lc-app-shell__nav:empty)) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'header'
+      'body'
+      'end';
+
+    > .lc-app-shell__nav {
+      display: none;
+    }
+
+    > .lc-app-shell__footer {
+      padding-left: env(safe-area-inset-left, 0px);
+    }
+  }
+}

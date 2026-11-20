@@ -109,12 +109,22 @@ describe('AppShellComponent navPlacement (019)', () => {
   });
 
   describe('AC-2, AC-3, AC-4: the layout is CSS from 1024 px only', () => {
-    it('keeps every full-height rule inside @media (min-width: 1024px)', () => {
+    // 3.50 (review 071 F-2): the print block names the full-height selector
+    // only to undo it (one column, no nav column, at the same weight), so a
+    // hit may also sit there; the layout itself stays in the 1024 px blocks,
+    // and the print block holds none of it (pinned in app-shell.print.spec).
+    it('keeps every full-height rule inside @media (min-width: 1024px) (or, undoing it, @media print)', () => {
       const blocks = mediaBlocks(css, '@media (min-width: 1024px)');
+      const print = mediaBlocks(css, '@media print');
+      const inside = (at: number, list: Array<[number, number]>) => list.some(([start, end]) => at > start && at < end);
       const hits = [...css.matchAll(/nav-full-height/g)].map((m) => m.index ?? 0);
-      expect(hits.length).toBeGreaterThanOrEqual(4);
+      expect(hits.filter((at) => inside(at, blocks)).length).toBeGreaterThanOrEqual(4);
       for (const at of hits) {
-        expect(blocks.some(([start, end]) => at > start && at < end)).toBe(true);
+        expect(inside(at, blocks) || inside(at, print)).toBe(true);
+      }
+      expect(print).toHaveLength(1);
+      for (const [start, end] of print) {
+        expect(css.slice(start, end)).not.toMatch(/nav header|grid-row|100dvh|100vh|display:\s*grid|--_nav-width/);
       }
     });
 

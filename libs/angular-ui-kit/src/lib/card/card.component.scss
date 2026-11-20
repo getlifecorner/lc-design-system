@@ -557,3 +557,23 @@
 .card-truncate-title :is(.card__badge-slot, .card__badge) {
   flex-shrink: 0;
 }
+
+// ── Head that wraps (3.50, request 071, usm-x row 86, `headerActionWrap`) ──
+// The title column asks for `--lc-card-header-title-min` (12rem) and takes
+// all free room on its line (the large grow factor); when the action doesn't
+// fit beside that, it wraps onto a line of its own and fills it. Wide cards
+// keep one line. CSS only, so it holds in prerendered HTML.
+.card-header-wrap .card__header {
+  flex-wrap: wrap;
+  row-gap: var(--spacing-3);
+}
+
+.card-header-wrap .card__header-left {
+  flex: 1000000 1 var(--lc-card-header-title-min, 12rem);
+}
+
+.card-header-wrap .card__header-action {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}

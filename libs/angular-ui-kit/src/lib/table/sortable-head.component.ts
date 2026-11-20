@@ -18,6 +18,13 @@ import type { SortEvent, TableColumnAlign, TableSize, TableSortDirection } from 
  * visually hidden text after the label („Name, sorted ascending“), from
  * `sortedAscendingLabel` / `sortedDescendingLabel`.
  *
+ * Arrow space (3.50, usm-x row 82): a sortable head keeps 32 px at its inline
+ * end (the start for `align="end"`) for the arrow. `--lc-sortable-head-unsorted-reserve`
+ * (default `32px`, `--spacing-8`) sets that space while the head is neither
+ * sorted nor busy, e.g. `var(--spacing-4)` to reserve the full space only
+ * while sorted; sorted and busy heads keep 32 px. The reserve, the arrow and
+ * the busy ring follow `dir` (logical properties; RTL since 3.50).
+ *
  * @example
  * ```html
  * <th lcSortableHead="name" scope="col" [sortDirection]="sort().column === 'name' ? sort().direction : null"

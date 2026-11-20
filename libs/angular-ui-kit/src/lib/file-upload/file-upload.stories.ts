@@ -389,7 +389,7 @@ export const Image: Story = {
     imageSrc: LOGO,
     imageAlt: 'Company logo',
     imageBackground: 'surface',
-    imageHint: 'SVG or PNG, at most 85 kB.',
+    imageHint: 'Shown at the top of the side navigation and on invoices.',
     chooseImageLabel: 'Choose image',
     replaceImageLabel: 'Replace image',
     removeImageLabel: 'Remove image',
@@ -476,9 +476,9 @@ export const ImageBackgrounds: Story = {
   }),
 };
 
-/** The German labels of the image field (design §7). */
+/** The German labels of the image field (design 069 §7; the hint names the logo's use, 071 AC-25). */
 const IMAGE_DE = `
-  imageHint="SVG oder PNG, höchstens 85 kB."
+  imageHint="Erscheint oben in der Seitenleiste und auf Rechnungen."
   accept=".svg,.png"
   [maxSizeBytes]="87040"
   locale="de-DE"

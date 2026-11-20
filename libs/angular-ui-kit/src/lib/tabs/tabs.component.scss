@@ -273,12 +273,18 @@ a.lc-tabs__tab {
 }
 
 // 3.48 (request 068, usm-x rows 50 and 69): a muted tab names a place edited
-// elsewhere: tertiary ink, weight 400 (5.84:1 light, 7.31:1 dark on the page;
-// hover keeps the primary ink). The selected look wins. A hint is a quiet 12 px
-// second text after the label.
+// elsewhere: tertiary ink, weight 400 (5.84:1 light, 7.31:1 dark on the page).
+// The selected look wins. A hint is a quiet 12 px second text after the label.
 .lc-tabs__tab--muted:not(.lc-tabs__tab--selected) {
   color: var(--color-text-tertiary);
   font-weight: var(--font-weight-normal);
+}
+
+// 3.50 (request 071, usm-x row 85): hover keeps the muted ink (the hover fill
+// stays; 5.30:1 light, 6.65:1 dark on the fill over the page). Same weight as
+// the tab's hover rule, written after it.
+.lc-tabs__tab--muted:not(.lc-tabs__tab--selected):hover {
+  color: var(--color-text-tertiary);
 }
 
 .lc-tabs__hint {

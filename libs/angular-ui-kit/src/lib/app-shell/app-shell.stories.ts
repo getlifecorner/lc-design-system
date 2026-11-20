@@ -154,6 +154,8 @@ Input \`navPlacement="full-height"\` (3.14) runs the \`[shell-nav]\` column from
 | \`--lc-app-shell-bg\` | \`var(--color-background)\` | the page colour behind everything (the sky) |
 | \`--lc-app-shell-bg-image\` | \`var(--app-background-image, none)\` | a layer over the page colour, e.g. a tint: \`linear-gradient(to bottom, var(--color-land-1), var(--color-land-2), var(--color-land-3))\`. The horizon's land still paints over it |
 
+**Print** (3.50): the page prints as content only. \`lc-header\`, \`lc-sidenav\` and \`lc-bottom-nav\` are not printed, and in \`@media print\` the shell keeps no bottom clearance (\`--lc-app-shell-bottom-clearance\` falls back to 0), no sky image (\`--lc-app-shell-bg-image\` falls back to \`none\`) and no screen height (\`min-height: 0\`); a hook an app sets still wins. On screen nothing changes (*Print* story).
+
 Input \`horizon\` closes the page with the horizon block (\`.lc-horizon\`, from the kit's styles). Its land is 112 px on a phone (more under a bar taller than 72 px, by the difference: 3.10.1, AS-31) and 72 · 80 · 96 · 128 px from 1024 · 1280 · 1440 · 1920 px (3.9, LK-12; \`--lc-horizon-land\`). With a \`[shell-footer]\` the footer's height is added below that, so a page with a footer needs no override: \`--lc-horizon-land\` is the land above the footer. The horizon is \`aria-hidden\` (decoration): a figure in it gets \`alt=""\` and nothing focusable; the footer is outside it and stays reachable.
 
 **\`lc-app-page\`** — the page inside the shell: \`<main [id]="mainId">\` (default \`main\`) with the content as a column (24 px apart, 40 px from 1024 px), centred and at most \`contentMaxWidth\` wide (880 px; side padding 24 · 32 · 48 · 56 · 72 · 96 px). \`[page-aside]\` is the right column: an \`<aside>\` after \`<main>\`, docked to the window's right edge from 1280 px (360 · 400 · 460 px; \`--lc-app-page-aside-width\`) with a fading tint and hairline that start behind the header (set a changed \`--lc-app-page-aside-width\` on the shell, so both parts line up), hidden below 1280 px (show a narrow equivalent inside main). It renders only with \`asideLabelledby\` or \`asideAriaLabel\`.
@@ -247,6 +249,21 @@ export const ContentPage: Story = {
         <lc-bottom-nav shell-bottom-nav variant="floating" ariaLabel="Hauptnavigation" [items]="nav" activeRoute="/household" />
       </lc-app-shell>`,
   }),
+};
+
+/** 3.50 (request 071, finance-intelligence app-shell row 1): what the shell prints. */
+export const Print: Story = {
+  name: 'Print',
+  args: { horizon: false },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.50 (finance-intelligence app-shell-2026-11-20 row 1): the page prints as content only, on screen nothing changes. In `@media print` `lc-header` is not printed (`display: none`), like `lc-sidenav` and `lc-bottom-nav` already were, and `lc-app-shell` keeps no bottom clearance (`--lc-app-shell-bottom-clearance` falls back to 0, about 112 px on screen below 1024 px), no sky image (`--lc-app-shell-bg-image` falls back to `none`) and no screen height (`min-height: 0`), so a monthly report fits one A4 sheet. From 1024 px (A4 landscape is about 1046 px) the shell keeps no nav column either, also with `navPlacement="full-height"`: one column, the page starts at the left edge at the full width. A hook an app sets for print still wins. Try it with the browser\'s print preview (or DevTools → Rendering → emulate CSS media type `print`). The screen view is the content page.',
+      },
+    },
+  },
+  render: ContentPage.render,
 };
 
 /** The skeleton life-os shows while Today loads (board t08), inside a busy page. */

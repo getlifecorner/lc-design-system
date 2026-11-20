@@ -21,6 +21,8 @@
     [size]="menuSize()"
     [minWidth]="menuMinWidth()"
     [maxWidth]="menuMaxWidth()"
+    [maxHeight]="menuMaxHeight()"
+    [ariaLabel]="menuAriaLabel()"
     (itemClick)="onItemClick($event)"
     (closed)="open.set(false)"
   >

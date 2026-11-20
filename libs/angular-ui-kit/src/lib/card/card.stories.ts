@@ -6,6 +6,7 @@ import { IconComponent } from '../icon/icon.component';
 import { BadgeComponent } from '../badge/badge.component';
 import { DescriptionListComponent } from '../description-list/description-list.component';
 import { ButtonComponent } from '../button/button.component';
+import { SearchInputComponent } from '../search-input/search-input.component';
 
 // `lc-button` and `a[lcButton]` come from the preview's global imports.
 const meta: Meta<CardComponent> = {
@@ -150,6 +151,12 @@ Use it for content sections, dashboard widgets, and list items.
       description:
         '3.44 (usm-x row 17): spacing of the built-in head. `sm`: padding-bottom 8 px, margin-bottom 12 px (md 12 / 16); a collapsible head is at least 32 px high and its toggle\'s hit area stays 44 px',
       table: { defaultValue: { summary: 'md' } },
+    },
+    headerActionWrap: {
+      control: 'boolean',
+      description:
+        '3.50 (usm-x row 86): the head may wrap: when the title would get less than `--lc-card-header-title-min` (default `12rem`), `[card-header-action]` takes a line of its own under the title at full width (12 px below). Wide cards look as before. CSS only (prerendered HTML holds)',
+      table: { defaultValue: { summary: 'false' } },
     },
   },
 };
@@ -944,6 +951,38 @@ export const ClickableHeading: Story = {
           <p style="margin: 0;">48 Rechnungen, 3 offen</p>
         </lc-card>
         <p role="status" style="margin: 0; font-size: var(--font-size-sm); color: var(--color-text-secondary);">Aktiviert: {{ clicks }}</p>
+      </div>`,
+  }),
+};
+
+/** 3.50 (request 071, usm-x row 86): a search in the head takes its own line on a narrow card. */
+export const HeaderActionWrap: Story = {
+  name: 'Header Action Wrap',
+  decorators: [moduleMetadata({ imports: [SearchInputComponent] })],
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.50 (usm-x row 86): `headerActionWrap` lets the head wrap. The title column asks for `--lc-card-header-title-min` (12rem); when the 220 px search doesn\'t fit beside that, it takes a line of its own under the title (12 px below, the head\'s full width) instead of pushing the title to about 40 px; on a wide card it stays on the title\'s line. CSS only, so it holds before JavaScript. The collapsible card\'s chevron follows the action onto its line. The last card is the default (no wrap) for comparison. German title with a count badge.',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 16px;">
+        <lc-card variant="outlined" padding="lg" title="Objekttypen" badge="128" [headerActionWrap]="true">
+          <lc-search-input card-header-action size="sm" placeholder="Suchen …" ariaLabel="Objekttypen durchsuchen" style="display: block; width: 220px; max-width: 100%;" />
+          <p style="margin: 0;">128 Objekttypen in 6 Bereichen.</p>
+        </lc-card>
+        <lc-card variant="outlined" padding="lg" title="Feldgruppen" badge="42" [headerActionWrap]="true" [collapsible]="true">
+          <lc-search-input card-header-action size="sm" placeholder="Suchen …" ariaLabel="Feldgruppen durchsuchen" style="display: block; width: 220px; max-width: 100%;" />
+          <p style="margin: 0;">42 Feldgruppen.</p>
+        </lc-card>
+        <lc-card variant="outlined" padding="lg" title="Objekttypen" badge="128">
+          <lc-search-input card-header-action size="sm" placeholder="Suchen …" ariaLabel="Objekttypen durchsuchen (ohne Umbruch)" style="display: block; width: 220px; max-width: 100%;" />
+          <p style="margin: 0;">Ohne headerActionWrap (wie bisher).</p>
+        </lc-card>
       </div>`,
   }),
 };

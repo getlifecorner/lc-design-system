@@ -1,8 +1,10 @@
 <div class="lc-menu">
-  <!-- Trigger slot -->
-  <div class="lc-menu__trigger">
-    <ng-content select="[trigger]" />
-  </div>
+  <!-- Trigger slot (3.50: none in an inline menu) -->
+  @if (!inline()) {
+    <div class="lc-menu__trigger">
+      <ng-content select="[trigger]" />
+    </div>
+  }
 
   <!-- Dropdown menu -->
   @if (overlayOrigin(); as origin) {
@@ -20,7 +22,7 @@
     >
       <ng-container [ngTemplateOutlet]="panel" />
     </ng-template>
-  } @else if (isOpen()) {
+  } @else if (isOpen() || inline()) {
     <ng-container [ngTemplateOutlet]="panel" />
   }
 
@@ -28,283 +30,95 @@
     <div
       #dropdown
       class="lc-menu__dropdown"
-      [class.lc-menu__dropdown--bottom-left]="effectivePosition() === 'bottom-left'"
-      [class.lc-menu__dropdown--bottom-right]="effectivePosition() === 'bottom-right'"
-      [class.lc-menu__dropdown--top-left]="effectivePosition() === 'top-left'"
-      [class.lc-menu__dropdown--top-right]="effectivePosition() === 'top-right'"
+      [class.lc-menu__dropdown--bottom-left]="!inline() && effectivePosition() === 'bottom-left'"
+      [class.lc-menu__dropdown--bottom-right]="!inline() && effectivePosition() === 'bottom-right'"
+      [class.lc-menu__dropdown--top-left]="!inline() && effectivePosition() === 'top-left'"
+      [class.lc-menu__dropdown--top-right]="!inline() && effectivePosition() === 'top-right'"
       [class.lc-menu__dropdown--sm]="size() === 'sm'"
       [class.lc-menu__dropdown--lg]="size() === 'lg'"
-      [style.min-width]="minWidth()"
-      [style.max-width]="maxWidth() || null"
-      [class.lc-menu__dropdown--capped]="!!maxWidth()"
-      [class.lc-menu__dropdown--has-toggles]="hasToggles()"
+      [style.min-width]="inline() ? null : minWidth()"
+      [style.max-width]="inline() ? null : maxWidth() || null"
+      [class.lc-menu__dropdown--capped]="!inline() && !!maxWidth()"
+      [class.lc-menu__dropdown--has-toggles]="hasToggles() && !inline()"
       [style.max-height]="panelMaxHeight()"
       [class.lc-menu__dropdown--scroll]="scrolls()"
-      [class.lc-menu__dropdown--overlay]="!!anchor()"
+      [class.lc-menu__dropdown--overlay]="!!activeAnchor()"
       [class.lc-menu__dropdown--at-point]="atPoint()"
       [class.lc-menu__dropdown--room]="roomMode()"
       [class.lc-menu__dropdown--room-below]="roomEdge() === 'below'"
       [class.lc-menu__dropdown--room-above]="roomEdge() === 'above'"
       [attr.lang]="panelLang()"
+      [class.lc-menu__dropdown--inline]="inline()"
     >
       <!-- Optional header slot (outside the menu role: it is not an item) -->
       <ng-content select="[header]" />
 
-      <!-- Menu items -->
-      <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- keydown bubbles from the focused menu items (roving tabindex) -->
-      <div
-        #list
-        class="lc-menu__items"
-        role="menu"
-        [id]="panelId"
-        [attr.aria-label]="ariaLabel() || null"
-        [attr.aria-busy]="loading() ? 'true' : null"
-        (keydown)="onPanelKeydown($event)"
-      >
-        @for (item of items(); track item.id; let i = $index) {
-          @if (item.children) {
-            <!-- Section (3.43): a heading and its items. The heading names the
-                 group and is hidden itself, so it is not read twice. -->
-            <div
-              class="lc-menu__section"
-              [class.lc-menu__section--indented]="item.indentChildren"
-              [attr.role]="item.children.length ? 'group' : null"
-              [attr.aria-labelledby]="item.children.length ? headingId(i) : null"
-            >
-              <div class="lc-menu__section-heading" [id]="headingId(i)" aria-hidden="true">{{ item.label }}</div>
-              @for (member of item.children; track member.id) {
-                @if (member.href) {
-                  <a
-                    #menuItem
-                    role="menuitem"
-                    [href]="member.href"
-                    [target]="member.target || '_self'"
-                    [attr.rel]="member.target === '_blank' ? 'noopener noreferrer' : null"
-                    [attr.tabindex]="tabindexFor(indexOf(member), member)"
-                    [attr.aria-disabled]="member.disabled ? 'true' : null"
-                    class="lc-menu__item"
-                    [class.lc-menu__item--danger]="member.variant === 'danger'"
-                    [class.lc-menu__item--disabled]="member.disabled && !hasReason(member)"
-                    [class.lc-menu__item--reason]="hasReason(member)"
-                    [class.lc-menu__item--emphasis]="member.emphasis"
-                    [lcTooltip]="tooltipOf(member)"
-                    (click)="onItemClick(member, $event)"
-                  >
-                    @if (member.swatch; as swatch) {
-                      <span class="lc-menu__item-swatch" aria-hidden="true" [style.background]="swatchBackground(swatch)"></span>
+      <!-- Menu items. 3.50: one part, or (inline with control rows) the parts
+           between the rows and the rows themselves, outside role="menu". -->
+      @for (segment of segments(); track $index) {
+        @if (segment.control; as entry) {
+          <div class="lc-menu__control">
+            @if (entry.label) {
+              <span class="lc-menu__control-label" [id]="controlLabelId(segment.offset)">{{ entry.label }}</span>
+            }
+            @if (controlTemplate(entry); as template) {
+              <ng-container
+                [ngTemplateOutlet]="template"
+                [ngTemplateOutletContext]="{ $implicit: entry, labelId: controlLabelId(segment.offset) }"
+              />
+            }
+          </div>
+        } @else {
+          <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- keydown bubbles from the focused menu items (roving tabindex) -->
+          <div
+            #list
+            class="lc-menu__items"
+            role="menu"
+            [attr.id]="segment.first ? panelId : null"
+            [attr.aria-label]="segment.first ? ariaLabel() || null : null"
+            [attr.aria-busy]="loading() ? 'true' : null"
+            (keydown)="onPanelKeydown($event, segment)"
+            [attr.aria-labelledby]="segment.first || !segment.items[0]?.children ? null : headingId(segment.offset)"
+            [class.lc-menu__items--has-toggles]="inline() && segment.toggles"
+          >
+            @for (item of segment.items; track item.id; let i = $index) {
+              @if (item.children) {
+                <!-- Section (3.43): a heading and its items. The heading names the
+                     group and is hidden itself, so it is not read twice. -->
+                <div
+                  class="lc-menu__section"
+                  [class.lc-menu__section--indented]="item.indentChildren"
+                  [attr.role]="item.children.length ? 'group' : null"
+                  [attr.aria-labelledby]="item.children.length ? headingId(segment.offset + i) : null"
+                >
+                  <div class="lc-menu__section-heading" [id]="headingId(segment.offset + i)" aria-hidden="true">{{ item.label }}</div>
+                  @for (member of item.children; track member.id) {
+                    @if (member.children) {
+                      <!-- 3.50 (usm-x row 78): a section inside a section -->
+                      <ng-container
+                        [ngTemplateOutlet]="nestedSection"
+                        [ngTemplateOutletContext]="{ $implicit: member, depth: 1, id: nestedHeadingId(headingId(segment.offset + i), $index) }"
+                      />
+                    } @else {
+                      <ng-container [ngTemplateOutlet]="menuItem" [ngTemplateOutletContext]="{ $implicit: member }" />
                     }
-                    @if (member.icon) {
-                      <lc-icon [name]="member.icon" [size]="member.iconSize || 'sm'" [decorative]="true" />
+                    <!-- 3.48 (usm-x row 57): a divider between members of one section -->
+                    @if (member.dividerAfter && !$last) {
+                      <hr class="lc-menu__divider" />
                     }
-                    <span class="lc-menu__item-content">
-                      <span class="lc-menu__item-label">{{ member.label }}</span>
-                      @if (member.metadata?.subtitle; as subtitle) {
-                        <span class="lc-menu__item-subtitle">{{ subtitle }}</span>
-                      }
-                    </span>
-                    @if (member.metadata?.badge; as badge) {
-                      <span class="lc-menu__item-badge">{{ badge }}</span>
-                    }
-                  </a>
-                } @else if (isToggle(member)) {
-                  <!-- Checkbox / radio item (3.45) -->
-                  <button
-                    #menuItem
-                    type="button"
-                    [attr.role]="member.type === 'radio' ? 'menuitemradio' : 'menuitemcheckbox'"
-                    [attr.aria-checked]="member.checked ? 'true' : 'false'"
-                    class="lc-menu__item lc-menu__item--toggle"
-                    [class.lc-menu__item--danger]="member.variant === 'danger'"
-                    [class.lc-menu__item--disabled]="member.disabled && !hasReason(member)"
-                    [attr.tabindex]="tabindexFor(indexOf(member), member)"
-                    [disabled]="nativeDisabled(member)"
-                    [attr.aria-disabled]="hasReason(member) ? 'true' : null"
-                    [class.lc-menu__item--reason]="hasReason(member)"
-                    [class.lc-menu__item--emphasis]="member.emphasis"
-                    [lcTooltip]="tooltipOf(member)"
-                    (click)="onToggleClick(member, $event)"
-                  >
-                    <span class="lc-menu__item-indicator" aria-hidden="true">
-                      @if (member.checked) {
-                        @if (member.type === 'radio') {
-                          <svg class="lc-menu__item-dot" viewBox="0 0 20 20" focusable="false"><circle cx="10" cy="10" r="4" fill="currentColor" /></svg>
-                        } @else {
-                          <lc-icon name="check" size="xs" [decorative]="true" />
-                        }
-                      }
-                    </span>
-                    @if (member.swatch; as swatch) {
-                      <span class="lc-menu__item-swatch" aria-hidden="true" [style.background]="swatchBackground(swatch)"></span>
-                    }
-                    @if (member.icon) {
-                      <lc-icon [name]="member.icon" [size]="member.iconSize || 'sm'" [decorative]="true" />
-                    }
-                    <span class="lc-menu__item-content">
-                      <span class="lc-menu__item-label">{{ member.label }}</span>
-                      @if (member.metadata?.subtitle; as subtitle) {
-                        <span class="lc-menu__item-subtitle">{{ subtitle }}</span>
-                      }
-                    </span>
-                    @if (member.metadata?.badge; as badge) {
-                      <span class="lc-menu__item-badge">{{ badge }}</span>
-                    }
-                  </button>
-                } @else {
-                  <button
-                    #menuItem
-                    type="button"
-                    role="menuitem"
-                    class="lc-menu__item"
-                    [class.lc-menu__item--danger]="member.variant === 'danger'"
-                    [class.lc-menu__item--disabled]="member.disabled && !hasReason(member)"
-                    [attr.tabindex]="tabindexFor(indexOf(member), member)"
-                    [disabled]="nativeDisabled(member)"
-                    [attr.aria-disabled]="hasReason(member) ? 'true' : null"
-                    [class.lc-menu__item--reason]="hasReason(member)"
-                    [class.lc-menu__item--emphasis]="member.emphasis"
-                    [lcTooltip]="tooltipOf(member)"
-                    (click)="onItemClick(member, $event)"
-                  >
-                    @if (member.swatch; as swatch) {
-                      <span class="lc-menu__item-swatch" aria-hidden="true" [style.background]="swatchBackground(swatch)"></span>
-                    }
-                    @if (member.icon) {
-                      <lc-icon [name]="member.icon" [size]="member.iconSize || 'sm'" [decorative]="true" />
-                    }
-                    <span class="lc-menu__item-content">
-                      <span class="lc-menu__item-label">{{ member.label }}</span>
-                      @if (member.metadata?.subtitle; as subtitle) {
-                        <span class="lc-menu__item-subtitle">{{ subtitle }}</span>
-                      }
-                    </span>
-                    @if (member.metadata?.badge; as badge) {
-                      <span class="lc-menu__item-badge">{{ badge }}</span>
-                    }
-                  </button>
-                }
-                <!-- 3.48 (usm-x row 57): a divider between members of one section -->
-                @if (member.dividerAfter && !$last) {
-                  <hr class="lc-menu__divider" />
-                }
-              }
-            </div>
-          } @else if (item.href) {
-            <!-- Link item -->
-            <a
-              #menuItem
-              role="menuitem"
-              [href]="item.href"
-              [target]="item.target || '_self'"
-              [attr.rel]="item.target === '_blank' ? 'noopener noreferrer' : null"
-              [attr.tabindex]="tabindexFor(indexOf(item), item)"
-              [attr.aria-disabled]="item.disabled ? 'true' : null"
-              class="lc-menu__item"
-              [class.lc-menu__item--danger]="item.variant === 'danger'"
-              [class.lc-menu__item--disabled]="item.disabled && !hasReason(item)"
-              [class.lc-menu__item--reason]="hasReason(item)"
-              [class.lc-menu__item--emphasis]="item.emphasis"
-              [lcTooltip]="tooltipOf(item)"
-              (click)="onItemClick(item, $event)"
-            >
-              @if (item.swatch; as swatch) {
-                <span class="lc-menu__item-swatch" aria-hidden="true" [style.background]="swatchBackground(swatch)"></span>
-              }
-              @if (item.icon) {
-                <lc-icon [name]="item.icon" [size]="item.iconSize || 'sm'" [decorative]="true" />
-              }
-              <span class="lc-menu__item-content">
-                <span class="lc-menu__item-label">{{ item.label }}</span>
-                @if (item.metadata?.subtitle; as subtitle) {
-                  <span class="lc-menu__item-subtitle">{{ subtitle }}</span>
-                }
-              </span>
-              @if (item.metadata?.badge; as badge) {
-                <span class="lc-menu__item-badge">{{ badge }}</span>
-              }
-            </a>
-          } @else if (isToggle(item)) {
-            <!-- Checkbox / radio item (3.45) -->
-            <button
-              #menuItem
-              type="button"
-              [attr.role]="item.type === 'radio' ? 'menuitemradio' : 'menuitemcheckbox'"
-              [attr.aria-checked]="item.checked ? 'true' : 'false'"
-              class="lc-menu__item lc-menu__item--toggle"
-              [class.lc-menu__item--danger]="item.variant === 'danger'"
-              [class.lc-menu__item--disabled]="item.disabled && !hasReason(item)"
-              [attr.tabindex]="tabindexFor(indexOf(item), item)"
-              [disabled]="nativeDisabled(item)"
-              [attr.aria-disabled]="hasReason(item) ? 'true' : null"
-              [class.lc-menu__item--reason]="hasReason(item)"
-              [class.lc-menu__item--emphasis]="item.emphasis"
-              [lcTooltip]="tooltipOf(item)"
-              (click)="onToggleClick(item, $event)"
-            >
-              <span class="lc-menu__item-indicator" aria-hidden="true">
-                @if (item.checked) {
-                  @if (item.type === 'radio') {
-                    <svg class="lc-menu__item-dot" viewBox="0 0 20 20" focusable="false"><circle cx="10" cy="10" r="4" fill="currentColor" /></svg>
-                  } @else {
-                    <lc-icon name="check" size="xs" [decorative]="true" />
                   }
-                }
-              </span>
-              @if (item.swatch; as swatch) {
-                <span class="lc-menu__item-swatch" aria-hidden="true" [style.background]="swatchBackground(swatch)"></span>
+                </div>
+              } @else {
+                <ng-container [ngTemplateOutlet]="menuItem" [ngTemplateOutletContext]="{ $implicit: item }" />
               }
-              @if (item.icon) {
-                <lc-icon [name]="item.icon" [size]="item.iconSize || 'sm'" [decorative]="true" />
-              }
-              <span class="lc-menu__item-content">
-                <span class="lc-menu__item-label">{{ item.label }}</span>
-                @if (item.metadata?.subtitle; as subtitle) {
-                  <span class="lc-menu__item-subtitle">{{ subtitle }}</span>
-                }
-              </span>
-              @if (item.metadata?.badge; as badge) {
-                <span class="lc-menu__item-badge">{{ badge }}</span>
-              }
-            </button>
-          } @else {
-            <!-- Button item -->
-            <button
-              #menuItem
-              type="button"
-              role="menuitem"
-              class="lc-menu__item"
-              [class.lc-menu__item--danger]="item.variant === 'danger'"
-              [class.lc-menu__item--disabled]="item.disabled && !hasReason(item)"
-              [attr.tabindex]="tabindexFor(indexOf(item), item)"
-              [disabled]="nativeDisabled(item)"
-              [attr.aria-disabled]="hasReason(item) ? 'true' : null"
-              [class.lc-menu__item--reason]="hasReason(item)"
-              [class.lc-menu__item--emphasis]="item.emphasis"
-              [lcTooltip]="tooltipOf(item)"
-              (click)="onItemClick(item, $event)"
-            >
-              @if (item.swatch; as swatch) {
-                <span class="lc-menu__item-swatch" aria-hidden="true" [style.background]="swatchBackground(swatch)"></span>
-              }
-              @if (item.icon) {
-                <lc-icon [name]="item.icon" [size]="item.iconSize || 'sm'" [decorative]="true" />
-              }
-              <span class="lc-menu__item-content">
-                <span class="lc-menu__item-label">{{ item.label }}</span>
-                @if (item.metadata?.subtitle; as subtitle) {
-                  <span class="lc-menu__item-subtitle">{{ subtitle }}</span>
-                }
-              </span>
-              @if (item.metadata?.badge; as badge) {
-                <span class="lc-menu__item-badge">{{ badge }}</span>
-              }
-            </button>
-          }
 
-          @if (item.dividerAfter) {
-            <hr class="lc-menu__divider" />
-          }
+              @if (item.dividerAfter) {
+                <hr class="lc-menu__divider" />
+              }
+            }
+          </div>
         }
-      </div>
+      }
 
       <!-- 3.48 (usm-x row 55): the busy row, outside role="menu"; its status
            text arrives one frame after the row, so it is announced -->
@@ -318,5 +132,145 @@
       <!-- Optional footer slot -->
       <ng-content select="[footer]" />
     </div>
+  </ng-template>
+
+  <!-- 3.50 (usm-x row 78): a nested section (level 2 and deeper): a group named
+       by its heading, heading and items indented one step per level. -->
+  <ng-template #nestedSection let-section let-depth="depth" let-id="id">
+    <div
+      class="lc-menu__section lc-menu__section--nested"
+      [style.--_lc-menu-depth]="depth"
+      [attr.role]="section.children.length ? 'group' : null"
+      [attr.aria-labelledby]="section.children.length ? id : null"
+    >
+      <div class="lc-menu__section-heading" [id]="id" aria-hidden="true">{{ section.label }}</div>
+      @for (member of section.children; track member.id) {
+        @if (member.children) {
+          <ng-container
+            [ngTemplateOutlet]="nestedSection"
+            [ngTemplateOutletContext]="{ $implicit: member, depth: depth + 1, id: nestedHeadingId(id, $index) }"
+          />
+        } @else {
+          <ng-container [ngTemplateOutlet]="menuItem" [ngTemplateOutletContext]="{ $implicit: member }" />
+        }
+        @if (member.dividerAfter && !$last) {
+          <hr class="lc-menu__divider" />
+        }
+      }
+    </div>
+  </ng-template>
+
+  <!-- One item: a link, a checkbox / radio (3.45) or a button. 3.50: `current`,
+       `busy`, `badgeVariant` and `attrs` (new bindings after the old ones). -->
+  <ng-template #menuItem let-item>
+    @if (item.href) {
+      <!-- Link item -->
+      <a
+        role="menuitem"
+        [href]="item.href"
+        [target]="item.target || '_self'"
+        [attr.rel]="item.target === '_blank' ? 'noopener noreferrer' : null"
+        [attr.tabindex]="tabindexFor(indexOf(item), item)"
+        [attr.aria-disabled]="item.disabled || item.busy ? 'true' : null"
+        class="lc-menu__item"
+        [class.lc-menu__item--danger]="item.variant === 'danger'"
+        [class.lc-menu__item--disabled]="item.disabled && !hasReason(item)"
+        [class.lc-menu__item--reason]="hasReason(item)"
+        [class.lc-menu__item--emphasis]="item.emphasis"
+        [lcTooltip]="tooltipOf(item)"
+        (click)="onItemClick(item, $event)"
+        [class.lc-menu__item--current]="item.current"
+        [class.lc-menu__item--busy]="item.busy"
+        [attr.aria-current]="item.current ? 'true' : null"
+        [attr.aria-busy]="item.busy ? 'true' : null"
+        [lcMenuItemAttrs]="item.attrs"
+      >
+        <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: item }" />
+      </a>
+    } @else if (isToggle(item)) {
+      <!-- Checkbox / radio item (3.45) -->
+      <button
+        type="button"
+        [attr.role]="item.type === 'radio' ? 'menuitemradio' : 'menuitemcheckbox'"
+        [attr.aria-checked]="item.checked ? 'true' : 'false'"
+        class="lc-menu__item lc-menu__item--toggle"
+        [class.lc-menu__item--danger]="item.variant === 'danger'"
+        [class.lc-menu__item--disabled]="item.disabled && !hasReason(item)"
+        [attr.tabindex]="tabindexFor(indexOf(item), item)"
+        [disabled]="nativeDisabled(item)"
+        [attr.aria-disabled]="hasReason(item) || item.busy ? 'true' : null"
+        [class.lc-menu__item--reason]="hasReason(item)"
+        [class.lc-menu__item--emphasis]="item.emphasis"
+        [lcTooltip]="tooltipOf(item)"
+        (click)="onToggleClick(item, $event)"
+        [class.lc-menu__item--current]="item.current"
+        [class.lc-menu__item--busy]="item.busy"
+        [attr.aria-current]="item.current ? 'true' : null"
+        [attr.aria-busy]="item.busy ? 'true' : null"
+        [lcMenuItemAttrs]="item.attrs"
+      >
+        <span class="lc-menu__item-indicator" aria-hidden="true">
+          @if (item.checked) {
+            @if (item.type === 'radio') {
+              <svg class="lc-menu__item-dot" viewBox="0 0 20 20" focusable="false"><circle cx="10" cy="10" r="4" fill="currentColor" /></svg>
+            } @else {
+              <lc-icon name="check" size="xs" [decorative]="true" />
+            }
+          }
+        </span>
+        <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: item }" />
+      </button>
+    } @else {
+      <!-- Button item -->
+      <button
+        type="button"
+        role="menuitem"
+        class="lc-menu__item"
+        [class.lc-menu__item--danger]="item.variant === 'danger'"
+        [class.lc-menu__item--disabled]="item.disabled && !hasReason(item)"
+        [attr.tabindex]="tabindexFor(indexOf(item), item)"
+        [disabled]="nativeDisabled(item)"
+        [attr.aria-disabled]="hasReason(item) || item.busy ? 'true' : null"
+        [class.lc-menu__item--reason]="hasReason(item)"
+        [class.lc-menu__item--emphasis]="item.emphasis"
+        [lcTooltip]="tooltipOf(item)"
+        (click)="onItemClick(item, $event)"
+        [class.lc-menu__item--current]="item.current"
+        [class.lc-menu__item--busy]="item.busy"
+        [attr.aria-current]="item.current ? 'true' : null"
+        [attr.aria-busy]="item.busy ? 'true' : null"
+        [lcMenuItemAttrs]="item.attrs"
+      >
+        <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: item }" />
+      </button>
+    }
+  </ng-template>
+
+  <!-- The item's swatch, icon, label, subtitle and badge (3.50: or spinner). -->
+  <ng-template #itemContent let-item>
+    @if (item.swatch; as swatch) {
+      <span class="lc-menu__item-swatch" aria-hidden="true" [style.background]="swatchBackground(swatch)"></span>
+    }
+    @if (item.icon) {
+      <lc-icon [name]="item.icon" [size]="item.iconSize || 'sm'" [decorative]="true" />
+    }
+    <span class="lc-menu__item-content">
+      <span class="lc-menu__item-label">{{ item.label }}</span>
+      @if (item.metadata?.subtitle; as subtitle) {
+        <span class="lc-menu__item-subtitle">{{ subtitle }}</span>
+      }
+      @if (item.busy) {
+        <span class="lc-menu__item-busy-text">{{ ' ' + busyLabel() }}</span>
+      }
+    </span>
+    @if (item.busy) {
+      <span class="lc-menu__item-spinner" aria-hidden="true"><lc-spinner size="xs" /></span>
+    } @else if (item.metadata?.badge; as badge) {
+      @if (item.badgeVariant) {
+        <lc-badge class="lc-menu__item-badge-variant" size="xs" [rounded]="true" [variant]="item.badgeVariant">{{ badge }}</lc-badge>
+      } @else {
+        <span class="lc-menu__item-badge">{{ badge }}</span>
+      }
+    }
   </ng-template>
 </div>

@@ -198,13 +198,32 @@ export class AvatarComponent {
   shape = input<AvatarShape>('circle');
 
   /**
+   * 3.50 (usm-x row 81): letters shown instead of the name's initials, e.g.
+   * `'IN'` for an incident or `'CRM'` on a square avatar; at most 3
+   * characters (more are cut), 3 at 0.75 em so they fit every size. The
+   * accessible name stays `alt`, then `name`, then "Avatar". `''`: the
+   * initials of `name` as before.
+   * @default ''
+   */
+  letters = input<string>('');
+
+  /**
    * Computed initials from name
    */
   initials = computed(() => avatarInitials(this.name()));
 
-  /** The person symbol: `fallback="person"`, no image (or a broken one) and no name. */
+  /** `letters` (trimmed, at most 3 characters), else the name's initials. */
+  protected readonly shownLetters = computed(() => {
+    const letters = this.letters()?.trim() ?? '';
+    return letters ? Array.from(letters).slice(0, 3).join('') : this.initials();
+  });
+
+  /** Three letters take a smaller size (0.75 em) to fit the disc. */
+  protected readonly threeLetters = computed(() => Array.from(this.shownLetters()).length === 3);
+
+  /** The person symbol: `fallback="person"`, no image (or a broken one), no name and no `letters`. */
   protected readonly showPerson = computed(
-    () => this.fallback() === 'person' && !this.showImage() && !this.name()?.trim(),
+    () => this.fallback() === 'person' && !this.showImage() && !this.name()?.trim() && !this.letters()?.trim(),
   );
 
   /**

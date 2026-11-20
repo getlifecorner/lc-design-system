@@ -203,8 +203,11 @@ describe('th[lcSortableHead] busy and hooks (3.48, usm-x row 60)', () => {
     });
 
     it('the ring: 12 px, 2 px, 3/4 arc, primary; static under reduced motion; CanvasText in forced colours', () => {
+      // 3.50 (request 071, backlog 068-n1, AC-22): `right` and
+      // `border-right-color` became `inset-inline-end` and
+      // `border-inline-end-color` (same values; in RTL the ring sits over the reserve).
       expect(css).toContain(
-        '.lc-sortable-head__busy { position: absolute; top: 50%; right: var(--spacing-3); box-sizing: border-box; width: 0.75rem; height: 0.75rem; margin-top: -0.375rem; border: 2px solid var(--color-primary); border-right-color: transparent; border-radius: 50%; animation: lc-sortable-head-spin 0.8s linear infinite; }',
+        '.lc-sortable-head__busy { position: absolute; top: 50%; inset-inline-end: var(--spacing-3); box-sizing: border-box; width: 0.75rem; height: 0.75rem; margin-top: -0.375rem; border: 2px solid var(--color-primary); border-inline-end-color: transparent; border-radius: 50%; animation: lc-sortable-head-spin 0.8s linear infinite; }',
       );
       expect(css).toContain('@media (prefers-reduced-motion: reduce) { .lc-sortable-head__busy { animation: none; } }');
       expect(css).toContain('@media (forced-colors: active) { .lc-sortable-head__busy { border-color: CanvasText; } }');

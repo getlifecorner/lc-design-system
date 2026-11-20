@@ -623,3 +623,11 @@ html.dark .lc-header:not(.lc-header--light),
   flex: 0 1 auto;
   min-width: 0;
 }
+
+// Print (071, AC-20): the header is not printed, like lc-sidenav and
+// lc-bottom-nav. Nothing changes on screen.
+@media print {
+  .lc-header-host {
+    display: none;
+  }
+}

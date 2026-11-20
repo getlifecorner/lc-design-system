@@ -68,11 +68,21 @@ export class ToggleGroupComponent {
   /** id(s) of external element(s) labelling the group (wins over `ariaLabel`) */
   readonly ariaLabelledBy = input<string>();
 
+  /**
+   * Each option gets a hit area of at least 44 × 44 px (3.50, WCAG 2.5.5):
+   * a transparent extension above and below the option (lg 2, md 5.5, sm
+   * 9 px at 100 % text; keep that space clear of other controls), and an
+   * option narrower than 44 px grows to 44 px with its label centred.
+   * Height, padding, type and colours of `sm`/`md`/`lg` stay as they are.
+   * @default false
+   */
+  readonly touchTarget = input<boolean>(false);
+
   /** Emitted when selection changes */
   selectionChange = output<string>();
 
-  /** Computed size class */
-  sizeClass = computed(() => `lc-toggle-group--${this.size()}`);
+  /** Computed size class (plus the touch-target modifier when on) */
+  sizeClass = computed(() => `lc-toggle-group--${this.size()}${this.touchTarget() ? ' lc-toggle-group--touch' : ''}`);
 
   /**
    * Roving tabindex: the selected option is the group's single tab stop; when

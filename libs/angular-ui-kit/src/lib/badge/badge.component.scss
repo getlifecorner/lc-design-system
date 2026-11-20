@@ -217,6 +217,27 @@ $_badge-wrap-heights: (
   margin-block: -0.2em;
 }
 
+// 3.50 (request 071, usm-x row 83): one marked run is cut, the rest of the
+// label (an end, a count) stays whole. The label becomes a flex row: the text
+// runs are anonymous items that can't shrink (`nowrap`), the gap stands in for
+// the spaces flex drops at the runs' edges (0.3em ≈ a space), and only
+// `.lc-badge__cut` shrinks, down to 2em, with its own ellipsis. The label's
+// own clip is off, so nothing else is cut.
+.lc-badge--truncate .lc-badge__label:has(> .lc-badge__cut) {
+  display: flex;
+  column-gap: 0.3em;
+  overflow: visible;
+}
+
+.lc-badge--truncate .lc-badge__cut {
+  flex: 0 1 auto;
+  min-width: 2em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-block: 0.2em;
+  margin-block: -0.2em;
+}
+
 // Responsive behavior
 @media (max-width: 640px) {
   .lc-badge {

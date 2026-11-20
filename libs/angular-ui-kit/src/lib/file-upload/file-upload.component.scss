@@ -241,6 +241,13 @@
     font-size: var(--font-size-xs);
     color: var(--color-text-error);
   }
+
+  // 3.50 (request 071, backlog 069-n1): without a rejection the empty live
+  // region takes back the column gap above it, so the field ends at its last
+  // line; the region stays in the DOM.
+  &__error:empty {
+    margin-block-start: calc(-1 * var(--spacing-2));
+  }
 }
 
 // Forced colours: the ring is Highlight (request 042). 3.49 (request 069):

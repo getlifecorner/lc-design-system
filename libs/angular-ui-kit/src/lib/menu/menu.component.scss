@@ -238,15 +238,22 @@
   hyphenate-limit-chars: 12 4 3;
 }
 
-.lc-menu__dropdown--has-toggles .lc-menu__item:not(.lc-menu__item--toggle) {
+// 3.50 (review 071 F-1): an inline menu reserves the slot per `role="menu"`
+// part (`.lc-menu__items--has-toggles`), so a part without toggles starts its
+// labels at the item padding, on the control rows' label line. Same weight as
+// the panel selector; a popup keeps the panel class.
+.lc-menu__dropdown--has-toggles .lc-menu__item:not(.lc-menu__item--toggle),
+.lc-menu__items--has-toggles .lc-menu__item:not(.lc-menu__item--toggle) {
   padding-inline-start: calc(var(--lc-density-padding-md, var(--spacing-4)) + 1.25rem + var(--spacing-3));
 }
 
-.lc-menu__dropdown--has-toggles.lc-menu__dropdown--sm .lc-menu__item:not(.lc-menu__item--toggle) {
+.lc-menu__dropdown--has-toggles.lc-menu__dropdown--sm .lc-menu__item:not(.lc-menu__item--toggle),
+.lc-menu__dropdown--sm .lc-menu__items--has-toggles .lc-menu__item:not(.lc-menu__item--toggle) {
   padding-inline-start: calc(var(--lc-density-padding-sm, var(--spacing-3)) + 1.25rem + var(--lc-density-gap-sm, var(--spacing-2)));
 }
 
-.lc-menu__dropdown--has-toggles.lc-menu__dropdown--lg .lc-menu__item:not(.lc-menu__item--toggle) {
+.lc-menu__dropdown--has-toggles.lc-menu__dropdown--lg .lc-menu__item:not(.lc-menu__item--toggle),
+.lc-menu__dropdown--lg .lc-menu__items--has-toggles .lc-menu__item:not(.lc-menu__item--toggle) {
   padding-inline-start: calc(var(--spacing-5) + 1.25rem + var(--lc-density-gap-md, var(--spacing-4)));
 }
 
@@ -368,9 +375,182 @@
   padding: var(--lc-density-padding-md, var(--spacing-4)) var(--spacing-5);
 }
 
+// ── 3.50 (request 071, usm-x rows 77, 78) ──
+// `inline`: the menu in the page. The host and the wrapper are blocks, the
+// panel takes its container's width with no frame of its own and no slide-in.
+:host(.lc-menu-host--inline) {
+  display: block;
+
+  .lc-menu {
+    display: block;
+  }
+}
+
+.lc-menu__dropdown.lc-menu__dropdown--inline {
+  position: static;
+  z-index: auto;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  animation: none;
+}
+
+// A control row (`MenuItem.control`) between the menu parts: the label, then
+// the app's control; the control wraps under the label when the row is too
+// narrow. At least 44 px high, padded as an item.
+.lc-menu__control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--spacing-3);
+  row-gap: var(--spacing-2);
+  box-sizing: border-box;
+  min-height: 2.75rem;
+  padding: var(--lc-density-padding-sm, var(--spacing-3)) var(--lc-density-padding-md, var(--spacing-4));
+}
+
+.lc-menu__control-label {
+  flex: 1 1 auto;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
+}
+
+.lc-menu__dropdown--sm .lc-menu__control {
+  padding: var(--lc-density-padding-xs, var(--spacing-2)) var(--lc-density-padding-sm, var(--spacing-3));
+}
+
+.lc-menu__dropdown--sm .lc-menu__control-label {
+  font-size: var(--font-size-sm);
+}
+
+.lc-menu__dropdown--lg .lc-menu__control {
+  padding: var(--lc-density-padding-md, var(--spacing-4)) var(--spacing-5);
+}
+
+.lc-menu__dropdown--lg .lc-menu__control-label {
+  font-size: var(--font-size-lg);
+}
+
+// `current`: a 3 px bar at the start (3.76:1 light, 5.77:1 dark or more on
+// the fill), the selected fill (kept on hover) and a semibold label, so the
+// state never rests on colour alone. A disabled item shows the disabled look.
+.lc-menu__item--current:not(.lc-menu__item--disabled):not(.lc-menu__item--reason) {
+  position: relative;
+  background-color: var(--color-surface-selected);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 3px;
+    border-start-end-radius: 2px;
+    border-end-end-radius: 2px;
+    background-color: var(--color-primary-500);
+  }
+
+  .lc-menu__item-label {
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+.lc-menu__item--current:not(.lc-menu__item--disabled):not(.lc-menu__item--reason):hover {
+  background-color: var(--color-surface-selected);
+}
+
+// `busy`: a 16 px spinner in the badge's place, a progress cursor, no
+// dimming; the hidden `busyLabel` follows the label in the item's name.
+.lc-menu__item--busy {
+  position: relative;
+  cursor: progress;
+}
+
+.lc-menu__item-spinner {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.lc-menu__item-busy-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// `badgeVariant`: an lc-badge (xs, 20 px high, as the plain badge) that never
+// shrinks or wraps.
+.lc-menu__item-badge-variant {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+// Sections inside sections, to any depth: heading and items one step further
+// per level (md 16, sm 12, lg 20 px; items at 16 / 32 / 48 px on levels
+// 1 / 2 / 3). A nested heading is 12 px semibold, without capitals.
+.lc-menu__section--nested {
+  > .lc-menu__section-heading {
+    padding-inline-start: calc(var(--lc-density-padding-md, var(--spacing-4)) + var(--_lc-menu-depth, 1) * var(--spacing-4));
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .lc-menu__item {
+    padding-inline-start: calc(var(--lc-density-padding-md, var(--spacing-4)) + var(--_lc-menu-depth, 1) * var(--spacing-4));
+  }
+}
+
+.lc-menu__dropdown--sm .lc-menu__section--nested {
+  > .lc-menu__section-heading,
+  .lc-menu__item {
+    padding-inline-start: calc(var(--lc-density-padding-sm, var(--spacing-3)) + var(--_lc-menu-depth, 1) * var(--spacing-3));
+  }
+}
+
+.lc-menu__dropdown--lg .lc-menu__section--nested {
+  > .lc-menu__section-heading,
+  .lc-menu__item {
+    padding-inline-start: calc(var(--spacing-5) + var(--_lc-menu-depth, 1) * var(--spacing-5));
+  }
+}
+
+// With toggles, the other items of a nested section keep the indicator slot.
+.lc-menu__dropdown--has-toggles .lc-menu__section--nested .lc-menu__item:not(.lc-menu__item--toggle),
+.lc-menu__items--has-toggles .lc-menu__section--nested .lc-menu__item:not(.lc-menu__item--toggle) {
+  padding-inline-start: calc(var(--lc-density-padding-md, var(--spacing-4)) + var(--_lc-menu-depth, 1) * var(--spacing-4) + 1.25rem + var(--spacing-3));
+}
+
+.lc-menu__dropdown--has-toggles.lc-menu__dropdown--sm .lc-menu__section--nested .lc-menu__item:not(.lc-menu__item--toggle),
+.lc-menu__dropdown--sm .lc-menu__items--has-toggles .lc-menu__section--nested .lc-menu__item:not(.lc-menu__item--toggle) {
+  padding-inline-start: calc(
+    var(--lc-density-padding-sm, var(--spacing-3)) + var(--_lc-menu-depth, 1) * var(--spacing-3) + 1.25rem + var(--lc-density-gap-sm, var(--spacing-2))
+  );
+}
+
+.lc-menu__dropdown--has-toggles.lc-menu__dropdown--lg .lc-menu__section--nested .lc-menu__item:not(.lc-menu__item--toggle),
+.lc-menu__dropdown--lg .lc-menu__items--has-toggles .lc-menu__section--nested .lc-menu__item:not(.lc-menu__item--toggle) {
+  padding-inline-start: calc(var(--spacing-5) + var(--_lc-menu-depth, 1) * var(--spacing-5) + 1.25rem + var(--lc-density-gap-md, var(--spacing-4)));
+}
+
 @media (forced-colors: active) {
   .lc-menu__item-swatch {
     border-color: CanvasText;
+  }
+
+  // 3.50: the current bar keeps a system colour.
+  .lc-menu__item--current:not(.lc-menu__item--disabled):not(.lc-menu__item--reason)::before {
+    background-color: Highlight;
+    forced-color-adjust: none;
   }
 }
 

@@ -145,6 +145,27 @@ export interface NavigationItem extends ItemRowState {
 
   /** A quieter ink at rest (3.44); the item is still a link. */
   muted?: boolean;
+
+  /**
+   * 3.50 (usm-x row 74): a `kind: 'action'` item opens a popup (e.g. a group
+   * menu beside the rail): `aria-haspopup` on its button and `aria-expanded`
+   * (`true` while `lc-sidenav` `expandedActionId` is this item's id). Ignored
+   * on links.
+   */
+  hasPopup?: 'menu' | 'dialog';
+}
+
+/** Payload of `lc-sidenav`'s `railItemClick` (3.50, usm-x row 74). */
+export interface NavigationRailItemEvent {
+  /** The `railItems` entry that was pressed. */
+  item: NavigationItem;
+  /** The `click` event. */
+  event: MouseEvent;
+  /**
+   * The rail item's link or button, to anchor a menu beside the rail and to
+   * pass as the menu's `returnFocusTo`.
+   */
+  element: HTMLElement;
 }
 
 /** Payload of `lc-sidenav`'s `itemContextMenu` (3.44). */

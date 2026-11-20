@@ -439,3 +439,27 @@ export const MaxWidth: Story = {
       </div>`,
   }),
 };
+
+/** 3.50 (request 071, usm-x row 83): only the marked run is cut; the end of the label stays. */
+export const CutRun: Story = {
+  name: 'Cut Run',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.50 (usm-x row 83): with `maxWidth` a projected element with the class `lc-badge__cut` is the only run that is cut (with its own ellipsis, at least 2em stay); the text before and after it („Recording in“, „· 3 objects“) stays whole. `maxWidth="min(22rem, 100%)"`: 352 px on a wide page, the row on a phone. The badge\'s `title` holds the whole label. A run that fits shows no ellipsis (the gap between the runs is 0.3em, about a space). Without `maxWidth` the class does nothing. EN and DE.',
+      },
+    },
+  },
+  render: () => ({
+    props: { run: 'Annual closing 2026 north region bundle', runDe: 'Änderungspaket Jahresabschluss 2026 Nord' },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <!-- Each badge in a block of the row's width: the 100 % of maxWidth needs a container of definite width. -->
+        <div><lc-badge lang="en" variant="info" size="md" [rounded]="true" [dot]="true" maxWidth="min(22rem, 100%)">Recording in <span class="lc-badge__cut">{{ run }}</span> · 3 objects</lc-badge></div>
+        <div><lc-badge lang="de" variant="info" size="md" [rounded]="true" [dot]="true" maxWidth="min(22rem, 100%)">Aufnahme läuft in <span class="lc-badge__cut">{{ runDe }}</span> · 3 Objekte</lc-badge></div>
+        <div><lc-badge lang="de" variant="info" size="md" [rounded]="true" [dot]="true" maxWidth="min(22rem, 100%)">Aufnahme läuft in <span class="lc-badge__cut">Nord</span> · 3 Objekte</lc-badge></div>
+      </div>`,
+  }),
+};

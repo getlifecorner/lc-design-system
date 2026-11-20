@@ -465,6 +465,35 @@ const EXPECT_IN_HTML = [
       && /<button(?=[^>]*\saria-disabled="true")(?![^>]*\sdisabled(?:=|\s|>))[^>]*>(?:<!--[^]*?-->|\s)*Workflow/.test(tabs)
       && /padding:\s*var\(--lc-tabs-panel-padding,\s*var\(--lc-density-padding-md,\s*var\(--spacing-4\)\)\)/.test(html);
   }],
+  // 3.50 (request 071, probe-350.ts): the collapsed rail's slot and railItems,
+  // the card head that may wrap, the inline menu with a control row, before JS.
+  ['sidenav: the collapsed rail with [sidenav-rail-top] and railItems (usm-x row 74)', (html) => {
+    const sn = html.match(/<div(?=[^>]*\sid="compat-sidenav-350")[^>]*>([^]*?)<\/lc-sidenav>/)?.[1] ?? '';
+    const nav = sn.match(/<nav(?=[^>]*\sclass="lc-sidenav__nav lc-sidenav__nav--docked lc-sidenav__nav--rail-items")(?=[^>]*\saria-label="Navigation 350")[^>]*>([^]*?)<\/nav>/)?.[1] ?? '';
+    return /<aside(?=[^>]*\sclass="[^"]*\blc-sidenav--collapsed\b)[^>]*>/.test(sn)
+      && /<div(?=[^>]*\sclass="lc-sidenav__rail-top")[^>]*>(?:<!--[^]*?-->|\s)*<button(?=[^>]*\sid="compat-rail-top-350")[^>]*>/.test(sn)
+      && (sn.match(/<nav\b/g) ?? []).length === 1
+      && /<a(?=[^>]*\sdata-tooltip="Übersicht")(?=[^>]*\shref="\/compat-350\/start")[^>]*>/.test(nav)
+      && /<button(?=[^>]*\sdata-tooltip="Stammdaten")(?=[^>]*\saria-haspopup="menu")(?=[^>]*\saria-expanded="false")[^>]*>/.test(nav);
+  }],
+  ['card: headerActionWrap is a class and a CSS wrap, before JS (usm-x row 86)', (html) => {
+    const card = html.match(/<div(?=[^>]*\sid="compat-card-350")[^>]*>([^]*?)<\/lc-card>/)?.[1] ?? '';
+    return /<div(?=[^>]*\sclass="[^"]*\bcard-header-wrap\b)[^>]*>/.test(card)
+      && /<div(?=[^>]*\sclass="card__header-action")[^>]*>(?:<!--[^]*?-->|\s)*<input(?=[^>]*\stype="search")[^>]*>/.test(card)
+      && /\.card-header-wrap(?:\[_ngcontent-[^\]]*\])?\s+\.card__header(?:\[_ngcontent-[^\]]*\])?\s*\{\s*flex-wrap:\s*wrap;\s*row-gap:\s*var\(--spacing-3\);?\s*\}/.test(html)
+      && /\.card-header-wrap(?:\[_ngcontent-[^\]]*\])?\s+\.card__header-left(?:\[_ngcontent-[^\]]*\])?\s*\{\s*flex:\s*1000000 1 var\(--lc-card-header-title-min,\s*12rem\);?\s*\}/.test(html);
+  }],
+  ['menu: the inline panel, its parts and a control row outside role="menu", before JS (usm-x rows 77, 78)', (html) => {
+    const menu = html.match(/<div(?=[^>]*\sid="compat-menu-350")[^>]*>([^]*?)<\/lc-menu>/)?.[1] ?? '';
+    const label = menu.match(/<span(?=[^>]*\sclass="lc-menu__control-label")(?=[^>]*\sid="([^"]+)")[^>]*>Dichte<\/span>/);
+    return /<div(?=[^>]*\sclass="lc-menu__dropdown lc-menu__dropdown--inline")[^>]*>/.test(menu)
+      && !/lc-menu__trigger/.test(menu)
+      && /<div(?=[^>]*\srole="menu")(?=[^>]*\saria-label="Konto 350")[^>]*>/.test(menu)
+      && (menu.match(/\srole="menu"/g) ?? []).length === 2
+      && !!label
+      && new RegExp(`<button(?=[^>]*\\sid="compat-density-350")(?=[^>]*\\saria-labelledby="${label[1]}")[^>]*>`).test(menu)
+      && /<button(?=[^>]*\srole="menuitem")(?=[^>]*\saria-current="true")[^>]*>/.test(menu);
+  }],
   // (minified or not: spaces optional, the container longhands or their shorthand)
   ['vertical tabs stack in a narrow container, pure CSS (backlog 064-n8)', (html) => /\.lc-tabs:has\(\s*>\s*\.lc-tabs__container--vertical\s*\)\s*\{\s*(?:container-name:\s*lc-tabs;\s*container-type:\s*inline-size|container:\s*lc-tabs\s*\/\s*inline-size);?\s*\}/.test(html)
     && /@container\s+lc-tabs\s*\(\s*(?:width\s*<\s*31rem|max-width:\s*30\.\d+rem)\s*\)\s*\{\s*\.lc-tabs__container--vertical\s*\{\s*flex-direction:\s*column;?\s*\}/.test(html)],

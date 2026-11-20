@@ -87,7 +87,8 @@ export class SplitButtonComponent {
   readonly loading = input(false);
 
   /**
-   * Accessible name of the caret (German: „Weitere Aktionen“).
+   * Accessible name of the caret (German: „Weitere Aktionen“). 3.50 (usm-x
+   * row 79): it also names the open menu (`aria-label` on its `role="menu"`).
    * @default 'More actions'
    */
   readonly menuAriaLabel = input('More actions');
@@ -139,6 +140,15 @@ export class SplitButtonComponent {
    * @default ''
    */
   readonly menuMaxWidth = input('');
+
+  /**
+   * 3.50 (usm-x row 79): `lc-menu` `maxHeight` of the menu: a CSS length, or
+   * `'room'` (the room between the group and the viewport edge picks the side
+   * and the height). Empty: the menu's CSS hook `--lc-menu-max-height` (set
+   * on the split button or an ancestor), else no cap.
+   * @default ''
+   */
+  readonly menuMaxHeight = input('');
 
   /** The face was activated (click, Enter, Space); not while disabled or loading. */
   readonly clicked = output<void>();
