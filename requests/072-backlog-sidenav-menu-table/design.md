@@ -86,7 +86,7 @@ anchor box = rail border box (x 17, w 56) × item (y 223, h 44) → panel x 81, 
 | Popup parts / rows | as inline: toggle slot per part (`lc-menu__items--has-toggles`, no panel-wide `--has-toggles`), control row min-h 44, pad 12/16 (sm 8/12, lg 16/20), gap 12 / row-gap 8 | label 16/500 | as 3.50 |
 | Brand mark `.lc-sidenav__brand-mark` | before the tile; `display: grid; place-items: center; flex: none; inline-size: 32px; block-size: 32px`; child `display: block; max-inline-size: 100%; max-block-size: 100%`; `:empty` → `display: none`; `:not(:empty) ~ .lc-sidenav__brand-tile, :not(:empty) ~ .lc-sidenav__brand-logo` → `display: none`. Rail: 44 × 44 brand, mark box at the tile's place (rail x + 11.5; 28.5 in the rail story) | — | — |
 | Rail template nav `.lc-sidenav__nav--rail-template` | column, `align-items: center`, gap 2, pad 8 / `--spacing-1-5` (6): 44 px children at x 5.5 in the rail (22.5 in the story) = brand, rail-top, collapse column | — | `--spacing-1-5` |
-| `lc-sidenav__rail-item` | `inline-flex`, centre, 44 × 44, pad 0, border 0, radius md, bg none, colour `--lc-sidenav-fg`; hover `--lc-sidenav-hover-bg` + fg-active; focus 2 px ring offset 2; current: active bg/fg + inset 2 px bar (as `.lc-sidenav__nav-item--active`); tooltip `::after` as the rail item's | — | sidenav hooks |
+| `lc-sidenav__rail-item` | `inline-flex`, centre, 44 × 44, pad 0, border 0, radius md, bg none, colour `--lc-sidenav-fg`; hover `--lc-sidenav-hover-bg` + fg-active; focus 2 px ring offset 2; current: active bg/fg + inset 2 px bar (as `.lc-sidenav__nav-item--active`); tooltip `::after` as the rail item's (only with `[data-tooltip]`). *(Change r1, D-2: also `position: relative`, `font: inherit`, `text-decoration: none`, `cursor: pointer`; unscoped, the ring shares the item ring's rule.)* | — | sidenav hooks |
 | Table RTL (appended) | `th:where(:dir(rtl))` right; sortable pad-right = size pad (12/16/20), pad-left 32; arrow `right: auto; left: 12px`; actions `--start` right, `--end` left (th + td) | — | as LTR |
 
 ## 4. States
@@ -94,10 +94,10 @@ anchor box = rail border box (x 17, w 56) × item (y 223, h 44) → panel x 81, 
 | Part | default · hover · focus-visible · active · disabled · loading · empty · error · overflow |
 |---|---|
 | Rail group | rest/hover/ring/current as rail items; open: `aria-expanded="true"`, tooltip hidden; disabled/busy entry: no menu (blocked, as today); `hasChildren` without children: press emits `expandRequested`, menu opens with `loading` (`childrenLoadingLabel`) and takes the focus when children arrive (3.48); empty `children: []`: plain entry (no menu); a nested `hasChildren` group: heading only (docs). Re-render while open: `returnFocusTo` is bound to the live element (view query by id). |
-| Group menu | items as `lc-menu` (current bar, busy spinner, reason tooltip, badge variants); long German labels wrap at spaces inside `maxWidth` (20rem); many items: scroll inside 100dvh − 32, CDK shifts the panel up. Light page + `theme="dark"` rail: the panel follows the page theme (menu limit). |
-| Side positions | no room on the preferred side → other side; taller than the viewport below the anchor → shifted up inside the margin. |
+| Group menu | items as `lc-menu` (current bar, busy spinner, reason tooltip, badge variants); long German labels wrap at spaces inside `maxWidth` (20rem) *(change r1: one word wider than the label room is clipped, an lc-menu limit, review F-3)*; many items: scroll inside 100dvh − 32, CDK shifts the panel up. Light page + `theme="dark"` rail: the panel follows the page theme (menu limit). |
+| Side positions | no room on the preferred side → other side; taller than the viewport below the anchor → shifted up inside the margin. *(Change r1, O-1: CDK's fit test reserves both 8 px margins, so a panel with less than 16 px to spare is shifted and may touch or cover its anchor, as at 360 px; known limit, review F-1.)* |
 | Popup control rows | Tab walk; a click in a control: stays open; Escape: closes, focus to the trigger; `closeOnSelect` items close as before; `loading` row after the body; long label wraps the control under it (row-gap 8). |
-| Part names | `partLabel` > first-part `ariaLabel` > section heading (3.50) > `partAriaLabel` fallback > none. |
+| Part names | First part: `ariaLabel` > its `partLabel` (after a leading control row) > none. Later parts: `partLabel` > section heading (3.50) > `partAriaLabel` fallback > none. *(Change r1, D-1: the old chain put `partLabel` first everywhere and contradicted §2; §2 is right, the menu's name must not vanish.)* |
 | Brand mark | hover/ring/toggle/tooltip of the brand unchanged; nothing projected: tile (pixel-identical); a wide mark is contained in 32 × 32. |
 | Rail template | app content; the class gives hover/ring/current; empty template: an empty nav. |
 | Cut label | cut: tooltip shows „{label} · {tooltip}“, description = tooltip text; not cut / rail: as before. |
@@ -147,7 +147,7 @@ Story strings (DE): „Bereiche“, „Übersicht“, „Stammdaten“, „Objek
 | RTL Head | `data-display-table--rtl-head` | `dir="rtl"`: lc-table md (sorted asc column, sortable end column, actions `end`) + a `th[lcSortableHead]` table | AC-14 |
 | Description | `feedback-tooltip--description` | icon button „Fett“, `lcTooltip="Fett (Strg+B)"`, `tooltipDescription="Strg+B"` | AC-18 (pattern) |
 
-Baseline: `tmp/story-shots/072/baseline` = 560 shots (140 stories: sidenav 40, menu 19, table 34, tooltip 9, split-button 7, header 31; logs `baseline-a.log`, `baseline-b.log`), `--widths=360,1280 --themes=light,dark --full`. Expected to differ: `data-display-table--sortable-head-reserve-and-rtl` (RTL heads move right). All others identical.
+Baseline: `tmp/story-shots/072/baseline` = 560 shots (140 stories: sidenav 40, menu 19, table 34, tooltip 9, split-button 7, header 31; logs `baseline-a.log`, `baseline-b.log`), `--widths=360,1280 --themes=light,dark --full`. Expected to differ: `data-display-table--sortable-head-reserve-and-rtl` (RTL heads move right). All others identical. *(Change r1, D-3: shoot `rail-group-menu` and `rail-group-menu-rtl` without `--full`; the full-page capture scrolls and closes the open menu.)*
 
 ## 9. Verification
 

@@ -21,6 +21,7 @@ metadata:
 - 064 r1 (3.44 baseline `tmp/story-shots/064/baseline`): `navigation-sidenav--text-brand-drawer-german` 1280 D differs deterministically after 3.44 (21 px of corner anti-aliasing on the brand tile r 10 and the current item r 12, fills and rects equal): re-baseline it. Sidenav flakes seen across 5 runs: collapsed-vs-expanded 360 L/D, drawer-mode 360/1280 D, sidebar-first-layout 360/1280, sidebar-first-collapsed 360 L, prominent-brand 360 L, collapsed-rail-badges 360, themed-rail-badges 360/1280 (flips); app-shell wide-page 360 D once. After `lc-tabs` became a scroll container (3.44) every tabs shot differs by AA (Δ1–2): re-baseline tabs and page-header *Full Example* / *With Body Content*.
 
 - 069 r1 vs the 069 baselines: `navigation-sidenav--action-items` 1280 L/D differs (busy spinner frame, Δ ≤ 2) and `--themed-rail-badges` 1280 D (rail icon edges x 34–37, Δ ≤ 36), byte-equal in the dev's and the review run: baseline outliers, not badge changes. Palette ×11 the dev saw were identical in r1.
+- 072 r1: `navigation-sidenav--lazy-children` 1280 L/D is spinner-random too (D flipped between two runs on one build). `rail-group-menu(-rtl)` must be shot without `--full` (the capture scrolls and closes the menu). `feedback-tooltip--description` opens its tooltip on the right (button 16 px from the edge, CDK flips the centred bottom tooltip).
 
 **Why:** a hash diff on an unstable story wastes a shot opening in review.
 **How to apply:** do a quick stability re-run when capturing baselines (`--compare` against the fresh baseline).

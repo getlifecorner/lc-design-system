@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.51.0] - 2026-11-21
+
+The backlog of the USM X rail and menus, closed in one version: a built-in group menu on the collapsed rail, your own brand mark and rail template, menus beside an element, control rows in popups, named menu parts and an RTL table head. Gap IDs: backlog 071-n1 … 071-n8. No API breaks: every new input is optional and its default renders the 3.50 DOM (comment anchors and the empty brand-mark box aside).
+
+### Added
+
+- **`lc-sidenav railGroupMenu`** (071-n1): a `railItems` group opens its children in an `lc-menu` beside the collapsed rail (8 px outside its edge, top aligned with the item, on the side the rail sits), named by the group. Label, icon, disabled reason, tooltip, busy, hint, badge, current and nested groups are kept; a link entry navigates with the router and `itemClicked` fires; Escape returns the focus to the rail item. Hook `--lc-sidenav-rail-menu-max-width` (20rem; the panel is 220 px for the Master data example).
+- **`[sidenav-brand-mark]`** (071-n2): the app's own mark instead of the brand tile (32 × 32 at the tile's place, decorative, also in prerendered HTML). **`ng-template[lcSidenavRail]`** with `SidenavRailContext` and the class `lc-sidenav__rail-item` (071-n5): your own collapsed rail in the rail's look (items 44 × 44, 2 px apart, rail width 56), winning over `railItems`.
+- **`lc-menu position="right-start" | "left-start"`** (071-n3, type `MenuPosition`): beside the anchor with an 8 px gap and aligned tops; flips at the viewport edge; physical in RTL (`right-start` stays on the right).
+- **`lc-menu popupControls`** (071-n4): control rows (`MenuItem.control`) in a popup. Tab walks part, control, part and leaves the menu after the last part; arrows stay in their part; Escape returns to the trigger; a click in a control keeps the menu open.
+- **`MenuItem.partLabel` and `lc-menu partAriaLabel`** (071-n7): later `role="menu"` parts of an inline or popup menu are named, by default „{label}, part {n}“ (German „{label}, Teil {n}“); `''` names none.
+- **`lcTooltip tooltipDescription`** (071-n8): a description for the trigger that does not repeat its name.
+
+### Changed
+
+- `lc-sidenav`: the tooltip of a cut label describes the label by the tooltip text alone, so the label is heard once (it was „{label} · {tooltip}“, twice). Every text brand has an empty `.lc-sidenav__brand-mark` box (`display: none`).
+- `lc-menu`: an inline menu with control rows and an `ariaLabel` names its later parts „{label}, part 2“ (before: unnamed). The first part keeps `ariaLabel`.
+
+### Fixed
+
+- `lc-table` and `th[lcSortableHead]` heads align to the inline start in RTL; the sortable arrow and its reserve sit at the inline end, and `actionsAlign` start/end follow (071-n6). LTR is unchanged (computed values compared on all table stories).
+
+### Compatibility
+
+- Known limits: at 360 px a side-positioned menu with less than 16 px to spare is pushed against the edge (CDK counts both 8 px margins); a single word wider than the menu's label room is clipped; 054-n2 (Safari focus return) is still open, WebKit cannot be run here. Tested: 7573 unit tests, compat check on Angular 22 (144 checks), axe 0 violations on 84 story shots.
+
 ## [3.50.0] - 2026-11-20
 
 The USM X shell and menus, a few component gaps and print rules for the app shell. Gap IDs: usm-x 2026-11-17 rows 74–86, finance-intelligence vertraege-prove-2026-11-19 row 2 and app-shell-2026-11-20 row 1, backlog 068-n1, 068-n3, 069-n1, 069-n2. No API breaks; printing a page with `lc-header` or `lc-app-shell` changes (see Changed).
