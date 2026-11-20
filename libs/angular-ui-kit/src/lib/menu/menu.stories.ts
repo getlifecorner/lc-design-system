@@ -39,8 +39,10 @@ const meta: Meta<MenuComponent> = {
     isOpen: { description: 'Whether the menu is currently visible' },
     position: {
       control: 'select',
-      options: ['bottom-left', 'bottom-right', 'top-left', 'top-right'],
-      description: 'Anchor position relative to the trigger element',
+      options: ['bottom-left', 'bottom-right', 'top-left', 'top-right', 'right-start', 'left-start'],
+      description:
+        'Anchor position relative to the trigger element (`MenuPosition`). 3.51 (request 072, backlog 071-n3): `right-start` / `left-start` open the panel beside the anchor or trigger, 8 px apart, top edges aligned; `right` and `left` are physical in LTR and RTL. With an element `anchor` the panel flips to the other side when there is no room and shifts inside the 8 px viewport margin; with `maxHeight="room"` it is the viewport less 32 px high',
+      table: { defaultValue: { summary: "'bottom-right'" } },
     },
     minWidth: { description: 'Minimum width of the menu panel (CSS value)' },
     maxWidth: {
@@ -57,7 +59,7 @@ const meta: Meta<MenuComponent> = {
     items: {
       control: 'object',
       description:
-        '`MenuItem[]`. 3.43 (usm-x row 12): an item with `children` is a section: its `label` is a heading (not focusable, not an action) and the children are its items, in a `role="group"` named by the heading; one level. `indentChildren: true` indents them one step (md 16, sm 12, lg 20 px); `dividerAfter` on a section follows the whole group. The arrow keys, Home and End run over the items of every section. 3.45 (usm-x row 31): `type: \'checkbox\' | \'radio\'` with `checked` (controlled), `radioGroup` (the exclusive set) and `closeOnSelect` (`true`: the menu emits `closed` after the item acts). 3.48 (usm-x rows 56, 57, 68): `tooltip` (kit tooltip on hover and focus), `disabledReason` (a `disabled` item with a reason stays in the arrow order as `aria-disabled` and shows the reason), `emphasis` (bold label, visual only), `swatch` (a colour sample or two halves before the label, decorative); `dividerAfter` on a member draws between members of a section. 3.50 (usm-x rows 77, 78, 80): `current` (`aria-current`, a 3 px bar, semibold), `busy` (spinner, `aria-busy`, not activatable), `badgeVariant` (the badge as an `lc-badge` variant), `attrs` (`id` and `data-*` only), `control` (inline control rows); a member with `children` is a section again, to any depth',
+        '`MenuItem[]`. 3.43 (usm-x row 12): an item with `children` is a section: its `label` is a heading (not focusable, not an action) and the children are its items, in a `role="group"` named by the heading; one level. `indentChildren: true` indents them one step (md 16, sm 12, lg 20 px); `dividerAfter` on a section follows the whole group. The arrow keys, Home and End run over the items of every section. 3.45 (usm-x row 31): `type: \'checkbox\' | \'radio\'` with `checked` (controlled), `radioGroup` (the exclusive set) and `closeOnSelect` (`true`: the menu emits `closed` after the item acts). 3.48 (usm-x rows 56, 57, 68): `tooltip` (kit tooltip on hover and focus), `disabledReason` (a `disabled` item with a reason stays in the arrow order as `aria-disabled` and shows the reason), `emphasis` (bold label, visual only), `swatch` (a colour sample or two halves before the label, decorative); `dividerAfter` on a member draws between members of a section. 3.50 (usm-x rows 77, 78, 80): `current` (`aria-current`, a 3 px bar, semibold), `busy` (spinner, `aria-busy`, not activatable), `badgeVariant` (the badge as an `lc-badge` variant), `attrs` (`id` and `data-*` only), `control` (inline control rows); a member with `children` is a section again, to any depth. 3.51 (request 072, backlog 071-n7): `partLabel` on the first entry of a `role="menu"` part after a control row names that part',
       table: { defaultValue: { summary: '[]' } },
     },
     anchor: {
@@ -104,6 +106,18 @@ const meta: Meta<MenuComponent> = {
       description:
         '3.50 (backlog 068-n3): `HTMLElement | null`, the element that gets the focus when the menu closes from inside (Escape, Tab, an item), before the trigger, the anchor element and the element focused at open. Use it with a point `anchor` when nothing was focused, or for a menu beside a rail item. `null`: as before',
       table: { defaultValue: { summary: 'null' } },
+    },
+    popupControls: {
+      control: 'boolean',
+      description:
+        '3.51 (request 072, backlog 071-n4): a popup menu draws `control` entries as control rows (as `inline`), split into `role="menu"` parts. The arrows stay inside a part; Tab and Shift+Tab walk the parts, the controls and header/footer controls, and Tab past the last stop (Shift+Tab before the first) closes the menu as Tab does without control rows. A click in a control keeps it open; Escape closes and returns the focus. Inline: ignored. `false`: a `control` entry is a plain item in a popup, as before',
+      table: { defaultValue: { summary: 'false' } },
+    },
+    partAriaLabel: {
+      control: 'text',
+      description:
+        '3.51 (request 072, backlog 071-n7): the name of a later `role="menu"` part without `partLabel` that does not start with a section, while `ariaLabel` is set: `{label}` is `ariaLabel`, `{n}` the part\'s number (2, 3 …). German „{label}, Teil {n}“. `\'\'`: such a part stays unnamed, as in 3.50',
+      table: { defaultValue: { summary: "'{label}, part {n}'" } },
     },
   },
 
@@ -893,7 +907,8 @@ const ACCOUNT_PANEL: MenuItem[] = [
   { id: 'density', label: 'Dichte', control: 'density' },
   { id: 'sounds', label: 'Töne', control: 'sounds' },
   { id: 'shortcuts', label: 'Tastenkürzel anzeigen', control: 'shortcuts' },
-  { id: 'profile', label: 'Profil', current: true },
+  // 3.51 (backlog 071-n7): the second part is named „Konto“
+  { id: 'profile', label: 'Profil', current: true, partLabel: 'Konto' },
   { id: 'logout', label: 'Abmelden', variant: 'danger' },
 ];
 
@@ -943,7 +958,7 @@ export const AccountPanel: Story = {
     docs: {
       description: {
         story:
-          '3.50 (usm-x row 77): the account panel as one inline menu. The identity is the `[header]`; „Hell“ and „Dunkel“ are radio items with a swatch (a `role="menu"` named „Darstellung“); „Dichte“, „Töne“ and „Tastenkürzel anzeigen“ are control rows (`MenuItem.control` + `ng-template[lcMenuControl]`): an `lc-toggle-group` with `touchTarget` and two `lc-switch`, outside `role="menu"`, at least 44 px high, the label before the control (the toggle group is named by the row label through `labelId`); „Profil“ (`current`: bar and semibold) and „Abmelden“ are the second menu part. Tab: radio part → toggle group → switch → switch → second part (one stop per part); the arrows stay inside a part. At 360 px the toggle group fits beside „Dichte“; a longer label would put it on the next line (8 px below).',
+          '3.50 (usm-x row 77): the account panel as one inline menu. The identity is the `[header]`; „Hell“ and „Dunkel“ are radio items with a swatch (a `role="menu"` named „Darstellung“); „Dichte“, „Töne“ and „Tastenkürzel anzeigen“ are control rows (`MenuItem.control` + `ng-template[lcMenuControl]`): an `lc-toggle-group` with `touchTarget` and two `lc-switch`, outside `role="menu"`, at least 44 px high, the label before the control (the toggle group is named by the row label through `labelId`); „Profil“ (`current`: bar and semibold) and „Abmelden“ are the second menu part, named „Konto“ by `partLabel` on „Profil“ (3.51, backlog 071-n7). Tab: radio part → toggle group → switch → switch → second part (one stop per part); the arrows stay inside a part. At 360 px the toggle group fits beside „Dichte“; a longer label would put it on the next line (8 px below).',
       },
     },
   },
@@ -1040,6 +1055,186 @@ export const NestedSections: Story = {
             <lc-menu [inline]="true" [items]="items" [size]="size" [ariaLabel]="'Bereiche (' + size + ')'" />
           </div>
         }
+      </div>`,
+  }),
+};
+
+/** Three entries of the side-position menus. */
+const SIDE_ITEMS: MenuItem[] = [
+  { id: 'open', label: 'Öffnen' },
+  { id: 'copy', label: 'Kopieren' },
+  { id: 'move', label: 'Verschieben' },
+];
+
+/**
+ * 3.51 (request 072, backlog 071-n3): three overlay menus beside their
+ * anchors, opened once the canvas has its padding. They stay open (the
+ * demo ignores `closed`).
+ */
+@Component({
+  selector: 'lc-menu-side-positions-demo',
+  standalone: true,
+  imports: [MenuComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div lang="de" style="display: flex; flex-direction: column; gap: 152px; padding-bottom: 152px;">
+      <div style="display: flex;">
+        <button #a type="button" style="${TOKEN_TRIGGER}">right-start</button>
+        <lc-menu [items]="items" [isOpen]="open()" [anchor]="a" position="right-start" ariaLabel="Aktionen (right-start)" />
+      </div>
+      <div style="display: flex; justify-content: center;">
+        <button #b type="button" style="${TOKEN_TRIGGER}">left-start</button>
+        <lc-menu [items]="items" [isOpen]="open()" [anchor]="b" position="left-start" ariaLabel="Aktionen (left-start)" />
+      </div>
+      <div style="display: flex; justify-content: flex-end;">
+        <button #c type="button" style="${TOKEN_TRIGGER}">right-start am Rand</button>
+        <lc-menu [items]="items" [isOpen]="open()" [anchor]="c" position="right-start" ariaLabel="Aktionen (am Rand)" />
+      </div>
+    </div>
+  `,
+})
+class MenuSidePositionsDemoComponent {
+  protected readonly items = SIDE_ITEMS;
+  protected readonly open = signal(false);
+
+  constructor() {
+    afterNextRender(() => setTimeout(() => this.open.set(true), 100));
+  }
+}
+
+/** 3.51 (request 072, backlog 071-n3): `right-start` and `left-start`. */
+export const SidePositions: Story = {
+  name: 'Side Positions',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.51 (request 072, backlog 071-n3): `position="right-start"` opens the panel beside its anchor on the right, `left-start` on the left: 8 px apart (the panel\'s inline margin, so a flipped panel keeps it), top edges aligned. `right` and `left` are physical, also in RTL. The third anchor sits at the right edge: there is no room on the right, so its panel flips to the left. A panel taller than the room below shifts up inside the 8 px viewport margin. At a point `anchor` the point\'s positions apply. Three menus are open at once here (the demo keeps them open).',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [MenuSidePositionsDemoComponent] },
+    template: `<lc-menu-side-positions-demo />`,
+  }),
+};
+
+/** The popup with control rows (3.51, backlog 071-n4): radios, two control rows, a named second part. */
+const POPUP_CONTROLS: MenuItem[] = [
+  { id: 'light', label: 'Hell', type: 'radio', radioGroup: 'theme', checked: true, swatch: '#ffffff' },
+  { id: 'dark', label: 'Dunkel', type: 'radio', radioGroup: 'theme', swatch: '#111827' },
+  { id: 'density', label: 'Dichte', control: 'density' },
+  { id: 'sounds', label: 'Töne', control: 'sounds' },
+  { id: 'profile', label: 'Profil', current: true, partLabel: 'Konto' },
+  { id: 'logout', label: 'Abmelden' },
+];
+
+@Component({
+  selector: 'lc-menu-popup-controls-demo',
+  standalone: true,
+  imports: [MenuComponent, MenuControlDirective, ToggleGroupComponent, SwitchComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div lang="de" style="position: relative; display: inline-block; padding: 16px 0; min-height: 440px;">
+      <lc-menu
+        [items]="items()"
+        [isOpen]="open()"
+        [popupControls]="true"
+        position="bottom-left"
+        ariaLabel="Darstellung"
+        minWidth="280px"
+        maxWidth="min(20rem, calc(100vw - 2rem))"
+        (itemToggle)="items.set(apply(items(), $event))"
+        (itemClick)="open.set(false)"
+        (closed)="open.set(false)"
+      >
+        <button trigger type="button" style="${TOKEN_TRIGGER}" (click)="open.set(!open())">Ansicht ▾</button>
+        <ng-template lcMenuControl="density" let-labelId="labelId">
+          <lc-toggle-group [options]="densities" [(selected)]="density" size="sm" [touchTarget]="true" [ariaLabelledBy]="labelId" />
+        </ng-template>
+        <ng-template lcMenuControl="sounds">
+          <lc-switch ariaLabel="Töne" [checked]="sounds()" (checkedChange)="sounds.set($event)" />
+        </ng-template>
+      </lc-menu>
+    </div>
+  `,
+})
+class MenuPopupControlsDemoComponent {
+  protected readonly open = signal(true);
+  protected readonly items = signal<MenuItem[]>(POPUP_CONTROLS);
+  protected readonly apply = applyToggle;
+  protected readonly densities = [
+    { value: 'compact', label: 'Kompakt' },
+    { value: 'normal', label: 'Normal' },
+    { value: 'wide', label: 'Weit' },
+  ];
+  protected readonly density = signal('normal');
+  protected readonly sounds = signal(true);
+}
+
+/** 3.51 (request 072, backlog 071-n4): control rows in a popup menu. */
+export const PopupControlRows: Story = {
+  name: 'Popup Control Rows',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.51 (request 072, backlog 071-n4): `popupControls` draws the `control` entries of a popup menu as control rows, as `inline` does: „Dichte“ (an `lc-toggle-group` sm with `touchTarget`, named by the row label) and „Töne“ (an `lc-switch`) sit between two `role="menu"` parts, outside them, at least 44 px high. The first part („Hell“, „Dunkel“, named „Darstellung“ by `ariaLabel`) keeps the radio slot; the second („Profil“, „Abmelden“) is named „Konto“ by `partLabel`. Keyboard: the arrows stay inside a part; Tab walks radio part → toggle group → switch → second part, and Tab on „Profil“ (Shift+Tab on the first part) closes the menu as Tab always did. A click in a control keeps the menu open; Escape closes it and returns the focus to „Ansicht“. `minWidth="280px"`; at 360 px the panel (at most 320 px) holds „Dichte“ and the 172 px toggle group on one line.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [MenuPopupControlsDemoComponent] },
+    template: `<lc-menu-popup-controls-demo />`,
+  }),
+};
+
+/** An inline panel with a control row and an unnamed second part (the fallback name). */
+const PART_NAMES_EN: MenuItem[] = [
+  { id: 'light', label: 'Light', type: 'radio', radioGroup: 'theme', checked: true },
+  { id: 'dark', label: 'Dark', type: 'radio', radioGroup: 'theme' },
+  { id: 'sounds', label: 'Sounds', control: 'sounds' },
+  { id: 'profile', label: 'Profile', current: true },
+  { id: 'logout', label: 'Sign out' },
+];
+
+const PART_NAMES_DE: MenuItem[] = [
+  { id: 'light', label: 'Hell', type: 'radio', radioGroup: 'theme', checked: true },
+  { id: 'dark', label: 'Dunkel', type: 'radio', radioGroup: 'theme' },
+  { id: 'sounds', label: 'Töne', control: 'sounds' },
+  { id: 'profile', label: 'Profil', current: true },
+  { id: 'logout', label: 'Abmelden' },
+];
+
+/** 3.51 (request 072, backlog 071-n7): every `role="menu"` part has a name. */
+export const PartNames: Story = {
+  name: 'Part Names',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.51 (request 072, backlog 071-n7): a control row splits an inline menu into `role="menu"` parts. The first part is named by `ariaLabel` („Account“); a later part without `partLabel` that does not start with a section is named by `partAriaLabel` (default „{label}, part {n}“): „Account, part 2“. The German copy sets `partAriaLabel="{label}, Teil {n}"`: „Konto, Teil 2“. `MenuItem.partLabel` on the part\'s first entry names it instead (see *Account Panel*, *Popup Control Rows*); a part that starts with a section keeps the heading as its name, as in 3.50. No pixel changes: the names are for screen readers.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [SwitchComponent, MenuControlDirective] },
+    props: { en: PART_NAMES_EN, de: PART_NAMES_DE },
+    template: `
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start;">
+        <div lang="en" style="${PANEL_BOX}">
+          <lc-menu [inline]="true" [items]="en" ariaLabel="Account">
+            <ng-template lcMenuControl="sounds"><lc-switch ariaLabel="Sounds" [checked]="true" /></ng-template>
+          </lc-menu>
+        </div>
+        <div lang="de" style="${PANEL_BOX}">
+          <lc-menu [inline]="true" [items]="de" ariaLabel="Konto" partAriaLabel="{label}, Teil {n}">
+            <ng-template lcMenuControl="sounds"><lc-switch ariaLabel="Töne" [checked]="true" /></ng-template>
+          </lc-menu>
+        </div>
       </div>`,
   }),
 };

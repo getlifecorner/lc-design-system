@@ -3,3 +3,4 @@
  */
 export * from './sidenav.component';
 export * from './sidenav-label.directive';
+export * from './sidenav-rail.directive';

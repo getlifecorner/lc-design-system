@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { applicationConfig } from '@storybook/angular';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
 import { provideRouter, withHashLocation } from '@angular/router';
 import { fn, expect, userEvent, within } from 'storybook/test';
 import { FormsModule } from '@angular/forms';
@@ -8,6 +8,7 @@ import type { NavigationItem, NavigationItemActionEvent, NavigationRailItemEvent
 import { SidenavComponent } from './sidenav.component';
 import { IconComponent } from '../icon/icon.component';
 import { SidenavLabelDirective } from './sidenav-label.directive';
+import { SidenavRailDirective } from './sidenav-rail.directive';
 import { HeaderComponent } from '../header/header.component';
 import { MenuComponent, type MenuItem } from '../menu/menu.component';
 import { SelectComponent, type SelectOption } from '../select/select.component';
@@ -188,6 +189,12 @@ const meta: Meta<SidenavComponent> = {
         '3.50 (usm-x row 74): `NavigationItem[] | null`, what the collapsed docked rail draws instead of `items`: one icon each, by `displayOrder` (`children`, `isSection`, `action` ignored), in the rail\'s look; current: the first with `current`, else by `route` / `matchRoutes`. A press emits `railItemClick` `{ item, event, element }` (and `itemClicked`). A `kind: \'action\'` entry with `hasPopup` gets `aria-haspopup` / `aria-expanded` (from `expandedActionId`). The `[sidenav-rail-top]` slot shows on the same rail only. `null`: the rail draws `items`',
       table: { defaultValue: { summary: 'null' } },
     },
+    railGroupMenu: {
+      control: 'boolean',
+      description:
+        '3.51 (request 072, backlog 071-n1): on the docked, collapsed rail a `railItems` entry with `children` (or `hasChildren`) is a menu button: a press, Enter, Space or the arrow towards the menu opens its children in an `lc-menu` beside the rail (8 px outside its edge, top aligned with the item, on the side away from the nearer viewport edge), named by the entry\'s label, at most `--lc-sidenav-rail-menu-max-width` wide (default `20rem`). Label, icon, disabled / reason, tooltip, busy, hint, badge, current and nested groups are kept; a link entry navigates with the router and emits `itemClicked`. Escape closes and returns the focus to the rail item; `railItemClick` is still emitted. Not with `lcSidenavRail`. `false`: as before',
+      table: { defaultValue: { summary: 'false' } },
+    },
     expandedGroups: {
       control: 'object',
       description:
@@ -274,8 +281,9 @@ Sidenav component for application navigation sidebar.
 | \`brandLogoSrc\` | \`string\` | \`''\` | 3.47: an image in the brand tile (decorative) |
 | \`expandedGroups\` | \`readonly string[]\` | \`[]\` | 3.47: ids of the open groups, any depth (two-way) |
 | \`highlight\` | \`string\` | \`''\` | 3.47: text marked in every label (\`<mark>\`) |
+| \`railGroupMenu\` | \`boolean\` | \`false\` | 3.51: \`railItems\` groups open their children in an \`lc-menu\` beside the rail |
 
-**Slots:** the default slot below the items; 3.47 \`[sidenav-top]\` between the brand and the items (an area picker, a search), in the docked rail and the drawer, hidden on the collapsed rail, no box without content. **Label template (3.47):** \`<ng-template lcSidenavLabel let-item let-level="level" let-highlight="highlight">\` (\`SidenavLabelDirective\`) replaces every label; it must show the label text (the link's name). A label cut by its ellipsis gets its full text as \`title\` when the pointer enters the item (not on the rail, not with a row tooltip).
+**Slots:** the default slot below the items; 3.47 \`[sidenav-top]\` between the brand and the items (an area picker, a search), in the docked rail and the drawer, hidden on the collapsed rail, no box without content. 3.51 \`[sidenav-brand-mark]\`: the app's mark instead of the brand tile (32 × 32, decorative; the brand keeps its name). **Rail template (3.51):** \`<ng-template lcSidenavRail let-entries let-current="current" let-railWidth="railWidth">\` (\`SidenavRailDirective\`) draws the docked, collapsed rail's navigation; \`lc-sidenav__rail-item\` gives a link or button the rail item's look. **Label template (3.47):** \`<ng-template lcSidenavLabel let-item let-level="level" let-highlight="highlight">\` (\`SidenavLabelDirective\`) replaces every label; it must show the label text (the link's name). A label cut by its ellipsis gets its full text as \`title\` when the pointer enters the item (not on the rail, not with a row tooltip).
 
 **Outputs:**
 | Output | Payload | Description |
@@ -1999,7 +2007,7 @@ export const CutLabelWithTooltip: Story = {
     docs: {
       description: {
         story:
-          '3.50 (usm-x row 76): a label cut by its ellipsis shows its full text. On a row with a kit `tooltip` (and a `disabledReason`) the tooltip reads „{label} · {tooltip}“ while the label is cut, checked when the pointer enters the row or the row takes the keyboard focus („Rechnungsfreigabe Kostenstelle 4711 · Wird im Rich Client bearbeitet“); a row without a tooltip keeps the `title` with the full label (3.47); a label that fits shows the tooltip alone. 240 px wide, German labels.',
+          '3.50 (usm-x row 76): a label cut by its ellipsis shows its full text. On a row with a kit `tooltip` (and a `disabledReason`) the tooltip reads „{label} · {tooltip}“ while the label is cut, checked when the pointer enters the row or the row takes the keyboard focus („Rechnungsfreigabe Kostenstelle 4711 · Wird im Rich Client bearbeitet“); a row without a tooltip keeps the `title` with the full label (3.47); a label that fits shows the tooltip alone. 240 px wide, German labels. 3.51 (backlog 071-n8): the row\'s description is the tooltip text alone („Wird im Rich Client bearbeitet“, the tooltip\'s `tooltipDescription`), so the label is heard once.',
       },
     },
   },
@@ -2017,6 +2025,215 @@ export const CutLabelWithTooltip: Story = {
       <div lang="de" style="display: flex; height: 400px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
         <lc-sidenav [isOpen]="true" mode="docked" width="240px" [items]="items" activeRoute="/start" ariaLabel="Bereiche" closeAriaLabel="Navigation schließen" />
         <div style="flex: 1; padding: 24px; color: var(--color-text-secondary);">Lieferanten</div>
+      </div>`,
+  }),
+};
+
+/** An entry of a rail group's menu: no icon there (`icon: ''`). */
+const groupEntry = (id: string, label: string, route: string, displayOrder: number, extra: Partial<NavigationItem> = {}): NavigationItem => ({
+  id,
+  icon: '',
+  label,
+  route,
+  displayOrder,
+  ...extra,
+});
+
+/** The rail of the group-menu stories (3.51, backlog 071-n1): „Übersicht“, two groups and „System“ (German). */
+const GROUP_RAIL_DE: NavigationItem[] = [
+  { id: 'gm-start', icon: 'home', label: 'Übersicht', route: '/start', displayOrder: 1 },
+  {
+    id: 'gm-stamm', icon: 'folder', label: 'Stammdaten', route: '', displayOrder: 2,
+    children: [
+      groupEntry('gm-objekte', 'Objekte', '', 1, {
+        children: [groupEntry('gm-objekttypen', 'Objekttypen', '/stamm/objekttypen', 1), groupEntry('gm-felder', 'Felder', '/stamm/felder', 2)],
+      }),
+      groupEntry('gm-zaehler', 'Zähler', '/stamm/zaehler', 2, { busy: true }),
+      groupEntry('gm-pruefungen', 'Prüfungen', '/stamm/pruefungen', 3, { badge: { value: 12, variant: 'warning' } }),
+      groupEntry('gm-archiv', 'Archiv', '/stamm/archiv', 4, { disabled: true, disabledReason: 'Kein Recht für diesen Bereich' }),
+    ],
+  },
+  {
+    id: 'gm-pruef', icon: 'check-circle', label: 'Prüfungen', route: '', displayOrder: 3,
+    children: [groupEntry('gm-regeln', 'Prüfregeln', '/pruef/regeln', 1), groupEntry('gm-laeufe', 'Prüfläufe', '/pruef/laeufe', 2)],
+  },
+  { id: 'gm-system', icon: 'settings', label: 'System', route: '/system', displayOrder: 4 },
+];
+
+/** The same rail in English (the RTL story). */
+const GROUP_RAIL_EN: NavigationItem[] = [
+  { id: 'gm-start', icon: 'home', label: 'Overview', route: '/start', displayOrder: 1 },
+  {
+    id: 'gm-stamm', icon: 'folder', label: 'Master data', route: '', displayOrder: 2,
+    children: [
+      groupEntry('gm-objekte', 'Objects', '', 1, {
+        children: [groupEntry('gm-objekttypen', 'Object types', '/stamm/objekttypen', 1), groupEntry('gm-felder', 'Fields', '/stamm/felder', 2)],
+      }),
+      groupEntry('gm-zaehler', 'Counters', '/stamm/zaehler', 2, { busy: true }),
+      groupEntry('gm-pruefungen', 'Checks', '/stamm/pruefungen', 3, { badge: { value: 12, variant: 'warning' } }),
+      groupEntry('gm-archiv', 'Archive', '/stamm/archiv', 4, { disabled: true, disabledReason: 'No access to this area' }),
+    ],
+  },
+  {
+    id: 'gm-pruef', icon: 'check-circle', label: 'Checks', route: '', displayOrder: 3,
+    children: [groupEntry('gm-regeln', 'Check rules', '/pruef/regeln', 1), groupEntry('gm-laeufe', 'Check runs', '/pruef/laeufe', 2)],
+  },
+  { id: 'gm-system', icon: 'settings', label: 'System', route: '/system', displayOrder: 4 },
+];
+
+/** 3.51 (request 072, backlog 071-n1): the rail's own group menu (`railGroupMenu`). */
+@Component({
+  selector: 'lc-sidenav-rail-group-menu-demo',
+  standalone: true,
+  imports: [SidenavComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    @if (rtl()) {
+      <div lang="en" dir="rtl">
+        <p role="status" style="margin: 0 0 12px; color: var(--color-text-secondary);">Last choice: {{ last() }}</p>
+        <div style="display: flex; height: 560px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
+          <lc-sidenav [isOpen]="true" mode="docked" position="right" width="280px" [(collapsed)]="collapsed" [items]="itemsEn" [railItems]="railEn" [railGroupMenu]="true"
+                      activeRoute="/stamm/objekttypen" ariaLabel="Areas" brandName="USM X" brandSubtitle="Customizing" brandLetter="X" [showCollapseToggle]="true"
+                      collapseAriaLabel="Collapse navigation to the right" busyLabel="Loading" childrenLoadingLabel="Loading …" (itemClicked)="last.set($event.label)" />
+          <div style="flex: 1; padding: 24px; color: var(--color-text-secondary);">Object types</div>
+        </div>
+      </div>
+    } @else {
+      <div lang="de">
+        <p role="status" style="margin: 0 0 12px; color: var(--color-text-secondary);">Letzte Auswahl: {{ last() }}</p>
+        <div style="display: flex; height: 560px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
+          <lc-sidenav [isOpen]="true" mode="docked" width="280px" [(collapsed)]="collapsed" [items]="items" [railItems]="rail" [railGroupMenu]="true"
+                      activeRoute="/stamm/objekttypen" ariaLabel="Bereiche" brandName="USM X" brandSubtitle="Customizing" brandLetter="X" [showCollapseToggle]="true"
+                      collapseAriaLabel="Navigation nach links einklappen" expandAriaLabel="Navigation ausklappen" closeAriaLabel="Navigation schließen"
+                      busyLabel="Wird geladen" childrenLoadingLabel="Wird geladen …" (itemClicked)="last.set($event.label)" />
+          <div style="flex: 1; padding: 24px; color: var(--color-text-secondary);">Objekttypen</div>
+        </div>
+      </div>
+    }
+  `,
+})
+class SidenavRailGroupMenuDemoComponent {
+  readonly rtl = input(false);
+  protected readonly items = USMX_ITEMS;
+  protected readonly rail = GROUP_RAIL_DE;
+  protected readonly itemsEn = USMX_ITEMS;
+  protected readonly railEn = GROUP_RAIL_EN;
+  protected readonly collapsed = signal(true);
+  protected readonly last = signal('–');
+}
+
+/** Opens the first rail group's menu (the shot shows it open; in the story view only). */
+const openFirstRailGroup = async ({ canvasElement, viewMode }: { canvasElement: HTMLElement; viewMode?: string }) => {
+  if (viewMode !== 'story') return;
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  canvasElement.querySelector<HTMLButtonElement>('.lc-sidenav__nav-item--rail-group')?.click();
+  await new Promise((resolve) => setTimeout(resolve, 300));
+};
+
+/** 3.51 (request 072, backlog 071-n1): a rail group opens its children in a menu beside the rail. */
+export const RailGroupMenu: Story = {
+  name: 'Rail Group Menu',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.51 (request 072, backlog 071-n1): `railGroupMenu` on the docked, collapsed rail: „Stammdaten“ and „Prüfungen“ are `railItems` entries with `children`, so they are menu buttons (`aria-haspopup="menu"`, `aria-expanded`). A press, Enter, Space or ArrowRight opens the children in an `lc-menu` beside the rail, 8 px outside its edge and level with the item (anchored to a hidden box over the rail\'s border box), named „Stammdaten“, at most `--lc-sidenav-rail-menu-max-width` (20rem) wide. The map keeps the nested group („Objekte“ as a section), the current link („Objekttypen“ by `activeRoute`; the rail item gets `aria-current="true"` and the current look), busy („Zähler“), the warning badge („Prüfungen“ 12) and the disabled entry with its reason („Archiv“). A link entry navigates with the router and emits `itemClicked` (the line above shows it); Escape closes and returns the focus to the rail item. The story opens „Stammdaten“. At 360 px the open drawer shows `items`.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [SidenavRailGroupMenuDemoComponent] },
+    template: `<lc-sidenav-rail-group-menu-demo />`,
+  }),
+  play: openFirstRailGroup,
+};
+
+/** 3.51 (request 072, backlog 071-n1): the rail on the right opens its menus to the left. */
+export const RailGroupMenuRtl: Story = {
+  name: 'Rail Group Menu RTL',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.51 (request 072, backlog 071-n1): the same rail in a `dir="rtl"` page with English labels: the rail sits at the right, so the menu opens on its left (`left-start`, 8 px outside the rail\'s edge, top aligned with the item; the side follows the rail\'s place: centre in the right half of the viewport) and ArrowLeft opens it. The story opens „Master data“.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [SidenavRailGroupMenuDemoComponent] },
+    template: `<lc-sidenav-rail-group-menu-demo [rtl]="true" />`,
+  }),
+  play: openFirstRailGroup,
+};
+
+/** An app mark drawn in the rail's ink (`currentColor`), 28 × 28 in the 32 px box. */
+const BRAND_MARK_SVG =
+  '<svg sidenav-brand-mark viewBox="0 0 32 32" width="28" height="28" focusable="false"><rect x="3" y="3" width="26" height="26" rx="7" fill="none" stroke="currentColor" stroke-width="3"/><path d="M10 17l4 4 8-10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+/** A docked rail with the app mark in `[sidenav-brand-mark]`. */
+const markRail = (attrs: string, frame = 'overflow: hidden;') => `
+  <div style="display: flex; height: 480px; border: 1px solid var(--color-border); border-radius: 8px; ${frame} flex: 0 0 auto;">
+    <lc-sidenav [isOpen]="true" mode="docked" width="240px" [mobileBreakpoint]="0" [items]="items" activeRoute="/start" brandName="USM X" brandSubtitle="Customizing" ${attrs}>
+      ${BRAND_MARK_SVG}
+    </lc-sidenav>
+  </div>`;
+
+/** 3.51 (request 072, backlog 071-n2): the app's own mark in the brand. */
+export const BrandMarkSlot: Story = {
+  name: 'Brand Mark Slot',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.51 (request 072, backlog 071-n2): `[sidenav-brand-mark]` puts the app\'s mark (here an inline SVG in `currentColor`, so it follows the rail\'s ink) in place of the tile, centred in 32 × 32 px, in every state: expanded on the light and the dark rail, collapsed with `brandToggle` (the brand stays a 44 px button with its ring and tooltip), and beside a `brandLogoSrc` (the mark wins). The mark is decorative (its box is `aria-hidden`): the brand keeps `brandName` as its name. It is in the prerendered HTML. Without content nothing changes.',
+      },
+    },
+  },
+  render: () => ({
+    props: { items: USMX_ITEMS, square: SQUARE_MARK },
+    template: `
+      <div lang="de" style="display: flex; flex-wrap: wrap; gap: 24px;">
+        ${markRail('theme="light" ariaLabel="Bereiche (hell)"')}
+        ${markRail('theme="dark" ariaLabel="Bereiche (dunkel)"')}
+        ${markRail('[collapsed]="true" [brandToggle]="true" collapseAriaLabel="Navigation nach links einklappen" expandAriaLabel="Navigation ausklappen" ariaLabel="Bereiche (eingeklappt)"', 'overflow: visible; position: relative;')}
+        ${markRail('[brandLogoSrc]="square" ariaLabel="Bereiche (mit Logo)"')}
+      </div>`,
+  }),
+};
+
+/** The template's three rail entries (initials; the name starts with them, WCAG 2.5.3). */
+const RAIL_TEMPLATE_ENTRIES = [
+  { id: 'em', initials: 'EM', label: 'Einkauf München', name: 'EM, Einkauf München' },
+  { id: 'fb', initials: 'FB', label: 'Finanzbuchhaltung', name: 'FB, Finanzbuchhaltung' },
+  { id: 'neu', initials: '+', label: 'Bereich hinzufügen', name: 'Bereich hinzufügen' },
+];
+
+/** 3.51 (request 072, backlog 071-n5): an app template draws the collapsed rail. */
+export const RailTemplate: Story = {
+  name: 'Rail Template',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.51 (request 072, backlog 071-n5): an `ng-template lcSidenavRail` draws the docked, collapsed rail\'s navigation instead of `railItems` (set here too: the template wins), inside the rail\'s `<nav>` „Bereiche“. Three app buttons carry `lc-sidenav__rail-item`: 44 × 44, centred on the brand and collapse column (x 22.5), 2 px apart, the rail\'s ink, hover fill, focus ring, the current look on „Einkauf München“ (`aria-current="page"`) and the label tooltip from `data-tooltip`. Their names start with the visible initials („EM, Einkauf München“, WCAG 2.5.3). The template gets the rail\'s entries, its current entry and the rail width (`let-railWidth`, the line beside the rail). Expanded and in the drawer (360 px) the `items` show as before.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [SidenavRailDirective] },
+    props: { items: USMX_ITEMS, rail: USMX_RAIL, entries: RAIL_TEMPLATE_ENTRIES },
+    template: `
+      <div lang="de" style="display: flex; height: 480px; border: 1px solid var(--color-border); border-radius: 8px; overflow: visible;">
+        <lc-sidenav [isOpen]="true" mode="docked" width="280px" [collapsed]="true" [items]="items" [railItems]="rail" activeRoute="/start" ariaLabel="Bereiche"
+                    brandName="USM X" brandSubtitle="Customizing" brandLetter="X" [showCollapseToggle]="true" expandAriaLabel="Navigation ausklappen" closeAriaLabel="Navigation schließen">
+          <ng-template lcSidenavRail let-railWidth="railWidth">
+            @for (entry of entries; track entry.id) {
+              <button type="button" class="lc-sidenav__rail-item" [attr.aria-label]="entry.name" [attr.data-tooltip]="entry.label" [attr.aria-current]="entry.id === 'em' ? 'page' : null">{{ entry.initials }}</button>
+            }
+            <p style="position: absolute; inset-inline-start: calc(100% + 16px); inset-block-end: 16px; margin: 0; white-space: nowrap; color: var(--color-text-secondary); font-size: var(--font-size-sm);">Schienenbreite: {{ railWidth }} px</p>
+          </ng-template>
+        </lc-sidenav>
+        <div style="flex: 1; padding: 24px; color: var(--color-text-secondary);">Einkauf München</div>
       </div>`,
   }),
 };

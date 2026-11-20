@@ -18,6 +18,12 @@ const meta: Meta<TooltipDirective> = {
       description: 'Which side of the element the tooltip appears on',
     },
     tooltipShowDelay: { description: 'Delay in milliseconds before showing (default: 0)' },
+    tooltipDescription: {
+      control: 'text',
+      description:
+        '3.51 (request 072, backlog 071-n8): the described element\'s accessible description while the tooltip shows, instead of the visible text, for a visible text that repeats the element\'s name (`aria-describedby` points at a hidden element inside the tooltip with this text). `\'\'`: the visible text describes, as before',
+      table: { defaultValue: { summary: "''" } },
+    },
   },
 };
 
@@ -175,5 +181,29 @@ export const HostWithTwoControls: Story = {
     const buttons = canvasElement.querySelectorAll<HTMLButtonElement>('[role="group"] lc-button button');
     buttons[0]?.focus();
     buttons[1]?.focus();
+  },
+};
+
+/** 3.51 (request 072, backlog 071-n8): a description that does not repeat the name. */
+export const Description: Story = {
+  name: 'Description',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.51 (request 072, backlog 071-n8): the icon button is named „Fett“ (`ariaLabel`); its tooltip shows „Fett (Strg+B)“, which repeats the name. `tooltipDescription="Strg+B"` makes the description „Strg+B“: while the tooltip shows, the button\'s `aria-describedby` points at a hidden element inside the tooltip that holds this text, so a screen reader says „Fett, Schalter, Strg+B“ instead of „Fett, Schalter, Fett (Strg+B)“. The visible tooltip is unchanged. `lc-sidenav` uses it for a cut label (the tooltip shows „{label} · {tooltip}“, the description is the tooltip text). The story focuses the button (in the story view).',
+      },
+    },
+  },
+  render: () => ({
+    template: `
+      <div lang="de" style="padding: 72px 16px;">
+        <lc-button lcTooltip="Fett (Strg+B)" tooltipDescription="Strg+B" tooltipPosition="bottom" variant="outlined" size="sm" [iconOnly]="true" ariaLabel="Fett"><lc-icon slot="icon-before" name="bold" size="sm" [decorative]="true"></lc-icon></lc-button>
+      </div>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    canvasElement.querySelector<HTMLButtonElement>('lc-button button')?.focus();
   },
 };

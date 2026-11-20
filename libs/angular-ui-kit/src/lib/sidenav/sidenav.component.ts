@@ -18,6 +18,10 @@ import {
   contentChild,
   linkedSignal,
   ChangeDetectorRef,
+  Injector,
+  afterRenderEffect,
+  viewChild,
+  viewChildren,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgTemplateOutlet, NgStyle } from '@angular/common';
@@ -42,10 +46,12 @@ import { IconComponent, ɵprovideKitIcons } from '@lifecorner/angular-ui-kit/ico
 import { ICON_CHEVRON_DOWN, ICON_CHEVRON_LEFT, ICON_CHEVRON_RIGHT } from '@lifecorner/angular-ui-kit/icons';
 import { BadgeComponent } from '@lifecorner/angular-ui-kit/badge';
 import { LogoComponent } from '@lifecorner/angular-ui-kit/logo';
+import { MenuComponent, type MenuItem, type MenuPosition } from '@lifecorner/angular-ui-kit/menu';
 import { SpinnerComponent } from '@lifecorner/angular-ui-kit/spinner';
 import { TooltipDirective, type TooltipPosition } from '@lifecorner/angular-ui-kit/tooltip';
 import { OverlayStackService, focusReturnTarget } from '@lifecorner/angular-ui-kit/internal/overlay';
 import { SidenavLabelDirective } from './sidenav-label.directive';
+import { SidenavRailDirective, type SidenavRailContext } from './sidenav-rail.directive';
 
 export type SidenavPosition = 'left' | 'right';
 export type SidenavMode = 'drawer' | 'docked';
@@ -83,6 +89,26 @@ function sameIds(ids: readonly string[], set: ReadonlySet<string>): boolean {
   const unique = new Set(ids);
   return unique.size === set.size && ids.every((id) => set.has(id));
 }
+
+/** 3.51 (071-n1): the links of a rail group's menu, in menu order (sections and nested groups opened). */
+function menuLinks(items: readonly NavigationItem[]): NavigationItem[] {
+  return sortNavigationItems(items).flatMap((item) => (item.isSection || isNavigationGroup(item) ? menuLinks(item.children ?? []) : [item]));
+}
+
+/** 3.51: the entry with this id below `items`, at any depth. */
+function findNavigationItem(items: readonly NavigationItem[], id: string): NavigationItem | null {
+  for (const item of items) {
+    if (item.id === id) return item;
+    const found = findNavigationItem(item.children ?? [], id);
+    if (found) return found;
+  }
+  return null;
+}
+
+/** 3.51: the rail group menu's default `maxWidth` (`--lc-sidenav-rail-menu-max-width`). */
+const RAIL_MENU_MAX_WIDTH = '20rem';
+/** 3.51: the rail width when it can't be read (the server; `--lc-sidenav-rail-width`). */
+const RAIL_WIDTH = 56;
 
 /** A label split into marked and plain parts (3.47, `highlight`). */
 interface LabelPart {
@@ -163,6 +189,13 @@ interface LabelPart {
  *   `brandLogoFit="natural"` (a wordmark at its own ratio, hook
  *   `--lc-sidenav-brand-logo-height`, default `24px`), and a cut label's full
  *   text in the row's kit tooltip („{label} · {tooltip}“)
+ * - 3.51 (request 072, backlog 071-n1, -n2, -n5, -n8): `railGroupMenu` (a
+ *   `railItems` group opens its children in an `lc-menu` beside the rail,
+ *   hook `--lc-sidenav-rail-menu-max-width`, default `20rem`), the
+ *   `[sidenav-brand-mark]` slot (the app's mark instead of the tile), an
+ *   `ng-template[lcSidenavRail]` for the collapsed rail with the class
+ *   `lc-sidenav__rail-item`, and a cut label's tooltip described without the
+ *   label (`tooltipDescription`)
  *
  * @example
  * ```html
@@ -192,6 +225,7 @@ interface LabelPart {
     IconComponent,
     BadgeComponent,
     LogoComponent,
+    MenuComponent,
     SpinnerComponent,
     TooltipDirective,
   ],
@@ -448,6 +482,29 @@ export class SidenavComponent implements OnDestroy {
   readonly railItems = input<NavigationItem[] | null>(null);
 
   /**
+   * 3.51 (request 072, backlog 071-n1): on the docked, collapsed rail a
+   * `railItems` entry with `children` (or `hasChildren`) is a menu button
+   * (`aria-haspopup="menu"`, `aria-expanded`); a press, Enter, Space or the
+   * arrow towards the menu opens its children in an `lc-menu` beside the rail
+   * (8 px outside its edge, top aligned with the item, on the side away from
+   * the nearer viewport edge), named by the entry's label, at most
+   * `--lc-sidenav-rail-menu-max-width` wide (read when it opens, default
+   * `20rem`). Map: `label`, `icon`, `disabled` / `disabledReason`, `tooltip`,
+   * `busy`, `hint` (subtitle), `badge` (value, variant), current (`current` or
+   * the current `route` / `matchRoutes`; the group then gets
+   * `aria-current="true"`), nested groups and sections as sections. A link
+   * child navigates with the router and emits `itemClicked`; an action child
+   * emits `itemClicked`. Escape closes; the focus returns to the rail item.
+   * `hasChildren` without children emits `expandRequested` and the menu shows
+   * its busy row (`childrenLoadingLabel`) until they arrive. `railItemClick`
+   * is still emitted on a press (drop your own menu). Entries are buttons
+   * (no "open in new tab"); groups in `items` are not menus. Not with
+   * `lcSidenavRail` (the template wins). `false`: as before.
+   * @default false
+   */
+  readonly railGroupMenu = input(false);
+
+  /**
    * 3.48 (backlog 067-n4): id of the item whose action popup is open. Its
    * action button gets `aria-expanded="true"` (and stays visible); the other
    * buttons with `action.hasPopup` get `"false"`, also in prerendered HTML.
@@ -569,6 +626,12 @@ export class SidenavComponent implements OnDestroy {
    * text of every item, see `SidenavLabelDirective`.
    */
   protected readonly labelTemplate = contentChild(SidenavLabelDirective);
+
+  /**
+   * The `lcSidenavRail` template (3.51, request 072, backlog 071-n5): draws
+   * the docked, collapsed rail's navigation, see `SidenavRailDirective`.
+   */
+  protected readonly railTemplate = contentChild(SidenavRailDirective);
 
   /**
    * Ids of the expanded parent items — the single source of truth for
@@ -700,6 +763,82 @@ export class SidenavComponent implements OnDestroy {
     return currentNavigationItem(rail, this.activeRoute(), this.activeRoute() === '' ? this.routerPath() : '');
   });
 
+  /** 3.51 (071-n5): the `lcSidenavRail` template while the rail is docked and collapsed, else `null`. */
+  protected readonly railTemplateOn = computed(() => (this.dockedRail() ? (this.railTemplate() ?? null) : null));
+
+  /** 3.51: the rail width the template gets (`--lc-sidenav-rail-width`, read after render). */
+  private readonly railWidth = signal(RAIL_WIDTH);
+
+  /** 3.51: the `lcSidenavRail` template's context. */
+  protected readonly railContext = computed<SidenavRailContext>(() => {
+    const rail = this.sortedRailItems();
+    return {
+      $implicit: rail ?? this.sortedItems(),
+      current: rail ? this.currentRailItem() : this.currentItem(),
+      railWidth: this.railWidth(),
+    };
+  });
+
+  /** 3.51 (071-n1): the rail draws `railItems` groups as menu buttons (`railGroupMenu`, no template). */
+  protected readonly railGroupMenuOn = computed(() => this.railGroupMenu() && this.showRailItems() && !this.railTemplate());
+
+  /** 3.51: id of the `railItems` group whose menu is open, or `null`. */
+  protected readonly railMenuGroupId = signal<string | null>(null);
+
+  /** 3.51: the open group: the live entry (`railItems` may be replaced while its menu is open). */
+  protected readonly railMenuGroup = computed<NavigationItem | null>(() => {
+    const id = this.railMenuGroupId();
+    if (id === null || !this.railGroupMenuOn()) return null;
+    return this.sortedRailItems()?.find((item) => item.id === id && isNavigationGroup(item)) ?? null;
+  });
+
+  /** 3.51: the side the group menu opens to (by the rail's place, set on open). */
+  protected readonly railMenuSide = signal<MenuPosition>('right-start');
+
+  /** 3.51: the group menu's `maxWidth` (`--lc-sidenav-rail-menu-max-width`, read on open). */
+  protected readonly railMenuMaxWidth = signal(RAIL_MENU_MAX_WIDTH);
+
+  /** 3.51: the current link among the rail groups' entries (the rail rules: `current`, then by route). */
+  private readonly railMenuCurrent = computed<NavigationItem | null>(() => {
+    const rail = this.sortedRailItems();
+    if (!rail || !this.railGroupMenu()) return null;
+    const links = rail.filter((item) => isNavigationGroup(item)).flatMap((group) => menuLinks(group.children ?? []));
+    return currentNavigationItem(links, this.activeRoute(), this.activeRoute() === '' ? this.routerPath() : '');
+  });
+
+  /** 3.51: the open group's children as menu entries. */
+  protected readonly railMenuItems = computed<MenuItem[]>(() => {
+    const group = this.railMenuGroup();
+    return group ? this.toMenuItems(group.children ?? [], this.railMenuCurrent()) : [];
+  });
+
+  /** 3.51: the open group loads its children (`childrenLoading`, or `hasChildren` without any yet). */
+  protected readonly railMenuLoading = computed(() => {
+    const group = this.railMenuGroup();
+    return !!group && (!!group.childrenLoading || (!!group.hasChildren && !group.children?.length));
+  });
+
+  /** 3.51: the rail's group buttons (any order; sorted by DOM position where used). */
+  private readonly railGroupButtons = viewChildren<ElementRef<HTMLElement>>('railGroup');
+
+  /** 3.51: the hidden box the group menu is anchored to. */
+  private readonly railAnchor = viewChild<ElementRef<HTMLElement>>('railAnchor');
+
+  /**
+   * 3.51: where the focus returns when the group menu closes: the open
+   * group's rail button, looked up in the view (also after a re-render).
+   */
+  protected readonly railMenuReturn = computed<HTMLElement | null>(() => {
+    const group = this.railMenuGroup();
+    if (!group) return null;
+    const groups = (this.sortedRailItems() ?? []).filter((item) => isNavigationGroup(item));
+    // compareDocumentPosition: 4 = the other node follows
+    const buttons = this.railGroupButtons()
+      .map((ref) => ref.nativeElement)
+      .sort((a, b) => (a.compareDocumentPosition(b) & 4 ? -1 : 1));
+    return buttons[groups.indexOf(group)] ?? null;
+  });
+
   /** Whether the drawer panel is rendered (drawer mode and open). */
   private readonly drawerOpen = computed(() => this.isOpen() && this.effectiveMode() === 'drawer');
   /** Whether the drawer panel was shown without a close after it. */
@@ -776,6 +915,22 @@ export class SidenavComponent implements OnDestroy {
       });
     });
 
+    // 3.51 (071-n1): the group menu belongs to the docked, collapsed rail; it
+    // is forgotten when the rail expands or turns into the drawer.
+    effect(() => {
+      if (!this.railGroupMenuOn()) untracked(() => this.railMenuGroupId.set(null));
+    });
+
+    // 3.51 (071-n5): the rail width for the `lcSidenavRail` context, read
+    // once the template's rail has rendered (56 on the server).
+    afterRenderEffect(() => {
+      if (!this.railTemplateOn()) return;
+      untracked(() => {
+        const width = this.readRailWidth();
+        if (width !== this.railWidth()) this.railWidth.set(width);
+      });
+    });
+
     // 3.44: busy and disabled items (`aria-disabled="true"`) ignore click,
     // Enter and Space. `RouterLink` navigates whatever `defaultPrevented`
     // says, so a capture listener on the host stops the click before it
@@ -819,6 +974,7 @@ export class SidenavComponent implements OnDestroy {
   private readonly truncatedRow = signal<Element | null>(null);
 
   private readonly changeDetector = inject(ChangeDetectorRef);
+  private readonly injector = inject(Injector);
 
   /**
    * Pointer over an item (3.47), or (3.50) focus on it: its label's `title`
@@ -1134,12 +1290,31 @@ export class SidenavComponent implements OnDestroy {
   }
 
   protected rowTooltip(item: NavigationItem, row?: Element): string {
-    const main = item.disabled ? (item.disabledReason ?? '') : (item.tooltip ?? '');
-    const text = [main, item.badge?.tooltip ?? ''].filter(Boolean).join(' · ');
+    const text = this.rowTooltipText(item);
     // 3.50 (usm-x row 76): a cut label shows its full text in the tooltip
     // („{label} · {tooltip}“; the row has no `title` then). Not on the rail.
-    if (text && row && this.truncatedRow() === row && !this.isRail()) return `${item.label} · ${text}`;
+    if (text && this.labelLeadsTooltip(row)) return `${item.label} · ${text}`;
     return text;
+  }
+
+  /**
+   * 3.51 (request 072, backlog 071-n8): the row tooltip's description while
+   * the cut label leads its visible text: the tooltip text without the label,
+   * so the label (the row's name) is heard once. `''`: the visible text.
+   */
+  protected rowTooltipDescription(item: NavigationItem, row?: Element): string {
+    return this.labelLeadsTooltip(row) ? this.rowTooltipText(item) : '';
+  }
+
+  /** The row tooltip without the label: reason or tooltip, then the badge's tooltip. */
+  private rowTooltipText(item: NavigationItem): string {
+    const main = item.disabled ? (item.disabledReason ?? '') : (item.tooltip ?? '');
+    return [main, item.badge?.tooltip ?? ''].filter(Boolean).join(' · ');
+  }
+
+  /** The row's label is cut, so its tooltip leads with the label (not on the rail). */
+  private labelLeadsTooltip(row?: Element): boolean {
+    return !!row && this.truncatedRow() === row && !this.isRail();
   }
 
   /** 3.50 (usm-x row 74): `aria-expanded` of a `kind: 'action'` item with `hasPopup`; `null` without. */
@@ -1162,6 +1337,129 @@ export class SidenavComponent implements OnDestroy {
     if (this.isBlocked(item)) return;
     this.itemClicked.emit(item);
     this.railItemClick.emit({ item, event, element: event.currentTarget as HTMLElement });
+  }
+
+  /** 3.51 (071-n1): a rail group contains the current link of the group menus. */
+  protected railGroupHoldsCurrent(item: NavigationItem): boolean {
+    const current = this.railMenuCurrent();
+    return !!current && containsItem(item, current);
+  }
+
+  /** 3.51: `aria-current` of a rail group: `page` when it is current itself, `true` when its menu holds the current link. */
+  protected railGroupCurrent(item: NavigationItem): string | null {
+    if (this.isRailItemActive(item)) return 'page';
+    return this.railGroupHoldsCurrent(item) ? 'true' : null;
+  }
+
+  /**
+   * 3.51 (071-n1): a press on a rail group (pointer, Enter, Space): emitted
+   * as any rail entry (`itemClicked`, `railItemClick`), then its menu opens,
+   * or closes when it is open.
+   */
+  protected onRailGroupClick(event: MouseEvent, item: NavigationItem, button: HTMLElement): void {
+    if (this.isBlocked(item)) return;
+    this.itemClicked.emit(item);
+    this.railItemClick.emit({ item, event, element: button });
+    if (this.railMenuGroupId() === item.id) this.railMenuGroupId.set(null);
+    else this.openRailMenu(item, button);
+  }
+
+  /** 3.51: the arrow towards the menu (right, or left when it opens left) opens it. */
+  protected onRailGroupKeydown(event: KeyboardEvent, item: NavigationItem, button: HTMLElement): void {
+    const towards = this.railMenuSideFor(button) === 'right-start' ? 'ArrowRight' : 'ArrowLeft';
+    if (event.key !== towards || this.isBlocked(item)) return;
+    event.preventDefault();
+    if (this.railMenuGroupId() !== item.id) this.openRailMenu(item, button);
+  }
+
+  /** 3.51: an entry of the group menu was chosen: the menu closes, a link navigates, `itemClicked`. */
+  protected onRailMenuItem(entry: MenuItem): void {
+    const group = this.railMenuGroup();
+    const item = group ? findNavigationItem(group.children ?? [], entry.id) : null;
+    if (!item) return;
+    this.railMenuGroupId.set(null);
+    if (item.kind !== 'action' && item.route) void this.router.navigateByUrl(item.route);
+    this.itemClicked.emit(item);
+  }
+
+  /**
+   * 3.51: opens a group's menu: the anchor box spans the rail's border box
+   * at the item's height (so the panel starts 8 px outside the rail), on the
+   * side away from the nearer viewport edge. Another open group menu closes
+   * first; this one opens after that render, so its pane is placed anew.
+   */
+  private openRailMenu(item: NavigationItem, button: HTMLElement): void {
+    if (this.railMenuGroupId() !== null) {
+      this.railMenuGroupId.set(null);
+      afterNextRender(() => this.openRailMenu(item, button), { injector: this.injector });
+      return;
+    }
+    this.requestChildren(item);
+    this.placeRailAnchor(button);
+    this.railMenuSide.set(this.railMenuSideFor(button));
+    this.railMenuMaxWidth.set(this.readRailMenuMaxWidth());
+    this.railMenuGroupId.set(item.id);
+  }
+
+  /** 3.51: the anchor box: the rail's border box (left −clientLeft, its offsetWidth), the item's top and height. */
+  private placeRailAnchor(button: HTMLElement): void {
+    const anchor = this.railAnchor()?.nativeElement;
+    const aside = button.closest<HTMLElement>('.lc-sidenav');
+    if (!anchor || !aside) return;
+    const box = aside.getBoundingClientRect();
+    const rect = button.getBoundingClientRect();
+    anchor.style.left = `${-aside.clientLeft}px`;
+    anchor.style.width = `${aside.offsetWidth}px`;
+    anchor.style.top = `${rect.top - box.top - aside.clientTop + aside.scrollTop}px`;
+    anchor.style.height = `${rect.height}px`;
+  }
+
+  /** 3.51: `right-start` while the rail's centre is in the viewport's left half, else `left-start`. */
+  private railMenuSideFor(button: HTMLElement): MenuPosition {
+    const rail = (button.closest<HTMLElement>('.lc-sidenav') ?? button).getBoundingClientRect();
+    const viewport = button.ownerDocument.documentElement.clientWidth || button.ownerDocument.defaultView?.innerWidth || 0;
+    return rail.left + rail.width / 2 <= viewport / 2 ? 'right-start' : 'left-start';
+  }
+
+  /** 3.51: `--lc-sidenav-rail-menu-max-width` on the sidenav or an ancestor, else `20rem`. */
+  private readRailMenuMaxWidth(): string {
+    if (typeof getComputedStyle !== 'function') return RAIL_MENU_MAX_WIDTH;
+    return getComputedStyle(this.host.nativeElement).getPropertyValue('--lc-sidenav-rail-menu-max-width').trim() || RAIL_MENU_MAX_WIDTH;
+  }
+
+  /** 3.51: `--lc-sidenav-rail-width` in px (56 when it is not a px length). */
+  private readRailWidth(): number {
+    if (typeof getComputedStyle !== 'function') return RAIL_WIDTH;
+    const value = getComputedStyle(this.host.nativeElement).getPropertyValue('--lc-sidenav-rail-width').trim();
+    const width = parseFloat(value);
+    return value.endsWith('px') && width > 0 ? width : RAIL_WIDTH;
+  }
+
+  /**
+   * 3.51 (071-n1, design §2): rail group entries as menu entries: label,
+   * icon, disabled / reason, tooltip, busy, hint (subtitle), badge (value,
+   * variant), current; nested groups and sections become sections.
+   */
+  private toMenuItems(items: readonly NavigationItem[], current: NavigationItem | null): MenuItem[] {
+    return sortNavigationItems(items).map((item): MenuItem => {
+      if (item.isSection || isNavigationGroup(item)) {
+        return { id: item.id, label: item.label, children: this.toMenuItems(item.children ?? [], current) };
+      }
+      const entry: MenuItem = { id: item.id, label: item.label };
+      if (item.icon) entry.icon = item.icon;
+      if (item.disabled) entry.disabled = true;
+      if (item.disabledReason) entry.disabledReason = item.disabledReason;
+      if (item.tooltip) entry.tooltip = item.tooltip;
+      if (item.busy) entry.busy = true;
+      if (item.hint || item.badge) {
+        entry.metadata = {};
+        if (item.hint) entry.metadata.subtitle = item.hint;
+        if (item.badge) entry.metadata.badge = String(item.badge.value);
+      }
+      if (item.badge) entry.badgeVariant = item.badge.variant ?? 'default';
+      if (item.current || item === current) entry.current = true;
+      return entry;
+    });
   }
 
   /**

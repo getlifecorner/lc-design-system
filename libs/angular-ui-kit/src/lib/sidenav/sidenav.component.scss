@@ -244,7 +244,11 @@
     color: var(--lc-sidenav-fg-active, var(--_lc-sidenav-t-fg-active));
   }
 
-  &:focus-visible {
+  // 3.51 (request 072, backlog 071-n5): an app's `lc-sidenav__rail-item` in
+  // an `lcSidenavRail` template shares this ring (unscoped: it carries the
+  // app's attribute, not the sidenav's).
+  @at-root .lc-sidenav__nav-item:focus-visible,
+    ::ng-deep .lc-sidenav__rail-item:focus-visible {
     outline: 2px solid var(--lc-sidenav-focus-ring, var(--_lc-sidenav-t-accent, var(--color-primary-500)));
     outline-offset: 2px;
   }
@@ -1017,6 +1021,138 @@
   max-inline-size: 100%;
   object-fit: contain;
   filter: var(--lc-sidenav-brand-logo-filter, none);
+}
+
+// ── Backlog bundle (3.51, request 072) ───────────────────────────────────
+// 071-n2: the `[sidenav-brand-mark]` box, before the tile: 32 × 32, centred,
+// the projected mark contained in it. Written on one line, so `:empty` hides
+// it without content; a mark hides the tile and the natural logo.
+.lc-sidenav__brand-mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: 32px;
+  block-size: 32px;
+
+  &:empty {
+    display: none;
+  }
+
+  > ::ng-deep * {
+    display: block;
+    max-inline-size: 100%;
+    max-block-size: 100%;
+  }
+}
+
+.lc-sidenav__brand-mark:not(:empty) ~ .lc-sidenav__brand-tile,
+.lc-sidenav__brand-mark:not(:empty) ~ .lc-sidenav__brand-logo {
+  display: none;
+}
+
+// 071-n1 (`railGroupMenu`): the menu host takes no room (the empty trigger
+// slot would make a line box); the hidden anchor box is placed on open over
+// the rail's border box at the item's height (the aside's identity transform
+// makes it the containing block).
+.lc-sidenav__rail-menu {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  inline-size: 0;
+  block-size: 0;
+}
+
+.lc-sidenav__rail-anchor {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+// An open group keeps the hover fill (the current fill wins) and hides its
+// label tooltip, which would cover the menu.
+.lc-sidenav--collapsed .lc-sidenav__nav-item--rail-group[aria-expanded='true'] {
+  background-color: var(--lc-sidenav-hover-bg, var(--_lc-sidenav-t-hover-bg));
+}
+
+.lc-sidenav--collapsed .lc-sidenav__nav-item--rail-group.lc-sidenav__nav-item--active[aria-expanded='true'] {
+  background-color: var(--lc-sidenav-active-bg, var(--_lc-sidenav-t-active-bg));
+}
+
+.lc-sidenav--collapsed .lc-sidenav__nav-item.lc-sidenav__nav-item--rail-group[aria-expanded='true']::after {
+  content: none;
+}
+
+// 071-n5 (`lcSidenavRail`): the template's column, centred, 2 px apart, so
+// 44 px children sit on the brand, rail-top and collapse column.
+.lc-sidenav--collapsed .lc-sidenav__nav--rail-template {
+  align-items: center;
+  gap: 2px;
+  padding: var(--spacing-2, 0.5rem) var(--spacing-1-5, 0.375rem);
+}
+
+// `lc-sidenav__rail-item` on an app's link or button: the rail item's look.
+// Unscoped (the element carries the app's attribute); one class plus the
+// state, so an app class wins. The ring is the item ring above.
+::ng-deep .lc-sidenav__rail-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  box-sizing: border-box;
+  inline-size: var(--size-min-touch-width, 2.75rem);
+  block-size: var(--size-min-touch-height, 2.75rem);
+  padding: 0;
+  border: 0;
+  border-radius: var(--border-radius-md, 0.375rem);
+  background: none;
+  color: var(--lc-sidenav-fg, var(--_lc-sidenav-t-fg));
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+::ng-deep .lc-sidenav__rail-item:hover {
+  background-color: var(--lc-sidenav-hover-bg, var(--_lc-sidenav-t-hover-bg));
+  color: var(--lc-sidenav-fg-active, var(--_lc-sidenav-t-fg-active));
+}
+
+::ng-deep .lc-sidenav__rail-item[aria-current='page'],
+::ng-deep .lc-sidenav__rail-item[aria-current='true'] {
+  background-color: var(--lc-sidenav-active-bg, var(--_lc-sidenav-t-active-bg));
+  color: var(--lc-sidenav-active-fg, var(--_lc-sidenav-t-active-fg));
+  font-weight: 600;
+  box-shadow: inset 2px 0 0 var(--lc-sidenav-active-indicator, var(--_lc-sidenav-t-accent, var(--color-primary-500)));
+}
+
+// The label tooltip from `data-tooltip`, as the rail items'.
+::ng-deep .lc-sidenav__rail-item[data-tooltip]:hover::after,
+::ng-deep .lc-sidenav__rail-item[data-tooltip]:focus-visible::after {
+  content: attr(data-tooltip);
+  content: string.unquote('attr(data-tooltip) / ""');
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 8px;
+  padding: 4px 10px;
+  background-color: var(--color-surface-raised);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--elevation-2, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+  font-size: 0.75rem;
+  white-space: nowrap;
+  border-radius: 4px;
+  z-index: 1002;
+  pointer-events: none;
+}
+
+@media (forced-colors: active) {
+  ::ng-deep .lc-sidenav__rail-item[aria-current='page']:not(:focus-visible),
+  ::ng-deep .lc-sidenav__rail-item[aria-current='true']:not(:focus-visible) {
+    outline: 1px solid Highlight;
+  }
 }
 
 @media (forced-colors: active) {

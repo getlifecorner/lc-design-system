@@ -19,6 +19,7 @@ import {
   inject,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
+import { Directionality } from '@angular/cdk/bidi';
 import {
   CdkConnectedOverlay,
   OverlayModule,
@@ -177,10 +178,27 @@ export interface MenuItem {
    * to the next part (one stop per part). Only a part with a checkbox or
    * radio item reserves the check-mark slot; the labels of the other parts
    * start on the rows' label line (md 16 px). Ignored in a popup menu (Tab
-   * would close it before the control is reached).
+   * would close it before the control is reached), unless the menu sets
+   * `popupControls` (3.51).
    */
   control?: string;
+  /**
+   * 3.51 (request 072, backlog 071-n7): on the first top-level entry of a
+   * `role="menu"` part that follows a control row: the part's name
+   * (`aria-label`), e.g. „Konto“. The first part keeps `ariaLabel` when set.
+   * Elsewhere ignored. Unset: a part that starts with a section is named by
+   * its heading, any other later part by `partAriaLabel`.
+   */
+  partLabel?: string;
 }
+
+/**
+ * Where a popup menu opens (3.51, request 072, backlog 071-n3, adds
+ * `right-start` and `left-start`): below or above the trigger or anchor at
+ * its left or right edge, or beside it on the right or left with the top
+ * edges aligned. `right` and `left` are physical in LTR and RTL.
+ */
+export type MenuPosition = 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right' | 'right-start' | 'left-start';
 
 /** 3.50: one part of a menu between control rows (inline), or the whole menu. */
 interface MenuSegment {
@@ -192,6 +210,8 @@ interface MenuSegment {
   readonly offset: number;
   /** Whether this is the first `role="menu"` part (it carries the id and `aria-label`). */
   readonly first: boolean;
+  /** 3.51: the number of this `role="menu"` part (1, 2 …; 0 for a control row), for `partAriaLabel`. */
+  readonly part: number;
   /** The range of this part's acting items in `actions()`: [start, end). */
   readonly start: number;
   readonly end: number;
@@ -243,6 +263,35 @@ const ELEMENT_POSITIONS: Record<'bottom-left' | 'bottom-right' | 'top-left' | 't
   'top-left': [besideElement('start', 'top'), besideElement('start', 'bottom'), besideElement('end', 'top'), besideElement('end', 'bottom')],
   'top-right': [besideElement('end', 'top'), besideElement('end', 'bottom'), besideElement('start', 'top'), besideElement('start', 'bottom')],
 };
+
+/** 3.51: the two side positions (071-n3). */
+type SidePosition = 'right-start' | 'left-start';
+
+/** 3.51: whether a position opens beside the anchor (right or left). */
+function isSidePosition(position: MenuPosition): position is SidePosition {
+  return position === 'right-start' || position === 'left-start';
+}
+
+/**
+ * 3.51 (design §1, 071-n3): a side position of an element anchor: the panel
+ * on the physical right or left, top edges aligned, then the other side. CDK
+ * reads `start` / `end` in the overlay's direction, so in RTL the physical
+ * sides are its `end` / `start`.
+ */
+function sidePositions(position: SidePosition, rtl: boolean): ConnectedPosition[] {
+  const right: ConnectedPosition = { originX: rtl ? 'start' : 'end', originY: 'top', overlayX: rtl ? 'end' : 'start', overlayY: 'top' };
+  const left: ConnectedPosition = { originX: rtl ? 'end' : 'start', originY: 'top', overlayX: rtl ? 'start' : 'end', overlayY: 'top' };
+  return position === 'right-start' ? [right, left] : [left, right];
+}
+
+/** 3.51: a side panel's height in `maxHeight="room"`: the viewport less this much, px (the overlay's own cap). */
+const SIDE_ROOM_INSET = 32;
+
+/**
+ * 3.51 (071-n4): what Tab can reach in a popup with control rows (filtered
+ * by `tabIndex`, `disabled`, `hidden` / `inert` and, in a browser, visibility).
+ */
+const TABBABLE_SELECTOR = 'a[href], button, input:not([type="hidden"]), select, textarea, [tabindex], [contenteditable="true"]';
 
 /** 3.48: at a point the panel opens below and after it, else flips like a native context menu. */
 const POINT_POSITIONS: ConnectedPosition[] = [
@@ -305,6 +354,10 @@ const ROOM_KEEP = 240;
  *   submitted) and activate it once; `returnFocusTo` names the focus target
  *   after closing (068-n3); the CSS hook `--lc-menu-max-height` caps the
  *   panel when `maxHeight` is empty
+ * - 3.51 (request 072, backlog 071-n3, -n4, -n7): `position` `right-start` /
+ *   `left-start` open the panel beside the trigger or anchor; `popupControls`
+ *   draws control rows in a popup (Tab walks parts and controls);
+ *   `MenuItem.partLabel` and `partAriaLabel` name the later `role="menu"` parts
  *
  * @example
  * ```html
@@ -338,7 +391,19 @@ export class MenuComponent implements OnDestroy {
 
   readonly items = input<MenuItem[]>([]);
   readonly isOpen = input(false);
-  readonly position = input<'bottom-left' | 'bottom-right' | 'top-left' | 'top-right'>('bottom-right');
+  /**
+   * Where the panel opens: below (`bottom-*`) or above (`top-*`) the trigger
+   * or anchor, aligned at its left or right edge, 8 px apart. 3.51 (request
+   * 072, backlog 071-n3): `right-start` / `left-start` open it beside the
+   * anchor or trigger, 8 px apart, top edges aligned; `right` and `left` are
+   * physical in LTR and RTL. With `anchor` (an element) it flips to the other
+   * side when there is no room and shifts inside the 8 px viewport margin (at
+   * the projected trigger it does not flip, as the other values). With
+   * `maxHeight="room"` a side panel is the viewport less 32 px high and never
+   * flips the side. At a point `anchor`, the point's positions apply.
+   * @default 'bottom-right'
+   */
+  readonly position = input<MenuPosition>('bottom-right');
   readonly size = input<'sm' | 'md' | 'lg'>('md');
   readonly minWidth = input('220px');
   /**
@@ -442,6 +507,31 @@ export class MenuComponent implements OnDestroy {
    */
   readonly returnFocusTo = input<HTMLElement | null>(null);
 
+  /**
+   * 3.51 (request 072, backlog 071-n4): a popup menu draws `MenuItem.control`
+   * entries as control rows (as `inline` does), which split it into
+   * `role="menu"` parts. The arrows stay inside a part; Tab and Shift+Tab walk
+   * the panel's stops (one per part, each control, controls in the header
+   * and footer), and Tab past the last stop or Shift+Tab before the first
+   * closes the menu as Tab does without control rows. A click in a control
+   * keeps the menu open; Escape closes it and returns the focus. On open the
+   * focus goes to the first part's item (or the first control of a leading
+   * row). Inline: ignored. `false`: a `control` entry is a plain item in a
+   * popup, as before.
+   * @default false
+   */
+  readonly popupControls = input(false);
+
+  /**
+   * 3.51 (request 072, backlog 071-n7): the name of a later `role="menu"`
+   * part (after a control row) that has no `MenuItem.partLabel` and does not
+   * start with a section, while `ariaLabel` is set: `{label}` is replaced by
+   * `ariaLabel`, `{n}` by the part's number (2, 3 …). German:
+   * „{label}, Teil {n}“. `''`: such a part stays unnamed, as in 3.50.
+   * @default '{label}, part {n}'
+   */
+  readonly partAriaLabel = input('{label}, part {n}');
+
   readonly itemClick = output<MenuItem>();
   readonly closed = output<void>();
   /**
@@ -459,7 +549,18 @@ export class MenuComponent implements OnDestroy {
    * of a section its members (3.50: to any depth). Section headings are not
    * in it, nor (inline) control rows.
    */
-  protected readonly actions = computed(() => flattenActions(this.items(), this.inline()));
+  protected readonly actions = computed(() => flattenActions(this.items(), this.controlsOn()));
+
+  /** 3.51: control entries are control rows (inline, or a popup with `popupControls`). */
+  private readonly controlsOn = computed(() => this.inline() || this.popupControls());
+
+  /** 3.51 (071-n4): a popup split into parts by control rows. */
+  protected readonly segmentedPopup = computed(
+    () => !this.inline() && this.popupControls() && this.items().some((item) => item.control),
+  );
+
+  /** 3.51: one roving stop per part and the indicator slot per part (inline, or a segmented popup). */
+  private readonly perPart = computed(() => this.inline() || this.segmentedPopup());
 
   /** Position of each acting item in {@link actions}. */
   private readonly actionIndex = computed(() => new Map(this.actions().map((item, i) => [item, i])));
@@ -480,19 +581,21 @@ export class MenuComponent implements OnDestroy {
    */
   protected readonly segments = computed<MenuSegment[]>(() => {
     const items = this.items();
-    if (!this.inline() || !items.some((item) => item.control)) {
-      return [{ items, control: null, offset: 0, first: true, start: 0, end: this.actions().length, toggles: this.hasToggles() }];
+    if (!this.controlsOn() || !items.some((item) => item.control)) {
+      return [{ items, control: null, offset: 0, first: true, part: 1, start: 0, end: this.actions().length, toggles: this.hasToggles() }];
     }
     const segments: MenuSegment[] = [];
     let part: MenuItem[] = [];
     let offset = 0;
     let start = 0;
+    let parts = 0;
     const flush = (next: number) => {
       if (part.length) {
         const acting = flattenActions(part, true);
         const end = start + acting.length;
         const toggles = acting.some((item) => this.isToggle(item));
-        segments.push({ items: part, control: null, offset, first: !segments.some((s) => !s.control), start, end, toggles });
+        parts++;
+        segments.push({ items: part, control: null, offset, first: parts === 1, part: parts, start, end, toggles });
         start = end;
       }
       part = [];
@@ -501,7 +604,7 @@ export class MenuComponent implements OnDestroy {
     items.forEach((item, i) => {
       if (item.control) {
         flush(i + 1);
-        segments.push({ items: [], control: item, offset: i, first: false, start, end: start, toggles: false });
+        segments.push({ items: [], control: item, offset: i, first: false, part: 0, start, end: start, toggles: false });
       } else {
         part.push(item);
       }
@@ -551,10 +654,11 @@ export class MenuComponent implements OnDestroy {
   protected readonly room = signal<{ side: RoomSide; height: number } | null>(null);
 
   /** 3.49: `position` with the vertical side the room chose; `position` itself without `'room'`. */
-  protected readonly effectivePosition = computed(() => {
+  protected readonly effectivePosition = computed<MenuPosition>(() => {
     const position = this.position();
     const room = this.roomMode() ? this.room() : null;
-    if (!room) return position;
+    // 3.51: a side panel keeps its side (the room sets its height only)
+    if (!room || isSidePosition(position)) return position;
     const vertical = room.side === 'above' ? 'top' : 'bottom';
     return position.endsWith('-left') ? (`${vertical}-left` as const) : (`${vertical}-right` as const);
   });
@@ -569,13 +673,24 @@ export class MenuComponent implements OnDestroy {
   /** 3.49: an overlay room panel at an element keeps its 8 px gap on the anchor's side only. */
   protected readonly roomEdge = computed(() => {
     const anchor = this.activeAnchor();
+    if (this.sidePosition()) return null;
     return this.roomMode() && !!anchor && isAnchorElement(anchor) ? (this.room()?.side ?? null) : null;
+  });
+
+  /** 3.51 (071-n3): the side position while the panel opens beside an element or the trigger (not at a point). */
+  protected readonly sidePosition = computed<SidePosition | null>(() => {
+    const position = this.position();
+    return !this.inline() && !this.atPoint() && isSidePosition(position) ? position : null;
   });
 
   /** 3.48: overlay positions, preferred first (design §3A); 3.49: the room's side first. */
   protected readonly overlayPositions = computed(() => {
     if (this.atPoint()) return this.roomMode() && this.room()?.side === 'above' ? POINT_POSITIONS_ABOVE : POINT_POSITIONS;
-    return ELEMENT_POSITIONS[this.effectivePosition()] ?? ELEMENT_POSITIONS['bottom-right'];
+    // 3.51: beside the anchor, physical in LTR and RTL (CDK's direction is the menu's `Directionality`)
+    const side = this.sidePosition();
+    if (side) return sidePositions(side, this.directionality?.value === 'rtl');
+    const position = this.effectivePosition();
+    return (isSidePosition(position) ? null : ELEMENT_POSITIONS[position]) ?? ELEMENT_POSITIONS['bottom-right'];
   });
 
   /** 3.48: the panel is a column whose items scroll (capped or in the overlay). */
@@ -589,6 +704,9 @@ export class MenuComponent implements OnDestroy {
 
   private readonly panelElement = viewChild<ElementRef<HTMLElement>>('dropdown');
   private readonly listElement = viewChild<ElementRef<HTMLElement>>('list');
+  /** 3.51: the body of a segmented popup (parts and control rows), its scroller. */
+  private readonly bodyElement = viewChild<ElementRef<HTMLElement>>('body');
+  private readonly directionality = inject(Directionality, { optional: true });
   private readonly connectedOverlay = viewChild(CdkConnectedOverlay);
   private readonly viewportRuler = inject(ViewportRuler);
   private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -653,9 +771,11 @@ export class MenuComponent implements OnDestroy {
           this.hookMaxHeight.set(this.readMaxHeightHook());
           this.listen(true);
           this.activeIndex.set(this.firstEnabledIndex());
+          // 3.51: a segmented popup starts with the first item of every part
+          this.partStops.set(new Map());
           // Move focus into the menu once the panel has rendered
           if (initialized) {
-            afterNextRender(() => this.focusActiveItem(), { injector: this.injector });
+            afterNextRender(() => this.focusOnOpen(), { injector: this.injector });
           }
         } else if (!open && (wasOpen || !initialized)) {
           this.overlayStack.remove(this.menuId);
@@ -841,7 +961,7 @@ export class MenuComponent implements OnDestroy {
     const part = segment ?? this.segments()[0];
     const start = part?.start ?? 0;
     const end = part?.end ?? this.actions().length;
-    const current = this.inline() ? this.indexOfNode(event.target) : this.activeIndex();
+    const current = this.perPart() ? this.indexOfNode(event.target) : this.activeIndex();
     switch (event.key) {
       case 'ArrowDown':
         this.consume(event);
@@ -877,12 +997,72 @@ export class MenuComponent implements OnDestroy {
         // so the browser's Tab would leave the document (CD runs after it).
         // Return the focus first, without preventDefault: Tab then moves on
         // from the anchor (Shift+Tab before it). 3.50: from `returnFocusTo`
-        // too. An inline menu stays: Tab moves on to the next stop.
-        if (this.inline()) break;
-        if (this.activeAnchor() || this.returnFocusTarget()) this.returnFocus();
-        this.close();
+        // too. An inline menu stays: Tab moves on to the next stop. 3.51: a
+        // segmented popup decides on the panel (`onDropdownKeydown`).
+        if (this.perPart()) break;
+        this.tabOut();
         break;
     }
+  }
+
+  /**
+   * 3.51 (request 072, backlog 071-n4, design §1): in a popup with control
+   * rows Tab and Shift+Tab move natively between the panel's stops (parts,
+   * controls, header and footer controls); Tab on the last stop and
+   * Shift+Tab on the first close the menu as Tab does without control rows.
+   */
+  protected onDropdownKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Tab' || !this.segmentedPopup() || !this.popupOpen()) return;
+    const stops = this.tabStops();
+    const edge = event.shiftKey ? stops[0] : stops[stops.length - 1];
+    if (edge && event.target !== edge) return;
+    this.tabOut();
+  }
+
+  /** Tab leaves a popup: the focus returns first (overlay, `returnFocusTo`), then the menu closes; Tab is not prevented. */
+  private tabOut(): void {
+    // 3.48 (review r2, F-4): the overlay panel is the last node of <body>, so
+    // the browser's Tab would leave the document (CD runs after it).
+    if (this.activeAnchor() || this.returnFocusTarget()) this.returnFocus();
+    this.close();
+  }
+
+  /** 3.51: a control in a scrolling segmented popup is revealed when it takes the focus (no page scroll). */
+  protected onBodyFocusIn(event: FocusEvent): void {
+    const target = event.target;
+    if (this.scrolls() && target instanceof HTMLElement) this.revealItem(target);
+  }
+
+  /** 3.51: the panel's Tab stops in DOM order (a segmented popup). */
+  private tabStops(): HTMLElement[] {
+    const panel = this.panelElement()?.nativeElement;
+    if (!panel) return [];
+    return Array.from(panel.querySelectorAll<HTMLElement>(TABBABLE_SELECTOR)).filter((node) => {
+      if (node.tabIndex < 0 || node.matches(':disabled') || node.closest('[hidden], [inert]')) return false;
+      // a native radio set is one stop: its checked radio (else its first)
+      if (node instanceof HTMLInputElement && node.type === 'radio' && node.name) {
+        const set = Array.from(panel.querySelectorAll<HTMLInputElement>('input[type="radio"]')).filter((r) => r.name === node.name);
+        const checked = set.find((r) => r.checked);
+        if (checked ? checked !== node : set[0] !== node) return false;
+      }
+      const visible = (node as HTMLElement & { checkVisibility?: () => boolean }).checkVisibility;
+      return typeof visible === 'function' ? visible.call(node) : true;
+    });
+  }
+
+  /** 3.51: on open, the first stop: the first part's item, or the first control of a leading control row. */
+  private focusOnOpen(): void {
+    if (this.segmentedPopup() && this.segments()[0]?.control) {
+      const row = this.panelElement()?.nativeElement.querySelector<HTMLElement>('.lc-menu__control');
+      const stop = row ? this.tabStops().find((node) => row.contains(node)) : undefined;
+      if (stop) {
+        // in the overlay the page must not scroll (a scroll closes the menu)
+        if (this.activeAnchor()) stop.focus({ preventScroll: true });
+        else stop.focus();
+        return;
+      }
+    }
+    this.focusActiveItem();
   }
 
   /**
@@ -892,7 +1072,8 @@ export class MenuComponent implements OnDestroy {
    */
   protected tabindexFor(index: number, item: MenuItem): number {
     if (!this.isReachable(item)) return -1;
-    if (!this.inline()) return index === this.activeIndex() ? 0 : -1;
+    // 3.51: a segmented popup has one stop per part, as an inline menu
+    if (!this.perPart()) return index === this.activeIndex() ? 0 : -1;
     const part = this.segments().find((s) => !s.control && index >= s.start && index < s.end);
     return part && index === this.stopOf(part) ? 0 : -1;
   }
@@ -907,7 +1088,7 @@ export class MenuComponent implements OnDestroy {
   /** 3.50: the item at `index` becomes the roving stop (of its part, inline). */
   private setStop(index: number): void {
     this.activeIndex.set(index);
-    if (!this.inline()) return;
+    if (!this.perPart()) return;
     const part = this.segments().find((s) => !s.control && index >= s.start && index < s.end);
     if (part) this.partStops.update((stops) => new Map(stops).set(part.start, index));
   }
@@ -915,6 +1096,35 @@ export class MenuComponent implements OnDestroy {
   /** 3.50: the template that fills a control row, by `MenuItem.control`. */
   protected controlTemplate(item: MenuItem): MenuControlDirective['template'] | null {
     return this.controlTemplates().find((t) => t.lcMenuControl() === item.control)?.template ?? null;
+  }
+
+  /**
+   * 3.51 (request 072, backlog 071-n7, design §4): the `aria-label` of a
+   * `role="menu"` part. The first part: `ariaLabel`, else the `partLabel` of
+   * its first entry when a control row comes before it. A later part: its
+   * `partLabel`; none when it starts with a section (named by the heading,
+   * 3.50); else `partAriaLabel` with `ariaLabel` and the part's number.
+   */
+  protected partName(segment: MenuSegment): string | null {
+    const own = segment.offset > 0 ? (segment.items[0]?.partLabel ?? '') : '';
+    if (segment.first) return this.ariaLabel() || own || null;
+    if (own) return own;
+    if (segment.items[0]?.children) return null;
+    const label = this.ariaLabel();
+    const pattern = this.partAriaLabel();
+    if (!label || !pattern) return null;
+    return pattern.replace(/\{label\}/g, () => label).replace(/\{n\}/g, () => String(segment.part));
+  }
+
+  /** 3.50: a later part that starts with a section is named by its heading (3.51: unless it has a `partLabel`). */
+  protected partLabelledBy(segment: MenuSegment): string | null {
+    if (segment.first || !segment.items[0]?.children || segment.items[0].partLabel) return null;
+    return this.headingId(segment.offset);
+  }
+
+  /** 3.51: the scrolling list: the body of a segmented popup, else the (first) `role="menu"` part. */
+  private scroller(): HTMLElement | undefined {
+    return (this.bodyElement() ?? this.listElement())?.nativeElement;
   }
 
   /** 3.50: id of a control row's label (`labelId` of its template). */
@@ -1006,7 +1216,7 @@ export class MenuComponent implements OnDestroy {
    * scrolling the page.
    */
   private revealItem(item: HTMLElement): void {
-    const list = this.listElement()?.nativeElement;
+    const list = this.scroller();
     if (!list || list.scrollHeight <= list.clientHeight) return;
     const box = list.getBoundingClientRect();
     const rect = item.getBoundingClientRect();
@@ -1024,8 +1234,9 @@ export class MenuComponent implements OnDestroy {
    */
   private measureRoom(keepSide: boolean): void {
     const panel = this.panelElement()?.nativeElement;
-    const list = this.listElement()?.nativeElement;
-    const rooms = this.rooms(this.viewportRuler.getViewportSize().height);
+    const list = this.scroller();
+    const viewportHeight = this.viewportRuler.getViewportSize().height;
+    const rooms = this.rooms(viewportHeight);
     if (!panel || !list || !rooms) return;
     const chrome = panel.offsetHeight - list.clientHeight;
     const whole = chrome + list.scrollHeight;
@@ -1037,7 +1248,10 @@ export class MenuComponent implements OnDestroy {
     const previous = this.room();
     const side =
       keepSide && previous ? previous.side : rooms[preferred] >= keep || rooms[preferred] >= rooms[other] ? preferred : other;
-    const height = Math.max(min, Math.floor(rooms[side]));
+    // 3.51 (071-n3): a side panel is the viewport less 32 px high; its side never changes
+    const height = this.sidePosition()
+      ? Math.max(min, Math.floor(viewportHeight - SIDE_ROOM_INSET))
+      : Math.max(min, Math.floor(rooms[side]));
     if (previous?.side === side && previous.height === height) return;
     this.room.set({ side, height });
     // An overlay pane is placed again right away, with the panel at its new

@@ -27,6 +27,7 @@
   }
 
   <ng-template #panel>
+    <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- 3.51: Tab bubbles from the focused items and controls (popupControls) -->
     <div
       #dropdown
       class="lc-menu__dropdown"
@@ -39,7 +40,7 @@
       [style.min-width]="inline() ? null : minWidth()"
       [style.max-width]="inline() ? null : maxWidth() || null"
       [class.lc-menu__dropdown--capped]="!inline() && !!maxWidth()"
-      [class.lc-menu__dropdown--has-toggles]="hasToggles() && !inline()"
+      [class.lc-menu__dropdown--has-toggles]="hasToggles() && !inline() && !segmentedPopup()"
       [style.max-height]="panelMaxHeight()"
       [class.lc-menu__dropdown--scroll]="scrolls()"
       [class.lc-menu__dropdown--overlay]="!!activeAnchor()"
@@ -49,75 +50,21 @@
       [class.lc-menu__dropdown--room-above]="roomEdge() === 'above'"
       [attr.lang]="panelLang()"
       [class.lc-menu__dropdown--inline]="inline()"
+      [class.lc-menu__dropdown--right-start]="sidePosition() === 'right-start'"
+      [class.lc-menu__dropdown--left-start]="sidePosition() === 'left-start'"
+      (keydown)="onDropdownKeydown($event)"
     >
       <!-- Optional header slot (outside the menu role: it is not an item) -->
       <ng-content select="[header]" />
 
-      <!-- Menu items. 3.50: one part, or (inline with control rows) the parts
-           between the rows and the rows themselves, outside role="menu". -->
-      @for (segment of segments(); track $index) {
-        @if (segment.control; as entry) {
-          <div class="lc-menu__control">
-            @if (entry.label) {
-              <span class="lc-menu__control-label" [id]="controlLabelId(segment.offset)">{{ entry.label }}</span>
-            }
-            @if (controlTemplate(entry); as template) {
-              <ng-container
-                [ngTemplateOutlet]="template"
-                [ngTemplateOutletContext]="{ $implicit: entry, labelId: controlLabelId(segment.offset) }"
-              />
-            }
-          </div>
-        } @else {
-          <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- keydown bubbles from the focused menu items (roving tabindex) -->
-          <div
-            #list
-            class="lc-menu__items"
-            role="menu"
-            [attr.id]="segment.first ? panelId : null"
-            [attr.aria-label]="segment.first ? ariaLabel() || null : null"
-            [attr.aria-busy]="loading() ? 'true' : null"
-            (keydown)="onPanelKeydown($event, segment)"
-            [attr.aria-labelledby]="segment.first || !segment.items[0]?.children ? null : headingId(segment.offset)"
-            [class.lc-menu__items--has-toggles]="inline() && segment.toggles"
-          >
-            @for (item of segment.items; track item.id; let i = $index) {
-              @if (item.children) {
-                <!-- Section (3.43): a heading and its items. The heading names the
-                     group and is hidden itself, so it is not read twice. -->
-                <div
-                  class="lc-menu__section"
-                  [class.lc-menu__section--indented]="item.indentChildren"
-                  [attr.role]="item.children.length ? 'group' : null"
-                  [attr.aria-labelledby]="item.children.length ? headingId(segment.offset + i) : null"
-                >
-                  <div class="lc-menu__section-heading" [id]="headingId(segment.offset + i)" aria-hidden="true">{{ item.label }}</div>
-                  @for (member of item.children; track member.id) {
-                    @if (member.children) {
-                      <!-- 3.50 (usm-x row 78): a section inside a section -->
-                      <ng-container
-                        [ngTemplateOutlet]="nestedSection"
-                        [ngTemplateOutletContext]="{ $implicit: member, depth: 1, id: nestedHeadingId(headingId(segment.offset + i), $index) }"
-                      />
-                    } @else {
-                      <ng-container [ngTemplateOutlet]="menuItem" [ngTemplateOutletContext]="{ $implicit: member }" />
-                    }
-                    <!-- 3.48 (usm-x row 57): a divider between members of one section -->
-                    @if (member.dividerAfter && !$last) {
-                      <hr class="lc-menu__divider" />
-                    }
-                  }
-                </div>
-              } @else {
-                <ng-container [ngTemplateOutlet]="menuItem" [ngTemplateOutletContext]="{ $implicit: item }" />
-              }
-
-              @if (item.dividerAfter) {
-                <hr class="lc-menu__divider" />
-              }
-            }
-          </div>
-        }
+      <!-- 3.51 (071-n4): a popup with control rows wraps its parts and rows in
+           a body (the scroller of a capped or overlay panel). -->
+      @if (segmentedPopup()) {
+        <div #body class="lc-menu__body" (focusin)="onBodyFocusIn($event)">
+          <ng-container [ngTemplateOutlet]="parts" />
+        </div>
+      } @else {
+        <ng-container [ngTemplateOutlet]="parts" />
       }
 
       <!-- 3.48 (usm-x row 55): the busy row, outside role="menu"; its status
@@ -132,6 +79,76 @@
       <!-- Optional footer slot -->
       <ng-content select="[footer]" />
     </div>
+  </ng-template>
+
+  <!-- Menu items. 3.50: one part, or (inline with control rows; 3.51: or a
+       popup with `popupControls`) the parts between the rows and the rows
+       themselves, outside role="menu". -->
+  <ng-template #parts>
+    @for (segment of segments(); track $index) {
+      @if (segment.control; as entry) {
+        <div class="lc-menu__control">
+          @if (entry.label) {
+            <span class="lc-menu__control-label" [id]="controlLabelId(segment.offset)">{{ entry.label }}</span>
+          }
+          @if (controlTemplate(entry); as template) {
+            <ng-container
+              [ngTemplateOutlet]="template"
+              [ngTemplateOutletContext]="{ $implicit: entry, labelId: controlLabelId(segment.offset) }"
+            />
+          }
+        </div>
+      } @else {
+        <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- keydown bubbles from the focused menu items (roving tabindex) -->
+        <div
+          #list
+          class="lc-menu__items"
+          role="menu"
+          [attr.id]="segment.first ? panelId : null"
+          [attr.aria-label]="partName(segment)"
+          [attr.aria-busy]="loading() ? 'true' : null"
+          (keydown)="onPanelKeydown($event, segment)"
+          [attr.aria-labelledby]="partLabelledBy(segment)"
+          [class.lc-menu__items--has-toggles]="(inline() || segmentedPopup()) && segment.toggles"
+        >
+          @for (item of segment.items; track item.id; let i = $index) {
+            @if (item.children) {
+              <!-- Section (3.43): a heading and its items. The heading names the
+                   group and is hidden itself, so it is not read twice. -->
+              <div
+                class="lc-menu__section"
+                [class.lc-menu__section--indented]="item.indentChildren"
+                [attr.role]="item.children.length ? 'group' : null"
+                [attr.aria-labelledby]="item.children.length ? headingId(segment.offset + i) : null"
+              >
+                <div class="lc-menu__section-heading" [id]="headingId(segment.offset + i)" aria-hidden="true">{{ item.label }}</div>
+                @for (member of item.children; track member.id) {
+                  @if (member.children) {
+                    <!-- 3.50 (usm-x row 78): a section inside a section -->
+                    <ng-container
+                      [ngTemplateOutlet]="nestedSection"
+                      [ngTemplateOutletContext]="{ $implicit: member, depth: 1, id: nestedHeadingId(headingId(segment.offset + i), $index) }"
+                    />
+                  } @else {
+                    <ng-container [ngTemplateOutlet]="menuItem" [ngTemplateOutletContext]="{ $implicit: member }" />
+                  }
+                  <!-- 3.48 (usm-x row 57): a divider between members of one section -->
+                  @if (member.dividerAfter && !$last) {
+                    <hr class="lc-menu__divider" />
+                  }
+                }
+              </div>
+            } @else {
+              <ng-container [ngTemplateOutlet]="menuItem" [ngTemplateOutletContext]="{ $implicit: item }" />
+            }
+
+            @if (item.dividerAfter) {
+              <hr class="lc-menu__divider" />
+            }
+          }
+        </div>
+      }
+    }
   </ng-template>
 
   <!-- 3.50 (usm-x row 78): a nested section (level 2 and deeper): a group named

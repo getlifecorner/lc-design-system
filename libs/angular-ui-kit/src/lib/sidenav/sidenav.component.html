@@ -167,14 +167,46 @@
       <div class="lc-sidenav__rail-top"><ng-content select="[sidenav-rail-top]"></ng-content></div>
     }
 
-    @if (showRailItems()) {
+    @if (railTemplateOn(); as rail) {
+      <!-- 3.51 (request 072, backlog 071-n5): the app's `lcSidenavRail` template draws the collapsed rail's navigation. -->
+      <nav
+        class="lc-sidenav__nav lc-sidenav__nav--docked lc-sidenav__nav--rail-template"
+        [attr.aria-label]="ariaLabel()">
+        <ng-container [ngTemplateOutlet]="rail.template" [ngTemplateOutletContext]="railContext()" />
+      </nav>
+    } @else if (showRailItems()) {
       <!-- 3.50 (usm-x row 74): the collapsed rail draws `railItems` instead of `items`: one icon each, in the rail's look. -->
       <nav
         class="lc-sidenav__nav lc-sidenav__nav--docked lc-sidenav__nav--rail-items"
         [attr.aria-label]="ariaLabel()">
         @for (item of sortedRailItems(); track item.id) {
           <div class="lc-sidenav__nav-item-row">
-            @if (item.kind === 'action') {
+            @if (railGroupMenu() && isGroup(item)) {
+              <!-- 3.51 (request 072, backlog 071-n1, `railGroupMenu`): a group opens its children in the rail's menu. -->
+              <button
+                #railGroup
+                type="button"
+                class="lc-sidenav__nav-item lc-sidenav__nav-item--rail-group"
+                (click)="onRailGroupClick($event, item, railGroup)"
+                (keydown)="onRailGroupKeydown($event, item, railGroup)"
+                [class.lc-sidenav__nav-item--active]="!!railGroupCurrent(item)"
+                [attr.aria-current]="railGroupCurrent(item)"
+                [title]="railTitle(item)"
+                [attr.data-tooltip]="item.label"
+                [class.lc-sidenav__nav-item--busy]="!!item.busy"
+                [class.lc-sidenav__nav-item--disabled]="!!item.disabled"
+                [class.lc-sidenav__nav-item--muted]="!!item.muted"
+                [attr.aria-busy]="item.busy ? 'true' : null"
+                [attr.aria-disabled]="isBlocked(item) ? 'true' : null"
+                [attr.tabindex]="itemTabIndex(item)"
+                [lcTooltip]="rowTooltip(item)"
+                [tooltipPosition]="tooltipSide()"
+                (contextmenu)="onContextMenu($event, item)"
+                aria-haspopup="menu"
+                [attr.aria-expanded]="railMenuGroupId() === item.id ? 'true' : 'false'">
+                <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: item, optionalIcon: false, level: 1 }" />
+              </button>
+            } @else if (item.kind === 'action') {
               <button
                 type="button"
                 class="lc-sidenav__nav-item lc-sidenav__nav-item--action"
@@ -220,6 +252,24 @@
           </div>
         }
       </nav>
+      @if (railGroupMenuOn()) {
+        <!-- 3.51 (071-n1): the group menu (an overlay), anchored to a hidden box over the rail's border box at the item's height. -->
+        <div #railAnchor class="lc-sidenav__rail-anchor"></div>
+        <lc-menu
+          class="lc-sidenav__rail-menu"
+          [items]="railMenuItems()"
+          [isOpen]="!!railMenuGroup()"
+          [anchor]="railAnchor"
+          [position]="railMenuSide()"
+          [maxWidth]="railMenuMaxWidth()"
+          [ariaLabel]="railMenuGroup()?.label ?? ''"
+          [loading]="railMenuLoading()"
+          [loadingLabel]="childrenLoadingLabel()"
+          [busyLabel]="busyLabel()"
+          [returnFocusTo]="railMenuReturn()"
+          (itemClick)="onRailMenuItem($event)"
+          (closed)="railMenuGroupId.set(null)" />
+      }
     } @else if (items().length > 0) {
       <!-- Navigation items (if provided) -->
       <nav
@@ -292,6 +342,7 @@
                               [attr.aria-disabled]="isBlocked(child) ? 'true' : null"
                               [attr.tabindex]="itemTabIndex(child)"
                               [lcTooltip]="rowTooltip(child, row)"
+                              [tooltipDescription]="rowTooltipDescription(child, row)"
                               [tooltipPosition]="tooltipSide()"
                               (contextmenu)="onContextMenu($event, child)"
                               [attr.aria-haspopup]="itemHasPopup(child)"
@@ -316,6 +367,7 @@
                               [attr.aria-disabled]="isBlocked(child) ? 'true' : null"
                               [attr.tabindex]="itemTabIndex(child)"
                               [lcTooltip]="rowTooltip(child, row)"
+                              [tooltipDescription]="rowTooltipDescription(child, row)"
                               [tooltipPosition]="tooltipSide()"
                               (contextmenu)="onContextMenu($event, child)">
                               <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: child, optionalIcon: true, level: 2 }" />
@@ -363,6 +415,7 @@
                   [attr.aria-disabled]="isBlocked(item) ? 'true' : null"
                   [attr.tabindex]="itemTabIndex(item)"
                   [lcTooltip]="rowTooltip(item, row)"
+                  [tooltipDescription]="rowTooltipDescription(item, row)"
                   [tooltipPosition]="tooltipSide()"
                   (contextmenu)="onContextMenu($event, item)"
                   [attr.aria-haspopup]="itemHasPopup(item)"
@@ -387,6 +440,7 @@
                   [attr.aria-disabled]="isBlocked(item) ? 'true' : null"
                   [attr.tabindex]="itemTabIndex(item)"
                   [lcTooltip]="rowTooltip(item, row)"
+                  [tooltipDescription]="rowTooltipDescription(item, row)"
                   [tooltipPosition]="tooltipSide()"
                   (contextmenu)="onContextMenu($event, item)">
                   <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: item, optionalIcon: false, level: 1 }" />
@@ -459,6 +513,7 @@
       [attr.aria-disabled]="isBlocked(item) ? 'true' : null"
       [attr.tabindex]="itemTabIndex(item)"
       [lcTooltip]="rowTooltip(item, row)"
+      [tooltipDescription]="rowTooltipDescription(item, row)"
       [tooltipPosition]="tooltipSide()"
       (contextmenu)="onContextMenu($event, item)">
       <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: item, optionalIcon: optionalIcon, level: level }" />
@@ -524,6 +579,7 @@
       [attr.aria-disabled]="isBlocked(item) ? 'true' : null"
       [attr.tabindex]="itemTabIndex(item)"
       [lcTooltip]="rowTooltip(item, row)"
+      [tooltipDescription]="rowTooltipDescription(item, row)"
       [tooltipPosition]="tooltipSide()"
       (contextmenu)="onContextMenu($event, item)"
       [attr.aria-haspopup]="itemHasPopup(item)"
@@ -546,6 +602,7 @@
       [attr.aria-disabled]="isBlocked(item) ? 'true' : null"
       [attr.tabindex]="itemTabIndex(item)"
       [lcTooltip]="rowTooltip(item, row)"
+      [tooltipDescription]="rowTooltipDescription(item, row)"
       [tooltipPosition]="tooltipSide()"
       (contextmenu)="onContextMenu($event, item)">
       <ng-container [ngTemplateOutlet]="itemContent" [ngTemplateOutletContext]="{ $implicit: item, optionalIcon: optionalIcon, level: level }" />
@@ -553,8 +610,12 @@
   }
 </ng-template>
 
-<!-- The brand link's content: the tile (decorative) and the name. -->
+<!-- The brand link's content: the tile (decorative) and the name. 3.51
+     (request 072, backlog 071-n2): the `[sidenav-brand-mark]` box first, on
+     one line (`:empty` hides it without content); a mark hides the tile and
+     the natural logo. -->
 <ng-template #brandContent>
+  <span class="lc-sidenav__brand-mark" aria-hidden="true"><ng-content select="[sidenav-brand-mark]"></ng-content></span>
   @if (naturalLogo()) {
     <!-- 3.50 (usm-x row 75): `brandLogoFit="natural"`: the logo at its own ratio, no tile (the rail shows the tile). -->
     <img class="lc-sidenav__brand-logo" [src]="brandLogoSrc()" alt="" />

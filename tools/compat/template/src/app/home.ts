@@ -58,6 +58,7 @@ import { Probe346 } from './probe-346';
 import { Probe347 } from './probe-347';
 import { Probe348 } from './probe-348';
 import { Probe350 } from './probe-350';
+import { Probe351 } from './probe-351';
 
 /**
  * The broad page (route `''`): every component, imported from the PRIMARY
@@ -151,6 +152,8 @@ import { Probe350 } from './probe-350';
     Probe348,
     // 3.50 (request 071)
     Probe350,
+    // 3.51 (request 072)
+    Probe351,
   ],
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

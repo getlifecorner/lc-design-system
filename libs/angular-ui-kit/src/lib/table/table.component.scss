@@ -708,3 +708,44 @@
 .lc-table__actions-cell--label-hidden {
   position: relative;
 }
+
+// 3.51 (request 072, backlog 071-n6): the head in RTL. Appended after the
+// pinned rules; each selector is the LTR rule it mirrors plus
+// `:where(:dir(rtl))` (no weight), so it wins by order and an app's
+// `cellClass` / `cellStyle` still win as in LTR. Head cells align to the
+// inline start (right), the sortable arrow reserve and the arrow move to the
+// left (end cells were already logical), actions `start` go right and `end`
+// go left. The stack mode stays physical.
+.lc-table {
+  thead tr th:where(:dir(rtl)) {
+    text-align: right;
+  }
+
+  thead tr th.sortable:where(:dir(rtl)) {
+    padding-right: var(--lc-density-padding-md, var(--spacing-4));
+    padding-left: var(--spacing-8);
+
+    .sort-indicator {
+      right: auto;
+      left: var(--spacing-3);
+    }
+  }
+
+  &--sm thead tr th.sortable:where(:dir(rtl)) {
+    padding-right: var(--lc-density-padding-sm, var(--spacing-3));
+  }
+
+  &--lg thead tr th.sortable:where(:dir(rtl)) {
+    padding-right: var(--spacing-5);
+  }
+
+  thead tr th.lc-table__actions-cell--start:where(:dir(rtl)),
+  tbody tr td.lc-table__actions-cell--start:where(:dir(rtl)) {
+    text-align: right;
+  }
+
+  thead tr th.lc-table__actions-cell--end:where(:dir(rtl)),
+  tbody tr td.lc-table__actions-cell--end:where(:dir(rtl)) {
+    text-align: left;
+  }
+}

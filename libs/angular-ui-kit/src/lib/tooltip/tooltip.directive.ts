@@ -26,7 +26,7 @@ export type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
   selector: 'lc-tooltip-content',
   standalone: true,
   imports: [],
-  template: `<div class="lc-tooltip-inner">{{ content }}</div>`,
+  template: `<div class="lc-tooltip-inner">{{ content }}</div>@if (description) {<span class="lc-tooltip-description" [id]="descriptionId" hidden>{{ description }}</span>}`,
   styles: [
     `
       :host {
@@ -57,6 +57,10 @@ export type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
 })
 export class TooltipContentComponent {
   content = '';
+  /** 3.51 (request 072, backlog 071-n8): the hidden description text; `''`: no element. */
+  description = '';
+  /** Id of the hidden description element. */
+  descriptionId = '';
 }
 
 const POSITIONS: Record<TooltipPosition, ConnectedPosition> = {
@@ -168,11 +172,29 @@ export class TooltipDirective implements OnDestroy {
   tooltipDisabled = input<boolean>(false);
 
   /**
+   * 3.51 (request 072, backlog 071-n8): the described element's accessible
+   * description while the tooltip shows, instead of the visible text. Use it
+   * when the visible text repeats the element's name (a cut label shown in
+   * full before the hint), so the name is not heard twice. The visible text
+   * stays `lcTooltip`; `aria-describedby` points at a hidden element inside
+   * the tooltip (`{tooltipId}-description`) that holds this text.
+   * `''`: the visible text describes, as before.
+   * @default ''
+   */
+  tooltipDescription = input<string>('');
+
+  /**
    * Id of the tooltip element; while shown, the `aria-describedby` of the
    * described element (the host, or the focusable element it wraps, such as
    * `lc-button`'s `<button>`) points at it.
    */
   readonly tooltipId = `lc-tooltip-${++TooltipDirective.nextId}`;
+
+  /** 3.51: id of the hidden description element (with `tooltipDescription`). */
+  private readonly descriptionId = `${this.tooltipId}-description`;
+
+  /** The id `aria-describedby` points at while shown: the tooltip, or its hidden description. */
+  private describedById = this.tooltipId;
 
   private overlayRef?: OverlayRef;
   private tooltipRef?: ComponentRef<TooltipContentComponent>;
@@ -266,6 +288,11 @@ export class TooltipDirective implements OnDestroy {
       const portal = new ComponentPortal(TooltipContentComponent, this.viewContainerRef);
       this.tooltipRef = this.overlayRef.attach(portal) as ComponentRef<TooltipContentComponent>;
       this.tooltipRef.instance.content = this.lcTooltip();
+      // 3.51 (071-n8): a separate description, read once per show as the text
+      const description = this.tooltipDescription();
+      this.tooltipRef.instance.description = description;
+      this.tooltipRef.instance.descriptionId = this.descriptionId;
+      this.describedById = description ? this.descriptionId : this.tooltipId;
 
       const tooltipEl = this.tooltipRef.location.nativeElement as HTMLElement;
       // The id is what the described element's aria-describedby points at
@@ -406,17 +433,18 @@ export class TooltipDirective implements OnDestroy {
   private addDescribedBy(el: HTMLElement): void {
     this.describedEl = el;
     const ids = (el.getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean);
-    if (!ids.includes(this.tooltipId)) ids.push(this.tooltipId);
+    if (!ids.includes(this.describedById)) ids.push(this.describedById);
     this.renderer.setAttribute(el, 'aria-describedby', ids.join(' '));
   }
 
-  /** Removes the tooltip id from the element it was added to, keeping the other ids. */
+  /** Removes the tooltip id (or its description's) from the element it was added to, keeping the other ids. */
   private removeDescribedBy(): void {
     const el = this.describedEl ?? this.elementRef.nativeElement;
     this.describedEl = undefined;
     const ids = (el.getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean);
-    if (!ids.includes(this.tooltipId)) return;
-    const rest = ids.filter((id) => id !== this.tooltipId);
+    const own = (id: string) => id === this.tooltipId || id === this.descriptionId;
+    if (!ids.some(own)) return;
+    const rest = ids.filter((id) => !own(id));
     if (rest.length) {
       this.renderer.setAttribute(el, 'aria-describedby', rest.join(' '));
     } else {

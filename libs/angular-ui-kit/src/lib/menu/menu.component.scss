@@ -542,6 +542,36 @@
   padding-inline-start: calc(var(--spacing-5) + var(--_lc-menu-depth, 1) * var(--spacing-5) + 1.25rem + var(--lc-density-gap-md, var(--spacing-4)));
 }
 
+// ── 3.51 (request 072) ──
+// Side positions (backlog 071-n3): beside the projected trigger, top edges
+// aligned, 8 px apart; in the overlay the pane holds the panel 8 px from the
+// anchor on either side (a flipped panel keeps the gap), never above or below.
+.lc-menu__dropdown--right-start {
+  top: 0;
+  left: calc(100% + var(--spacing-2));
+}
+
+.lc-menu__dropdown--left-start {
+  top: 0;
+  right: calc(100% + var(--spacing-2));
+}
+
+.lc-menu__dropdown.lc-menu__dropdown--overlay.lc-menu__dropdown--right-start,
+.lc-menu__dropdown.lc-menu__dropdown--overlay.lc-menu__dropdown--left-start {
+  margin-block: 0;
+  margin-inline: var(--spacing-2);
+}
+
+// Control rows in a popup (backlog 071-n4, `popupControls`): the body holds
+// the parts and the rows; in a capped or overlay panel it is the scroller
+// (header, footer and the busy row keep their height).
+.lc-menu__dropdown--scroll > .lc-menu__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 @media (forced-colors: active) {
   .lc-menu__item-swatch {
     border-color: CanvasText;

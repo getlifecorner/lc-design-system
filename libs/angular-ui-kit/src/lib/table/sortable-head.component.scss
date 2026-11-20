@@ -9,10 +9,19 @@
 // The shared mixins are untouched, so lc-table's compiled head is unchanged.
 :host {
   @include sortable-head.head-cell;
+  // 3.51 (request 072, backlog 071-n6): `left` in LTR as before; RTL sets the
+  // private value to `right` below. Same weight as before, so an app class on
+  // the <th> still wins.
+  text-align: var(--_lc-sortable-head-align, left);
   padding-block: var(--lc-sortable-head-padding-block, var(--lc-density-padding-sm, var(--spacing-3)));
   padding-inline: var(--lc-sortable-head-padding-inline, var(--lc-density-padding-md, var(--spacing-4)));
   background-color: var(--color-surface-2);
   border-bottom: var(--lc-sortable-head-border-bottom, 2px solid var(--color-border-strong));
+}
+
+// 3.51 (backlog 071-n6): in RTL the head aligns to the inline start (right).
+:host(:dir(rtl)) {
+  --_lc-sortable-head-align: right;
 }
 
 :host(.lc-sortable-head--sm) {

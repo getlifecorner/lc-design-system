@@ -1699,3 +1699,77 @@ export const SortableHeadReserveAndRtl: Story = {
       </div>`,
   }),
 };
+
+/** The RTL head story's table (3.51, backlog 071-n6), in Arabic. */
+const RTL_HEAD_FIXTURE = {
+  caption: 'الفواتير المفتوحة',
+  columns: [
+    { key: 'name', label: 'الاسم', sortable: true },
+    { key: 'status', label: 'الحالة' },
+    { key: 'amount', label: 'المبلغ', align: 'end', sortable: true },
+  ] as TableColumn[],
+  data: [
+    { id: 1, name: 'صيانة الطابعة', status: 'مفتوح', amount: '1,200.00' },
+    { id: 2, name: 'ترخيص البرنامج', status: 'قيد التنفيذ', amount: '480.00' },
+    { id: 3, name: 'استشارة', status: 'مغلق', amount: '2,960.00' },
+  ],
+  actions: [
+    { key: 'explain', label: 'شرح', variant: 'ghost' },
+    { key: 'withdraw', label: 'سحب', variant: 'ghost' },
+  ] as TableAction[],
+};
+
+/** 3.51 (request 072, backlog 071-n6): `lc-table` and `th[lcSortableHead]` heads in RTL. */
+export const RtlHead: Story = {
+  name: 'RTL Head',
+  decorators: [moduleMetadata({ imports: [SortableHeadComponent] })],
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.51 (request 072, backlog 071-n6): under `dir="rtl"` the head cells of `lc-table` and of `th[lcSortableHead]` align to the inline start (right), as the body cells do. A sortable head keeps its 32 px arrow reserve and the arrow at its inline end (left; „الاسم“ in the first table), the sorted end column („المبلغ“, ascending) keeps the arrow before its label, and `actionsAlign="end"` puts the actions head and the buttons on the left. Explicit `align`, `cellClass` and `cellStyle` still win; LTR is unchanged (`left`). The second table is an app table with `th[lcSortableHead]`. At 360 px the table scrolls in its wrapper, starting at the right.',
+      },
+    },
+  },
+  render: () => ({
+    props: { fixture: RTL_HEAD_FIXTURE },
+    template: `
+      <div lang="ar" dir="rtl" style="display: flex; flex-direction: column; gap: 24px;">
+        <lc-table
+          [caption]="fixture.caption"
+          [columns]="fixture.columns"
+          [data]="fixture.data"
+          [actions]="fixture.actions"
+          actionsLabel="الإجراءات"
+          actionsAlign="end"
+          sortedAscendingLabel="مرتب تصاعديا"
+          sortedDescendingLabel="مرتب تنازليا"
+        ></lc-table>
+        <div style="${RESERVE_FRAME}">
+          <table style="${RESERVE_TABLE}">
+            <thead>
+              <tr>
+                <th scope="col" lcSortableHead="name" sortDirection="asc">الاسم</th>
+                <th scope="col" lcSortableHead="status">الحالة</th>
+                <th scope="col" lcSortableHead="amount" align="end">المبلغ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="${RESERVE_CELL}">صيانة الطابعة</td>
+                <td style="${RESERVE_CELL}">مفتوح</td>
+                <td style="${RESERVE_CELL} text-align: end; font-variant-numeric: tabular-nums;">1,200.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>`,
+  }),
+  play: async ({ canvasElement, viewMode }) => {
+    if (viewMode !== 'story') return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    // the shot: „المبلغ“ sorted ascending
+    canvasElement.querySelectorAll<HTMLElement>('lc-table thead th.sortable')[1]?.click();
+  },
+};

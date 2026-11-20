@@ -494,6 +494,20 @@ const EXPECT_IN_HTML = [
       && new RegExp(`<button(?=[^>]*\\sid="compat-density-350")(?=[^>]*\\saria-labelledby="${label[1]}")[^>]*>`).test(menu)
       && /<button(?=[^>]*\srole="menuitem")(?=[^>]*\saria-current="true")[^>]*>/.test(menu);
   }],
+  // 3.51 (request 072, probe-351.ts): the app's brand mark and a rail template, before JS.
+  ['sidenav: the [sidenav-brand-mark] in its hidden box inside the brand link, the name kept (backlog 071-n2, AC-6)', (html) => {
+    const sn = html.match(/<div(?=[^>]*\sid="compat-sidenav-351")[^>]*>([^]*?)<\/lc-sidenav>/)?.[1] ?? '';
+    const brand = sn.match(/<a(?=[^>]*\sclass="lc-sidenav__brand")[^>]*>([^]*?)<\/a>/)?.[1] ?? '';
+    return /^(?:<!--[^]*?-->|\s)*<span(?=[^>]*\sclass="lc-sidenav__brand-mark")(?=[^>]*\saria-hidden="true")[^>]*>(?:<!--[^]*?-->|\s)*<svg(?=[^>]*\sid="compat-mark-351")[^>]*>/.test(brand)
+      && /<span[^>]*\sclass="lc-sidenav__brand-name"[^>]*>USM X<\/span>/.test(brand);
+  }],
+  ['sidenav: an lcSidenavRail template draws the collapsed rail with the server width 56 (backlog 071-n5)', (html) => {
+    const sn = html.match(/<div(?=[^>]*\sid="compat-rail-351")[^>]*>([^]*?)<\/lc-sidenav>/)?.[1] ?? '';
+    const nav = sn.match(/<nav(?=[^>]*\sclass="lc-sidenav__nav lc-sidenav__nav--docked lc-sidenav__nav--rail-template")(?=[^>]*\saria-label="Schiene 351")[^>]*>([^]*?)<\/nav>/)?.[1] ?? '';
+    return (nav.match(/<button(?=[^>]*\sclass="lc-sidenav__rail-item")[^>]*>/g) ?? []).length === 2
+      && /<span[^>]*\sid="compat-rail-width-351"[^>]*>56<\/span>/.test(nav)
+      && (sn.match(/<nav\b/g) ?? []).length === 1;
+  }],
   // (minified or not: spaces optional, the container longhands or their shorthand)
   ['vertical tabs stack in a narrow container, pure CSS (backlog 064-n8)', (html) => /\.lc-tabs:has\(\s*>\s*\.lc-tabs__container--vertical\s*\)\s*\{\s*(?:container-name:\s*lc-tabs;\s*container-type:\s*inline-size|container:\s*lc-tabs\s*\/\s*inline-size);?\s*\}/.test(html)
     && /@container\s+lc-tabs\s*\(\s*(?:width\s*<\s*31rem|max-width:\s*30\.\d+rem)\s*\)\s*\{\s*\.lc-tabs__container--vertical\s*\{\s*flex-direction:\s*column;?\s*\}/.test(html)],
