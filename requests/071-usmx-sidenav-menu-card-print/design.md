@@ -4,6 +4,7 @@
 - **Spec:** [spec.md](spec.md) — AC-1 … AC-26
 - **Measured on:** 3.49.1 (`07b834d`), Storybook rebuilt 2026-11-20; logs `tmp/story-shots/071/design/m1.log` (toggle-group, card), `m2.log` (contrast grid), `proto.log` (§3 prototypes)
 - **Change note (review r1, 2026-11-20):** build.md deviations 1–6 accepted and written in (§2 `brandToggle`, `touchTarget`; §3 brand x 5.5; §4 cut-label events; §8 rail story; §9 AC-1/3/13). Added after measuring the build: the toggle column is reserved per inline menu part (§3, review F-1), print drops the nav column from 1024 px (§3, F-2), the rail menu's point sits 8 px beside the rail edge (§8, F-3).
+- **Change note (review r2, 2026-11-20):** §3 Print as built: in the one-column print layout the nav wrapper isn't printed either, and the footer drops its nav inset (`padding-left: env(safe-area-inset-left, 0px)`). The rule repeats the full-height selector at the same weight, after the screen rules.
 
 ## 1. Approach
 

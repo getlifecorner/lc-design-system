@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.50.0] - 2026-11-20
+
+The USM X shell and menus, a few component gaps and print rules for the app shell. Gap IDs: usm-x 2026-11-17 rows 74–86, finance-intelligence vertraege-prove-2026-11-19 row 2 and app-shell-2026-11-20 row 1, backlog 068-n1, 068-n3, 069-n1, 069-n2. No API breaks; printing a page with `lc-header` or `lc-app-shell` changes (see Changed).
+
+### Added
+
+- **`lc-sidenav` collapsed rail** (usm-x row 74, the USM X shell): `[sidenav-rail-top]` shows content on the docked, collapsed rail only (e.g. the area picker as a 44 px icon button, x 5.5–49.5 on the 56 px rail); `railItems` is what the rail draws instead of `items` (one icon per entry, the rail's tooltip, badge dot and current bar; an action entry is current only by `current`) and `railItemClick` gives `{ item, event, element }` to open a menu 8 px beside the rail (the rail's right edge + 8); `NavigationItem.hasPopup` puts `aria-haspopup`/`aria-expanded` on an action item; `brandToggle` makes the brand the rail toggle (44 × 44 on the rail, named „USM X Customizing, Collapse navigation to the left“, focus kept).
+- **`lc-sidenav brandLogoFit="natural"`** (row 75): a wordmark at its own ratio (4:1 → 96 × 24, `--lc-sidenav-brand-logo-height`), no tile; the rail shows the letter tile.
+- **`lc-menu inline`** (row 77, the account panel): the menu in the page, never closing, with control rows (`MenuItem.control` + `ng-template[lcMenuControl]`, `MenuControlDirective`) for a toggle group or switches between the menu parts, one Tab stop per part; only a part with checkbox or radio items reserves the check-mark slot, so „Profil“ and „Abmelden“ start on the „Dichte“ line (16 px).
+- **`MenuItem.current`, `busy`, `badgeVariant`, `attrs`, nested sections** (rows 78, 80): a 3 px bar + semibold (3.75:1 / 5.77:1), a spinner with `aria-busy` and `busyLabel`, `lc-badge` variants (text ≥ 4.60:1), `id`/`data-*` attributes only, sections to any depth (items at 16/32/48 px).
+- **`lc-menu returnFocusTo`** (backlog 068-n3) and the CSS hook **`--lc-menu-max-height`**; **`lc-split-button menuMaxHeight`** (row 79, `'room'` too).
+- **`lc-card headerActionWrap`** (row 86): at 390 px a 220 px search takes its own line under the title (title column 308 px instead of 72); hook `--lc-card-header-title-min` (12rem).
+- **`lc-badge` `.lc-badge__cut`** (row 83: with `maxWidth` only the marked run is cut, „· 3 Objekte“ stays visible); **`lc-avatar letters`** (row 81: „IN“, „CRM“; the name stays the accessible name); **`th[lcSortableHead]` `--lc-sortable-head-unsorted-reserve`** (row 82: `var(--spacing-4)` makes unsorted heads 16 px narrower; sorted and busy heads keep 32 px); **`lc-toggle-group touchTarget`** (finance-intelligence vertraege row 2, „Verträge“: every option ≥ 44 × 44 px, lg 40 → 44, without a new look).
+
+### Changed
+
+- `lc-menu`: Enter and Space on an item are `preventDefault`ed and stopped and activate it once (row 84). `lc-split-button`: `menuAriaLabel` also names the open menu.
+- Print (finance-intelligence app-shell-2026-11-20 row 1): `lc-header` is not printed; `lc-app-shell` drops the bottom clearance (112 → 0 px), the sky image and the screen height, and from 1024 px the nav column (one column, the page at x 0 and full width: 1040 → 1280 px at 1280, also with `navPlacement="full-height"`). The screen is unchanged.
+- `lc-sidenav`: a cut label with a kit tooltip shows its full text in the tooltip (row 76). `lc-tabs`: a muted tab keeps its muted ink on hover (row 85; 5.30:1 / 6.64:1).
+
+### Fixed
+
+- `th[lcSortableHead]` in RTL: reserve, arrow and busy ring sit at the inline end (068-n1). `lc-file-upload variant="image"`: no 8 px gap under the field without a rejection (069-n1); the German hints name what the logo is used for (069-n2).
+
+### Compatibility
+
+- No API breaks; every new input defaults to the 3.49.1 rendering (DOM identical apart from comment anchors and the collapsed rail's empty slot wrapper). `MenuItem.children` on a member now nests instead of being ignored.
+
+### Known
+
+- The second and later `role="menu"` parts of an inline menu have no accessible name unless a section names them. The cut-label tooltip's description repeats the label for screen readers. Safari/iOS focus return of `lc-modal` is not checked automatically.
+
 ## [3.49.1] - 2026-11-19
 
 Image grounds of `lc-file-upload` in forced colours (069-s1, found in the review of request 069). No API breaks.
