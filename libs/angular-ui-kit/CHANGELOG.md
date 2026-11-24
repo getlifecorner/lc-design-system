@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.52.0] - 2026-11-24
+
+Three consumer gaps closed in one version: a required combobox that can't be cleared with a click, KPI tile headers that fill their card and carry a state badge, and a visible label on `lc-select`. Gap IDs: finance-intelligence massnahmen-prove-2026-11-22 row 5, cockpit-prove-2026-11-22, simulation-2026-11-24 row 1. No API breaks.
+
+### Added
+
+- **`lc-combobox clearable`** (finance-intelligence massnahmen-prove-2026-11-22 row 5, form „Maßnahme anlegen“): `false` leaves out the × of a selected single value, so a required status can't be emptied by a click and Tab goes from the input to the next control. The input then reaches the frame's end padding (9 px from the edge at sm, md and lg, as an empty field). Typing still filters, another option replaces the value, and `clear()`, `writeValue(null)` and `[(selectedValue)]` still clear it; `multiple` chips keep their ×.
+- **`lc-stat-trend fullWidth`, `iconPlacement` and the slot `[stat-trend-end]`** (cockpit-prove-2026-11-22, cockpit KPI tiles): `fullWidth` lets the tile fill its container (header end = card content end); `iconPlacement="after-label"` (type `StatTrendIconPlacement`) puts the icon 8 px after the label; `[stat-trend-end]` takes one element, such as a state `lc-badge`, at the end of the header, centred on the label. Order is always label, icon, slot, and RTL mirrors. When they don't fit on one row (at 360 px „OFFENE MASSNAHMEN“, icon and „Teilweise umgesetzt“ need 336 of 294 px), the badge moves to a second header row at the start (header 48 px). Start the slot's text with a space (`&ngsp;`), also inside an `lc-badge`, so axe's WCAG 2.5.3 check reads two words.
+- **`lc-select label` and `requiredIndicator`** (simulation-2026-11-24 row 1): a visible label above the trigger with the `lc-combobox` label's tokens (14 px, weight 500, 6 px to the field), so label and field tops line up beside a combobox. It names the trigger (`aria-labelledby`), the list and the search fallback („Search {label}“), and a click focuses the trigger. `required` adds a `*` hidden from screen readers unless `requiredIndicator` is false. `ariaLabel` wins when both are set.
+
+### Compatibility
+
+- No API breaks; every new input defaults to the 3.51 rendering (DOM identical apart from comment anchors). A `label` attribute on `lc-select` that did nothing before now shows a label and names the field. Known limits: a wrapping `after-label` label fills its row, so the icon sits at the row end; tiles in one grid row align their values only when their headers have the same height; `lc-select multiple` still shows the English „2 selected“. Tested: 7618 unit tests, compat check on Angular 21 and 22 (144 checks each), axe 0 violations on 48 story shots.
+
 ## [3.51.0] - 2026-11-21
 
 The backlog of the USM X rail and menus, closed in one version: a built-in group menu on the collapsed rail, your own brand mark and rail template, menus beside an element, control rows in popups, named menu parts and an RTL table head. Gap IDs: backlog 071-n1 … 071-n8. No API breaks: every new input is optional and its default renders the 3.50 DOM (comment anchors and the empty brand-mark box aside).

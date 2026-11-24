@@ -1,3 +1,2 @@
-- [Gates and measuring](reference_gates-and-measuring.md) — baselines, gate order, story-shots compare/measure, pixel diff, temp-spec tricks, Bash forms that pass
-- [Build pitfalls](feedback_build-pitfalls.md) — default-DOM proof, attribute order, Jest/jsdom, Storybook args, SCSS pins, entries, lint
-- [Kit gates and session quirks](kit-gates-and-session-quirks.md) — session rooted outside the repo, Node version, no WebKit here
+- [Gates and measuring](reference_gates-and-measuring.md) — baselines after 073, gate order, compare/measure/jq, play-story diffs, Bash forms, session limits
+- [Build pitfalls](feedback_build-pitfalls.md) — default-DOM proof, axe label-in-name, Jest/jsdom (no encapsulation), Storybook args, SCSS pins, entries, lint
