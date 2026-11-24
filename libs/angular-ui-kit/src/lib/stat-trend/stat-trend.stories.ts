@@ -3,6 +3,7 @@ import { moduleMetadata } from '@storybook/angular';
 import { StatTrendComponent, StatTrendLabels } from './stat-trend.component';
 import { SparklineComponent } from '../sparkline/sparkline.component';
 import { CardComponent } from '../card/card.component';
+import { BadgeComponent } from '../badge/badge.component';
 
 const meta: Meta<StatTrendComponent> = {
   title: 'Charts/Stat Trend',
@@ -33,6 +34,19 @@ const meta: Meta<StatTrendComponent> = {
         'Words of the screen-reader text when `sentiment` is set: `up`, `down`, `unchanged`, `positive`, `negative`, `neutral`. Missing keys fall back to English (up, down, unchanged, favourable, unfavourable, neutral).',
       table: { defaultValue: { summary: '{}' } },
     },
+    iconPlacement: {
+      control: 'select',
+      options: ['end', 'after-label'],
+      description:
+        "3.52: where the header `icon` sits. `'end'` at the end of the header, before a `[stat-trend-end]` element (as before); `'after-label'` 8 px after the label, also in a wide (`fullWidth`) header.",
+      table: { defaultValue: { summary: 'end' } },
+    },
+    fullWidth: {
+      control: 'boolean',
+      description:
+        '3.52: the tile takes the full width of its container (`display: block; inline-size: 100%`), so the header reaches the container\'s end edge. The value row, the change and the 120 px sparkline keep their size and start position.',
+      table: { defaultValue: { summary: 'false' } },
+    },
   },
 
   parameters: {
@@ -48,6 +62,13 @@ Stat trend component for displaying KPI values with change indicators.
 - \`sentiment\` colours by good or bad instead (costs rising = negative); the arrow keeps the direction and a screen-reader text names both
 - Optional embedded sparkline chart
 - Configurable sparkline color theme
+- 3.52: header arrangement. \`fullWidth\` fills the container, \`iconPlacement="after-label"\` puts the icon 8 px after the label, and the \`[stat-trend-end]\` slot takes one element (a state \`lc-badge\`) at the end of the header, vertically centred on the label row
+
+**Header slot \`[stat-trend-end]\` (3.52):**
+- Order is always label, icon, slot: the slot is the last item at the end edge, \`iconPlacement\` moves only the icon (\`end\` = just before the slot, \`after-label\` = after the label). Reading and focus order equal the visual order.
+- The slot renders only with a \`label\` or \`icon\`: the header needs one, and a state badge without a label has no context.
+- When label, icon and slot don't fit on one row, the slot moves to a second header row at the start; the label hyphenates only when it alone is wider than its row (set \`lang\`). A long badge text needs \`lc-badge [wrap]="true"\`.
+- Start the slot's text with a space (\`&ngsp;\` or the text on its own line), also inside an \`lc-badge\`: axe's WCAG 2.5.3 check joins the label and the slot text without one ("MaßnahmenTeilweise"). In a clickable \`lc-card\`, the card's \`ariaLabel\` holds the badge text in order ("Offene Maßnahmen: Teilweise umgesetzt, 27") and the slot holds no control.
 `,
       },
     },
@@ -430,6 +451,152 @@ export const Sentiment: Story = {
     },
     moduleMetadata: {
       imports: [StatTrendComponent, CardComponent],
+    },
+  }),
+};
+
+/** The revenue series of the *Header Arrangement* cards. */
+const REVENUE_DATA = [20, 25, 22, 30, 28, 35, 32, 40, 38, 42];
+
+/**
+ * KPI tiles (3.52, request 073, finance-intelligence cockpit-prove-2026-11-22):
+ * `fullWidth` tiles with a state badge in `[stat-trend-end]`. Tile A is a
+ * clickable card whose name holds the badge text in order.
+ */
+export const KpiTile: Story = {
+  name: 'KPI Tile (DE)',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story: `
+3.52 (request 073, finance-intelligence cockpit-prove-2026-11-22): KPI tiles with \`fullWidth\`, so the header reaches the card's end edge, and a state \`lc-badge\` in the \`[stat-trend-end]\` slot. Tiles A and C put the icon after the label (\`iconPlacement="after-label"\`), tile B keeps it at the end, just before the badge.
+
+At 360 px and in the three columns at 1024 px, "OFFENE MASSNAHMEN", the icon and "Teilweise umgesetzt" don't fit on one row, so the badge moves to a second header row at the start (header 48 px); at 1280 px each header is one row with the badge at the card's end edge, centred on the label. Tile A is a clickable card named "Offene Maßnahmen: Teilweise umgesetzt, 27": the badge text is part of the name, in order, and its text starts with a space (\`&ngsp;\`), so axe's WCAG 2.5.3 check reads two words.
+`,
+      },
+    },
+  },
+  render: () => ({
+    props: { de: DE_LABELS },
+    template: `
+      <div lang="de" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <lc-card
+          variant="outlined"
+          padding="md"
+          borderRadius="md"
+          [clickable]="true"
+          ariaLabel="Offene Maßnahmen: Teilweise umgesetzt, 27"
+        >
+          <lc-stat-trend label="Offene Maßnahmen" value="27" icon="info-circle" iconPlacement="after-label" [fullWidth]="true">
+            <lc-badge stat-trend-end variant="warning" size="sm" [rounded]="true" [wrap]="true">&ngsp;Teilweise umgesetzt</lc-badge>
+          </lc-stat-trend>
+        </lc-card>
+
+        <lc-card variant="outlined" padding="md" borderRadius="md">
+          <lc-stat-trend
+            label="Einsparung 2026"
+            value="1,2 Mio. €"
+            change="+4,0 %"
+            sentiment="positive"
+            [labels]="de"
+            icon="chart-bar"
+            [fullWidth]="true"
+          >
+            <lc-badge stat-trend-end variant="success" size="sm" [rounded]="true">&ngsp;Im Plan</lc-badge>
+          </lc-stat-trend>
+        </lc-card>
+
+        <lc-card variant="outlined" padding="md" borderRadius="md">
+          <lc-stat-trend label="Budgetabweichung" value="−3,4 %" icon="info-circle" iconPlacement="after-label" [fullWidth]="true">
+            <lc-badge stat-trend-end variant="error" size="sm" [rounded]="true">&ngsp;Kritisch</lc-badge>
+          </lc-stat-trend>
+        </lc-card>
+      </div>
+    `,
+    moduleMetadata: {
+      imports: [StatTrendComponent, CardComponent, BadgeComponent],
+    },
+  }),
+};
+
+/** One *Header Arrangement* card: `fullWidth`, `iconPlacement`, slot. */
+const arrangementCard = (attrs: string, slot: boolean) => `
+        <lc-card variant="outlined" padding="md" borderRadius="md">
+          <lc-stat-trend label="Revenue" value="$42,350" change="+12.5%" icon="currency-dollar" [sparklineData]="data" ${attrs}>${
+            slot ? `
+            <lc-badge stat-trend-end variant="success" size="sm" [rounded]="true">&ngsp;On track</lc-badge>
+          ` : ''
+          }</lc-stat-trend>
+        </lc-card>`;
+
+/**
+ * Header arrangement (3.52, request 073): the combinations of `fullWidth`,
+ * `iconPlacement` and the `[stat-trend-end]` slot in a 400 px column.
+ */
+export const HeaderArrangement: Story = {
+  name: 'Header Arrangement',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story: `
+3.52 (request 073): six cards in a 400 px column, top to bottom.
+
+1. Default: the header is as wide as the tile's content (unchanged).
+2. \`fullWidth\`: the icon sits at the card's end edge.
+3. \`fullWidth\` + \`iconPlacement="after-label"\`: the icon 8 px after the label.
+4. \`fullWidth\` + slot: the icon 8 px before the badge, both at the end edge.
+5. \`fullWidth\` + \`after-label\` + slot: the icon after the label, the badge at the end edge.
+6. Slot without \`fullWidth\`: label, icon and badge as wide as their content; free space only when the value row or the sparkline is wider.
+
+The order is always label, icon, slot. The value row, the change and the 120 px sparkline keep their size and start position.
+`,
+      },
+    },
+  },
+  render: () => ({
+    props: { data: REVENUE_DATA },
+    template: `
+      <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 400px;">${[
+        arrangementCard('', false),
+        arrangementCard('[fullWidth]="true"', false),
+        arrangementCard('[fullWidth]="true" iconPlacement="after-label"', false),
+        arrangementCard('[fullWidth]="true"', true),
+        arrangementCard('[fullWidth]="true" iconPlacement="after-label"', true),
+        arrangementCard('', true),
+      ].join('')}
+      </div>
+    `,
+    moduleMetadata: {
+      imports: [StatTrendComponent, CardComponent, BadgeComponent, SparklineComponent],
+    },
+  }),
+};
+
+/** Header arrangement in a right-to-left page (3.52, request 073): cards 4 and 5 mirrored. */
+export const HeaderRtl: Story = {
+  name: 'Header RTL',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.52 (request 073): cards 4 and 5 of *Header Arrangement* in `dir="rtl"`. The header mirrors: the label starts at the right edge, the badge sits at the left edge, and with `iconPlacement="after-label"` the icon follows the label to its left. All new rules use logical properties.',
+      },
+    },
+  },
+  render: () => ({
+    props: { data: REVENUE_DATA },
+    template: `
+      <div dir="rtl" style="display: flex; flex-direction: column; gap: 1rem; max-width: 400px;">${[
+        arrangementCard('[fullWidth]="true"', true),
+        arrangementCard('[fullWidth]="true" iconPlacement="after-label"', true),
+      ].join('')}
+      </div>
+    `,
+    moduleMetadata: {
+      imports: [StatTrendComponent, CardComponent, BadgeComponent, SparklineComponent],
     },
   }),
 };

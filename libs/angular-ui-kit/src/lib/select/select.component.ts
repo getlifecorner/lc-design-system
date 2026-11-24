@@ -141,9 +141,28 @@ export class SelectComponent implements ControlValueAccessor {
   readonly errorMessage = input<string>('');
 
   /**
-   * ARIA label for accessibility
+   * ARIA label for accessibility. Wins over `label` when both are set.
+   * @default undefined
    */
   readonly ariaLabel = input<string | undefined>(undefined);
+
+  /**
+   * Visible label above the trigger (3.52), styled like the `lc-combobox`
+   * label (14 px, weight 500, 6 px above the field). It names the trigger and
+   * the list, and a click on it focuses the trigger (not when disabled). If
+   * `ariaLabel` is set too, `ariaLabel` names the trigger; keep it equal to or
+   * starting with the label (WCAG 2.5.3).
+   * @default ''
+   */
+  readonly label = input<string>('');
+
+  /**
+   * Whether `required` adds a `*` after the `label` (hidden from screen
+   * readers; `aria-required` already says it), as in lc-input. No effect
+   * without `label`.
+   * @default true
+   */
+  readonly requiredIndicator = input<boolean>(true);
 
   /**
    * Select options (flat list or groups). Groups render a header each (not
@@ -296,6 +315,18 @@ export class SelectComponent implements ControlValueAccessor {
     return this.placeholder();
   });
 
+  /** id of the visible `label` (3.52). */
+  readonly labelId = `${this.selectId}-label`;
+
+  /**
+   * 3.52: the trigger is named by the visible `label` (`aria-labelledby`)
+   * unless `ariaLabel` is set, which wins (`aria-label` as before).
+   */
+  protected readonly triggerLabelledBy = computed(() => (this.label() && !this.ariaLabel() ? this.labelId : null));
+
+  /** 3.52: the text that names the list and the search fallback: `ariaLabel`, else `label`. */
+  protected readonly nameText = computed(() => this.ariaLabel() || this.label());
+
   /** id of the helper/error text the trigger is described by (aria-describedby) */
   readonly describedBy = computed(() => {
     if (this.error() && this.errorMessage()) {
@@ -342,6 +373,16 @@ export class SelectComponent implements ControlValueAccessor {
    */
   optionId(index: number): string {
     return `${this.selectId}-option-${index}`;
+  }
+
+  /**
+   * 3.52: a click on the visible `label` focuses the trigger (a `div` with
+   * `role="combobox"` is not labelable, so the label has no `for`). Nothing
+   * when disabled.
+   */
+  protected onLabelClick(): void {
+    if (this.isDisabled()) return;
+    this.selectTrigger()?.nativeElement.focus();
   }
 
   /**

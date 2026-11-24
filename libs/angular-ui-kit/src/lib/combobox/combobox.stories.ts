@@ -117,6 +117,12 @@ selection, create-new entries, grouped options, and keyboard navigation.
         '3.42 (usm-x row 9): marks the field invalid without a message (error border, `aria-invalid="true"`, `aria-describedby` unchanged), for a form that lists its errors once in a summary that names the field. A set `error` implies it',
       table: { defaultValue: { summary: 'false' } },
     },
+    clearable: {
+      control: 'boolean',
+      description:
+        '3.52 (request 073): whether a selected single value shows the clear (×) button. `false` for required single choices such as a status: no button is rendered, the input reaches the frame\'s end padding, and the tab order loses that stop. Typing still filters, choosing another option replaces the value, and `clear()`, `writeValue(null)` and `[(selectedValue)]` still clear it. No effect with `multiple` (chips keep their ×).',
+      table: { defaultValue: { summary: 'true' } },
+    },
   },
 };
 
@@ -342,6 +348,55 @@ export const ClearTargetsDe: Story = {
           emptyMessage="Keine Treffer"
           clearAriaLabel="Auswahl löschen"
           [selectedValue]="'ks-4711'"
+        />
+      </div>`,
+  }),
+};
+
+/** The statuses of a measure (request 073, massnahmen-prove row 5), two with long labels. */
+const statusOptions: ComboboxOption[] = [
+  { value: 'open', label: 'Offen' },
+  { value: 'in-progress', label: 'In Umsetzung' },
+  { value: 'partial', label: 'Teilweise umgesetzt (Restaufwand in Klärung)' },
+  { value: 'done', label: 'Umgesetzt' },
+  { value: 'deferred', label: 'Zurückgestellt bis zur Budgetfreigabe' },
+];
+
+/** 3.52 (request 073, massnahmen-prove row 5): a required single choice without the clear button. */
+export const RequiredSingleChoice: Story = {
+  name: 'Required single choice (DE)',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.52 (request 073, finance-intelligence massnahmen-prove row 5, form „Maßnahme anlegen“): the required field „Status“ with `clearable="false"` at sm, md and lg, each with a long preset value. No clear button is rendered, so the value can\'t be emptied by a click and Tab goes from the input straight to the next control; the input reaches the frame\'s end padding (9 px from the frame edge, as an empty field). Typing still filters, and choosing another option replaces the value. The last field keeps the default (`clearable` true) with its × for comparison.',
+      },
+    },
+  },
+  render: () => ({
+    props: { statusOptions, sizes: ['sm', 'md', 'lg'] },
+    template: `
+      <div lang="de" style="display: flex; flex-direction: column; gap: 1rem; max-width: 400px;">
+        @for (size of sizes; track size) {
+          <lc-combobox
+            [options]="statusOptions"
+            [size]="size"
+            [label]="'Status (' + size + ')'"
+            placeholder="Status wählen"
+            emptyMessage="Keine Treffer"
+            clearAriaLabel="Auswahl löschen"
+            [clearable]="false"
+            [selectedValue]="'partial'"
+          />
+        }
+        <lc-combobox
+          [options]="statusOptions"
+          label="Status (md, mit ×)"
+          placeholder="Status wählen"
+          emptyMessage="Keine Treffer"
+          clearAriaLabel="Auswahl löschen"
+          [selectedValue]="'partial'"
         />
       </div>`,
   }),

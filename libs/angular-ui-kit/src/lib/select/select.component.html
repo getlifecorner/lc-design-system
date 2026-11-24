@@ -1,4 +1,10 @@
 <div class="lc-select-wrapper">
+  @if (label()) {
+    <!-- 3.52: the trigger is a div (role="combobox"), not labelable, so the label has no `for`: it names the
+         trigger through aria-labelledby, and a click focuses the trigger. No whitespace before the * (its margin is the gap). -->
+    <!-- eslint-disable-next-line @angular-eslint/template/label-has-associated-control, @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- pointer shortcut; the trigger is the keyboard target and is named by aria-labelledby -->
+    <label class="lc-select__label" [id]="labelId" (click)="onLabelClick()">{{ label() }}@if (required() && requiredIndicator()) {<span class="lc-select__required" aria-hidden="true">*</span>}</label>
+  }
   <div
     #selectTrigger
     [class]="selectClasses()"
@@ -8,6 +14,7 @@
     [attr.aria-controls]="isOpen() ? listboxId : null"
     [attr.aria-activedescendant]="activeDescendantId()"
     [attr.aria-label]="ariaLabel() || null"
+    [attr.aria-labelledby]="triggerLabelledBy()"
     [attr.aria-required]="required() ? 'true' : null"
     [attr.aria-disabled]="isDisabled() ? 'true' : null"
     [attr.aria-invalid]="error() ? 'true' : null"
@@ -110,7 +117,7 @@
             aria-autocomplete="list"
             [attr.aria-controls]="listboxId"
             [attr.aria-activedescendant]="activeDescendantId()"
-            [attr.aria-label]="searchAriaLabel() || (ariaLabel() ? 'Search ' + ariaLabel() : 'Search options')"
+            [attr.aria-label]="searchAriaLabel() || (nameText() ? 'Search ' + nameText() : 'Search options')"
             [(ngModel)]="searchQuery"
             (keydown)="onKeyDown($event)"
             (click)="$event.stopPropagation()"
@@ -122,7 +129,7 @@
         class="lc-select__options"
         role="listbox"
         [id]="listboxId"
-        [attr.aria-label]="ariaLabel() || null"
+        [attr.aria-label]="nameText() || null"
         [attr.aria-multiselectable]="multiple() ? 'true' : null"
       >
         @if (filteredOptions().length === 0 || visibleGroups()) {

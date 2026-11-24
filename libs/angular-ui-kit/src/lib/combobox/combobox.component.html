@@ -46,7 +46,7 @@
 
     @if (isLoading() || loading()) {
       <lc-spinner size="sm" class="lc-combobox__spinner" />
-    } @else if (!multiple() && selectedSingle()) {
+    } @else if (!multiple() && selectedSingle() && clearable()) {
       <button
         type="button"
         class="lc-combobox__clear"

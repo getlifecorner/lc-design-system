@@ -1,4 +1,5 @@
 import {
+  booleanAttribute,
   Component,
   ChangeDetectionStrategy,
   input,
@@ -159,6 +160,17 @@ export class ComboboxComponent implements ControlValueAccessor {
 
   /** Empty state message */
   readonly emptyMessage = input<string>('No results');
+
+  /**
+   * Whether a selected single value shows the clear (×) button (3.52). `false`
+   * for required single choices such as a status: no button is rendered, the
+   * input reaches the frame's end padding, and the tab order loses that stop.
+   * Typing still filters, choosing another option replaces the value, and
+   * `clear()`, `writeValue(null)` and `[(selectedValue)]` still clear it. No
+   * effect with `multiple` (chips keep their ×).
+   * @default true
+   */
+  readonly clearable = input(true, { transform: booleanAttribute });
 
   /** Accessible name of the clear button. */
   readonly clearAriaLabel = input('Clear');

@@ -28,6 +28,8 @@
       @if (icon()) {
         <lc-icon [name]="icon()" size="sm" class="lc-stat-trend__header-icon" [decorative]="true" />
       }
+      <!-- 3.52 (request 073): one element at the end of the header; no node without projected content. -->
+      <ng-content select="[stat-trend-end]" />
     </div>
     <!-- Request 031 (WCAG 2.5.3): a space before the row, the pill and the sparkline keeps the
          text "Label Value +3,1 %"; in a flex container it gets no box and renders nothing. -->

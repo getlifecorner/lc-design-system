@@ -85,3 +85,52 @@
   white-space: nowrap;
   border: 0;
 }
+
+// 3.52 (request 073, cockpit-prove-2026-11-22): header arrangement. Every rule
+// is keyed to a host class of a new input or to projected `[stat-trend-end]`
+// content, so a default tile keeps its CSS. Angular's style shim scopes inside
+// `:where()`/`:is()` only, not inside `:has()`, so `:has(> [stat-trend-end])`
+// matches the consumer's projected element. Logical properties only (RTL).
+
+// `fullWidth`: the tile fills its container, the header reaches its end edge.
+:host(.lc-stat-trend--full-width) {
+  display: block;
+  inline-size: 100%;
+}
+
+:host(.lc-stat-trend--full-width) > .lc-stat-trend {
+  display: flex;
+}
+
+// `iconPlacement="after-label"`: the icon 8 px (the header gap) after the label.
+:host(.lc-stat-trend--icon-after-label) .lc-stat-trend__header-icon {
+  margin-inline-end: auto;
+}
+
+// The slot element as a flex box: no inline strut (an lc-badge host 24 px, not 25).
+.lc-stat-trend__header > ::ng-deep [stat-trend-end] {
+  display: flex;
+}
+
+// With a slot the header wraps: the slot moves to a second row at the start when
+// label, icon and slot don't fit; the label hyphenates only when it alone is
+// wider than its row, and keeps the icon on its row.
+.lc-stat-trend__header:has(> [stat-trend-end]) {
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
+
+  > .lc-stat-trend__label {
+    overflow-wrap: anywhere;
+    hyphens: auto;
+    hyphenate-limit-chars: 12 4 3;
+  }
+
+  > .lc-stat-trend__label:has(+ .lc-stat-trend__header-icon) {
+    max-inline-size: calc(100% - 20px - 0.5rem);
+  }
+}
+
+// Icon at the end with a slot: icon and slot are grouped at the end edge.
+:host(:not(.lc-stat-trend--icon-after-label)) .lc-stat-trend__header:has(> [stat-trend-end]) > .lc-stat-trend__label {
+  margin-inline-end: auto;
+}

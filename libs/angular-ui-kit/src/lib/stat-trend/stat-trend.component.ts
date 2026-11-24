@@ -1,4 +1,5 @@
 import {
+  booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   input,
@@ -12,6 +13,9 @@ export type StatTrendDirection = 'up' | 'down' | 'neutral';
 
 /** Whether a change is good or bad for the reader, independent of its direction. */
 export type StatTrendSentiment = 'positive' | 'negative' | 'neutral';
+
+/** Where the header `icon` sits (3.52): at the end of the header, or right after the label. */
+export type StatTrendIconPlacement = 'end' | 'after-label';
 
 /**
  * Words of the screen-reader text that `lc-stat-trend` adds to the change when
@@ -48,6 +52,10 @@ const DEFAULT_LABELS: StatTrendLabels = {
   templateUrl: './stat-trend.component.html',
   styleUrls: ['./stat-trend.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '[class.lc-stat-trend--full-width]': 'fullWidth()',
+    '[class.lc-stat-trend--icon-after-label]': "iconPlacement() === 'after-label'",
+  },
 })
 /**
  * Stat trend component for displaying KPI values with change indicators.
@@ -64,10 +72,23 @@ const DEFAULT_LABELS: StatTrendLabels = {
  * hidden text names the direction and the sentiment ("+3.1 %, up, unfavourable"),
  * so the meaning never rests on colour alone. Translate it with `labels`.
  *
+ * Header arrangement (3.52): `fullWidth` lets the tile fill its container,
+ * `iconPlacement="after-label"` puts the icon right after the label, and the
+ * `[stat-trend-end]` slot takes one element (a state `lc-badge`) at the end of
+ * the header, vertically centred on the label row. The order is always label,
+ * icon, slot. When the row is too narrow, the slot moves to a second header row
+ * at the start. The slot renders only with a `label` or `icon` (the header
+ * needs one). Start the slot's text with a space (`&ngsp;` or the text on its
+ * own line), also inside an `lc-badge`, so it stays a separate word next to
+ * the label (axe's WCAG 2.5.3 check joins them without one).
+ *
  * @example
  * ```html
  * <lc-stat-trend label="Revenue" value="$42,350" change="+12.5%" [sparklineData]="data" />
  * <lc-stat-trend label="Costs" value="€48.2m" change="+3.1%" sentiment="negative" />
+ * <lc-stat-trend label="Open measures" value="27" icon="info-circle" iconPlacement="after-label" fullWidth>
+ *   <lc-badge stat-trend-end variant="warning" size="sm" [rounded]="true">&ngsp;Partly done</lc-badge>
+ * </lc-stat-trend>
  * ```
  */
 export class StatTrendComponent {
@@ -107,6 +128,23 @@ export class StatTrendComponent {
 
   /** Optional icon name (Tabler icon). */
   icon = input<string>('');
+
+  /**
+   * Where the header `icon` sits (3.52): `'end'` at the end of the header,
+   * before a `[stat-trend-end]` element (as before); `'after-label'` 8 px after
+   * the label, also in a wide (`fullWidth`) header.
+   * @default 'end'
+   */
+  iconPlacement = input<StatTrendIconPlacement>('end');
+
+  /**
+   * Whether the tile takes the full width of its container (3.52): the host
+   * becomes `display: block; inline-size: 100%`, so the header reaches the
+   * container's end edge. The value row, the change and the 120 px sparkline
+   * keep their size and start position.
+   * @default false
+   */
+  fullWidth = input(false, { transform: booleanAttribute });
 
   protected readonly resolvedDirection = computed<StatTrendDirection>(() => {
     const dir = this.direction();

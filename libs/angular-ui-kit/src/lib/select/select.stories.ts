@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/angular';
 import { FormsModule } from '@angular/forms';
 import { fn, expect, userEvent, within } from 'storybook/test';
 import { SelectComponent } from './select.component';
+import { ComboboxComponent } from '../combobox/combobox.component';
+import { NumberInputComponent } from '../number-input/number-input.component';
 
 /**
  * The Select component provides dropdown selection with single or multiple options.
@@ -35,6 +37,18 @@ const meta: Meta<SelectComponent> = {
         'Whether a selected value shows the clear (×) button (3.39). `false` for selects that always have a value (sort, level, page size): no button is rendered, the value text gets its room and the tab order loses that stop',
       table: { defaultValue: { summary: 'true' } },
     },
+    label: {
+      control: 'text',
+      description:
+        '3.52 (request 073): visible label above the trigger, styled like the `lc-combobox` label (14 px, weight 500, 6 px above the field). It names the trigger (`aria-labelledby`) and the list, and a click on it focuses the trigger (not when disabled). If `ariaLabel` is set too, `ariaLabel` names the trigger; keep it equal to or starting with the label (WCAG 2.5.3).',
+      table: { defaultValue: { summary: "''" } },
+    },
+    requiredIndicator: {
+      control: 'boolean',
+      description:
+        '3.52 (request 073): whether `required` adds a `*` after the `label` (hidden from screen readers; `aria-required` already says it), as in lc-input. No effect without `label`.',
+      table: { defaultValue: { summary: 'true' } },
+    },
   },
   parameters: {
     docs: {
@@ -54,6 +68,8 @@ Select component for dropdown option selection.
 - ControlValueAccessor integration for reactive forms
 - 3.39: \`clearable="false"\` leaves out the clear button for selects that always have a value; xs, sm and md
   reserve the button's room only while it is shown (see *Without Clear Button*)
+- 3.52: \`label\` shows a visible label above the trigger, as \`lc-combobox\` and \`lc-input\` do, and names the field;
+  \`required\` adds a \`*\` (\`requiredIndicator\`). \`ariaLabel\` wins over \`label\` when both are set (see *With Label*)
 `,
       },
     },
@@ -252,6 +268,7 @@ export const SelectInForm: Story = {
       <div style="max-width: 400px; display: flex; flex-direction: column; gap: 16px;">
         <lc-input label="Company Name" placeholder="Acme Corp" [required]="true"></lc-input>
         <lc-select
+          label="Industry"
           placeholder="Select your industry"
           [options]="[
             { value: 'tech', label: 'Technology' },
@@ -262,6 +279,7 @@ export const SelectInForm: Story = {
           ]"
         ></lc-select>
         <lc-select
+          label="Company size"
           placeholder="Select company size"
           [options]="[
             { value: '1-10', label: '1\u201310 employees' },
@@ -532,6 +550,119 @@ export const WithoutClearButton: Story = {
             <lc-select [size]="size" [ariaLabel]="'Kostenstelle (' + size + ')'" clearAriaLabel="Auswahl löschen" [options]="centres" [ngModel]="'4711'"></lc-select>
           }
         </div>
+      </div>
+    `,
+  }),
+};
+
+/** 3.52 (request 073, finance-intelligence simulation row 1): a visible label (all controls live). */
+export const WithLabel: Story = {
+  name: 'With Label',
+  args: {
+    label: 'Country',
+    required: true,
+    helperText: 'Where the company is registered',
+    placeholder: 'Select a country',
+    options: countryOptions,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '3.52 (request 073, finance-intelligence simulation row 1): `label` shows a visible label above the trigger, with the tokens, size and spacing of the `lc-combobox` label (14 px, weight 500, 6 px above the field). It names the trigger through `aria-labelledby` and the list through its `aria-label`, and a click on it focuses the trigger. `required` adds a `*` (hidden from screen readers, `aria-required` says it); `requiredIndicator: false` leaves it out. Set `ariaLabel` as well and it names the trigger instead.',
+      },
+    },
+  },
+};
+
+/** Scenarios of the simulation page (request 073). */
+const scenarioOptions = [
+  { value: 'base', label: 'Basisszenario 2027' },
+  { value: 'optimistic', label: 'Optimistisch' },
+  { value: 'pessimistic', label: 'Pessimistisch' },
+  { value: 'infra', label: 'Kostensenkung IT-Infrastruktur' },
+];
+
+/** Kinds of change of the simulation page (request 073). */
+const changeKindOptions = [
+  { value: 'price', label: 'Preisänderung' },
+  { value: 'volume', label: 'Mengenänderung' },
+  { value: 'new', label: 'Neuer Vertrag' },
+  { value: 'cancel', label: 'Kündigung' },
+];
+
+/** Start months of the simulation page (request 073). */
+const monthOptions = ['Januar', 'Februar', 'März', 'April'].map((name, i) => ({ value: `2027-0${i + 1}`, label: `${name} 2027` }));
+
+/** 3.52 (request 073): the label in every size and state, in German. */
+export const LabelStatesDe: Story = {
+  name: 'Label States (DE)',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.52 (request 073, finance-intelligence simulation row 1): the visible `label` at xs, sm, md and lg, with `required` (`*`), an error and its message, a helper text, disabled, searchable (the search field keeps its `searchAriaLabel` „Szenario suchen“) and multiple. The label keeps its 14 px and its 6 px to the trigger in every size, stays `--color-text-primary` with an error and when disabled, and a long label such as „Simulationsszenario auswählen“ wraps at spaces (a single compound hyphenates under `lang="de"`) without clipping.',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [SelectComponent, FormsModule] },
+    props: { scenarioOptions, changeKindOptions, monthOptions, sizes: ['xs', 'sm', 'md', 'lg'] },
+    template: `
+      <div lang="de" style="max-width: 320px; display: flex; flex-direction: column; gap: 16px;">
+        @for (size of sizes; track size) {
+          <lc-select [size]="size" [label]="'Szenario (' + size + ')'" placeholder="Bitte wählen" clearAriaLabel="Auswahl löschen" [options]="scenarioOptions"></lc-select>
+        }
+        <lc-select label="Art der Änderung" [required]="true" placeholder="Bitte wählen" clearAriaLabel="Auswahl löschen" [options]="changeKindOptions"></lc-select>
+        <lc-select label="Simulationsszenario auswählen" [required]="true" placeholder="Bitte wählen" clearAriaLabel="Auswahl löschen" [options]="scenarioOptions" [error]="true" errorMessage="Bitte ein Szenario wählen"></lc-select>
+        <lc-select label="Ab (Monat)" placeholder="Bitte wählen" clearAriaLabel="Auswahl löschen" helperText="Gilt für alle Verträge" [options]="monthOptions"></lc-select>
+        <lc-select label="Simulationsszenario auswählen" placeholder="Bitte wählen" [options]="scenarioOptions" [ngModel]="'base'" [disabled]="true"></lc-select>
+        <lc-select
+          label="Simulationsszenario auswählen"
+          placeholder="Bitte wählen"
+          clearAriaLabel="Auswahl löschen"
+          searchPlaceholder="Suchen …"
+          searchAriaLabel="Szenario suchen"
+          noOptionsLabel="Keine Treffer"
+          [searchable]="true"
+          [options]="scenarioOptions"
+        ></lc-select>
+        <lc-select label="Art der Änderung (mehrere)" placeholder="Bitte wählen" [multiple]="true" [options]="changeKindOptions" [ngModel]="['price', 'volume']"></lc-select>
+      </div>
+    `,
+  }),
+};
+
+/** 3.52 (request 073): select, combobox and number input labels side by side. */
+export const LabelsInAFormDe: Story = {
+  name: 'Labels in a Form (DE)',
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        story:
+          '3.52 (request 073, finance-intelligence simulation row 1): a select with `label` next to an `lc-combobox` and an `lc-number-input`, one column at 360 px and two from 1024 px. The labels share their tokens and the 6 px to the field, so label tops and field tops line up in each row (the md select is 40 px high, the combobox frame 42 px, as before).',
+      },
+    },
+  },
+  render: () => ({
+    moduleMetadata: { imports: [SelectComponent, ComboboxComponent, NumberInputComponent, FormsModule] },
+    props: {
+      changeKindOptions,
+      monthOptions,
+      contracts: [
+        { value: 'v-100', label: 'Rechenzentrumsbetrieb (V-100)' },
+        { value: 'v-200', label: 'Arbeitsplatzservice (V-200)' },
+        { value: 'l-310', label: 'Lizenzen Bürosoftware (L-310)' },
+      ],
+    },
+    template: `
+      <div lang="de" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); max-width: 45rem; gap: 1rem;">
+        <lc-select label="Art der Änderung" [required]="true" placeholder="Bitte wählen" clearAriaLabel="Auswahl löschen" [options]="changeKindOptions"></lc-select>
+        <lc-combobox label="Vertrag oder Leistung" placeholder="Suchen …" emptyMessage="Keine Treffer" clearAriaLabel="Auswahl löschen" [options]="contracts" />
+        <lc-select label="Ab (Monat)" placeholder="Bitte wählen" clearAriaLabel="Auswahl löschen" [options]="monthOptions"></lc-select>
+        <lc-number-input label="Änderung in Prozent" suffix="%"></lc-number-input>
       </div>
     `,
   }),
